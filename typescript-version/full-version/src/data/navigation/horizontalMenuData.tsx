@@ -190,23 +190,17 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
         ]
       },
       {
-        label: dictionary['navigation'].user,
-        icon: 'ri-user-line',
+        label: 'User Settings',
+        icon: 'ri-user-settings-line',
         children: [
           {
-            label: dictionary['navigation'].list,
+            label: 'User List',
             href: '/apps/user/list'
           },
           {
             label: dictionary['navigation'].view,
             href: '/apps/user/view'
-          }
-        ]
-      },
-      {
-        label: dictionary['navigation'].rolesPermissions,
-        icon: 'ri-lock-line',
-        children: [
+          },
           {
             label: dictionary['navigation'].roles,
             href: '/apps/roles'
@@ -216,7 +210,7 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
             href: '/apps/permissions'
           }
         ]
-      }
+      },
     ]
   },
   {

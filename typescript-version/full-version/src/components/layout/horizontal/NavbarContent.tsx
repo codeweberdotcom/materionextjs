@@ -44,14 +44,14 @@ const shortcuts: ShortcutsType[] = [
   {
     url: '/apps/user/list',
     icon: 'ri-user-3-line',
-    title: 'Users',
+    title: 'User List',
     subtitle: 'Manage Users'
   },
   {
     url: '/apps/roles',
     icon: 'ri-computer-line',
-    title: 'Role Management',
-    subtitle: 'Permissions'
+    title: 'Roles',
+    subtitle: 'User Roles'
   },
   {
     url: '/dashboards/crm',

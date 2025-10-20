@@ -166,15 +166,15 @@ const UserDropdown = () => {
                     <Divider className='mlb-1' />
                   )}
                   {isAdmin && (
-                    <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/admin')}>
-                      <i className='ri-admin-line text-error' />
-                      <Typography color='error.main'>Admin Panel</Typography>
+                    <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/roles')}>
+                      <i className='ri-shield-user-line text-error' />
+                      <Typography color='error.main'>Roles</Typography>
                     </MenuItem>
                   )}
                   {isAdmin && (
-                    <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/user-management')}>
-                      <i className='ri-user-settings-line text-error' />
-                      <Typography color='error.main'>User Management</Typography>
+                    <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/permissions')}>
+                      <i className='ri-lock-2-line text-error' />
+                      <Typography color='error.main'>Permissions</Typography>
                     </MenuItem>
                   )}
 
