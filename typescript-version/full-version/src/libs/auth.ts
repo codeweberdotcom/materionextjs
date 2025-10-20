@@ -3,8 +3,42 @@ import CredentialProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import { PrismaClient } from '@prisma/client'
-import type { NextAuthOptions } from 'next-auth'
+import type { NextAuthOptions, User } from 'next-auth'
 import type { Adapter } from 'next-auth/adapters'
+
+// Extend NextAuth types
+declare module 'next-auth' {
+  interface User {
+    role?: {
+      id: string
+      name: string
+      description?: string | null
+      permissions?: string | null
+    }
+  }
+
+  interface Session {
+    user: User & {
+      role?: {
+        id: string
+        name: string
+        description?: string | null
+        permissions?: string | null
+      }
+    }
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    role?: {
+      id: string
+      name: string
+      description?: string | null
+      permissions?: string | null
+    }
+  }
+}
 
 const prisma = new PrismaClient()
 
@@ -36,15 +70,29 @@ export const authOptions: NextAuthOptions = {
 
         try {
           // ** Login API Call to match the user credentials and receive user data in response along with his role
-          const res = await fetch(`${process.env.API_URL}/login`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-          })
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-          const data = await res.json()
+          let res
+          try {
+            res = await fetch(`${baseUrl}/api/login`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ email, password })
+            })
+          } catch (fetchError) {
+            console.error('Fetch error:', fetchError)
+            throw new Error('Unable to connect to authentication server. Please check if the server is running.')
+          }
+
+          let data
+          try {
+            data = await res.json()
+          } catch (parseError) {
+            console.error('Login API JSON parse error:', parseError)
+            throw new Error('Invalid response from login API')
+          }
 
           if (res.status === 401) {
             throw new Error(JSON.stringify(data))
@@ -61,6 +109,7 @@ export const authOptions: NextAuthOptions = {
 
           return null
         } catch (e: any) {
+          console.error('Auth error:', e)
           throw new Error(e.message)
         }
       }
@@ -111,6 +160,7 @@ export const authOptions: NextAuthOptions = {
          * in token which then will be available in the `session()` callback
          */
         token.name = user.name
+        token.role = user.role
       }
 
       return token
@@ -119,6 +169,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         // ** Add custom params to user in session which are added in `jwt()` callback via `token` parameter
         session.user.name = token.name
+        session.user.role = token.role
       }
 
       return session

@@ -9,6 +9,7 @@ import type { ButtonProps } from '@mui/material/Button'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
+import type { UsersType } from '@/types/apps/userTypes'
 
 // Component Imports
 import EditUserInfo from '@components/dialogs/edit-user-info'
@@ -16,22 +17,34 @@ import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 import OpenDialogOnElementClick from '@components/dialogs/OpenDialogOnElementClick'
 import CustomAvatar from '@core/components/mui/Avatar'
 
-// Vars
-const userData = {
-  firstName: 'Seth',
-  lastName: 'Hallam',
-  userName: '@shallamb',
-  billingEmail: 'shallamb@gmail.com',
-  status: 'active',
-  role: 'Subscriber',
-  taxId: 'Tax-8894',
-  contact: '+1 (234) 464-0600',
-  language: ['English'],
-  country: 'France',
-  useAsBillingAddress: true
+interface UserDetailsProps {
+  userData?: UsersType
 }
 
-const UserDetails = () => {
+// Vars - Default fallback data
+const defaultUserData: UsersType = {
+  id: 0,
+  fullName: 'Unknown User',
+  company: 'N/A',
+  role: 'subscriber',
+  username: '@unknown',
+  country: 'Unknown',
+  contact: 'N/A',
+  email: 'unknown@example.com',
+  currentPlan: 'basic',
+  status: 'active',
+  avatar: '',
+  avatarColor: 'primary'
+}
+
+const UserDetails = ({ userData }: UserDetailsProps) => {
+  // Use provided userData or fallback to default
+  const user = userData || defaultUserData
+
+  // Split full name into first and last name
+  const nameParts = user.fullName.split(' ')
+  const firstName = nameParts[0] || 'Unknown'
+  const lastName = nameParts.slice(1).join(' ') || 'User'
   const buttonProps = (children: string, color: ThemeColor, variant: ButtonProps['variant']): ButtonProps => ({
     children,
     color,
@@ -45,10 +58,10 @@ const UserDetails = () => {
           <div className='flex flex-col gap-6'>
             <div className='flex items-center justify-center flex-col gap-4'>
               <div className='flex flex-col items-center gap-4'>
-                <CustomAvatar alt='user-profile' src='/images/avatars/1.png' variant='rounded' size={120} />
-                <Typography variant='h5'>{`${userData.firstName} ${userData.lastName}`}</Typography>
+                <CustomAvatar alt='user-profile' src={user.avatar} variant='rounded' size={120} />
+                <Typography variant='h5'>{firstName} {lastName}</Typography>
               </div>
-              <Chip label='Subscriber' color='error' size='small' variant='tonal' />
+              <Chip label={user.role} color='error' size='small' variant='tonal' />
             </div>
             <div className='flex items-center justify-around flex-wrap gap-4'>
               <div className='flex items-center gap-4'>
@@ -79,49 +92,43 @@ const UserDetails = () => {
                 <Typography className='font-medium' color='text.primary'>
                   Username:
                 </Typography>
-                <Typography>{userData.userName}</Typography>
+                <Typography>{user.username}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Billing Email:
+                  Email:
                 </Typography>
-                <Typography>{userData.billingEmail}</Typography>
+                <Typography>{user.email}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Status
+                  Status:
                 </Typography>
-                <Typography color='text.primary'>{userData.status}</Typography>
+                <Typography color='text.primary'>{user.status}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
                   Role:
                 </Typography>
-                <Typography color='text.primary'>{userData.role}</Typography>
+                <Typography color='text.primary'>{user.role}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Tax ID:
+                  Plan:
                 </Typography>
-                <Typography color='text.primary'>{userData.taxId}</Typography>
+                <Typography color='text.primary'>{user.currentPlan}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Contact:
+                  Company:
                 </Typography>
-                <Typography color='text.primary'>{userData.contact}</Typography>
-              </div>
-              <div className='flex items-center flex-wrap gap-x-1.5'>
-                <Typography className='font-medium' color='text.primary'>
-                  Language:
-                </Typography>
-                <Typography color='text.primary'>{userData.language}</Typography>
+                <Typography color='text.primary'>{user.company}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
                   Country:
                 </Typography>
-                <Typography color='text.primary'>{userData.country}</Typography>
+                <Typography color='text.primary'>{user.country}</Typography>
               </div>
             </div>
           </div>
@@ -130,7 +137,7 @@ const UserDetails = () => {
               element={Button}
               elementProps={buttonProps('Edit', 'primary', 'contained')}
               dialog={EditUserInfo}
-              dialogProps={{ data: userData }}
+              dialogProps={{ data: user }}
             />
             <OpenDialogOnElementClick
               element={Button}

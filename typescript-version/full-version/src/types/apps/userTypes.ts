@@ -2,7 +2,7 @@
 import type { ThemeColor } from '@core/types'
 
 export type UsersType = {
-  id: number
+  id: string | number // Accept both string (database ID) and number (display ID)
   role: string
   email: string
   status: string

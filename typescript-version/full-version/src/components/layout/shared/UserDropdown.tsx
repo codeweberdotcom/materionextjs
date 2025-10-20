@@ -29,6 +29,7 @@ import type { Locale } from '@configs/i18n'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
+import { useAuth } from '@/hooks/useAuth'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
@@ -55,6 +56,7 @@ const UserDropdown = () => {
   const { data: session } = useSession()
   const { settings } = useSettings()
   const { lang: locale } = useParams()
+  const { userRole, isAdmin, isModerator } = useAuth()
 
   const handleDropdownOpen = () => {
     !open ? setOpen(true) : setOpen(false)
@@ -126,6 +128,19 @@ const UserDropdown = () => {
                         {session?.user?.name || ''}
                       </Typography>
                       <Typography variant='caption'>{session?.user?.email || ''}</Typography>
+                      {userRole && (
+                        <div className='flex items-center gap-1'>
+                          <i className={`ri-shield-user-line text-xs ${
+                            isAdmin ? 'text-error' : isModerator ? 'text-warning' : 'text-primary'
+                          }`} />
+                          <Typography variant='caption' sx={{
+                            color: isAdmin ? 'error.main' : isModerator ? 'warning.main' : 'primary.main',
+                            fontWeight: 500
+                          }}>
+                            {userRole.name.charAt(0).toUpperCase() + userRole.name.slice(1)}
+                          </Typography>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <Divider className='mlb-1' />
@@ -145,6 +160,32 @@ const UserDropdown = () => {
                     <i className='ri-question-line' />
                     <Typography color='text.primary'>FAQ</Typography>
                   </MenuItem>
+
+                  {/* Role-based menu items */}
+                  {isAdmin && (
+                    <>
+                      <Divider className='mlb-1' />
+                      <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/admin')}>
+                        <i className='ri-admin-line text-error' />
+                        <Typography color='error.main'>Admin Panel</Typography>
+                      </MenuItem>
+                      <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/user-management')}>
+                        <i className='ri-user-settings-line text-error' />
+                        <Typography color='error.main'>User Management</Typography>
+                      </MenuItem>
+                    </>
+                  )}
+
+                  {isModerator && (
+                    <>
+                      <Divider className='mlb-1' />
+                      <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/moderation')}>
+                        <i className='ri-shield-check-line text-warning' />
+                        <Typography color='warning.main'>Moderation</Typography>
+                      </MenuItem>
+                    </>
+                  )}
+
                   <div className='flex items-center plb-2 pli-4'>
                     <Button
                       fullWidth

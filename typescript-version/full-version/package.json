@@ -122,6 +122,7 @@
     "rimraf": "^5.0.7"
   },
   "prisma": {
-    "schema": "./src/prisma/schema.prisma"
+    "schema": "./src/prisma/schema.prisma",
+    "seed": "tsx src/prisma/seed.ts"
   }
 }

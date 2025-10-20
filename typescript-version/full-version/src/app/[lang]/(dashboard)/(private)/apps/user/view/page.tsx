@@ -3,19 +3,21 @@ import type { ReactElement } from 'react'
 
 // Next Imports
 import dynamic from 'next/dynamic'
+import { notFound } from 'next/navigation'
 
 // MUI Imports
 import Grid from '@mui/material/Grid2'
 
 // Type Imports
 import type { PricingPlanType } from '@/types/pages/pricingTypes'
+import type { UsersType } from '@/types/apps/userTypes'
 
 // Component Imports
 import UserLeftOverview from '@views/apps/user/view/user-left-overview'
 import UserRight from '@views/apps/user/view/user-right'
 
 // Data Imports
-import { getPricingData } from '@/app/server/actions'
+import { getPricingData, getUserById } from '@/app/server/actions'
 
 const OverViewTab = dynamic(() => import('@views/apps/user/view/user-right/overview'))
 const SecurityTab = dynamic(() => import('@views/apps/user/view/user-right/security'))
@@ -50,19 +52,36 @@ const tabContentList = (data?: PricingPlanType[]): { [key: string]: ReactElement
   return res.json()
 } */
 
-const UserViewTab = async () => {
+const UserViewTab = async ({ searchParams }: { searchParams: Promise<{ id: string }> }) => {
   // Vars
   const data = await getPricingData()
 
+  // Get user ID from search params
+  const params = await searchParams
+  const userId = params?.id
+
+  if (!userId) {
+    notFound()
+  }
+
+  // Fetch specific user data
+  const userData = await getUserById(userId)
+
+  if (!userData) {
+    notFound()
+  }
+
   return (
-    <Grid container spacing={6}>
-      <Grid size={{ xs: 12, lg: 4, md: 5 }}>
-        <UserLeftOverview />
+    <div>
+      <Grid container spacing={6}>
+        <Grid size={{ xs: 12, lg: 4, md: 5 }}>
+          <UserLeftOverview userData={userData} />
+        </Grid>
+        <Grid size={{ xs: 12, lg: 8, md: 7 }}>
+          <UserRight tabContentList={tabContentList(data)} />
+        </Grid>
       </Grid>
-      <Grid size={{ xs: 12, lg: 8, md: 7 }}>
-        <UserRight tabContentList={tabContentList(data)} />
-      </Grid>
-    </Grid>
+    </div>
   )
 }
 

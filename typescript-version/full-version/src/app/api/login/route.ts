@@ -1,38 +1,95 @@
 // Next Imports
 import { NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
+import { PrismaClient } from '@prisma/client'
 
-import type { UserTable } from './users'
-
-type ResponseUser = Omit<UserTable, 'password'>
-
-// Mock data for demo purpose
-import { users } from './users'
+const prisma = new PrismaClient()
 
 export async function POST(req: Request) {
-  // Vars
-  const { email, password } = await req.json()
-  const user = users.find(u => u.email === email && u.password === password)
-  let response: null | ResponseUser = null
-
-  if (user) {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password: _, ...filteredUserData } = user
-
-    response = {
-      ...filteredUserData
+  try {
+    // Check if request body exists
+    if (!req.body) {
+      return NextResponse.json(
+        { message: ['Request body is required'] },
+        { status: 400, statusText: 'Bad Request' }
+      )
     }
 
-    return NextResponse.json(response)
-  } else {
-    // We return 401 status code and error message if user is not found
+    let body
+    try {
+      body = await req.json()
+    } catch (parseError) {
+      console.error('Login JSON parse error:', parseError)
+      return NextResponse.json(
+        { message: ['Invalid JSON in request body'] },
+        { status: 400, statusText: 'Bad Request' }
+      )
+    }
+
+    const { email, password } = body
+
+    // Find user by email
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { role: true }
+    })
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          message: ['Email or Password is invalid']
+        },
+        {
+          status: 401,
+          statusText: 'Unauthorized Access'
+        }
+      )
+    }
+
+    // Check if user has a role
+    if (!user.role) {
+      return NextResponse.json(
+        {
+          message: ['User role not found. Please contact administrator.']
+        },
+        {
+          status: 500,
+          statusText: 'Internal Server Error'
+        }
+      )
+    }
+
+    // Verify password
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+
+    if (!isPasswordValid) {
+      return NextResponse.json(
+        {
+          message: ['Email or Password is invalid']
+        },
+        {
+          status: 401,
+          statusText: 'Unauthorized Access'
+        }
+      )
+    }
+
+    // Return user data without password
+    const { password: _, ...userWithoutPassword } = user
+
+    return NextResponse.json({
+      ...userWithoutPassword,
+      role: user.role
+    })
+  } catch (error) {
+    console.error('Login error:', error)
     return NextResponse.json(
       {
-        // We create object here to separate each error message for each field in case of multiple errors
-        message: ['Email or Password is invalid']
+        message: ['Internal server error']
       },
       {
-        status: 401,
-        statusText: 'Unauthorized Access'
+        status: 500,
+        statusText: 'Internal Server Error'
       }
     )
   }

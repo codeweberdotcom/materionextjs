@@ -2,6 +2,7 @@
 
 // React Imports
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 // Next Imports
 import Link from 'next/link'
@@ -16,6 +17,8 @@ import Checkbox from '@mui/material/Checkbox'
 import Button from '@mui/material/Button'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Divider from '@mui/material/Divider'
+import Alert from '@mui/material/Alert'
+import CircularProgress from '@mui/material/CircularProgress'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -38,6 +41,16 @@ import { getLocalizedUrl } from '@/utils/i18n'
 const RegisterV2 = ({ mode }: { mode: Mode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  })
+  const [errors, setErrors] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [agreeToTerms, setAgreeToTerms] = useState(false)
 
   // Vars
   const darkImg = '/images/pages/auth-v2-mask-dark.png'
@@ -49,6 +62,7 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
 
   // Hooks
   const { lang: locale } = useParams()
+  const router = useRouter()
   const authBackground = useImageVariant(mode, lightImg, darkImg)
   const { settings } = useSettings()
 
@@ -61,6 +75,95 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
   )
 
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
+
+  const handleInputChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: event.target.value
+    }))
+    // Clear errors when user starts typing
+    if (errors.length > 0) {
+      setErrors([])
+    }
+  }
+
+  const validateForm = () => {
+    const newErrors: string[] = []
+
+    if (!formData.name.trim()) {
+      newErrors.push('Username is required')
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.push('Email is required')
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.push('Please enter a valid email address')
+    }
+
+    if (!formData.password) {
+      newErrors.push('Password is required')
+    } else if (formData.password.length < 6) {
+      newErrors.push('Password must be at least 6 characters long')
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      newErrors.push('Passwords do not match')
+    }
+
+    if (!agreeToTerms) {
+      newErrors.push('You must agree to the privacy policy and terms')
+    }
+
+    setErrors(newErrors)
+    return newErrors.length === 0
+  }
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!validateForm()) {
+      return
+    }
+
+    setIsLoading(true)
+    setErrors([])
+
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          password: formData.password
+        })
+      })
+
+      let data
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError)
+        throw new Error('Invalid response from server')
+      }
+
+      if (response.ok) {
+        setSuccess(true)
+        setTimeout(() => {
+          router.push('/login?message=Registration successful! Please log in.')
+        }, 2000)
+      } else {
+        setErrors(Array.isArray(data.message) ? data.message : [data.message || 'Registration failed'])
+      }
+    } catch (error) {
+      console.error('Registration error:', error)
+      setErrors(['Network error. Please try again.'])
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className='flex bs-full justify-center'>
@@ -98,13 +201,46 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
             <Typography variant='h4'>Adventure starts here 🚀</Typography>
             <Typography className='mbe-1'>Make your app management easy and fun!</Typography>
           </div>
-          <form noValidate autoComplete='off' onSubmit={e => e.preventDefault()} className='flex flex-col gap-5'>
-            <TextField autoFocus fullWidth label='Username' />
-            <TextField fullWidth label='Email' />
+          <form noValidate autoComplete='off' onSubmit={handleSubmit} className='flex flex-col gap-5'>
+            {errors.length > 0 && (
+              <Alert severity='error' variant='outlined'>
+                {errors.map((error, index) => (
+                  <div key={index}>{error}</div>
+                ))}
+              </Alert>
+            )}
+
+            {success && (
+              <Alert severity='success' variant='outlined'>
+                Registration successful! Redirecting to login...
+              </Alert>
+            )}
+
+            <TextField
+              autoFocus
+              fullWidth
+              label='Username'
+              value={formData.name}
+              onChange={handleInputChange('name')}
+              error={errors.some(error => error.includes('Username'))}
+            />
+
+            <TextField
+              fullWidth
+              label='Email'
+              type='email'
+              value={formData.email}
+              onChange={handleInputChange('email')}
+              error={errors.some(error => error.includes('Email'))}
+            />
+
             <TextField
               fullWidth
               label='Password'
               type={isPasswordShown ? 'text' : 'password'}
+              value={formData.password}
+              onChange={handleInputChange('password')}
+              error={errors.some(error => error.includes('Password'))}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -122,9 +258,24 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
                 }
               }}
             />
+
+            <TextField
+              fullWidth
+              label='Confirm Password'
+              type='password'
+              value={formData.confirmPassword}
+              onChange={handleInputChange('confirmPassword')}
+              error={errors.some(error => error.includes('match'))}
+            />
+
             <div className='flex justify-between items-center gap-3'>
               <FormControlLabel
-                control={<Checkbox />}
+                control={
+                  <Checkbox
+                    checked={agreeToTerms}
+                    onChange={(e) => setAgreeToTerms(e.target.checked)}
+                  />
+                }
                 label={
                   <>
                     <span>I agree to </span>
@@ -135,8 +286,15 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
                 }
               />
             </div>
-            <Button fullWidth variant='contained' type='submit'>
-              Sign Up
+
+            <Button
+              fullWidth
+              variant='contained'
+              type='submit'
+              disabled={isLoading || success}
+              startIcon={isLoading ? <CircularProgress size={20} /> : null}
+            >
+              {isLoading ? 'Creating Account...' : 'Sign Up'}
             </Button>
             <div className='flex justify-center items-center flex-wrap gap-2'>
               <Typography>Already have an account?</Typography>
