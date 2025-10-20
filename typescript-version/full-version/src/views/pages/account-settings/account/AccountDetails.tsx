@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { ChangeEvent } from 'react'
 
 // MUI Imports
@@ -17,6 +17,7 @@ import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import Chip from '@mui/material/Chip'
 import type { SelectChangeEvent } from '@mui/material/Select'
+import { toast } from 'react-toastify'
 
 type Data = {
   firstName: string
@@ -35,18 +36,18 @@ type Data = {
 
 // Vars
 const initialData: Data = {
-  firstName: 'John',
-  lastName: 'Doe',
-  email: 'john.doe@example.com',
-  organization: 'ThemeSelection',
-  phoneNumber: '+1 (917) 543-9876',
-  address: '123 Main St, New York, NY 10001',
-  state: 'New York',
-  zipCode: '634880',
-  country: 'usa',
-  language: 'arabic',
-  timezone: 'gmt-12',
-  currency: 'usd'
+  firstName: '',
+  lastName: '',
+  email: '',
+  organization: '',
+  phoneNumber: '',
+  address: '',
+  state: '',
+  zipCode: '',
+  country: '',
+  language: '',
+  timezone: '',
+  currency: ''
 }
 
 const languageData = ['English', 'Arabic', 'French', 'German', 'Portuguese']
@@ -57,6 +58,8 @@ const AccountDetails = () => {
   const [fileInput, setFileInput] = useState<string>('')
   const [imgSrc, setImgSrc] = useState<string>('/images/avatars/1.png')
   const [language, setLanguage] = useState<string[]>(['English'])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
   const handleDelete = (value: string) => {
     setLanguage(current => current.filter(item => item !== value))
@@ -70,16 +73,56 @@ const AccountDetails = () => {
     setFormData({ ...formData, [field]: value })
   }
 
-  const handleFileInputChange = (file: ChangeEvent) => {
-    const reader = new FileReader()
-    const { files } = file.target as HTMLInputElement
+  const handleFileInputChange = async (fileEvent: ChangeEvent) => {
+    const { files } = fileEvent.target as HTMLInputElement
 
     if (files && files.length !== 0) {
-      reader.onload = () => setImgSrc(reader.result as string)
-      reader.readAsDataURL(files[0])
+      const file = files[0]
 
-      if (reader.result !== null) {
-        setFileInput(reader.result as string)
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file')
+        return
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('File size must be less than 5MB')
+        return
+      }
+
+      try {
+        // Show preview immediately
+        const reader = new FileReader()
+        reader.onload = () => setImgSrc(reader.result as string)
+        reader.readAsDataURL(file)
+
+        // Upload file to server
+        const formData = new FormData()
+        formData.append('avatar', file)
+
+        const response = await fetch('/api/user/avatar', {
+          method: 'POST',
+          body: formData
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          setImgSrc(result.avatarUrl)
+          toast.success('Avatar uploaded successfully!')
+        } else {
+          const error = await response.json()
+          toast.error(error.message || 'Failed to upload avatar')
+          // Reset to previous image on error
+          const profileResponse = await fetch('/api/user/profile')
+          if (profileResponse.ok) {
+            const userData = await profileResponse.json()
+            setImgSrc(userData.avatar || '/images/avatars/1.png')
+          }
+        }
+      } catch (error) {
+        console.error('Error uploading avatar:', error)
+        toast.error('Failed to upload avatar')
       }
     }
   }
@@ -87,6 +130,82 @@ const AccountDetails = () => {
   const handleFileInputReset = () => {
     setFileInput('')
     setImgSrc('/images/avatars/1.png')
+  }
+
+  // Fetch current user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/user/profile')
+        if (response.ok) {
+          const userData = await response.json()
+
+          // Split full name into first and last name
+          const nameParts = userData.fullName.split(' ')
+          const firstName = nameParts[0] || ''
+          const lastName = nameParts.slice(1).join(' ') || ''
+
+          setFormData({
+            firstName,
+            lastName,
+            email: userData.email,
+            organization: userData.company || '',
+            phoneNumber: userData.contact || '',
+            address: '',
+            state: '',
+            zipCode: '',
+            country: 'usa',
+            language: 'English',
+            timezone: 'gmt-05-et',
+            currency: 'usd'
+          })
+          setLanguage(['English'])
+
+          // Set current avatar if exists
+          if (userData.avatar) {
+            setImgSrc(userData.avatar)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+        toast.error('Failed to load user data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUserData()
+  }, [])
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+
+    try {
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          email: formData.email,
+          // Add other fields as needed
+        })
+      })
+
+      if (response.ok) {
+        toast.success('Profile updated successfully!')
+      } else {
+        toast.error('Failed to update profile')
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      toast.error('Failed to update profile')
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -116,7 +235,10 @@ const AccountDetails = () => {
         </div>
       </CardContent>
       <CardContent>
-        <form onSubmit={e => e.preventDefault()}>
+        {loading ? (
+          <Typography>Loading user data...</Typography>
+        ) : (
+          <form onSubmit={handleSubmit}>
           <Grid container spacing={5}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
@@ -284,8 +406,8 @@ const AccountDetails = () => {
               </FormControl>
             </Grid>
             <Grid size={{ xs: 12 }} className='flex gap-4 flex-wrap'>
-              <Button variant='contained' type='submit'>
-                Save Changes
+              <Button variant='contained' type='submit' disabled={saving}>
+                {saving ? 'Saving...' : 'Save Changes'}
               </Button>
               <Button variant='outlined' type='reset' color='secondary' onClick={() => setFormData(initialData)}>
                 Reset
@@ -293,6 +415,7 @@ const AccountDetails = () => {
             </Grid>
           </Grid>
         </form>
+       )}
       </CardContent>
     </Card>
   )

@@ -18,6 +18,8 @@ import { db as statisticsData } from '@/fake-db/pages/widgetExamples'
 
 // Database Imports
 import { PrismaClient } from '@prisma/client'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/libs/auth'
 
 // Type Imports
 import type { UsersType } from '@/types/apps/userTypes'
@@ -80,7 +82,7 @@ export const getUserData = async (): Promise<UsersType[]> => {
         email: user.email,
         currentPlan: 'basic',
         status: 'active',
-        avatar: '',
+        avatar: user.image || '',
         avatarColor: 'primary' as const
       }
     })
@@ -137,7 +139,7 @@ export const getUserById = async (id: string) => {
       email: user.email,
       currentPlan: 'basic',
       status: 'active',
-      avatar: '',
+      avatar: user.image || '',
       avatarColor: 'primary' as const
     }
   } catch (error) {
@@ -151,7 +153,96 @@ export const getPermissionsData = async () => {
 }
 
 export const getProfileData = async () => {
-  return profileData
+  try {
+    // Get current session to identify the logged-in user
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.email) {
+      console.error('No authenticated user found')
+      return profileData // Return fake data as fallback
+    }
+
+    // Find the current user in the database
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: {
+        role: true
+      }
+    })
+
+    if (!currentUser) {
+      console.error('User not found in database:', session.user.email)
+      return profileData // Return fake data as fallback
+    }
+
+    // Map database roles to expected UI roles
+    let uiRole = 'subscriber' // default fallback
+    switch (currentUser.role?.name) {
+      case 'admin':
+        uiRole = 'admin'
+        break
+      case 'moderator':
+        uiRole = 'maintainer'
+        break
+      case 'user':
+        uiRole = 'subscriber'
+        break
+      default:
+        uiRole = 'subscriber'
+    }
+
+    // Create user profile data with the expected structure
+    const userProfileData = {
+      about: [
+        { property: 'Full Name', value: currentUser.name || 'Unknown User', icon: 'ri-user-3-line' },
+        { property: 'Status', value: 'active', icon: 'ri-check-line' },
+        { property: 'Role', value: uiRole, icon: 'ri-star-line' },
+        { property: 'Country', value: 'N/A', icon: 'ri-flag-line' },
+        { property: 'Language', value: 'English', icon: 'ri-translate-2' }
+      ],
+      contacts: [
+        { property: 'Contact', value: 'N/A', icon: 'ri-phone-line' },
+        { property: 'Email', value: currentUser.email, icon: 'ri-mail-open-line' }
+      ],
+      teams: [
+        { property: 'Development Team', value: '(1 Member)' }
+      ],
+      overview: [
+        { property: 'Task Compiled', value: '0', icon: 'ri-check-line' },
+        { property: 'Connections', value: '1', icon: 'ri-user-3-line' },
+        { property: 'Projects Compiled', value: '0', icon: 'ri-function-line' }
+      ],
+      connections: profileData.users.profile.connections,
+      teamsTech: profileData.users.profile.teamsTech,
+      projectTable: profileData.users.profile.projectTable
+    }
+
+    // Return the complete profile data structure
+    return {
+      users: {
+        profile: userProfileData,
+        teams: profileData.users.teams,
+        projects: profileData.users.projects,
+        connections: profileData.users.connections
+      },
+      profileHeader: {
+        fullName: currentUser.name || 'Unknown User',
+        location: 'N/A',
+        joiningDate: new Date(currentUser.createdAt).toLocaleDateString('en-US', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }),
+        designation: uiRole,
+        profileImg: currentUser.image || '/images/avatars/1.png',
+        designationIcon: 'ri-user-3-line',
+        coverImg: '/images/pages/profile-banner.png'
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching profile data:', error)
+    return profileData // Return fake data as fallback
+  }
 }
 
 export const getFaqData = async () => {

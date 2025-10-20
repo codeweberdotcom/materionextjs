@@ -38,6 +38,7 @@ import {
 } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
+import { toast } from 'react-toastify'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
@@ -152,6 +153,57 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   // Hooks
   const { lang: locale } = useParams()
 
+  // Check if current user is admin
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await fetch('/api/user/profile')
+        if (response.ok) {
+          const userData = await response.json()
+          setIsAdmin(userData.role === 'admin')
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error)
+      }
+    }
+
+    checkAdminStatus()
+  }, [])
+
+  // Handle user deletion
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete user "${userName}"? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        // Refresh data from server
+        const refreshResponse = await fetch('/api/admin/users')
+        if (refreshResponse.ok) {
+          const updatedUsers = await refreshResponse.json()
+          setData(updatedUsers)
+        } else {
+          // If refresh fails, just remove from local data
+          setData(data?.filter(user => user.id !== userId))
+        }
+        toast.success('User deleted successfully!')
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to delete user')
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      toast.error('Failed to delete user')
+    }
+  }
+
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
       {
@@ -234,9 +286,11 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: 'Action',
         cell: ({ row }) => (
           <div className='flex items-center'>
-            <IconButton onClick={() => setData(data?.filter(product => product.id !== row.original.id))}>
-              <i className='ri-delete-bin-7-line text-textSecondary' />
-            </IconButton>
+            {isAdmin && (
+              <IconButton onClick={() => handleDeleteUser(String(row.original.id), row.original.fullName)}>
+                <i className='ri-delete-bin-7-line text-textSecondary' />
+              </IconButton>
+            )}
             <IconButton>
               <Link href={getLocalizedUrl(`/apps/user/view?id=${row.original.id}`, locale as Locale)} className='flex'>
                 <i className='ri-eye-line text-textSecondary' />

@@ -170,6 +170,18 @@ export const authOptions: NextAuthOptions = {
         // ** Add custom params to user in session which are added in `jwt()` callback via `token` parameter
         session.user.name = token.name
         session.user.role = token.role
+
+        // ** Fetch current avatar from database and add to session
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: session.user.email || '' },
+            select: { image: true }
+          })
+          session.user.image = user?.image || null
+        } catch (error) {
+          console.error('Error fetching user avatar for session:', error)
+          session.user.image = null
+        }
       }
 
       return session

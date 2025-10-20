@@ -163,27 +163,29 @@ const UserDropdown = () => {
 
                   {/* Role-based menu items */}
                   {isAdmin && (
-                    <>
-                      <Divider className='mlb-1' />
-                      <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/admin')}>
-                        <i className='ri-admin-line text-error' />
-                        <Typography color='error.main'>Admin Panel</Typography>
-                      </MenuItem>
-                      <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/user-management')}>
-                        <i className='ri-user-settings-line text-error' />
-                        <Typography color='error.main'>User Management</Typography>
-                      </MenuItem>
-                    </>
+                    <Divider className='mlb-1' />
+                  )}
+                  {isAdmin && (
+                    <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/admin')}>
+                      <i className='ri-admin-line text-error' />
+                      <Typography color='error.main'>Admin Panel</Typography>
+                    </MenuItem>
+                  )}
+                  {isAdmin && (
+                    <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/user-management')}>
+                      <i className='ri-user-settings-line text-error' />
+                      <Typography color='error.main'>User Management</Typography>
+                    </MenuItem>
                   )}
 
                   {isModerator && (
-                    <>
-                      <Divider className='mlb-1' />
-                      <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/moderation')}>
-                        <i className='ri-shield-check-line text-warning' />
-                        <Typography color='warning.main'>Moderation</Typography>
-                      </MenuItem>
-                    </>
+                    <Divider className='mlb-1' />
+                  )}
+                  {isModerator && (
+                    <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/moderation')}>
+                      <i className='ri-shield-check-line text-warning' />
+                      <Typography color='warning.main'>Moderation</Typography>
+                    </MenuItem>
                   )}
 
                   <div className='flex items-center plb-2 pli-4'>

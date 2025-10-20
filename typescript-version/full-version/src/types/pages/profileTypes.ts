@@ -15,7 +15,7 @@ export type ProfileHeaderType = {
   fullName: string
   coverImg: string
   location: string
-  profileImg: string
+  profileImg: string | null
   joiningDate: string
   designation: string
   designationIcon?: string

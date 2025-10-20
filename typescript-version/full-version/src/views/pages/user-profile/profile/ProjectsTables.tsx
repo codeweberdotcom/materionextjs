@@ -69,7 +69,7 @@ const ProjectTables = ({ projectTable }: { projectTable?: ProjectTableRowType[] 
   // States
   const [rowSelection, setRowSelection] = useState({})
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [data, setData] = useState(...[projectTable])
+  const [data, setData] = useState(projectTable || [])
   const [globalFilter, setGlobalFilter] = useState('')
 
   // Hooks
@@ -101,7 +101,7 @@ const ProjectTables = ({ projectTable }: { projectTable?: ProjectTableRowType[] 
         header: 'Project',
         cell: ({ row }) => (
           <div className='flex items-center gap-3'>
-            <CustomAvatar src={row.original.avatar} size={34} />
+            <CustomAvatar src={row.original.avatar || undefined} size={34} />
             <div className='flex flex-col'>
               <Typography className='font-medium' color='text.primary'>
                 {row.original.title}
