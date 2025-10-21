@@ -251,37 +251,42 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
             href: '/apps/permissions'
           }
         ]
-      }
-    ]
-  },
-  {
-    label: 'References',
-    isSection: true,
-    children: [
-      {
-        label: 'Languages',
-        icon: 'ri-translate-2',
-        href: '/apps/references/languages'
       },
       {
-        label: 'Countries',
-        icon: 'ri-flag-line',
-        href: '/apps/references/countries'
-      },
-      {
-        label: 'Timezones',
-        icon: 'ri-time-line',
-        href: '/apps/references/timezones'
-      },
-      {
-        label: 'Currencies',
-        icon: 'ri-money-dollar-circle-line',
-        href: '/apps/references/currencies'
-      },
-      {
-        label: 'Regions/States',
-        icon: 'ri-map-pin-2-line',
-        href: '/apps/references/regions'
+        label: 'References',
+        icon: 'ri-database-2-line',
+        children: [
+          {
+            label: 'Languages',
+            icon: 'ri-translate-2',
+            href: '/apps/references/languages'
+          },
+          {
+            label: 'Countries',
+            icon: 'ri-flag-line',
+            href: '/apps/references/countries'
+          },
+          {
+            label: 'Currencies',
+            icon: 'ri-money-dollar-circle-line',
+            href: '/apps/references/currencies'
+          },
+          {
+            label: 'Regions',
+            icon: 'ri-map-pin-2-line',
+            href: '/apps/references/regions'
+          },
+          {
+            label: 'States',
+            icon: 'ri-map-pin-3-line',
+            href: '/apps/references/states'
+          },
+          {
+            label: 'Cities',
+            icon: 'ri-map-pin-4-line',
+            href: '/apps/references/cities'
+          }
+        ]
       }
     ]
   },

@@ -43,6 +43,9 @@ import { toast } from 'react-toastify'
 import type { ThemeColor } from '@core/types'
 import type { Locale } from '@configs/i18n'
 
+// Component Imports
+import AddCountryDialog from './AddCountryDialog'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -108,6 +111,7 @@ const CountriesListTable = () => {
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(true)
+  const [addCountryOpen, setAddCountryOpen] = useState(false)
 
   const { lang: locale } = useParams()
 
@@ -259,89 +263,123 @@ const CountriesListTable = () => {
     toast.info('Edit functionality will be implemented')
   }
 
+  const handleAddCountry = async (countryData: { name: string; code: string }) => {
+    try {
+      const response = await fetch('/api/admin/references/countries', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(countryData)
+      })
+
+      if (response.ok) {
+        const newCountry = await response.json()
+        const updatedData = [...data, newCountry]
+        setData(updatedData)
+        setFilteredData(updatedData)
+        setAddCountryOpen(false)
+        toast.success('Country added successfully!')
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to add country')
+      }
+    } catch (error) {
+      console.error('Error adding country:', error)
+      toast.error('Failed to add country')
+    }
+  }
+
   if (loading) {
     return <Typography>Loading countries...</Typography>
   }
 
   return (
-    <Card>
-      <CardHeader title='Countries Management' />
-      <Divider />
-      <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
-        <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
-          <DebouncedInput
-            value={globalFilter ?? ''}
-            onChange={value => setGlobalFilter(String(value))}
-            placeholder='Search Country'
-            className='max-sm:is-full'
-          />
+    <>
+      <Card>
+        <CardHeader title='Countries Management' />
+        <Divider />
+        <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
+          <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
+            <DebouncedInput
+              value={globalFilter ?? ''}
+              onChange={value => setGlobalFilter(String(value))}
+              placeholder='Search Country'
+              className='max-sm:is-full'
+            />
+          </div>
+          <Button variant='contained' onClick={() => setAddCountryOpen(true)} className='max-sm:is-full'>
+            Add New Country
+          </Button>
         </div>
-        <Button variant='contained' className='max-sm:is-full'>
-          Add New Country
-        </Button>
-      </div>
-      <div className='overflow-x-auto'>
-        <table className={tableStyles.table}>
-          <thead>
-            {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <th key={header.id}>
-                    {header.isPlaceholder ? null : (
-                      <div
-                        className={classnames({
-                          'flex items-center': header.column.getIsSorted(),
-                          'cursor-pointer select-none': header.column.getCanSort()
-                        })}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {{
-                          asc: <i className='ri-arrow-up-s-line text-xl' />,
-                          desc: <i className='ri-arrow-down-s-line text-xl' />
-                        }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
-                      </div>
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          {table.getFilteredRowModel().rows.length === 0 ? (
-            <tbody>
-              <tr>
-                <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                  No data available
-                </td>
-              </tr>
-            </tbody>
-          ) : (
-            <tbody>
-              {table
-                .getRowModel()
-                .rows.slice(0, table.getState().pagination.pageSize)
-                .map(row => (
-                  <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
-                    {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                    ))}
-                  </tr>
-                ))}
-            </tbody>
-          )}
-        </table>
-      </div>
-      <TablePagination
-        rowsPerPageOptions={[10, 25, 50]}
-        component='div'
-        className='border-bs'
-        count={table.getFilteredRowModel().rows.length}
-        rowsPerPage={table.getState().pagination.pageSize}
-        page={table.getState().pagination.pageIndex}
-        onPageChange={(_, page) => table.setPageIndex(page)}
-        onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
+        <div className='overflow-x-auto'>
+          <table className={tableStyles.table}>
+            <thead>
+              {table.getHeaderGroups().map(headerGroup => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <th key={header.id}>
+                      {header.isPlaceholder ? null : (
+                        <div
+                          className={classnames({
+                            'flex items-center': header.column.getIsSorted(),
+                            'cursor-pointer select-none': header.column.getCanSort()
+                          })}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {{
+                            asc: <i className='ri-arrow-up-s-line text-xl' />,
+                            desc: <i className='ri-arrow-down-s-line text-xl' />
+                          }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
+                        </div>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            {table.getFilteredRowModel().rows.length === 0 ? (
+              <tbody>
+                <tr>
+                  <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
+                    No data available
+                  </td>
+                </tr>
+              </tbody>
+            ) : (
+              <tbody>
+                {table
+                  .getRowModel()
+                  .rows.slice(0, table.getState().pagination.pageSize)
+                  .map(row => (
+                    <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                      {row.getVisibleCells().map(cell => (
+                        <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                      ))}
+                    </tr>
+                  ))}
+              </tbody>
+            )}
+          </table>
+        </div>
+        <TablePagination
+          rowsPerPageOptions={[10, 25, 50]}
+          component='div'
+          className='border-bs'
+          count={table.getFilteredRowModel().rows.length}
+          rowsPerPage={table.getState().pagination.pageSize}
+          page={table.getState().pagination.pageIndex}
+          onPageChange={(_, page) => table.setPageIndex(page)}
+          onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
+        />
+      </Card>
+      <AddCountryDialog
+        open={addCountryOpen}
+        handleClose={() => setAddCountryOpen(false)}
+        onSubmit={handleAddCountry}
       />
-    </Card>
+    </>
   )
 }
 

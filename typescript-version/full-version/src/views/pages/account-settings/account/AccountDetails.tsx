@@ -50,23 +50,19 @@ const initialData: Data = {
   currency: ''
 }
 
-const languageData = ['English', 'Arabic', 'French', 'German', 'Portuguese']
-
 const AccountDetails = () => {
   // States
   const [formData, setFormData] = useState<Data>(initialData)
   const [fileInput, setFileInput] = useState<string>('')
   const [imgSrc, setImgSrc] = useState<string>('/images/avatars/1.png')
-  const [language, setLanguage] = useState<string[]>(['English'])
+  const [language, setLanguage] = useState<string>('English')
+  const [languages, setLanguages] = useState<string[]>([])
+  const [currencies, setCurrencies] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  const handleDelete = (value: string) => {
-    setLanguage(current => current.filter(item => item !== value))
-  }
-
-  const handleChange = (event: SelectChangeEvent<string[]>) => {
-    setLanguage(event.target.value as string[])
+  const handleLanguageChange = (event: SelectChangeEvent<string>) => {
+    setLanguage(event.target.value)
   }
 
   const handleFormChange = (field: keyof Data, value: Data[keyof Data]) => {
@@ -132,10 +128,11 @@ const AccountDetails = () => {
     setImgSrc('/images/avatars/1.png')
   }
 
-  // Fetch current user data
+  // Fetch current user data and languages
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        // Fetch user profile
         const response = await fetch('/api/user/profile')
         if (response.ok) {
           const userData = await response.json()
@@ -154,17 +151,31 @@ const AccountDetails = () => {
             address: '',
             state: '',
             zipCode: '',
-            country: 'usa',
-            language: 'English',
-            timezone: 'gmt-05-et',
-            currency: 'usd'
+            country: userData.country || 'russia',
+            language: userData.language || 'Russian',
+            timezone: userData.timezone || 'Europe/Moscow',
+            currency: userData.currency || 'RUB'
           })
-          setLanguage(['English'])
+          setLanguage(userData.language || 'English')
 
           // Set current avatar if exists
           if (userData.avatar) {
             setImgSrc(userData.avatar)
           }
+        }
+
+        // Fetch available languages
+        const languagesResponse = await fetch('/api/languages')
+        if (languagesResponse.ok) {
+          const languagesData = await languagesResponse.json()
+          setLanguages(languagesData.map((lang: any) => lang.name))
+        }
+
+        // Fetch available currencies
+        const currenciesResponse = await fetch('/api/currencies')
+        if (currenciesResponse.ok) {
+          const currenciesData = await currenciesResponse.json()
+          setCurrencies(currenciesData)
         }
       } catch (error) {
         console.error('Error fetching user data:', error)
@@ -191,11 +202,33 @@ const AccountDetails = () => {
         body: JSON.stringify({
           name: `${formData.firstName} ${formData.lastName}`.trim(),
           email: formData.email,
-          // Add other fields as needed
+          language: language || 'English',
+          timezone: formData.timezone,
+          currency: formData.currency,
+          country: formData.country
         })
       })
 
       if (response.ok) {
+        const updatedUser = await response.json()
+
+        // Update local state with server response
+        setFormData({
+          firstName: updatedUser.fullName?.split(' ')[0] || '',
+          lastName: updatedUser.fullName?.split(' ').slice(1).join(' ') || '',
+          email: updatedUser.email,
+          organization: updatedUser.company || '',
+          phoneNumber: updatedUser.contact || '',
+          address: '',
+          state: '',
+          zipCode: '',
+          country: updatedUser.country || 'usa',
+          language: updatedUser.language || 'English',
+          timezone: updatedUser.timezone || 'gmt-05-et',
+          currency: updatedUser.currency || 'USD'
+        })
+        setLanguage(updatedUser.language || 'English')
+
         toast.success('Profile updated successfully!')
       } else {
         toast.error('Failed to update profile')
@@ -332,28 +365,11 @@ const AccountDetails = () => {
               <FormControl fullWidth>
                 <InputLabel>Language</InputLabel>
                 <Select
-                  multiple
                   label='Language'
                   value={language}
-                  onChange={handleChange}
-                  renderValue={selected => (
-                    <div className='flex flex-wrap gap-2'>
-                      {(selected as string[]).map(value => (
-                        <Chip
-                          key={value}
-                          clickable
-                          deleteIcon={
-                            <i className='ri-close-circle-fill' onMouseDown={event => event.stopPropagation()} />
-                          }
-                          size='small'
-                          label={value}
-                          onDelete={() => handleDelete(value)}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  onChange={handleLanguageChange}
                 >
-                  {languageData.map(name => (
+                  {languages.map(name => (
                     <MenuItem key={name} value={name}>
                       {name}
                     </MenuItem>
@@ -398,10 +414,11 @@ const AccountDetails = () => {
                   value={formData.currency}
                   onChange={e => handleFormChange('currency', e.target.value)}
                 >
-                  <MenuItem value='usd'>USD</MenuItem>
-                  <MenuItem value='euro'>EUR</MenuItem>
-                  <MenuItem value='pound'>Pound</MenuItem>
-                  <MenuItem value='bitcoin'>Bitcoin</MenuItem>
+                  {currencies.map(currency => (
+                    <MenuItem key={currency.id} value={currency.code}>
+                      {currency.name} ({currency.symbol})
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>

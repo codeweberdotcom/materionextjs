@@ -202,14 +202,17 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
             <MenuItem href={`/${locale}/apps/references/countries`} icon={<i className='ri-flag-line' />}>
               Countries
             </MenuItem>
-            <MenuItem href={`/${locale}/apps/references/timezones`} icon={<i className='ri-time-line' />}>
-              Timezones
-            </MenuItem>
             <MenuItem href={`/${locale}/apps/references/currencies`} icon={<i className='ri-money-dollar-circle-line' />}>
               Currencies
             </MenuItem>
             <MenuItem href={`/${locale}/apps/references/regions`} icon={<i className='ri-map-pin-2-line' />}>
-              Regions/States
+              Regions
+            </MenuItem>
+            <MenuItem href={`/${locale}/apps/references/states`} icon={<i className='ri-map-pin-3-line' />}>
+              States
+            </MenuItem>
+            <MenuItem href={`/${locale}/apps/references/cities`} icon={<i className='ri-map-pin-4-line' />}>
+              Cities
             </MenuItem>
           </MenuSection>
           <SubMenu label={dictionary['navigation'].pages} icon={<i className='ri-layout-left-line' />}>

@@ -38,7 +38,7 @@ const Layout = async ({ children }: ChildrenType) => {
 
   return (
     <html id='__next' suppressHydrationWarning>
-      <body className='flex is-full min-bs-full flex-auto flex-col'>
+      <body className='flex is-full min-bs-full flex-auto flex-col' suppressHydrationWarning>
         <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
         <Providers direction='ltr'>
           <BlankLayout systemMode={systemMode}>

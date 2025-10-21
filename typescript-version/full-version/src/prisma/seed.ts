@@ -1,214 +1,272 @@
 import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
+import { prisma } from '../libs/prisma'
 
-const prisma = new PrismaClient()
-
-// Sample data for reference tables
-const languages = [
-  { name: 'English', code: 'en' },
-  { name: 'Spanish', code: 'es' },
-  { name: 'French', code: 'fr' },
-  { name: 'German', code: 'de' },
-  { name: 'Italian', code: 'it' },
-  { name: 'Portuguese', code: 'pt' },
-  { name: 'Russian', code: 'ru' },
-  { name: 'Chinese', code: 'zh' },
-  { name: 'Japanese', code: 'ja' },
-  { name: 'Korean', code: 'ko' }
-]
-
-const countries = [
-  { name: 'United States', code: 'US' },
-  { name: 'United Kingdom', code: 'GB' },
-  { name: 'France', code: 'FR' },
-  { name: 'Germany', code: 'DE' },
-  { name: 'Italy', code: 'IT' },
-  { name: 'Spain', code: 'ES' },
-  { name: 'Portugal', code: 'PT' },
-  { name: 'Russia', code: 'RU' },
-  { name: 'China', code: 'CN' },
-  { name: 'Japan', code: 'JP' },
-  { name: 'South Korea', code: 'KR' },
-  { name: 'Canada', code: 'CA' },
-  { name: 'Australia', code: 'AU' },
-  { name: 'Brazil', code: 'BR' },
-  { name: 'India', code: 'IN' }
-]
-
-const timezones = [
-  { name: 'UTC-12:00', value: 'utc-12', offset: '-12:00' },
-  { name: 'UTC-11:00', value: 'utc-11', offset: '-11:00' },
-  { name: 'UTC-10:00', value: 'utc-10', offset: '-10:00' },
-  { name: 'UTC-09:00', value: 'utc-09', offset: '-09:00' },
-  { name: 'UTC-08:00', value: 'utc-08', offset: '-08:00' },
-  { name: 'UTC-07:00', value: 'utc-07', offset: '-07:00' },
-  { name: 'UTC-06:00', value: 'utc-06', offset: '-06:00' },
-  { name: 'UTC-05:00', value: 'utc-05', offset: '-05:00' },
-  { name: 'UTC-04:00', value: 'utc-04', offset: '-04:00' },
-  { name: 'UTC-03:00', value: 'utc-03', offset: '-03:00' },
-  { name: 'UTC-02:00', value: 'utc-02', offset: '-02:00' },
-  { name: 'UTC-01:00', value: 'utc-01', offset: '-01:00' },
-  { name: 'UTC+00:00', value: 'utc+00', offset: '+00:00' },
-  { name: 'UTC+01:00', value: 'utc+01', offset: '+01:00' },
-  { name: 'UTC+02:00', value: 'utc+02', offset: '+02:00' },
-  { name: 'UTC+03:00', value: 'utc+03', offset: '+03:00' },
-  { name: 'UTC+04:00', value: 'utc+04', offset: '+04:00' },
-  { name: 'UTC+05:00', value: 'utc+05', offset: '+05:00' },
-  { name: 'UTC+06:00', value: 'utc+06', offset: '+06:00' },
-  { name: 'UTC+07:00', value: 'utc+07', offset: '+07:00' },
-  { name: 'UTC+08:00', value: 'utc+08', offset: '+08:00' },
-  { name: 'UTC+09:00', value: 'utc+09', offset: '+09:00' },
-  { name: 'UTC+10:00', value: 'utc+10', offset: '+10:00' },
-  { name: 'UTC+11:00', value: 'utc+11', offset: '+11:00' },
-  { name: 'UTC+12:00', value: 'utc+12', offset: '+12:00' }
-]
-
-const currencies = [
-  { name: 'US Dollar', code: 'USD', symbol: '$' },
-  { name: 'Euro', code: 'EUR', symbol: '€' },
-  { name: 'British Pound', code: 'GBP', symbol: '£' },
-  { name: 'Japanese Yen', code: 'JPY', symbol: '¥' },
-  { name: 'Swiss Franc', code: 'CHF', symbol: 'CHF' },
-  { name: 'Canadian Dollar', code: 'CAD', symbol: 'C$' },
-  { name: 'Australian Dollar', code: 'AUD', symbol: 'A$' },
-  { name: 'Chinese Yuan', code: 'CNY', symbol: '¥' },
-  { name: 'Russian Ruble', code: 'RUB', symbol: '₽' },
-  { name: 'Indian Rupee', code: 'INR', symbol: '₹' },
-  { name: 'Brazilian Real', code: 'BRL', symbol: 'R$' },
-  { name: 'South Korean Won', code: 'KRW', symbol: '₩' }
+// Country data
+const countriesData = [
+  {"code": "US", "name": "United States"},
+  {"code": "GB", "name": "United Kingdom"},
+  {"code": "DE", "name": "Germany"},
+  {"code": "FR", "name": "France"},
+  {"code": "CA", "name": "Canada"},
+  {"code": "AU", "name": "Australia"},
+  {"code": "JP", "name": "Japan"},
+  {"code": "KR", "name": "South Korea"},
+  {"code": "CN", "name": "China"},
+  {"code": "IN", "name": "India"},
+  {"code": "BR", "name": "Brazil"},
+  {"code": "IT", "name": "Italy"},
+  {"code": "ES", "name": "Spain"},
+  {"code": "NL", "name": "Netherlands"},
+  {"code": "SE", "name": "Sweden"},
+  {"code": "NO", "name": "Norway"},
+  {"code": "DK", "name": "Denmark"},
+  {"code": "FI", "name": "Finland"},
+  {"code": "PL", "name": "Poland"},
+  {"code": "RU", "name": "Russia"},
+  {"code": "UA", "name": "Ukraine"},
+  {"code": "TR", "name": "Turkey"},
+  {"code": "SA", "name": "Saudi Arabia"},
+  {"code": "AE", "name": "United Arab Emirates"},
+  {"code": "SG", "name": "Singapore"},
+  {"code": "MY", "name": "Malaysia"},
+  {"code": "ID", "name": "Indonesia"},
+  {"code": "TH", "name": "Thailand"},
+  {"code": "VN", "name": "Vietnam"},
+  {"code": "PH", "name": "Philippines"},
+  {"code": "MX", "name": "Mexico"},
+  {"code": "AR", "name": "Argentina"},
+  {"code": "CL", "name": "Chile"},
+  {"code": "CO", "name": "Colombia"},
+  {"code": "ZA", "name": "South Africa"},
+  {"code": "EG", "name": "Egypt"},
+  {"code": "NG", "name": "Nigeria"},
+  {"code": "KE", "name": "Kenya"},
+  {"code": "IL", "name": "Israel"},
+  {"code": "CH", "name": "Switzerland"},
+  {"code": "AT", "name": "Austria"},
+  {"code": "BE", "name": "Belgium"},
+  {"code": "PT", "name": "Portugal"},
+  {"code": "IE", "name": "Ireland"},
+  {"code": "CZ", "name": "Czech Republic"},
+  {"code": "RO", "name": "Romania"},
+  {"code": "HU", "name": "Hungary"},
+  {"code": "GR", "name": "Greece"},
+  {"code": "BG", "name": "Bulgaria"},
+  {"code": "RS", "name": "Serbia"}
 ]
 
 async function main() {
-   // Create default roles
-   const adminRole = await prisma.role.upsert({
-     where: { name: 'admin' },
-     update: {},
-     create: {
-       name: 'admin',
-       description: 'Administrator with full access',
-       permissions: JSON.stringify(['read', 'write', 'delete', 'manage_users'])
-     }
-   })
+  // Create default role if it doesn't exist
+  const adminRole = await prisma.role.upsert({
+    where: { name: 'admin' },
+    update: {},
+    create: {
+      name: 'admin',
+      description: 'Administrator role',
+      permissions: 'all'
+    }
+  })
 
-   const userRole = await prisma.role.upsert({
-     where: { name: 'user' },
-     update: {},
-     create: {
-       name: 'user',
-       description: 'Regular user with basic access',
-       permissions: JSON.stringify(['read'])
-     }
-   })
+  const userRole = await prisma.role.upsert({
+    where: { name: 'user' },
+    update: {},
+    create: {
+      name: 'user',
+      description: 'Regular user role',
+      permissions: 'read'
+    }
+  })
 
-   const moderatorRole = await prisma.role.upsert({
-     where: { name: 'moderator' },
-     update: {},
-     create: {
-       name: 'moderator',
-       description: 'Moderator with content management access',
-       permissions: JSON.stringify(['read', 'write', 'moderate'])
-     }
-   })
+  // Create default user
+  const hashedPassword = await bcrypt.hash('admin123', 10)
 
-   // Create default admin user
-   const hashedPassword = await bcrypt.hash('admin123', 10)
-   const adminUser = await prisma.user.upsert({
-     where: { email: 'admin@example.com' },
-     update: {},
-     create: {
-       email: 'admin@example.com',
-       name: 'Admin User',
-       password: hashedPassword,
-       roleId: adminRole.id
-     }
-   })
+  const user = await prisma.user.upsert({
+    where: { email: 'admin@example.com' },
+    update: {
+      password: hashedPassword,
+      roleId: adminRole.id
+    },
+    create: {
+      email: 'admin@example.com',
+      name: 'Admin User',
+      password: hashedPassword,
+      roleId: adminRole.id,
+      language: 'Russian',
+      timezone: 'Europe/Moscow',
+      currency: 'RUB',
+      country: 'russia'
+    }
+  })
 
-   // Seed reference data
-   console.log('Seeding reference data...')
+  // Create some sample currencies if they don't exist
+  await prisma.currency.upsert({
+    where: { code: 'RUB' },
+    update: {},
+    create: {
+      name: 'Russian Ruble',
+      code: 'RUB',
+      symbol: '₽',
+      isActive: true
+    }
+  })
 
-   // Seed languages
-   for (const language of languages) {
-     await prisma.language.upsert({
-       where: { code: language.code },
-       update: {},
-       create: {
-         name: language.name,
-         code: language.code
-       }
-     })
-   }
+  await prisma.currency.upsert({
+    where: { code: 'USD' },
+    update: {},
+    create: {
+      name: 'US Dollar',
+      code: 'USD',
+      symbol: '$',
+      isActive: true
+    }
+  })
 
-   // Seed countries
-   for (const country of countries) {
-     await prisma.country.upsert({
-       where: { code: country.code },
-       update: {},
-       create: {
-         name: country.name,
-         code: country.code
-       }
-     })
-   }
+  await prisma.currency.upsert({
+    where: { code: 'EUR' },
+    update: {},
+    create: {
+      name: 'Euro',
+      code: 'EUR',
+      symbol: '€',
+      isActive: true
+    }
+  })
 
-   // Seed timezones
-   for (const timezone of timezones) {
-     await prisma.timezone.upsert({
-       where: { value: timezone.value },
-       update: {},
-       create: {
-         name: timezone.name,
-         value: timezone.value,
-         offset: timezone.offset
-       }
-     })
-   }
+  // Create some sample languages if they don't exist
+  await prisma.language.upsert({
+    where: { code: 'ru' },
+    update: {},
+    create: {
+      name: 'Russian',
+      code: 'ru',
+      isActive: true
+    }
+  })
 
-   // Seed currencies
-   for (const currency of currencies) {
-     await prisma.currency.upsert({
-       where: { code: currency.code },
-       update: {},
-       create: {
-         name: currency.name,
-         code: currency.code,
-         symbol: currency.symbol
-       }
-     })
-   }
+  await prisma.language.upsert({
+    where: { code: 'en' },
+    update: {},
+    create: {
+      name: 'English',
+      code: 'en',
+      isActive: true
+    }
+  })
 
-   // Seed regions/states for major countries
-   const usa = await prisma.country.findUnique({ where: { code: 'US' } })
-   if (usa) {
-     const regions = [
-       { name: 'California', code: 'CA' },
-       { name: 'New York', code: 'NY' },
-       { name: 'Texas', code: 'TX' },
-       { name: 'Florida', code: 'FL' },
-       { name: 'Illinois', code: 'IL' }
-     ]
+  // Add countries
+  for (const country of countriesData) {
+    await prisma.country.upsert({
+      where: { code: country.code },
+      update: {},
+      create: {
+        name: country.name,
+        code: country.code,
+        isActive: true
+      }
+    })
+  }
 
-     for (const region of regions) {
-       await prisma.region.upsert({
-         where: {
-           name_countryId: {
-             name: region.name,
-             countryId: usa.id
-           }
-         },
-         update: {},
-         create: {
-           name: region.name,
-           code: region.code,
-           countryId: usa.id
-         }
-       })
-     }
-   }
+  // Add regions
+  const regionsData = [
+    { name: "California", code: "CA", countryCode: "US" },
+    { name: "New York", code: "NY", countryCode: "US" },
+    { name: "Texas", code: "TX", countryCode: "US" },
+    { name: "England", code: "ENG", countryCode: "GB" },
+    { name: "Scotland", code: "SCO", countryCode: "GB" },
+    { name: "North Rhine-Westphalia", code: "NRW", countryCode: "DE" },
+    { name: "Bavaria", code: "BY", countryCode: "DE" }
+  ]
 
-   console.log('Database seeded successfully!')
-   console.log('Default roles created:', { adminRole, userRole, moderatorRole })
-   console.log('Default admin user:', { email: adminUser.email })
-   console.log('Reference data seeded successfully!')
+  for (const region of regionsData) {
+    const country = await prisma.country.findUnique({ where: { code: region.countryCode } })
+    if (country) {
+      await prisma.region.upsert({
+        where: { id: `${region.countryCode}-${region.code}` }, // unique id
+        update: {},
+        create: {
+          name: region.name,
+          code: region.code,
+          countryId: country.id,
+          isActive: true
+        }
+      })
+    }
+  }
+
+  // Add states
+  const statesData = [
+    { name: "California", code: "CA", countryCode: "US" },
+    { name: "Texas", code: "TX", countryCode: "US" },
+    { name: "Florida", code: "FL", countryCode: "US" },
+    { name: "New York", code: "NY", countryCode: "US" },
+    { name: "England", code: "ENG", countryCode: "GB" },
+    { name: "Scotland", code: "SCO", countryCode: "GB" },
+    { name: "Wales", code: "WAL", countryCode: "GB" },
+    { name: "North Rhine-Westphalia", code: "NRW", countryCode: "DE" },
+    { name: "Bavaria", code: "BY", countryCode: "DE" },
+    { name: "Berlin", code: "BE", countryCode: "DE" }
+  ]
+
+  for (const state of statesData) {
+    const country = await prisma.country.findUnique({ where: { code: state.countryCode } })
+    if (country) {
+      await prisma.state.upsert({
+        where: { id: `${state.countryCode}-${state.code}` },
+        update: {},
+        create: {
+          name: state.name,
+          code: state.code,
+          countryId: country.id,
+          isActive: true
+        }
+      })
+    }
+  }
+
+  // Add cities
+  const citiesData = [
+    { name: "Los Angeles", code: "LA", stateCode: "CA", countryCode: "US" },
+    { name: "San Francisco", code: "SF", stateCode: "CA", countryCode: "US" },
+    { name: "Houston", code: "HOU", stateCode: "TX", countryCode: "US" },
+    { name: "Dallas", code: "DAL", stateCode: "TX", countryCode: "US" },
+    { name: "Miami", code: "MIA", stateCode: "FL", countryCode: "US" },
+    { name: "Orlando", code: "ORL", stateCode: "FL", countryCode: "US" },
+    { name: "New York City", code: "NYC", stateCode: "NY", countryCode: "US" },
+    { name: "Buffalo", code: "BUF", stateCode: "NY", countryCode: "US" },
+    { name: "London", code: "LON", stateCode: "ENG", countryCode: "GB" },
+    { name: "Manchester", code: "MAN", stateCode: "ENG", countryCode: "GB" },
+    { name: "Edinburgh", code: "EDI", stateCode: "SCO", countryCode: "GB" },
+    { name: "Glasgow", code: "GLA", stateCode: "SCO", countryCode: "GB" },
+    { name: "Cardiff", code: "CAR", stateCode: "WAL", countryCode: "GB" },
+    { name: "Cologne", code: "CGN", stateCode: "NRW", countryCode: "DE" },
+    { name: "Dusseldorf", code: "DUS", stateCode: "NRW", countryCode: "DE" },
+    { name: "Munich", code: "MUC", stateCode: "BY", countryCode: "DE" },
+    { name: "Nuremberg", code: "NUE", stateCode: "BY", countryCode: "DE" },
+    { name: "Berlin", code: "BER", stateCode: "BE", countryCode: "DE" }
+  ]
+
+  for (const city of citiesData) {
+    const state = await prisma.state.findFirst({ where: { code: city.stateCode, country: { code: city.countryCode } } })
+    if (state) {
+      await prisma.city.upsert({
+        where: { id: `${city.countryCode}-${city.stateCode}-${city.code}` },
+        update: {},
+        create: {
+          name: city.name,
+          code: city.code,
+          stateId: state.id,
+          isActive: true
+        }
+      })
+    }
+  }
+
+  console.log('Database seeded successfully!')
+  console.log('User created:')
+  console.log('- Email: admin@example.com')
+  console.log('- Password: admin123')
+  console.log('- Role: admin')
 }
 
 main()

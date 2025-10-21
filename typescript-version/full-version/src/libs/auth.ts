@@ -5,9 +5,9 @@ import type { NextAuthOptions, User } from 'next-auth'
 import type { Adapter } from 'next-auth/adapters'
 
 // Initialize Prisma client
-const { PrismaClient } = require('@prisma/client')
-const { PrismaAdapter } = require('@auth/prisma-adapter')
-const prisma = new PrismaClient()
+import { PrismaClient } from '@prisma/client'
+import { PrismaAdapter } from '@auth/prisma-adapter'
+import { prisma } from './prisma'
 
 // Extend NextAuth types
 declare module 'next-auth' {

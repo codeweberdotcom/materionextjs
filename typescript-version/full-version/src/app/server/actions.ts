@@ -24,8 +24,7 @@ import { authOptions } from '@/libs/auth'
 import type { UsersType } from '@/types/apps/userTypes'
 
 // Initialize Prisma client
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+import { prisma } from '@/libs/prisma'
 
 export const getEcommerceData = async () => {
   return eCommerceData
@@ -88,7 +87,7 @@ export const getUserData = async (): Promise<UsersType[]> => {
       }
     })
   } catch (error) {
-    console.error('Error fetching users:', error)
+    console.error('Error fetching users:', error instanceof Error ? error.message : String(error))
     return []
   }
 }
@@ -144,7 +143,7 @@ export const getUserById = async (id: string) => {
       avatarColor: 'primary' as const
     }
   } catch (error) {
-    console.error('Error fetching user by ID:', error)
+    console.error('Error fetching user by ID:', error instanceof Error ? error.message : String(error))
     return null
   }
 }
@@ -241,7 +240,7 @@ export const getProfileData = async () => {
       }
     }
   } catch (error) {
-    console.error('Error fetching profile data:', error)
+    console.error('Error fetching profile data:', error instanceof Error ? error.message : String(error))
     return profileData // Return fake data as fallback
   }
 }

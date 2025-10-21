@@ -55,14 +55,17 @@ export async function GET() {
       company: 'N/A',
       contact: 'N/A',
       username: user.email.split('@')[0],
-      country: 'N/A',
+      country: user.country || 'russia',
+      language: user.language || 'Russian',
+      timezone: user.timezone || 'Europe/Moscow',
+      currency: user.currency || 'RUB',
       currentPlan: 'basic',
       status: 'active',
       avatar: user.image || '',
       avatarColor: 'primary'
     })
   } catch (error) {
-    console.error('Error fetching user profile:', error)
+    console.error('Error fetching user profile:', error instanceof Error ? error.message : String(error))
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -83,7 +86,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email } = body
+    const { name, email, language, timezone, currency, country } = body
 
     // Find the current user
     const currentUser = await prisma.user.findUnique({
@@ -102,7 +105,11 @@ export async function PUT(request: NextRequest) {
       where: { id: currentUser.id },
       data: {
         name: name || currentUser.name,
-        email: email || currentUser.email
+        email: email || currentUser.email,
+        language: language || currentUser.language,
+        timezone: timezone || currentUser.timezone,
+        currency: currency || currentUser.currency,
+        country: country || currentUser.country
       },
       include: {
         role: true
@@ -133,14 +140,17 @@ export async function PUT(request: NextRequest) {
       company: 'N/A',
       contact: 'N/A',
       username: updatedUser.email.split('@')[0],
-      country: 'N/A',
+      country: updatedUser.country || 'russia',
+      language: updatedUser.language || 'Russian',
+      timezone: updatedUser.timezone || 'Europe/Moscow',
+      currency: updatedUser.currency || 'RUB',
       currentPlan: 'basic',
       status: 'active',
       avatar: updatedUser.image || '',
       avatarColor: 'primary'
     })
   } catch (error) {
-    console.error('Error updating user profile:', error)
+    console.error('Error updating user profile:', error instanceof Error ? error.message : String(error))
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
