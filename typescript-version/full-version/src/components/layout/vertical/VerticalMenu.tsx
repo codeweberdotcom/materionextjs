@@ -187,12 +187,31 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
             </MenuItem>
             <MenuItem href={`/${locale}/apps/invoice/add`}>{dictionary['navigation'].add}</MenuItem>
           </SubMenu>
-          <SubMenu label='User Settings' icon={<i className='ri-user-settings-line' />}>
-            <MenuItem href={`/${locale}/apps/user/list`}>User List</MenuItem>
-            <MenuItem href={`/${locale}/apps/user/view`}>{dictionary['navigation'].view}</MenuItem>
-            <MenuItem href={`/${locale}/apps/roles`}>{dictionary['navigation'].roles}</MenuItem>
-            <MenuItem href={`/${locale}/apps/permissions`}>{dictionary['navigation'].permissions}</MenuItem>
-          </SubMenu>
+          <MenuSection label='Admin & Settings'>
+            <SubMenu label='User Settings' icon={<i className='ri-user-settings-line' />}>
+              <MenuItem href={`/${locale}/apps/user/list`}>User List</MenuItem>
+              <MenuItem href={`/${locale}/apps/user/view`}>{dictionary['navigation'].view}</MenuItem>
+              <MenuItem href={`/${locale}/apps/roles`}>{dictionary['navigation'].roles}</MenuItem>
+              <MenuItem href={`/${locale}/apps/permissions`}>{dictionary['navigation'].permissions}</MenuItem>
+            </SubMenu>
+          </MenuSection>
+          <MenuSection label='References'>
+            <MenuItem href={`/${locale}/apps/references/languages`} icon={<i className='ri-translate-2' />}>
+              Languages
+            </MenuItem>
+            <MenuItem href={`/${locale}/apps/references/countries`} icon={<i className='ri-flag-line' />}>
+              Countries
+            </MenuItem>
+            <MenuItem href={`/${locale}/apps/references/timezones`} icon={<i className='ri-time-line' />}>
+              Timezones
+            </MenuItem>
+            <MenuItem href={`/${locale}/apps/references/currencies`} icon={<i className='ri-money-dollar-circle-line' />}>
+              Currencies
+            </MenuItem>
+            <MenuItem href={`/${locale}/apps/references/regions`} icon={<i className='ri-map-pin-2-line' />}>
+              Regions/States
+            </MenuItem>
+          </MenuSection>
           <SubMenu label={dictionary['navigation'].pages} icon={<i className='ri-layout-left-line' />}>
             <MenuItem href={`/${locale}/pages/user-profile`}>{dictionary['navigation'].userProfile}</MenuItem>
             <MenuItem href={`/${locale}/pages/account-settings`}>{dictionary['navigation'].accountSettings}</MenuItem>

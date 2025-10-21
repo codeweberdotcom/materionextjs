@@ -39,7 +39,7 @@ export const initialFormData: FormDataType = {
   contactNumber: ''
 }
 
-const countries = ['USA', 'UK', 'Russia', 'Australia', 'Canada']
+const countries = ['United States', 'United Kingdom', 'Russia', 'Australia', 'Canada', 'Germany', 'France', 'Japan', 'China', 'Brazil', 'India', 'Italy', 'Spain', 'Portugal', 'South Korea']
 
 const AddCustomerDrawer = ({ open, setOpen, onFormSubmit }: Props) => {
   // States

@@ -36,9 +36,9 @@ type EditUserInfoProps = {
 // Vars
 const status = ['Status', 'Active', 'Inactive', 'Suspended']
 
-const languages = ['English', 'Spanish', 'French', 'German', 'Hindi']
+const languages = ['English', 'Spanish', 'French', 'German', 'Hindi', 'Russian', 'Chinese', 'Japanese', 'Korean', 'Italian', 'Portuguese']
 
-const countries = ['Select Country', 'France', 'Russia', 'China', 'UK', 'US']
+const countries = ['Select Country', 'United States', 'United Kingdom', 'France', 'Germany', 'Russia', 'China', 'Japan', 'South Korea', 'Canada', 'Australia', 'Brazil', 'India', 'Italy', 'Spain', 'Portugal']
 
 const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
   // States

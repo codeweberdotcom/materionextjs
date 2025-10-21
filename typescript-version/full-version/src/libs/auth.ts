@@ -1,10 +1,13 @@
 // Third-party Imports
 import CredentialProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import { PrismaClient } from '@prisma/client'
 import type { NextAuthOptions, User } from 'next-auth'
 import type { Adapter } from 'next-auth/adapters'
+
+// Initialize Prisma client
+const { PrismaClient } = require('@prisma/client')
+const { PrismaAdapter } = require('@auth/prisma-adapter')
+const prisma = new PrismaClient()
 
 // Extend NextAuth types
 declare module 'next-auth' {
@@ -39,8 +42,6 @@ declare module 'next-auth/jwt' {
     }
   }
 }
-
-const prisma = new PrismaClient()
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,

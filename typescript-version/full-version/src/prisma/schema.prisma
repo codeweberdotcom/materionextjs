@@ -61,9 +61,61 @@ model User {
  }
 
 model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
+   identifier String
+   token      String   @unique
+   expires    DateTime
 
-  @@unique([identifier, token])
+   @@unique([identifier, token])
+}
+
+model Language {
+   id          String   @id @default(cuid())
+   name        String   @unique
+   code        String   @unique
+   isActive    Boolean  @default(true)
+   createdAt   DateTime @default(now())
+   updatedAt   DateTime @updatedAt
+}
+
+model Country {
+   id          String   @id @default(cuid())
+   name        String   @unique
+   code        String   @unique
+   isActive    Boolean  @default(true)
+   regions     Region[]
+   createdAt   DateTime @default(now())
+   updatedAt   DateTime @updatedAt
+}
+
+model Timezone {
+   id          String   @id @default(cuid())
+   name        String   @unique
+   value       String   @unique
+   offset      String
+   isActive    Boolean  @default(true)
+   createdAt   DateTime @default(now())
+   updatedAt   DateTime @updatedAt
+}
+
+model Currency {
+   id          String   @id @default(cuid())
+   name        String   @unique
+   code        String   @unique
+   symbol      String
+   isActive    Boolean  @default(true)
+   createdAt   DateTime @default(now())
+   updatedAt   DateTime @updatedAt
+}
+
+model Region {
+   id          String   @id @default(cuid())
+   name        String
+   code        String
+   countryId   String
+   country     Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+   isActive    Boolean  @default(true)
+   createdAt   DateTime @default(now())
+   updatedAt   DateTime @updatedAt
+
+   @@unique([name, countryId])
 }

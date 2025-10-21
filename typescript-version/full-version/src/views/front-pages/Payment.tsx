@@ -82,7 +82,7 @@ const cardData: CustomInputHorizontalData[] = [
   }
 ]
 
-const countries = ['Australia', 'Brazil', 'Canada', 'India', 'United Arab Emirates', 'United Kingdom', 'United States']
+const countries = ['United States', 'United Kingdom', 'Australia', 'Brazil', 'Canada', 'India', 'United Arab Emirates', 'Germany', 'France', 'Russia', 'China', 'Japan', 'South Korea', 'Italy', 'Spain', 'Portugal']
 
 const Payment = ({ data }: { data: PricingPlanType[] }) => {
   // Vars

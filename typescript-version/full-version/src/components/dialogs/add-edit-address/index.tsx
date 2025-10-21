@@ -48,7 +48,7 @@ type AddEditAddressProps = {
 }
 
 // Vars
-const countries = ['Select Country', 'France', 'Russia', 'China', 'UK', 'US']
+const countries = ['Select Country', 'United States', 'United Kingdom', 'France', 'Germany', 'Russia', 'China', 'Japan', 'South Korea', 'Canada', 'Australia', 'Brazil', 'India', 'Italy', 'Spain', 'Portugal']
 
 const initialAddressData: AddEditAddressProps['data'] = {
   firstName: '',

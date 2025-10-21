@@ -17,13 +17,14 @@ import { db as pricingData } from '@/fake-db/pages/pricing'
 import { db as statisticsData } from '@/fake-db/pages/widgetExamples'
 
 // Database Imports
-import { PrismaClient } from '@prisma/client'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/libs/auth'
 
 // Type Imports
 import type { UsersType } from '@/types/apps/userTypes'
 
+// Initialize Prisma client
+const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
 export const getEcommerceData = async () => {
@@ -54,7 +55,7 @@ export const getUserData = async (): Promise<UsersType[]> => {
     })
 
     // Transform the data to match the expected UsersType format
-    return users.map((user) => {
+    return users.map((user: any) => {
       // Map database roles to expected UI roles
       let uiRole = 'subscriber' // default fallback
       switch (user.role?.name) {

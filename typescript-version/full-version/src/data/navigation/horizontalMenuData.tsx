@@ -189,6 +189,10 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
           }
         ]
       },
+  {
+    label: 'Admin & Settings',
+    isSection: true,
+    children: [
       {
         label: 'User Settings',
         icon: 'ri-user-settings-line',
@@ -210,7 +214,9 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
             href: '/apps/permissions'
           }
         ]
-      },
+      }
+    ]
+  },
     ]
   },
   {
