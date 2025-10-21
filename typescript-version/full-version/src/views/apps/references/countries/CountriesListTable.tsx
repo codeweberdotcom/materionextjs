@@ -182,11 +182,19 @@ const CountriesListTable = () => {
       {
         id: 'regions',
         header: 'Regions',
-        cell: ({ row }) => (
-          <Typography>
-            {row.original.regions ? row.original.regions.length : 0} regions
-          </Typography>
-        )
+        cell: ({ row }) => {
+          const regionsCount = row.original.regions ? row.original.regions.length : 0
+          return (
+            <div className='flex items-center gap-2'>
+              <Chip
+                label={`${regionsCount} regions`}
+                size='small'
+                variant={regionsCount > 0 ? 'filled' : 'outlined'}
+                color={regionsCount > 0 ? 'primary' : 'default'}
+              />
+            </div>
+          )
+        }
       },
       {
         id: 'actions',
@@ -263,7 +271,7 @@ const CountriesListTable = () => {
     toast.info('Edit functionality will be implemented')
   }
 
-  const handleAddCountry = async (countryData: { name: string; code: string }) => {
+  const handleAddCountry = async (countryData: { name: string; code: string; regions: string[] }) => {
     try {
       const response = await fetch('/api/admin/references/countries', {
         method: 'POST',

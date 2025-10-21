@@ -262,30 +262,35 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
             href: '/apps/references/languages'
           },
           {
-            label: 'Countries',
+            label: 'Countries & Regions',
             icon: 'ri-flag-line',
-            href: '/apps/references/countries'
+            children: [
+              {
+                label: 'Countries',
+                href: '/apps/references/countries'
+              },
+              {
+                label: 'Regions',
+                icon: 'ri-map-pin-2-line',
+                href: '/apps/references/regions'
+              },
+              {
+                label: 'States',
+                icon: 'ri-map-pin-3-line',
+                href: '/apps/references/states'
+              },
+              {
+                label: 'Cities',
+                icon: 'ri-map-pin-4-line',
+                href: '/apps/references/cities'
+              }
+            ]
           },
           {
             label: 'Currencies',
             icon: 'ri-money-dollar-circle-line',
             href: '/apps/references/currencies'
           },
-          {
-            label: 'Regions',
-            icon: 'ri-map-pin-2-line',
-            href: '/apps/references/regions'
-          },
-          {
-            label: 'States',
-            icon: 'ri-map-pin-3-line',
-            href: '/apps/references/states'
-          },
-          {
-            label: 'Cities',
-            icon: 'ri-map-pin-4-line',
-            href: '/apps/references/cities'
-          }
         ]
       }
     ]

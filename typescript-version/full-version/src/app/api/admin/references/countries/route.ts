@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, code } = body
+    const { name, code, regions } = body
 
     if (!name || !code) {
       return NextResponse.json(
@@ -97,7 +97,32 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(newCountry)
+    // If regions are provided, update the regions to set countryId
+    if (regions && regions.length > 0) {
+      await prisma.region.updateMany({
+        where: {
+          id: {
+            in: regions
+          }
+        },
+        data: {
+          countryId: newCountry.id
+        }
+      })
+    }
+
+    // Fetch the updated country with regions
+    const updatedCountry = await prisma.country.findUnique({
+      where: { id: newCountry.id },
+      include: {
+        regions: {
+          where: { isActive: true },
+          orderBy: { name: 'asc' }
+        }
+      }
+    })
+
+    return NextResponse.json(updatedCountry)
   } catch (error) {
     console.error('Error creating country:', error)
     return NextResponse.json(
