@@ -8,7 +8,6 @@ const prisma = new PrismaClient()
 export async function GET() {
   try {
     const states = await prisma.state.findMany({
-      where: { isActive: true },
       include: {
         country: true,
         region: true

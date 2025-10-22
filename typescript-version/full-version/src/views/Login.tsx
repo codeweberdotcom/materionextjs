@@ -112,7 +112,7 @@ const Login = ({ mode }: { mode: Mode }) => {
 
     if (res && res.ok && res.error === null) {
       // Vars
-      const redirectURL = searchParams.get('redirectTo') ?? '/'
+      const redirectURL = searchParams.get('redirectTo') ?? '/en/apps/references/countries'
 
       router.replace(getLocalizedUrl(redirectURL, locale as Locale))
     } else {
@@ -203,6 +203,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                   label='Password'
                   id='login-password'
                   type={isPasswordShown ? 'text' : 'password'}
+                  autoComplete='current-password'
                   onChange={e => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)

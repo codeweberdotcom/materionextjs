@@ -75,13 +75,19 @@ export const authOptions: NextAuthOptions = {
 
           let res
           try {
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 seconds timeout
+
             res = await fetch(`${baseUrl}/api/login`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({ email, password })
+              body: JSON.stringify({ email, password }),
+              signal: controller.signal
             })
+
+            clearTimeout(timeoutId)
           } catch (fetchError) {
             console.error('Fetch error:', fetchError)
             throw new Error('Unable to connect to authentication server. Please check if the server is running.')
@@ -105,7 +111,9 @@ export const authOptions: NextAuthOptions = {
              * user data below. Below return statement will set the user object in the token and the same is set in
              * the session which will be accessible all over the app.
              */
-            return data
+            return {
+              id: data.id
+            }
           }
 
           return null
@@ -156,32 +164,29 @@ export const authOptions: NextAuthOptions = {
      */
     async jwt({ token, user }) {
       if (user) {
-        /*
-         * For adding custom parameters to user in session, we first need to add those parameters
-         * in token which then will be available in the `session()` callback
-         */
-        token.name = user.name
-        token.role = user.role
+        token.id = user.id
       }
-
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
-        // ** Add custom params to user in session which are added in `jwt()` callback via `token` parameter
-        session.user.name = token.name
-        session.user.role = token.role
-
-        // ** Fetch current avatar from database and add to session
+      if (token.id && session.user) {
+        // Fetch the user from the database
         try {
           const user = await prisma.user.findUnique({
-            where: { email: session.user.email || '' },
-            select: { image: true }
+            where: { id: token.id as string },
+            include: { role: true }
           })
-          session.user.image = user?.image || null
+          if (user) {
+            session.user.id = user.id
+            session.user.name = user.name
+            session.user.email = user.email
+            session.user.image = user.image
+            session.user.role = { id: user.role.id, name: user.role.name }
+          }
         } catch (error) {
-          console.error('Error fetching user avatar for session:', error)
-          session.user.image = null
+          console.error('Error fetching user for session:', error)
+          // Fallback to basic session data
+          session.user.id = token.id as string
         }
       }
 

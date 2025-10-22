@@ -16,6 +16,7 @@ import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
+import Switch from '@mui/material/Switch'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
 import type { TextFieldProps } from '@mui/material/TextField'
@@ -112,6 +113,7 @@ const CountriesListTable = () => {
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(true)
   const [addCountryOpen, setAddCountryOpen] = useState(false)
+  const [editCountry, setEditCountry] = useState<Country | null>(null)
 
   const { lang: locale } = useParams()
 
@@ -201,10 +203,15 @@ const CountriesListTable = () => {
         header: 'Actions',
         cell: ({ row }) => (
           <div className='flex items-center'>
-            <IconButton onClick={() => handleEditCountry(row.original)}>
+            <IconButton onClick={() => handleEditCountry(row.original)} title='Edit Country'>
               <i className='ri-edit-line text-textSecondary' />
             </IconButton>
-            <IconButton onClick={() => handleDeleteCountry(row.original.id, row.original.name)}>
+            <Switch
+              checked={row.original.isActive}
+              onChange={() => handleToggleCountryStatus(row.original.id)}
+              size='small'
+            />
+            <IconButton onClick={() => handleDeleteCountry(row.original.id, row.original.name)} title='Delete Country'>
               <i className='ri-delete-bin-7-line text-textSecondary' />
             </IconButton>
           </div>
@@ -267,11 +274,64 @@ const CountriesListTable = () => {
   }
 
   const handleEditCountry = (country: Country) => {
-    // TODO: Implement edit functionality
-    toast.info('Edit functionality will be implemented')
+    setEditCountry(country)
   }
 
-  const handleAddCountry = async (countryData: { name: string; code: string; regions: string[] }) => {
+  const handleUpdateCountry = async (countryData: { id: string; name: string; code: string; regions: string[]; isActive: boolean }) => {
+    try {
+      console.log('Updating country with data:', countryData)
+      const response = await fetch(`/api/admin/references/countries/${countryData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(countryData)
+      })
+
+      if (response.ok) {
+        const updatedCountry = await response.json()
+        const updatedData = data.map(country =>
+          country.id === updatedCountry.id ? updatedCountry : country
+        )
+        setData(updatedData)
+        setFilteredData(updatedData)
+        setEditCountry(null)
+        toast.success('Country updated successfully!')
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to update country')
+      }
+    } catch (error) {
+      console.error('Error updating country:', error)
+      toast.error('Failed to update country')
+    }
+  }
+
+  const handleToggleCountryStatus = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/references/countries/${id}`, {
+        method: 'PATCH'
+      })
+
+      if (response.ok) {
+        const updatedCountry = await response.json()
+        const updatedData = data.map(country =>
+          country.id === updatedCountry.id ? updatedCountry : country
+        )
+        setData(updatedData)
+        setFilteredData(updatedData)
+        toast.success(`Country ${updatedCountry.isActive ? 'activated' : 'deactivated'} successfully!`)
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to toggle country status')
+      }
+    } catch (error) {
+      console.error('Error toggling country status:', error)
+      toast.error('Failed to toggle country status')
+    }
+  }
+
+  const handleAddCountry = async (countryData: { name: string; code: string; regions: string[]; isActive: boolean }) => {
     try {
       const response = await fetch('/api/admin/references/countries', {
         method: 'POST',
@@ -383,9 +443,14 @@ const CountriesListTable = () => {
         />
       </Card>
       <AddCountryDialog
-        open={addCountryOpen}
-        handleClose={() => setAddCountryOpen(false)}
+        open={addCountryOpen || !!editCountry}
+        handleClose={() => {
+          setAddCountryOpen(false)
+          setEditCountry(null)
+        }}
         onSubmit={handleAddCountry}
+        editCountry={editCountry}
+        onUpdate={handleUpdateCountry}
       />
     </>
   )

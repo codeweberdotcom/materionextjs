@@ -167,22 +167,108 @@ async function main() {
     })
   }
 
-  // Add regions
+  // Add regions - Russian regions data
   const regionsData = [
-    { name: "California", code: "CA", countryCode: "US" },
-    { name: "New York", code: "NY", countryCode: "US" },
-    { name: "Texas", code: "TX", countryCode: "US" },
-    { name: "England", code: "ENG", countryCode: "GB" },
-    { name: "Scotland", code: "SCO", countryCode: "GB" },
-    { name: "North Rhine-Westphalia", code: "NRW", countryCode: "DE" },
-    { name: "Bavaria", code: "BY", countryCode: "DE" }
+    { name: "Republic of Adygea", code: "AD", countryCode: "RU" },
+    { name: "Republic of Bashkortostan", code: "BA", countryCode: "RU" },
+    { name: "Republic of Buryatia", code: "BU", countryCode: "RU" },
+    { name: "Altai Republic", code: "AL", countryCode: "RU" },
+    { name: "Republic of Dagestan", code: "DA", countryCode: "RU" },
+    { name: "Republic of Ingushetia", code: "IN", countryCode: "RU" },
+    { name: "Kabardino-Balkarian Republic", code: "KB", countryCode: "RU" },
+    { name: "Republic of Kalmykia", code: "KL", countryCode: "RU" },
+    { name: "Karachay-Cherkess Republic", code: "KC", countryCode: "RU" },
+    { name: "Republic of Karelia", code: "KR", countryCode: "RU" },
+    { name: "Komi Republic", code: "KO", countryCode: "RU" },
+    { name: "Mari El Republic", code: "ME", countryCode: "RU" },
+    { name: "Republic of Mordovia", code: "MO", countryCode: "RU" },
+    { name: "Republic of Sakha (Yakutia)", code: "SA", countryCode: "RU" },
+    { name: "Republic of North Ossetia–Alania", code: "SE", countryCode: "RU" },
+    { name: "Republic of Tatarstan", code: "TA", countryCode: "RU" },
+    { name: "Tuva Republic", code: "TY", countryCode: "RU" },
+    { name: "Udmurt Republic", code: "UD", countryCode: "RU" },
+    { name: "Republic of Khakassia", code: "KK", countryCode: "RU" },
+    { name: "Chechen Republic", code: "CE", countryCode: "RU" },
+    { name: "Chuvash Republic", code: "CU", countryCode: "RU" },
+    { name: "Republic of Crimea", code: "CR", countryCode: "RU" },
+    { name: "Donetsk People's Republic", code: "DN", countryCode: "RU" },
+    { name: "Luhansk People's Republic", code: "LG", countryCode: "RU" },
+    { name: "Altai Krai", code: "ALT", countryCode: "RU" },
+    { name: "Zabaykalsky Krai", code: "ZAB", countryCode: "RU" },
+    { name: "Kamchatka Krai", code: "KAM", countryCode: "RU" },
+    { name: "Krasnodar Krai", code: "KDA", countryCode: "RU" },
+    { name: "Krasnoyarsk Krai", code: "KYA", countryCode: "RU" },
+    { name: "Perm Krai", code: "PER", countryCode: "RU" },
+    { name: "Primorsky Krai", code: "PRI", countryCode: "RU" },
+    { name: "Stavropol Krai", code: "STA", countryCode: "RU" },
+    { name: "Khabarovsk Krai", code: "KHA", countryCode: "RU" },
+    { name: "Amur Oblast", code: "AMU", countryCode: "RU" },
+    { name: "Arkhangelsk Oblast", code: "ARK", countryCode: "RU" },
+    { name: "Astrakhan Oblast", code: "AST", countryCode: "RU" },
+    { name: "Belgorod Oblast", code: "BEL", countryCode: "RU" },
+    { name: "Bryansk Oblast", code: "BRY", countryCode: "RU" },
+    { name: "Vladimir Oblast", code: "VLA", countryCode: "RU" },
+    { name: "Volgograd Oblast", code: "VGG", countryCode: "RU" },
+    { name: "Vologda Oblast", code: "VLG", countryCode: "RU" },
+    { name: "Voronezh Oblast", code: "VOR", countryCode: "RU" },
+    { name: "Ivanovo Oblast", code: "IVA", countryCode: "RU" },
+    { name: "Irkutsk Oblast", code: "IRK", countryCode: "RU" },
+    { name: "Kaliningrad Oblast", code: "KGD", countryCode: "RU" },
+    { name: "Kaluga Oblast", code: "KLU", countryCode: "RU" },
+    { name: "Kemerovo Oblast", code: "KEM", countryCode: "RU" },
+    { name: "Kirov Oblast", code: "KIR", countryCode: "RU" },
+    { name: "Kostroma Oblast", code: "KOS", countryCode: "RU" },
+    { name: "Kurgan Oblast", code: "KGN", countryCode: "RU" },
+    { name: "Kursk Oblast", code: "KRS", countryCode: "RU" },
+    { name: "Leningrad Oblast", code: "LEN", countryCode: "RU" },
+    { name: "Lipetsk Oblast", code: "LIP", countryCode: "RU" },
+    { name: "Magadan Oblast", code: "MAG", countryCode: "RU" },
+    { name: "Moscow Oblast", code: "MOS", countryCode: "RU" },
+    { name: "Murmansk Oblast", code: "MUR", countryCode: "RU" },
+    { name: "Nizhny Novgorod Oblast", code: "NIZ", countryCode: "RU" },
+    { name: "Novgorod Oblast", code: "NGR", countryCode: "RU" },
+    { name: "Novosibirsk Oblast", code: "NVS", countryCode: "RU" },
+    { name: "Omsk Oblast", code: "OMS", countryCode: "RU" },
+    { name: "Orenburg Oblast", code: "ORE", countryCode: "RU" },
+    { name: "Oryol Oblast", code: "ORL", countryCode: "RU" },
+    { name: "Penza Oblast", code: "PNZ", countryCode: "RU" },
+    { name: "Pskov Oblast", code: "PSK", countryCode: "RU" },
+    { name: "Rostov Oblast", code: "ROS", countryCode: "RU" },
+    { name: "Ryazan Oblast", code: "RYA", countryCode: "RU" },
+    { name: "Samara Oblast", code: "SAM", countryCode: "RU" },
+    { name: "Saratov Oblast", code: "SAR", countryCode: "RU" },
+    { name: "Sakhalin Oblast", code: "SAK", countryCode: "RU" },
+    { name: "Sverdlovsk Oblast", code: "SVE", countryCode: "RU" },
+    { name: "Smolensk Oblast", code: "SMO", countryCode: "RU" },
+    { name: "Tambov Oblast", code: "TAM", countryCode: "RU" },
+    { name: "Tver Oblast", code: "TVE", countryCode: "RU" },
+    { name: "Tomsk Oblast", code: "TOM", countryCode: "RU" },
+    { name: "Tula Oblast", code: "TUL", countryCode: "RU" },
+    { name: "Tyumen Oblast", code: "TYU", countryCode: "RU" },
+    { name: "Ulyanovsk Oblast", code: "ULY", countryCode: "RU" },
+    { name: "Chelyabinsk Oblast", code: "CHE", countryCode: "RU" },
+    { name: "Yaroslavl Oblast", code: "YAR", countryCode: "RU" },
+    { name: "Zaporizhzhia Oblast", code: "ZAP", countryCode: "RU" },
+    { name: "Kherson Oblast", code: "KHE", countryCode: "RU" },
+    { name: "Moscow", code: "MOW", countryCode: "RU" },
+    { name: "Saint Petersburg", code: "SPE", countryCode: "RU" },
+    { name: "Sevastopol", code: "SEV", countryCode: "RU" },
+    { name: "Nenets Autonomous Okrug", code: "NEN", countryCode: "RU" },
+    { name: "Khanty-Mansi Autonomous Okrug", code: "KHM", countryCode: "RU" },
+    { name: "Chukotka Autonomous Okrug", code: "CHU", countryCode: "RU" },
+    { name: "Yamalo-Nenets Autonomous Okrug", code: "YAN", countryCode: "RU" }
   ]
 
   for (const region of regionsData) {
     const country = await prisma.country.findUnique({ where: { code: region.countryCode } })
     if (country) {
       await prisma.region.upsert({
-        where: { id: `${region.countryCode}-${region.code}` }, // unique id
+        where: {
+          name_countryId: {
+            name: region.name,
+            countryId: country.id
+          }
+        },
         update: {},
         create: {
           name: region.name,
@@ -212,7 +298,7 @@ async function main() {
     const country = await prisma.country.findUnique({ where: { code: state.countryCode } })
     if (country) {
       await prisma.state.upsert({
-        where: { id: `${state.countryCode}-${state.code}` },
+        where: { name_countryId: { name: state.name, countryId: country.id } },
         update: {},
         create: {
           name: state.name,
@@ -250,7 +336,7 @@ async function main() {
     const state = await prisma.state.findFirst({ where: { code: city.stateCode, country: { code: city.countryCode } } })
     if (state) {
       await prisma.city.upsert({
-        where: { id: `${city.countryCode}-${city.stateCode}-${city.code}` },
+        where: { name_stateId: { name: city.name, stateId: state.id } },
         update: {},
         create: {
           name: city.name,

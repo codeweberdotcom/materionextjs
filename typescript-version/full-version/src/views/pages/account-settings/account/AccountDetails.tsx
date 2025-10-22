@@ -15,6 +15,7 @@ import FormControl from '@mui/material/FormControl'
 import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
+import Autocomplete from '@mui/material/Autocomplete'
 import Chip from '@mui/material/Chip'
 import type { SelectChangeEvent } from '@mui/material/Select'
 import { toast } from 'react-toastify'
@@ -58,6 +59,7 @@ const AccountDetails = () => {
   const [language, setLanguage] = useState<string>('English')
   const [languages, setLanguages] = useState<string[]>([])
   const [currencies, setCurrencies] = useState<any[]>([])
+  const [countries, setCountries] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
@@ -162,6 +164,11 @@ const AccountDetails = () => {
           if (userData.avatar) {
             setImgSrc(userData.avatar)
           }
+        } else if (response.status === 401) {
+          // User is not authenticated, redirect to login
+          toast.error('Please log in to access your account settings')
+          window.location.href = '/en/login'
+          return
         }
 
         // Fetch available languages
@@ -172,11 +179,18 @@ const AccountDetails = () => {
         }
 
         // Fetch available currencies
-        const currenciesResponse = await fetch('/api/currencies')
-        if (currenciesResponse.ok) {
-          const currenciesData = await currenciesResponse.json()
-          setCurrencies(currenciesData)
-        }
+         const currenciesResponse = await fetch('/api/currencies')
+         if (currenciesResponse.ok) {
+           const currenciesData = await currenciesResponse.json()
+           setCurrencies(currenciesData)
+         }
+
+         // Fetch available countries
+         const countriesResponse = await fetch('/api/countries')
+         if (countriesResponse.ok) {
+           const countriesData = await countriesResponse.json()
+           setCountries(countriesData)
+         }
       } catch (error) {
         console.error('Error fetching user data:', error)
         toast.error('Failed to load user data')
@@ -347,19 +361,28 @@ const AccountDetails = () => {
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Country</InputLabel>
-                <Select
-                  label='Country'
-                  value={formData.country}
-                  onChange={e => handleFormChange('country', e.target.value)}
-                >
-                  <MenuItem value='usa'>USA</MenuItem>
-                  <MenuItem value='uk'>UK</MenuItem>
-                  <MenuItem value='australia'>Australia</MenuItem>
-                  <MenuItem value='germany'>Germany</MenuItem>
-                </Select>
-              </FormControl>
+              <Autocomplete
+                fullWidth
+                options={countries}
+                getOptionLabel={(option) => option.name}
+                value={countries.find(country => country.code === formData.country) || null}
+                onChange={(event, newValue) => {
+                  handleFormChange('country', newValue?.code || '')
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Country'
+                    required
+                    placeholder='Search for a country...'
+                  />
+                )}
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    {option.name}
+                  </li>
+                )}
+              />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>

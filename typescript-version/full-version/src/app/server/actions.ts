@@ -158,7 +158,7 @@ export const getProfileData = async () => {
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.email) {
-      console.error('No authenticated user found')
+      // Return fake data for unauthenticated users - this is normal behavior
       return profileData // Return fake data as fallback
     }
 

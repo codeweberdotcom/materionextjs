@@ -6,7 +6,7 @@ import { authOptions } from '@/libs/auth'
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
-// GET - Get all countries (admin only)
+// GET - Get all cities (admin only)
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
@@ -31,21 +31,23 @@ export async function GET() {
       )
     }
 
-    // Fetch countries from database
-    const countries = await prisma.country.findMany({
+    // Fetch cities from database
+    const cities = await prisma.city.findMany({
       where: { isActive: true },
       include: {
-        regions: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' }
+        state: {
+          include: {
+            country: true,
+            region: true
+          }
         }
       },
       orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json(countries)
+    return NextResponse.json(cities)
   } catch (error) {
-    console.error('Error fetching countries:', error)
+    console.error('Error fetching cities:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -53,7 +55,7 @@ export async function GET() {
   }
 }
 
-// POST - Create new country (admin only)
+// POST - Create new city (admin only)
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -79,52 +81,36 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, code, regions, isActive = true } = body
+    const { name, code, stateId, isActive = true } = body
 
-    if (!name || !code) {
+    if (!name || !code || !stateId) {
       return NextResponse.json(
-        { message: 'Name and code are required' },
+        { message: 'Name, code, and state are required' },
         { status: 400 }
       )
     }
 
-    // Create new country in database
-    const newCountry = await prisma.country.create({
+    // Create new city in database
+    const newCity = await prisma.city.create({
       data: {
         name,
         code,
+        stateId,
         isActive
-      }
-    })
-
-    // If regions are provided, update the regions to set countryId
-    if (regions && regions.length > 0) {
-      await prisma.region.updateMany({
-        where: {
-          id: {
-            in: regions
-          }
-        },
-        data: {
-          countryId: newCountry.id
-        }
-      })
-    }
-
-    // Fetch the updated country with regions
-    const updatedCountry = await prisma.country.findUnique({
-      where: { id: newCountry.id },
+      },
       include: {
-        regions: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' }
+        state: {
+          include: {
+            country: true,
+            region: true
+          }
         }
       }
     })
 
-    return NextResponse.json(updatedCountry)
+    return NextResponse.json(newCity)
   } catch (error) {
-    console.error('Error creating country:', error)
+    console.error('Error creating city:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

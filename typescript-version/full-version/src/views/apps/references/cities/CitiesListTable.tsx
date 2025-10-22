@@ -16,6 +16,7 @@ import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
+import Switch from '@mui/material/Switch'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
 import type { TextFieldProps } from '@mui/material/TextField'
@@ -200,10 +201,15 @@ const CitiesListTable = () => {
       header: 'Actions',
       cell: ({ row }) => (
         <div className='flex items-center'>
-          <IconButton onClick={() => handleEditCity(row.original)}>
+          <IconButton onClick={() => handleEditCity(row.original)} title='Edit City'>
             <i className='ri-edit-line text-textSecondary' />
           </IconButton>
-          <IconButton onClick={() => handleDeleteCity(row.original.id, row.original.name)}>
+          <Switch
+            checked={row.original.isActive}
+            onChange={() => handleToggleCityStatus(row.original.id)}
+            size='small'
+          />
+          <IconButton onClick={() => handleDeleteCity(row.original.id, row.original.name)} title='Delete City'>
             <i className='ri-delete-bin-7-line text-textSecondary' />
           </IconButton>
         </div>
@@ -265,6 +271,30 @@ const CitiesListTable = () => {
 
   const handleEditCity = (city: City) => {
     toast.info('Edit functionality will be implemented')
+  }
+
+  const handleToggleCityStatus = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/references/cities/${id}`, {
+        method: 'PATCH'
+      })
+
+      if (response.ok) {
+        const updatedCity = await response.json()
+        const updatedData = data.map(city =>
+          city.id === updatedCity.id ? updatedCity : city
+        )
+        setData(updatedData)
+        setFilteredData(updatedData)
+        toast.success(`City ${updatedCity.isActive ? 'activated' : 'deactivated'} successfully!`)
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to toggle city status')
+      }
+    } catch (error) {
+      console.error('Error toggling city status:', error)
+      toast.error('Failed to toggle city status')
+    }
   }
 
   if (loading) {

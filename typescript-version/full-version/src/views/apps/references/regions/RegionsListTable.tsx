@@ -16,6 +16,7 @@ import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
+import Switch from '@mui/material/Switch'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
 import type { TextFieldProps } from '@mui/material/TextField'
@@ -42,6 +43,9 @@ import { toast } from 'react-toastify'
 // Type Imports
 import type { ThemeColor } from '@core/types'
 import type { Locale } from '@configs/i18n'
+
+// Component Imports
+import AddRegionDialog from './AddRegionDialog'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -107,6 +111,8 @@ const RegionsListTable = () => {
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(true)
+  const [addRegionOpen, setAddRegionOpen] = useState(false)
+  const [editRegion, setEditRegion] = useState<Region | null>(null)
 
   const { lang: locale } = useParams()
 
@@ -182,10 +188,15 @@ const RegionsListTable = () => {
       header: 'Actions',
       cell: ({ row }) => (
         <div className='flex items-center'>
-          <IconButton onClick={() => handleEditRegion(row.original)}>
+          <IconButton onClick={() => handleEditRegion(row.original)} title='Edit Region'>
             <i className='ri-edit-line text-textSecondary' />
           </IconButton>
-          <IconButton onClick={() => handleDeleteRegion(row.original.id, row.original.name)}>
+          <Switch
+            checked={row.original.isActive}
+            onChange={() => handleToggleStatus(row.original.id)}
+            size='small'
+          />
+          <IconButton onClick={() => handleDeleteRegion(row.original.id, row.original.name)} title='Delete Region'>
             <i className='ri-delete-bin-7-line text-textSecondary' />
           </IconButton>
         </div>
@@ -246,7 +257,91 @@ const RegionsListTable = () => {
   }
 
   const handleEditRegion = (region: Region) => {
-    toast.info('Edit functionality will be implemented')
+    setEditRegion(region)
+  }
+
+  const handleUpdateRegion = async (regionData: { id: string; name: string; code: string; countryId: string }) => {
+    try {
+      const response = await fetch('/api/admin/references/regions', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(regionData)
+      })
+
+      if (response.ok) {
+        const updatedRegion = await response.json()
+        const updatedData = data.map(region =>
+          region.id === updatedRegion.id ? updatedRegion : region
+        )
+        setData(updatedData)
+        setFilteredData(updatedData)
+        setEditRegion(null)
+        toast.success('Region updated successfully!')
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to update region')
+      }
+    } catch (error) {
+      console.error('Error updating region:', error)
+      toast.error('Failed to update region')
+    }
+  }
+
+  const handleToggleStatus = async (id: string) => {
+    try {
+      const response = await fetch('/api/admin/references/regions', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ id })
+      })
+
+      if (response.ok) {
+        const updatedRegion = await response.json()
+        const updatedData = data.map(region =>
+          region.id === updatedRegion.id ? updatedRegion : region
+        )
+        setData(updatedData)
+        setFilteredData(updatedData)
+        toast.success(`Region ${updatedRegion.isActive ? 'activated' : 'deactivated'} successfully!`)
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to toggle region status')
+      }
+    } catch (error) {
+      console.error('Error toggling region status:', error)
+      toast.error('Failed to toggle region status')
+    }
+  }
+
+  const handleAddRegion = async (regionData: { name: string; code: string; countryId: string }) => {
+    try {
+      const response = await fetch('/api/admin/references/regions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(regionData)
+      })
+
+      if (response.ok) {
+        const newRegion = await response.json()
+        const updatedData = [...data, newRegion]
+        setData(updatedData)
+        setFilteredData(updatedData)
+        setAddRegionOpen(false)
+        toast.success('Region added successfully!')
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to add region')
+      }
+    } catch (error) {
+      console.error('Error adding region:', error)
+      toast.error('Failed to add region')
+    }
   }
 
   if (loading) {
@@ -254,6 +349,7 @@ const RegionsListTable = () => {
   }
 
   return (
+    <>
     <Card>
       <CardHeader title='Regions Management' />
       <Divider />
@@ -266,6 +362,9 @@ const RegionsListTable = () => {
             className='max-sm:is-full'
           />
         </div>
+        <Button variant='contained' onClick={() => setAddRegionOpen(true)} className='max-sm:is-full'>
+          Add New Region
+        </Button>
       </div>
       <div className='overflow-x-auto'>
         <table className={tableStyles.table}>
@@ -329,6 +428,17 @@ const RegionsListTable = () => {
         onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
       />
     </Card>
+    <AddRegionDialog
+      open={addRegionOpen || !!editRegion}
+      handleClose={() => {
+        setAddRegionOpen(false)
+        setEditRegion(null)
+      }}
+      onSubmit={handleAddRegion}
+      editRegion={editRegion}
+      onUpdate={handleUpdateRegion}
+    />
+   </>
   )
 }
 

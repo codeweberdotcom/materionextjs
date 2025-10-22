@@ -8,7 +8,6 @@ const prisma = new PrismaClient()
 export async function GET() {
   try {
     const regions = await prisma.region.findMany({
-      where: { isActive: true },
       include: {
         country: true
       },

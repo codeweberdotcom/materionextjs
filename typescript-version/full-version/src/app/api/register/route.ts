@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
@@ -92,15 +92,19 @@ export async function POST(req: Request) {
     }
 
     // Create user
-    const newUser = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        roleId: defaultRole.id
-      },
-      include: { role: true }
-    })
+     const newUser = await prisma.user.create({
+       data: {
+         name,
+         email,
+         password: hashedPassword,
+         roleId: defaultRole.id,
+         country: 'russia', // Set Russia as default country
+         language: 'Russian', // Set Russian as default language
+         timezone: 'Europe/Moscow', // Set Moscow timezone as default
+         currency: 'RUB' // Set Russian Ruble as default currency
+       },
+       include: { role: true }
+     })
 
     // Return user data without password
     const { password: _, ...userWithoutPassword } = newUser

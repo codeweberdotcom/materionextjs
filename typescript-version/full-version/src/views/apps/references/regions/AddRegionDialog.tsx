@@ -9,73 +9,90 @@ import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import Grid from '@mui/material/Grid2'
 import IconButton from '@mui/material/IconButton'
-import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import Autocomplete from '@mui/material/Autocomplete'
 import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
-
-type Region = {
-  id: string
-  name: string
-  code: string
-  isActive: boolean
-}
 
 type Country = {
   id: string
   name: string
   code: string
   isActive: boolean
-  regions?: Array<{
+}
+
+type Region = {
+  id: string
+  name: string
+  code: string
+  isActive: boolean
+  country: {
     id: string
     name: string
     code: string
-    isActive: boolean
-  }>
+  }
 }
 
-type AddCountryDialogProps = {
+type AddRegionDialogProps = {
   open: boolean
   handleClose: () => void
-  onSubmit: (data: { name: string; code: string; regions: string[]; isActive: boolean }) => void
-  editCountry?: Country | null
-  onUpdate?: (data: { id: string; name: string; code: string; regions: string[]; isActive: boolean }) => void
+  onSubmit: (data: { name: string; code: string; countryId: string }) => void
+  editRegion?: Region | null
+  onUpdate?: (data: { id: string; name: string; code: string; countryId: string }) => void
 }
 
-const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }: AddCountryDialogProps) => {
+const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: AddRegionDialogProps) => {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    regions: [] as string[],
+    countryId: '',
     isActive: true
   })
-  const [regions, setRegions] = useState<Region[]>([])
+  const [countries, setCountries] = useState<Country[]>([])
 
-  const isEditMode = !!editCountry
+  const isEditMode = !!editRegion
 
   useEffect(() => {
-    const fetchRegions = async () => {
+    const fetchCountries = async () => {
       try {
-        const response = await fetch('/api/regions')
+        const response = await fetch('/api/countries')
         if (response.ok) {
           const data = await response.json()
-          setRegions(data)
+          setCountries(data)
         }
       } catch (error) {
-        console.error('Error fetching regions:', error)
+        console.error('Error fetching countries:', error)
       }
     }
 
     if (open) {
-      fetchRegions()
+      fetchCountries()
     }
   }, [open])
 
+  // Populate form data when editing
+  useEffect(() => {
+    if (editRegion) {
+      setFormData({
+        name: editRegion.name,
+        code: editRegion.code,
+        countryId: editRegion.country.id,
+        isActive: editRegion.isActive
+      })
+    } else {
+      setFormData({
+        name: '',
+        code: '',
+        countryId: '',
+        isActive: true
+      })
+    }
+  }, [editRegion])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (isEditMode && onUpdate && editCountry) {
-      onUpdate({ ...formData, id: editCountry.id })
+    if (isEditMode && onUpdate && editRegion) {
+      onUpdate({ ...formData, id: editRegion.id })
     } else {
       onSubmit(formData)
     }
@@ -83,32 +100,13 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
   }
 
   const handleCloseDialog = () => {
-    setFormData({ name: '', code: '', regions: [], isActive: true })
+    setFormData({ name: '', code: '', countryId: '', isActive: true })
     handleClose()
   }
 
-  // Populate form data when editing
-  useEffect(() => {
-    if (editCountry) {
-      setFormData({
-        name: editCountry.name,
-        code: editCountry.code,
-        regions: editCountry.regions ? editCountry.regions.map(r => r.id) : [],
-        isActive: editCountry.isActive
-      })
-    } else {
-      setFormData({
-        name: '',
-        code: '',
-        regions: [],
-        isActive: true
-      })
-    }
-  }, [editCountry])
-
   return (
     <Dialog fullWidth open={open} onClose={handleCloseDialog} maxWidth='sm'>
-      <DialogTitle>{isEditMode ? 'Edit Country' : 'Add New Country'}</DialogTitle>
+      <DialogTitle>{isEditMode ? 'Edit Region' : 'Add New Region'}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <IconButton onClick={handleCloseDialog} className='absolute block-start-4 inline-end-4'>
@@ -118,8 +116,8 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='Country Name'
-                placeholder='United States'
+                label='Region Name'
+                placeholder='Republic of Adygea'
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                 required
@@ -128,8 +126,8 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='Country Code'
-                placeholder='US'
+                label='Region Code'
+                placeholder='AD'
                 value={formData.code}
                 onChange={e => setFormData({ ...formData, code: e.target.value })}
                 required
@@ -137,38 +135,24 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
             </Grid>
             <Grid size={{ xs: 12 }}>
               <Autocomplete
-                multiple
-                id='regions-autocomplete'
-                options={regions}
-                getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
-                value={regions.filter(region => formData.regions.includes(region.id))}
+                id='country-autocomplete'
+                options={countries}
+                getOptionLabel={(option) => option.name}
+                value={countries.find(country => country.id === formData.countryId) || null}
                 onChange={(event, newValue) => {
                   setFormData({
                     ...formData,
-                    regions: newValue.map(region => typeof region === 'string' ? region : region.id)
+                    countryId: newValue ? newValue.id : ''
                   })
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label='Regions'
-                    placeholder='Search and select regions...'
+                    label='Country'
+                    placeholder='Search and select country...'
+                    required
                   />
                 )}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => {
-                    const { key, ...chipProps } = getTagProps({ index })
-                    const region = regions.find(r => r.id === (typeof option === 'string' ? option : option.id))
-                    return (
-                      <Chip
-                        key={key}
-                        label={region?.name || (typeof option === 'string' ? option : option.name)}
-                        size='small'
-                        {...chipProps}
-                      />
-                    )
-                  })
-                }
                 renderOption={(props, option) => {
                   const { key, ...restProps } = props
                   return (
@@ -177,7 +161,6 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
                     </Box>
                   )
                 }}
-                filterSelectedOptions
                 fullWidth
               />
             </Grid>
@@ -199,7 +182,7 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
             Cancel
           </Button>
           <Button variant='contained' type='submit'>
-            {isEditMode ? 'Update Country' : 'Add Country'}
+            {isEditMode ? 'Update Region' : 'Add Region'}
           </Button>
         </DialogActions>
       </form>
@@ -207,4 +190,4 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
   )
 }
 
-export default AddCountryDialog
+export default AddRegionDialog

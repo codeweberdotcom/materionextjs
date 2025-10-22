@@ -6,8 +6,11 @@ import { authOptions } from '@/libs/auth'
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
-// GET - Get all countries (admin only)
-export async function GET() {
+// PATCH - Toggle city status (admin only)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -31,21 +34,39 @@ export async function GET() {
       )
     }
 
-    // Fetch countries from database
-    const countries = await prisma.country.findMany({
-      where: { isActive: true },
-      include: {
-        regions: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' }
-        }
-      },
-      orderBy: { name: 'asc' }
+    const { id: cityId } = await params
+
+    // Find current city status
+    const currentCity = await prisma.city.findUnique({
+      where: { id: cityId }
     })
 
-    return NextResponse.json(countries)
+    if (!currentCity) {
+      return NextResponse.json(
+        { message: 'City not found' },
+        { status: 404 }
+      )
+    }
+
+    // Toggle the status
+    const updatedCity = await prisma.city.update({
+      where: { id: cityId },
+      data: {
+        isActive: !currentCity.isActive
+      },
+      include: {
+        state: {
+          include: {
+            country: true,
+            region: true
+          }
+        }
+      }
+    })
+
+    return NextResponse.json(updatedCity)
   } catch (error) {
-    console.error('Error fetching countries:', error)
+    console.error('Error toggling city status:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -53,8 +74,11 @@ export async function GET() {
   }
 }
 
-// POST - Create new country (admin only)
-export async function POST(request: NextRequest) {
+// DELETE - Delete city (admin only)
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -78,53 +102,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { name, code, regions, isActive = true } = body
+    const { id: cityId } = await params
 
-    if (!name || !code) {
-      return NextResponse.json(
-        { message: 'Name and code are required' },
-        { status: 400 }
-      )
-    }
-
-    // Create new country in database
-    const newCountry = await prisma.country.create({
-      data: {
-        name,
-        code,
-        isActive
-      }
-    })
-
-    // If regions are provided, update the regions to set countryId
-    if (regions && regions.length > 0) {
-      await prisma.region.updateMany({
-        where: {
-          id: {
-            in: regions
-          }
-        },
-        data: {
-          countryId: newCountry.id
-        }
+    // Find and delete the city from database
+    try {
+      const deletedCity = await prisma.city.delete({
+        where: { id: cityId }
       })
-    }
 
-    // Fetch the updated country with regions
-    const updatedCountry = await prisma.country.findUnique({
-      where: { id: newCountry.id },
-      include: {
-        regions: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' }
-        }
+      return NextResponse.json({
+        message: 'City deleted successfully',
+        deletedCity
+      })
+    } catch (error: any) {
+      if (error.code === 'P2025') {
+        return NextResponse.json(
+          { message: 'City not found' },
+          { status: 404 }
+        )
       }
-    })
-
-    return NextResponse.json(updatedCountry)
+      throw error
+    }
   } catch (error) {
-    console.error('Error creating country:', error)
+    console.error('Error deleting city:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

@@ -16,6 +16,7 @@ import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
+import Switch from '@mui/material/Switch'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
 import type { TextFieldProps } from '@mui/material/TextField'
@@ -191,10 +192,15 @@ const StatesListTable = () => {
       header: 'Actions',
       cell: ({ row }) => (
         <div className='flex items-center'>
-          <IconButton onClick={() => handleEditState(row.original)}>
+          <IconButton onClick={() => handleEditState(row.original)} title='Edit State'>
             <i className='ri-edit-line text-textSecondary' />
           </IconButton>
-          <IconButton onClick={() => handleDeleteState(row.original.id, row.original.name)}>
+          <Switch
+            checked={row.original.isActive}
+            onChange={() => handleToggleStateStatus(row.original.id)}
+            size='small'
+          />
+          <IconButton onClick={() => handleDeleteState(row.original.id, row.original.name)} title='Delete State'>
             <i className='ri-delete-bin-7-line text-textSecondary' />
           </IconButton>
         </div>
@@ -256,6 +262,30 @@ const StatesListTable = () => {
 
   const handleEditState = (state: State) => {
     toast.info('Edit functionality will be implemented')
+  }
+
+  const handleToggleStateStatus = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/references/states/${id}`, {
+        method: 'PATCH'
+      })
+
+      if (response.ok) {
+        const updatedState = await response.json()
+        const updatedData = data.map(state =>
+          state.id === updatedState.id ? updatedState : state
+        )
+        setData(updatedData)
+        setFilteredData(updatedData)
+        toast.success(`State ${updatedState.isActive ? 'activated' : 'deactivated'} successfully!`)
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to toggle state status')
+      }
+    } catch (error) {
+      console.error('Error toggling state status:', error)
+      toast.error('Failed to toggle state status')
+    }
   }
 
   if (loading) {
