@@ -275,11 +275,6 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
                 href: '/apps/references/regions'
               },
               {
-                label: 'States',
-                icon: 'ri-map-pin-3-line',
-                href: '/apps/references/states'
-              },
-              {
                 label: 'Cities',
                 icon: 'ri-map-pin-4-line',
                 href: '/apps/references/cities'

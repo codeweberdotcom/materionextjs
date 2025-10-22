@@ -10,65 +10,35 @@ import TextField from '@mui/material/TextField'
 import Grid from '@mui/material/Grid2'
 import IconButton from '@mui/material/IconButton'
 import Box from '@mui/material/Box'
-import Autocomplete from '@mui/material/Autocomplete'
 import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
 
-type Country = {
-  id: string
-  name: string
-  code: string
-  isActive: boolean
-}
 
 type Region = {
   id: string
   name: string
   code: string
   isActive: boolean
-  country: {
-    id: string
-    name: string
-    code: string
-  }
 }
 
 type AddRegionDialogProps = {
   open: boolean
   handleClose: () => void
-  onSubmit: (data: { name: string; code: string; countryId: string }) => void
+  onSubmit: (data: { name: string; code: string }) => void
   editRegion?: Region | null
-  onUpdate?: (data: { id: string; name: string; code: string; countryId: string }) => void
+  onUpdate?: (data: { id: string; name: string; code: string }) => void
 }
 
 const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: AddRegionDialogProps) => {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    countryId: '',
     isActive: true
   })
-  const [countries, setCountries] = useState<Country[]>([])
+  const [errors, setErrors] = useState<{[key: string]: string}>({})
 
   const isEditMode = !!editRegion
 
-  useEffect(() => {
-    const fetchCountries = async () => {
-      try {
-        const response = await fetch('/api/countries')
-        if (response.ok) {
-          const data = await response.json()
-          setCountries(data)
-        }
-      } catch (error) {
-        console.error('Error fetching countries:', error)
-      }
-    }
-
-    if (open) {
-      fetchCountries()
-    }
-  }, [open])
 
   // Populate form data when editing
   useEffect(() => {
@@ -76,14 +46,12 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
       setFormData({
         name: editRegion.name,
         code: editRegion.code,
-        countryId: editRegion.country.id,
         isActive: editRegion.isActive
       })
     } else {
       setFormData({
         name: '',
         code: '',
-        countryId: '',
         isActive: true
       })
     }
@@ -91,6 +59,26 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validate required fields
+    const newErrors: {[key: string]: string} = {}
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Название региона обязательно'
+    }
+
+    if (!formData.code.trim()) {
+      newErrors.code = 'Код региона обязателен'
+    }
+
+
+    setErrors(newErrors)
+
+    // If there are errors, don't submit
+    if (Object.keys(newErrors).length > 0) {
+      return
+    }
+
     if (isEditMode && onUpdate && editRegion) {
       onUpdate({ ...formData, id: editRegion.id })
     } else {
@@ -100,7 +88,7 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
   }
 
   const handleCloseDialog = () => {
-    setFormData({ name: '', code: '', countryId: '', isActive: true })
+    setFormData({ name: '', code: '', isActive: true })
     handleClose()
   }
 
@@ -119,7 +107,14 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
                 label='Region Name'
                 placeholder='Republic of Adygea'
                 value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                onChange={e => {
+                  setFormData({ ...formData, name: e.target.value })
+                  if (errors.name) {
+                    setErrors({ ...errors, name: '' })
+                  }
+                }}
+                error={!!errors.name}
+                helperText={errors.name}
                 required
               />
             </Grid>
@@ -130,38 +125,9 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
                 placeholder='AD'
                 value={formData.code}
                 onChange={e => setFormData({ ...formData, code: e.target.value })}
+                error={!!errors.code}
+                helperText={errors.code}
                 required
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <Autocomplete
-                id='country-autocomplete'
-                options={countries}
-                getOptionLabel={(option) => option.name}
-                value={countries.find(country => country.id === formData.countryId) || null}
-                onChange={(event, newValue) => {
-                  setFormData({
-                    ...formData,
-                    countryId: newValue ? newValue.id : ''
-                  })
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label='Country'
-                    placeholder='Search and select country...'
-                    required
-                  />
-                )}
-                renderOption={(props, option) => {
-                  const { key, ...restProps } = props
-                  return (
-                    <Box key={key} component='li' {...restProps}>
-                      {option.name}
-                    </Box>
-                  )
-                }}
-                fullWidth
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

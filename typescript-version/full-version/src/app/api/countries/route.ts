@@ -8,18 +8,14 @@ const prisma = new PrismaClient()
 export async function GET() {
   try {
     const countries = await prisma.country.findMany({
-      include: {
-        regions: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' }
-        }
-      },
+      where: { isActive: true },
+      include: { regions: true },
       orderBy: { name: 'asc' }
     })
 
     return NextResponse.json(countries)
   } catch (error) {
-    console.error('Error fetching countries:', error)
+    console.error('Error fetching countries:', error instanceof Error ? error.message : String(error))
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -41,29 +37,18 @@ export async function POST(request: Request) {
       }
     })
 
-    // If regions are provided, update the regions to set countryId
+    // If regions are provided, connect them to the new country
     if (regions && regions.length > 0) {
       await prisma.region.updateMany({
-        where: {
-          id: {
-            in: regions
-          }
-        },
-        data: {
-          countryId: country.id
-        }
+        where: { id: { in: regions } },
+        data: { countryId: country.id }
       })
     }
 
     // Fetch the updated country with regions
     const updatedCountry = await prisma.country.findUnique({
       where: { id: country.id },
-      include: {
-        regions: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' }
-        }
-      }
+      include: { regions: true }
     })
 
     return NextResponse.json(updatedCountry)

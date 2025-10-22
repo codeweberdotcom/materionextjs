@@ -34,12 +34,7 @@ export async function GET() {
     // Fetch countries from database
     const countries = await prisma.country.findMany({
       where: { isActive: true },
-      include: {
-        regions: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' }
-        }
-      },
+      include: { regions: true },
       orderBy: { name: 'asc' }
     })
 
@@ -97,29 +92,18 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // If regions are provided, update the regions to set countryId
+    // If regions are provided, connect them to the new country
     if (regions && regions.length > 0) {
       await prisma.region.updateMany({
-        where: {
-          id: {
-            in: regions
-          }
-        },
-        data: {
-          countryId: newCountry.id
-        }
+        where: { id: { in: regions } },
+        data: { countryId: newCountry.id }
       })
     }
 
     // Fetch the updated country with regions
     const updatedCountry = await prisma.country.findUnique({
       where: { id: newCountry.id },
-      include: {
-        regions: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' }
-        }
-      }
+      include: { regions: true }
     })
 
     return NextResponse.json(updatedCountry)

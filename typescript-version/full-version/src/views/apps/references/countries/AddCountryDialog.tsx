@@ -170,11 +170,11 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
                   })
                 }
                 renderOption={(props, option) => {
-                  const { key, ...restProps } = props
+                  const { key, ...otherProps } = props
                   return (
-                    <Box key={key} component='li' {...restProps}>
+                    <li key={key} {...otherProps}>
                       {option.name}
-                    </Box>
+                    </li>
                   )
                 }}
                 filterSelectedOptions

@@ -34,11 +34,10 @@ export async function GET() {
     // Fetch regions from database
     const regions = await prisma.region.findMany({
       where: { isActive: true },
-      include: {
-        country: true
-      },
       orderBy: { name: 'asc' }
     })
+
+    return NextResponse.json(regions)
 
     return NextResponse.json(regions)
   } catch (error) {
@@ -76,25 +75,21 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, code, countryId, isActive = true } = body
+    const { name, code, isActive = true } = body
 
-    if (!name || !code || !countryId) {
+    if (!name || !code) {
       return NextResponse.json(
-        { message: 'Name, code, and country are required' },
+        { message: 'Name and code are required' },
         { status: 400 }
       )
     }
 
-    // Create new region in database
+    // Create a single region
     const newRegion = await prisma.region.create({
       data: {
         name,
         code,
-        countryId,
         isActive
-      },
-      include: {
-        country: true
       }
     })
 
@@ -134,26 +129,22 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, name, code, countryId, isActive } = body
+    const { id, name, code, isActive } = body
 
-    if (!id || !name || !code || !countryId) {
+    if (!id || !name || !code) {
       return NextResponse.json(
-        { message: 'ID, name, code, and country are required' },
+        { message: 'ID, name, and code are required' },
         { status: 400 }
       )
     }
 
-    // Update region in database
+    // Update the region
     const updatedRegion = await prisma.region.update({
       where: { id },
       data: {
         name,
         code,
-        countryId,
         ...(isActive !== undefined && { isActive })
-      },
-      include: {
-        country: true
       }
     })
 
@@ -219,9 +210,6 @@ export async function PATCH(request: NextRequest) {
       where: { id },
       data: {
         isActive: !currentRegion.isActive
-      },
-      include: {
-        country: true
       }
     })
 

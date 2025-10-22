@@ -64,11 +64,6 @@ type Region = {
   name: string
   code: string
   isActive: boolean
-  country: {
-    id: string
-    name: string
-    code: string
-  }
 }
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
@@ -168,10 +163,6 @@ const RegionsListTable = () => {
       header: 'Code',
       cell: ({ row }) => <Typography>{row.original.code}</Typography>
     }),
-    columnHelper.accessor('country.name', {
-      header: 'Country',
-      cell: ({ row }) => <Typography>{row.original.country.name}</Typography>
-    }),
     columnHelper.accessor('isActive', {
       header: 'Status',
       cell: ({ row }) => (
@@ -260,7 +251,7 @@ const RegionsListTable = () => {
     setEditRegion(region)
   }
 
-  const handleUpdateRegion = async (regionData: { id: string; name: string; code: string; countryId: string }) => {
+  const handleUpdateRegion = async (regionData: { id: string; name: string; code: string }) => {
     try {
       const response = await fetch('/api/admin/references/regions', {
         method: 'PUT',
@@ -317,7 +308,7 @@ const RegionsListTable = () => {
     }
   }
 
-  const handleAddRegion = async (regionData: { name: string; code: string; countryId: string }) => {
+  const handleAddRegion = async (regionData: { name: string; code: string }) => {
     try {
       const response = await fetch('/api/admin/references/regions', {
         method: 'POST',

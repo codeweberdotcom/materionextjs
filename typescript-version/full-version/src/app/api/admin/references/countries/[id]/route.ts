@@ -59,40 +59,6 @@ export async function PUT(
       )
     }
 
-    // Handle region assignments
-    try {
-      if (regions !== undefined) {
-        console.log('Handling region assignments for country:', countryId)
-        console.log('Regions to assign:', regions)
-
-        // First, delete regions that are not in the new list
-        await prisma.region.deleteMany({
-          where: {
-            countryId: countryId,
-            id: {
-              notIn: regions || []
-            }
-          }
-        })
-
-        // If regions are provided, assign them to the country
-        if (regions && regions.length > 0) {
-          await prisma.region.updateMany({
-            where: {
-              id: {
-                in: regions
-              }
-            },
-            data: {
-              countryId: countryId
-            }
-          })
-        }
-      }
-    } catch (regionError) {
-      console.error('Error handling region assignments:', regionError)
-      // Don't fail the entire operation if region assignment fails
-    }
 
     // Find and update the country in database
     try {
@@ -102,16 +68,48 @@ export async function PUT(
           name,
           code,
           ...(isActive !== undefined && { isActive })
-        },
-        include: {
-          regions: {
-            where: { isActive: true },
-            orderBy: { name: 'asc' }
-          }
         }
       })
 
-      return NextResponse.json(updatedCountry)
+      // Handle regions update
+      if (regions !== undefined) {
+        // Get current regions for the country
+        const currentRegions = await prisma.region.findMany({
+          where: { countryId: countryId }
+        })
+
+        const currentRegionIds: string[] = currentRegions.map((r: any) => r.id)
+        const newRegionIds: string[] = regions
+
+        // Regions to connect
+        const toConnect = newRegionIds.filter((id: string) => !currentRegionIds.includes(id))
+        // Regions to disconnect
+        const toDisconnect = currentRegionIds.filter((id: string) => !newRegionIds.includes(id))
+
+        // Connect new regions
+        if (toConnect.length > 0) {
+          await prisma.region.updateMany({
+            where: { id: { in: toConnect } },
+            data: { countryId: countryId }
+          })
+        }
+
+        // Disconnect old regions
+        if (toDisconnect.length > 0) {
+          await prisma.region.updateMany({
+            where: { id: { in: toDisconnect } },
+            data: { countryId: null }
+          })
+        }
+      }
+
+      // Fetch the updated country with regions
+      const finalCountry = await prisma.country.findUnique({
+        where: { id: countryId },
+        include: { regions: true }
+      })
+
+      return NextResponse.json(finalCountry)
     } catch (error: any) {
       if (error.code === 'P2025') {
         return NextResponse.json(
@@ -177,12 +175,6 @@ export async function PATCH(
       where: { id: countryId },
       data: {
         isActive: !currentCountry.isActive
-      },
-      include: {
-        regions: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' }
-        }
       }
     })
 

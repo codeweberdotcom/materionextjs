@@ -1,7 +1,7 @@
 datasource db {
-   provider = "sqlite"
-   url      = env("DATABASE_URL")
- }
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+  }
 
 generator client {
   provider        = "prisma-client-js"
@@ -82,15 +82,14 @@ model Language {
 }
 
 model Country {
-    id          String   @id @default(cuid())
-    name        String   @unique
-    code        String   @unique
-    isActive    Boolean  @default(true)
-    regions     Region[]
-    states      State[]
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-}
+      id          String   @id @default(cuid())
+      name        String   @unique
+      code        String   @unique
+      isActive    Boolean  @default(true)
+      regions     Region[]
+      createdAt   DateTime @default(now())
+      updatedAt   DateTime @updatedAt
+  }
 
 model Timezone {
    id          String   @id @default(cuid())
@@ -113,44 +112,39 @@ model Currency {
 }
 
 model Region {
-    id          String   @id @default(cuid())
-    name        String
-    code        String
-    countryId   String
-    country     Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
-    states      State[]
-    isActive    Boolean  @default(true)
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+      id          String   @id @default(cuid())
+      name        String
+      code        String
+      countryId   String?
+      country     Country? @relation(fields: [countryId], references: [id], onDelete: Cascade)
+      isActive    Boolean  @default(true)
+      createdAt   DateTime @default(now())
+      updatedAt   DateTime @updatedAt
 
-    @@unique([name, countryId])
-}
+      regionCities RegionCity[]
 
-model State {
-    id          String   @id @default(cuid())
-    name        String
-    code        String
-    countryId   String
-    regionId    String?
-    country     Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
-    region      Region?  @relation(fields: [regionId], references: [id], onDelete: SetNull)
-    cities      City[]
-    isActive    Boolean  @default(true)
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+      @@unique([name, id])
+  }
 
-    @@unique([name, countryId])
-}
+  model RegionCity {
+      id        String @id @default(cuid())
+      regionId  String
+      cityId    String
+      region    Region @relation(fields: [regionId], references: [id], onDelete: Cascade)
+      city      City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
+
+      @@unique([regionId, cityId])
+  }
+
 
 model City {
-    id          String   @id @default(cuid())
-    name        String
-    code        String
-    stateId     String
-    state       State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
-    isActive    Boolean  @default(true)
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+      id          String   @id @default(cuid())
+      name        String
+      code        String
+      isActive    Boolean  @default(true)
+      regionCities RegionCity[]
+      createdAt   DateTime @default(now())
+      updatedAt   DateTime @updatedAt
 
-    @@unique([name, stateId])
-}
+      @@unique([name, id])
+  }

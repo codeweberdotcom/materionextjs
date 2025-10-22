@@ -53,20 +53,76 @@ export async function PATCH(
       where: { id: cityId },
       data: {
         isActive: !currentCity.isActive
-      },
-      include: {
-        state: {
-          include: {
-            country: true,
-            region: true
-          }
-        }
       }
     })
 
     return NextResponse.json(updatedCity)
   } catch (error) {
     console.error('Error toggling city status:', error)
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+// PUT - Update city (admin only)
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check if user is admin
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { role: true }
+    })
+
+    if (!currentUser || currentUser.role?.name !== 'admin') {
+      return NextResponse.json(
+        { message: 'Admin access required' },
+        { status: 403 }
+      )
+    }
+
+    const { id: cityId } = await params
+    let body
+    try {
+      body = await request.json()
+    } catch (error) {
+      return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
+    }
+    const { name, code, isActive } = body
+
+    if (!name || !code) {
+      return NextResponse.json(
+        { message: 'Name and code are required' },
+        { status: 400 }
+      )
+    }
+
+    // Update the city
+    const updatedCity = await prisma.city.update({
+      where: { id: cityId },
+      data: {
+        name,
+        code,
+        isActive
+      }
+    })
+
+    return NextResponse.json(updatedCity)
+  } catch (error) {
+    console.error('Error updating city:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

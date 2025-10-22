@@ -260,92 +260,59 @@ async function main() {
   ]
 
   for (const region of regionsData) {
-    const country = await prisma.country.findUnique({ where: { code: region.countryCode } })
-    if (country) {
-      await prisma.region.upsert({
-        where: {
-          name_countryId: {
-            name: region.name,
-            countryId: country.id
-          }
-        },
-        update: {},
-        create: {
+    await prisma.region.upsert({
+      where: {
+        name_id: {
           name: region.name,
-          code: region.code,
-          countryId: country.id,
-          isActive: true
+          id: "region_" + region.code
         }
-      })
-    }
-  }
-
-  // Add states
-  const statesData = [
-    { name: "California", code: "CA", countryCode: "US" },
-    { name: "Texas", code: "TX", countryCode: "US" },
-    { name: "Florida", code: "FL", countryCode: "US" },
-    { name: "New York", code: "NY", countryCode: "US" },
-    { name: "England", code: "ENG", countryCode: "GB" },
-    { name: "Scotland", code: "SCO", countryCode: "GB" },
-    { name: "Wales", code: "WAL", countryCode: "GB" },
-    { name: "North Rhine-Westphalia", code: "NRW", countryCode: "DE" },
-    { name: "Bavaria", code: "BY", countryCode: "DE" },
-    { name: "Berlin", code: "BE", countryCode: "DE" }
-  ]
-
-  for (const state of statesData) {
-    const country = await prisma.country.findUnique({ where: { code: state.countryCode } })
-    if (country) {
-      await prisma.state.upsert({
-        where: { name_countryId: { name: state.name, countryId: country.id } },
-        update: {},
-        create: {
-          name: state.name,
-          code: state.code,
-          countryId: country.id,
-          isActive: true
-        }
-      })
-    }
+      },
+      update: {},
+      create: {
+        name: region.name,
+        code: region.code,
+        isActive: true
+      }
+    })
   }
 
   // Add cities
   const citiesData = [
-    { name: "Los Angeles", code: "LA", stateCode: "CA", countryCode: "US" },
-    { name: "San Francisco", code: "SF", stateCode: "CA", countryCode: "US" },
-    { name: "Houston", code: "HOU", stateCode: "TX", countryCode: "US" },
-    { name: "Dallas", code: "DAL", stateCode: "TX", countryCode: "US" },
-    { name: "Miami", code: "MIA", stateCode: "FL", countryCode: "US" },
-    { name: "Orlando", code: "ORL", stateCode: "FL", countryCode: "US" },
-    { name: "New York City", code: "NYC", stateCode: "NY", countryCode: "US" },
-    { name: "Buffalo", code: "BUF", stateCode: "NY", countryCode: "US" },
-    { name: "London", code: "LON", stateCode: "ENG", countryCode: "GB" },
-    { name: "Manchester", code: "MAN", stateCode: "ENG", countryCode: "GB" },
-    { name: "Edinburgh", code: "EDI", stateCode: "SCO", countryCode: "GB" },
-    { name: "Glasgow", code: "GLA", stateCode: "SCO", countryCode: "GB" },
-    { name: "Cardiff", code: "CAR", stateCode: "WAL", countryCode: "GB" },
-    { name: "Cologne", code: "CGN", stateCode: "NRW", countryCode: "DE" },
-    { name: "Dusseldorf", code: "DUS", stateCode: "NRW", countryCode: "DE" },
-    { name: "Munich", code: "MUC", stateCode: "BY", countryCode: "DE" },
-    { name: "Nuremberg", code: "NUE", stateCode: "BY", countryCode: "DE" },
-    { name: "Berlin", code: "BER", stateCode: "BE", countryCode: "DE" }
+    { name: "Los Angeles", code: "LA", countryCode: "US" },
+    { name: "San Francisco", code: "SF", countryCode: "US" },
+    { name: "Houston", code: "HOU", countryCode: "US" },
+    { name: "Dallas", code: "DAL", countryCode: "US" },
+    { name: "Miami", code: "MIA", countryCode: "US" },
+    { name: "Orlando", code: "ORL", countryCode: "US" },
+    { name: "New York City", code: "NYC", countryCode: "US" },
+    { name: "Buffalo", code: "BUF", countryCode: "US" },
+    { name: "London", code: "LON", countryCode: "GB" },
+    { name: "Manchester", code: "MAN", countryCode: "GB" },
+    { name: "Edinburgh", code: "EDI", countryCode: "GB" },
+    { name: "Glasgow", code: "GLA", countryCode: "GB" },
+    { name: "Cardiff", code: "CAR", countryCode: "GB" },
+    { name: "Cologne", code: "CGN", countryCode: "DE" },
+    { name: "Dusseldorf", code: "DUS", countryCode: "DE" },
+    { name: "Munich", code: "MUC", countryCode: "DE" },
+    { name: "Nuremberg", code: "NUE", countryCode: "DE" },
+    { name: "Berlin", code: "BER", countryCode: "DE" }
   ]
 
   for (const city of citiesData) {
-    const state = await prisma.state.findFirst({ where: { code: city.stateCode, country: { code: city.countryCode } } })
-    if (state) {
-      await prisma.city.upsert({
-        where: { name_stateId: { name: city.name, stateId: state.id } },
-        update: {},
-        create: {
+    await prisma.city.upsert({
+      where: {
+        name_id: {
           name: city.name,
-          code: city.code,
-          stateId: state.id,
-          isActive: true
+          id: "city_" + city.code
         }
-      })
-    }
+      },
+      update: {},
+      create: {
+        name: city.name,
+        code: city.code,
+        isActive: true
+      }
+    })
   }
 
   console.log('Database seeded successfully!')

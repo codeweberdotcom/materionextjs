@@ -233,7 +233,7 @@ const CountriesListTable = () => {
     },
     initialState: {
       pagination: {
-        pageSize: 10
+        pageSize: 50
       }
     },
     enableRowSelection: true,

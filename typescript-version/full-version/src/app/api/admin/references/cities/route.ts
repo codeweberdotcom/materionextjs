@@ -34,14 +34,6 @@ export async function GET() {
     // Fetch cities from database
     const cities = await prisma.city.findMany({
       where: { isActive: true },
-      include: {
-        state: {
-          include: {
-            country: true,
-            region: true
-          }
-        }
-      },
       orderBy: { name: 'asc' }
     })
 
@@ -80,12 +72,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const body = await request.json()
-    const { name, code, stateId, isActive = true } = body
+    let body
+    try {
+      body = await request.json()
+    } catch (error) {
+      return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
+    }
+    const { name, code, isActive = true } = body
 
-    if (!name || !code || !stateId) {
+    if (!name || !code) {
       return NextResponse.json(
-        { message: 'Name, code, and state are required' },
+        { message: 'Name and code are required' },
         { status: 400 }
       )
     }
@@ -95,16 +92,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         code,
-        stateId,
         isActive
-      },
-      include: {
-        state: {
-          include: {
-            country: true,
-            region: true
-          }
-        }
       }
     })
 

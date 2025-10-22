@@ -44,6 +44,9 @@ import { toast } from 'react-toastify'
 import type { ThemeColor } from '@core/types'
 import type { Locale } from '@configs/i18n'
 
+// Component Imports
+import AddCityDialog from './AddCityDialog'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -61,21 +64,6 @@ type City = {
   name: string
   code: string
   isActive: boolean
-  state: {
-    id: string
-    name: string
-    code: string
-    country: {
-      id: string
-      name: string
-      code: string
-    }
-    region?: {
-      id: string
-      name: string
-      code: string
-    }
-  }
 }
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
@@ -118,6 +106,8 @@ const CitiesListTable = () => {
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(true)
+  const [addCityOpen, setAddCityOpen] = useState(false)
+  const [editCity, setEditCity] = useState<City | null>(null)
 
   const { lang: locale } = useParams()
 
@@ -172,18 +162,6 @@ const CitiesListTable = () => {
     columnHelper.accessor('code', {
       header: 'Code',
       cell: ({ row }) => <Typography>{row.original.code}</Typography>
-    }),
-    columnHelper.accessor('state.name', {
-      header: 'State',
-      cell: ({ row }) => <Typography>{row.original.state.name}</Typography>
-    }),
-    columnHelper.accessor('state.country.name', {
-      header: 'Country',
-      cell: ({ row }) => <Typography>{row.original.state.country.name}</Typography>
-    }),
-    columnHelper.accessor('state.region.name', {
-      header: 'Region',
-      cell: ({ row }) => <Typography>{row.original.state.region?.name || 'N/A'}</Typography>
     }),
     columnHelper.accessor('isActive', {
       header: 'Status',
@@ -270,7 +248,7 @@ const CitiesListTable = () => {
   }
 
   const handleEditCity = (city: City) => {
-    toast.info('Edit functionality will be implemented')
+    setEditCity(city)
   }
 
   const handleToggleCityStatus = async (id: string) => {
@@ -297,24 +275,84 @@ const CitiesListTable = () => {
     }
   }
 
+  const handleAddCity = async (cityData: { name: string; code: string; isActive: boolean }) => {
+    try {
+      const response = await fetch('/api/admin/references/cities', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(cityData)
+      })
+
+      if (response.ok) {
+        const newCity = await response.json()
+        const updatedData = [...data, newCity]
+        setData(updatedData)
+        setFilteredData(updatedData)
+        setAddCityOpen(false)
+        toast.success('City added successfully!')
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to add city')
+      }
+    } catch (error) {
+      console.error('Error adding city:', error)
+      toast.error('Failed to add city')
+    }
+  }
+
+  const handleUpdateCity = async (cityData: { id: string; name: string; code: string; isActive: boolean }) => {
+    try {
+      const response = await fetch(`/api/admin/references/cities/${cityData.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(cityData)
+      })
+
+      if (response.ok) {
+        const updatedCity = await response.json()
+        const updatedData = data.map(city =>
+          city.id === updatedCity.id ? updatedCity : city
+        )
+        setData(updatedData)
+        setFilteredData(updatedData)
+        setEditCity(null)
+        toast.success('City updated successfully!')
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to update city')
+      }
+    } catch (error) {
+      console.error('Error updating city:', error)
+      toast.error('Failed to update city')
+    }
+  }
+
   if (loading) {
     return <Typography>Loading cities...</Typography>
   }
 
   return (
-    <Card>
-      <CardHeader title='Cities Management' />
-      <Divider />
-      <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
-        <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
-          <DebouncedInput
-            value={globalFilter ?? ''}
-            onChange={value => setGlobalFilter(String(value))}
-            placeholder='Search City'
-            className='max-sm:is-full'
-          />
+    <>
+      <Card>
+        <CardHeader title='Cities Management' />
+        <Divider />
+        <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
+          <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
+            <DebouncedInput
+              value={globalFilter ?? ''}
+              onChange={value => setGlobalFilter(String(value))}
+              placeholder='Search City'
+              className='max-sm:is-full'
+            />
+          </div>
+          <Button variant='contained' onClick={() => setAddCityOpen(true)} className='max-sm:is-full'>
+            Add New City
+          </Button>
         </div>
-      </div>
       <div className='overflow-x-auto'>
         <table className={tableStyles.table}>
           <thead>
@@ -376,7 +414,18 @@ const CitiesListTable = () => {
         onPageChange={(_, page) => table.setPageIndex(page)}
         onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
       />
-    </Card>
+      </Card>
+      <AddCityDialog
+        open={addCityOpen || !!editCity}
+        handleClose={() => {
+          setAddCityOpen(false)
+          setEditCity(null)
+        }}
+        onSubmit={handleAddCity}
+        editCity={editCity}
+        onUpdate={handleUpdateCity}
+      />
+    </>
   )
 }
 

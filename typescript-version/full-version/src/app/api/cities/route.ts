@@ -8,14 +8,6 @@ const prisma = new PrismaClient()
 export async function GET() {
   try {
     const cities = await prisma.city.findMany({
-      include: {
-        state: {
-          include: {
-            country: true,
-            region: true
-          }
-        }
-      },
       orderBy: { name: 'asc' }
     })
 
