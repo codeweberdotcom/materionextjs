@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/libs/auth'
+import { prisma } from '@/libs/prisma'
 
-// Create Prisma client instance
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
-
-// GET - Get all cities (admin only)
+// GET - Get all districts (admin only)
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
@@ -31,18 +28,15 @@ export async function GET() {
       )
     }
 
-    // Fetch cities from database
-    const cities = await prisma.city.findMany({
+    // Fetch districts from database
+    const districts = await prisma.district.findMany({
       where: { isActive: true },
-      orderBy: { name: 'asc' },
-      include: {
-        districts: true
-      }
+      orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json(cities)
+    return NextResponse.json(districts)
   } catch (error) {
-    console.error('Error fetching cities:', error)
+    console.error('Error fetching districts:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -50,7 +44,7 @@ export async function GET() {
   }
 }
 
-// POST - Create new city (admin only)
+// POST - Create new district (admin only)
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -81,7 +75,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
-    const { name, code, districts = [], isActive = true } = body
+    const { name, code, isActive = true } = body
 
     if (!name || !code) {
       return NextResponse.json(
@@ -90,24 +84,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create new city in database
-    const newCity = await prisma.city.create({
+    // Create new district in database
+    const newDistrict = await prisma.district.create({
       data: {
         name,
         code,
-        isActive,
-        districts: districts.length > 0 ? {
-          connect: districts.map((districtId: string) => ({ id: districtId }))
-        } : undefined
-      },
-      include: {
-        districts: true
+        isActive
       }
     })
 
-    return NextResponse.json(newCity)
+    return NextResponse.json(newDistrict)
   } catch (error) {
-    console.error('Error creating city:', error)
+    console.error('Error creating district:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

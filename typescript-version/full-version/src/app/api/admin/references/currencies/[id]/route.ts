@@ -1,10 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/libs/auth'
+import { prisma } from '@/libs/prisma'
 
-// Create Prisma client instance
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+// PATCH - Toggle currency status (admin only)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check if user is admin
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { role: true }
+    })
+
+    if (!currentUser || currentUser.role?.name !== 'admin') {
+      return NextResponse.json(
+        { message: 'Admin access required' },
+        { status: 403 }
+      )
+    }
+
+    const { id: currencyId } = await params
+
+    // Find current currency status
+    const currentCurrency = await prisma.currency.findUnique({
+      where: { id: currencyId }
+    })
+
+    if (!currentCurrency) {
+      return NextResponse.json(
+        { message: 'Currency not found' },
+        { status: 404 }
+      )
+    }
+
+    // Toggle the status
+    const updatedCurrency = await prisma.currency.update({
+      where: { id: currencyId },
+      data: {
+        isActive: !currentCurrency.isActive
+      }
+    })
+
+    return NextResponse.json(updatedCurrency)
+  } catch (error) {
+    console.error('Error toggling currency status:', error)
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
 
 // PUT - Update currency (admin only)
 export async function PUT(
@@ -36,7 +93,7 @@ export async function PUT(
 
     const { id: currencyId } = await params
     const body = await request.json()
-    const { name, code, symbol } = body
+    const { name, code, symbol, isActive } = body
 
     if (!name || !code || !symbol) {
       return NextResponse.json(
@@ -52,7 +109,8 @@ export async function PUT(
         data: {
           name,
           code,
-          symbol
+          symbol,
+          isActive
         }
       })
 

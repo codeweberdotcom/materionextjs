@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/libs/auth'
-
-// Create Prisma client instance
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+import { prisma } from '@/libs/prisma'
 
 // GET - Get all languages (admin only)
 export async function GET() {
@@ -73,7 +70,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, code } = body
+    const { name, code, isActive = true } = body
 
     if (!name || !code) {
       return NextResponse.json(
@@ -87,7 +84,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         code,
-        isActive: true
+        isActive
       }
     })
 

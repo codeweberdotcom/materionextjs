@@ -9,27 +9,30 @@ import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import Grid from '@mui/material/Grid2'
 import IconButton from '@mui/material/IconButton'
+import Switch from '@mui/material/Switch'
+import FormControlLabel from '@mui/material/FormControlLabel'
 
 type AddLanguageDialogProps = {
   open: boolean
   handleClose: () => void
-  onSubmit: (data: { name: string; code: string }) => void
+  onSubmit: (data: { name: string; code: string; isActive: boolean }) => void
 }
 
 const AddLanguageDialog = ({ open, handleClose, onSubmit }: AddLanguageDialogProps) => {
   const [formData, setFormData] = useState({
     name: '',
-    code: ''
+    code: '',
+    isActive: true
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSubmit(formData)
-    setFormData({ name: '', code: '' })
+    setFormData({ name: '', code: '', isActive: true })
   }
 
   const handleCloseDialog = () => {
-    setFormData({ name: '', code: '' })
+    setFormData({ name: '', code: '', isActive: true })
     handleClose()
   }
 
@@ -60,6 +63,17 @@ const AddLanguageDialog = ({ open, handleClose, onSubmit }: AddLanguageDialogPro
                 value={formData.code}
                 onChange={e => setFormData({ ...formData, code: e.target.value })}
                 required
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.isActive}
+                    onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
+                  />
+                }
+                label={formData.isActive ? 'Active' : 'Inactive'}
               />
             </Grid>
           </Grid>

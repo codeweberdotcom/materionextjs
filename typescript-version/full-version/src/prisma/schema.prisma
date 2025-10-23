@@ -117,14 +117,29 @@ model State {
    }
 
 model City {
-       id          String   @id @default(cuid())
-       name        String
-       code        String
-       stateId     String?
-       state       State?   @relation(fields: [stateId], references: [id], onDelete: Cascade)
-       isActive    Boolean  @default(true)
-       createdAt   DateTime @default(now())
-       updatedAt   DateTime @updatedAt
+        id          String   @id @default(cuid())
+        name        String
+        code        String
+        stateId     String?
+        state       State?   @relation(fields: [stateId], references: [id], onDelete: Cascade)
+        isActive    Boolean  @default(true)
+        createdAt   DateTime @default(now())
+        updatedAt   DateTime @updatedAt
 
-       @@unique([name, id])
-   }
+        districts   District[]
+
+        @@unique([name, id])
+    }
+
+model District {
+    id          String   @id @default(cuid())
+    name        String
+    code        String
+    cityId      String?
+    city        City?    @relation(fields: [cityId], references: [id], onDelete: Cascade)
+    isActive    Boolean  @default(true)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@unique([name, id])
+}

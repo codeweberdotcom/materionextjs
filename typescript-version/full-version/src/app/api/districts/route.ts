@@ -1,17 +1,16 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/libs/prisma'
 
-// GET - Get all active languages (public access)
+// GET - Get all active districts (public access)
 export async function GET() {
   try {
-    const languages = await prisma.language.findMany({
-      where: { isActive: true },
+    const districts = await prisma.district.findMany({
       orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json(languages)
+    return NextResponse.json(districts)
   } catch (error) {
-    console.error('Error fetching languages:', error)
+    console.error('Error fetching districts:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

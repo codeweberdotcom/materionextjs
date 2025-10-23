@@ -1,31 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/libs/auth'
+import { prisma } from '@/libs/prisma'
 
-// Create Prisma client instance
-let prisma: any
-try {
-  const { PrismaClient } = require('@prisma/client')
-  prisma = new PrismaClient()
-} catch (error) {
-  console.error('Failed to initialize Prisma client:', error)
-  // Fallback for when Prisma client is not available
-  prisma = null
+// PATCH - Toggle language status (admin only)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Check if user is admin
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { role: true }
+    })
+
+    if (!currentUser || currentUser.role?.name !== 'admin') {
+      return NextResponse.json(
+        { message: 'Admin access required' },
+        { status: 403 }
+      )
+    }
+
+    const { id: languageId } = await params
+
+    // Find current language status
+    const currentLanguage = await prisma.language.findUnique({
+      where: { id: languageId }
+    })
+
+    if (!currentLanguage) {
+      return NextResponse.json(
+        { message: 'Language not found' },
+        { status: 404 }
+      )
+    }
+
+    // Toggle the status
+    const updatedLanguage = await prisma.language.update({
+      where: { id: languageId },
+      data: {
+        isActive: !currentLanguage.isActive
+      }
+    })
+
+    return NextResponse.json(updatedLanguage)
+  } catch (error) {
+    console.error('Error toggling language status:', error)
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
 }
-
-// Sample languages data (temporary until Prisma client is regenerated)
-let sampleLanguages = [
-  { id: '1', name: 'English', code: 'en', isActive: true },
-  { id: '2', name: 'Spanish', code: 'es', isActive: true },
-  { id: '3', name: 'French', code: 'fr', isActive: true },
-  { id: '4', name: 'German', code: 'de', isActive: true },
-  { id: '5', name: 'Italian', code: 'it', isActive: true },
-  { id: '6', name: 'Portuguese', code: 'pt', isActive: true },
-  { id: '7', name: 'Russian', code: 'ru', isActive: true },
-  { id: '8', name: 'Chinese', code: 'zh', isActive: true },
-  { id: '9', name: 'Japanese', code: 'ja', isActive: true },
-  { id: '10', name: 'Korean', code: 'ko', isActive: true }
-]
 
 // PUT - Update language (admin only)
 export async function PUT(
@@ -44,7 +80,7 @@ export async function PUT(
 
     const { id: languageId } = await params
     const body = await request.json()
-    const { name, code } = body
+    const { name, code, isActive } = body
 
     if (!name || !code) {
       return NextResponse.json(
@@ -59,7 +95,8 @@ export async function PUT(
         where: { id: languageId },
         data: {
           name,
-          code
+          code,
+          isActive
         }
       })
 

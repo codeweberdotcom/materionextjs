@@ -9,6 +9,8 @@ import Button from '@mui/material/Button'
 import TextField from '@mui/material/TextField'
 import Grid from '@mui/material/Grid2'
 import IconButton from '@mui/material/IconButton'
+import Switch from '@mui/material/Switch'
+import FormControlLabel from '@mui/material/FormControlLabel'
 
 type Language = {
   id: string
@@ -21,20 +23,22 @@ type EditLanguageDialogProps = {
   open: boolean
   handleClose: () => void
   language: Language
-  onSubmit: (data: { name: string; code: string }) => void
+  onSubmit: (data: { name: string; code: string; isActive: boolean }) => void
 }
 
 const EditLanguageDialog = ({ open, handleClose, language, onSubmit }: EditLanguageDialogProps) => {
   const [formData, setFormData] = useState({
     name: '',
-    code: ''
+    code: '',
+    isActive: true
   })
 
   useEffect(() => {
     if (language) {
       setFormData({
         name: language.name,
-        code: language.code
+        code: language.code,
+        isActive: language.isActive
       })
     }
   }, [language])
@@ -75,6 +79,17 @@ const EditLanguageDialog = ({ open, handleClose, language, onSubmit }: EditLangu
                 value={formData.code}
                 onChange={e => setFormData({ ...formData, code: e.target.value })}
                 required
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.isActive}
+                    onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
+                  />
+                }
+                label={formData.isActive ? 'Active' : 'Inactive'}
               />
             </Grid>
           </Grid>

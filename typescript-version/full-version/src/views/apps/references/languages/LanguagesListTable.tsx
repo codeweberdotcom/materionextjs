@@ -18,6 +18,7 @@ import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
+import Switch from '@mui/material/Switch'
 import type { TextFieldProps } from '@mui/material/TextField'
 
 // Third-party Imports
@@ -184,10 +185,15 @@ const LanguagesListTable = () => {
             <IconButton onClick={() => {
               setEditingLanguage(row.original)
               setEditLanguageOpen(true)
-            }}>
+            }} title='Edit Language'>
               <i className='ri-edit-line text-textSecondary' />
             </IconButton>
-            <IconButton onClick={() => handleDeleteLanguage(row.original.id, row.original.name)}>
+            <Switch
+              checked={row.original.isActive}
+              onChange={() => handleToggleLanguageStatus(row.original.id)}
+              size='small'
+            />
+            <IconButton onClick={() => handleDeleteLanguage(row.original.id, row.original.name)} title='Delete Language'>
               <i className='ri-delete-bin-7-line text-textSecondary' />
             </IconButton>
           </div>
@@ -249,7 +255,7 @@ const LanguagesListTable = () => {
     }
   }
 
-  const handleAddLanguage = async (languageData: { name: string; code: string }) => {
+  const handleAddLanguage = async (languageData: { name: string; code: string; isActive: boolean }) => {
     try {
       const response = await fetch('/api/admin/references/languages', {
         method: 'POST',
@@ -276,7 +282,7 @@ const LanguagesListTable = () => {
     }
   }
 
-  const handleEditLanguage = async (id: string, languageData: { name: string; code: string }) => {
+  const handleEditLanguage = async (id: string, languageData: { name: string; code: string; isActive: boolean }) => {
     try {
       const response = await fetch(`/api/admin/references/languages/${id}`, {
         method: 'PUT',
@@ -301,6 +307,30 @@ const LanguagesListTable = () => {
     } catch (error) {
       console.error('Error updating language:', error)
       toast.error('Failed to update language')
+    }
+  }
+
+  const handleToggleLanguageStatus = async (id: string) => {
+    try {
+      const response = await fetch(`/api/admin/references/languages/${id}`, {
+        method: 'PATCH'
+      })
+
+      if (response.ok) {
+        const updatedLanguage = await response.json()
+        const updatedData = data.map(lang =>
+          lang.id === updatedLanguage.id ? updatedLanguage : lang
+        )
+        setData(updatedData)
+        setFilteredData(updatedData)
+        toast.success(`Language ${updatedLanguage.isActive ? 'activated' : 'deactivated'} successfully!`)
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to toggle language status')
+      }
+    } catch (error) {
+      console.error('Error toggling language status:', error)
+      toast.error('Failed to toggle language status')
     }
   }
 

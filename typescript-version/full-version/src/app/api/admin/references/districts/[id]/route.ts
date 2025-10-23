@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/libs/auth'
+import { prisma } from '@/libs/prisma'
 
-// Create Prisma client instance
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
-
-// PATCH - Toggle city status (admin only)
+// PATCH - Toggle district status (admin only)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -34,31 +31,31 @@ export async function PATCH(
       )
     }
 
-    const { id: cityId } = await params
+    const { id: districtId } = await params
 
-    // Find current city status
-    const currentCity = await prisma.city.findUnique({
-      where: { id: cityId }
+    // Find current district status
+    const currentDistrict = await prisma.district.findUnique({
+      where: { id: districtId }
     })
 
-    if (!currentCity) {
+    if (!currentDistrict) {
       return NextResponse.json(
-        { message: 'City not found' },
+        { message: 'District not found' },
         { status: 404 }
       )
     }
 
     // Toggle the status
-    const updatedCity = await prisma.city.update({
-      where: { id: cityId },
+    const updatedDistrict = await prisma.district.update({
+      where: { id: districtId },
       data: {
-        isActive: !currentCity.isActive
+        isActive: !currentDistrict.isActive
       }
     })
 
-    return NextResponse.json(updatedCity)
+    return NextResponse.json(updatedDistrict)
   } catch (error) {
-    console.error('Error toggling city status:', error)
+    console.error('Error toggling district status:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -66,7 +63,7 @@ export async function PATCH(
   }
 }
 
-// PUT - Update city (admin only)
+// PUT - Update district (admin only)
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -94,14 +91,14 @@ export async function PUT(
       )
     }
 
-    const { id: cityId } = await params
+    const { id: districtId } = await params
     let body
     try {
       body = await request.json()
     } catch (error) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
-    const { name, code, districts = [], isActive } = body
+    const { name, code, isActive } = body
 
     if (!name || !code) {
       return NextResponse.json(
@@ -110,27 +107,19 @@ export async function PUT(
       )
     }
 
-    // Update the city
-    const updatedCity = await prisma.city.update({
-      where: { id: cityId },
+    // Update the district
+    const updatedDistrict = await prisma.district.update({
+      where: { id: districtId },
       data: {
         name,
         code,
-        isActive,
-        districts: districts.length > 0 ? {
-          set: districts.map((districtId: string) => ({ id: districtId }))
-        } : {
-          set: []
-        }
-      },
-      include: {
-        districts: true
+        isActive
       }
     })
 
-    return NextResponse.json(updatedCity)
+    return NextResponse.json(updatedDistrict)
   } catch (error) {
-    console.error('Error updating city:', error)
+    console.error('Error updating district:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -138,7 +127,7 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete city (admin only)
+// DELETE - Delete district (admin only)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -166,29 +155,29 @@ export async function DELETE(
       )
     }
 
-    const { id: cityId } = await params
+    const { id: districtId } = await params
 
-    // Find and delete the city from database
+    // Find and delete the district from database
     try {
-      const deletedCity = await prisma.city.delete({
-        where: { id: cityId }
+      const deletedDistrict = await prisma.district.delete({
+        where: { id: districtId }
       })
 
       return NextResponse.json({
-        message: 'City deleted successfully',
-        deletedCity
+        message: 'District deleted successfully',
+        deletedDistrict
       })
     } catch (error: any) {
       if (error.code === 'P2025') {
         return NextResponse.json(
-          { message: 'City not found' },
+          { message: 'District not found' },
           { status: 404 }
         )
       }
       throw error
     }
   } catch (error) {
-    console.error('Error deleting city:', error)
+    console.error('Error deleting district:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

@@ -64,6 +64,12 @@ type City = {
   name: string
   code: string
   isActive: boolean
+  districts?: Array<{
+    id: string
+    name: string
+    code: string
+    isActive: boolean
+  }>
 }
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
@@ -175,6 +181,23 @@ const CitiesListTable = () => {
       )
     }),
     {
+      id: 'districts',
+      header: 'Districts',
+      cell: ({ row }) => {
+        const districtsCount = row.original.districts ? row.original.districts.length : 0
+        return (
+          <div className='flex items-center gap-2'>
+            <Chip
+              label={`${districtsCount} districts`}
+              size='small'
+              variant={districtsCount > 0 ? 'filled' : 'outlined'}
+              color={districtsCount > 0 ? 'primary' : 'default'}
+            />
+          </div>
+        )
+      }
+    },
+    {
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
@@ -275,7 +298,7 @@ const CitiesListTable = () => {
     }
   }
 
-  const handleAddCity = async (cityData: { name: string; code: string; isActive: boolean }) => {
+  const handleAddCity = async (cityData: { name: string; code: string; districts: string[]; isActive: boolean }) => {
     try {
       const response = await fetch('/api/admin/references/cities', {
         method: 'POST',
@@ -302,7 +325,7 @@ const CitiesListTable = () => {
     }
   }
 
-  const handleUpdateCity = async (cityData: { id: string; name: string; code: string; isActive: boolean }) => {
+  const handleUpdateCity = async (cityData: { id: string; name: string; code: string; districts: string[]; isActive: boolean }) => {
     try {
       const response = await fetch(`/api/admin/references/cities/${cityData.id}`, {
         method: 'PUT',

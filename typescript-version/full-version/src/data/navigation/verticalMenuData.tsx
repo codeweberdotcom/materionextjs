@@ -278,6 +278,11 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
                 label: 'Cities',
                 icon: 'ri-map-pin-4-line',
                 href: '/apps/references/cities'
+              },
+              {
+                label: 'Districts',
+                icon: 'ri-map-pin-5-line',
+                href: '/apps/references/districts'
               }
             ]
           },
