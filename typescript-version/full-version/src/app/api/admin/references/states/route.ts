@@ -6,7 +6,7 @@ import { authOptions } from '@/libs/auth'
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
-// GET - Get all regions (admin only)
+// GET - Get all states (admin only)
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
@@ -31,17 +31,15 @@ export async function GET() {
       )
     }
 
-    // Fetch regions from database
-    const regions = await prisma.region.findMany({
+    // Fetch states from database
+    const states = await prisma.state.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json(regions)
-
-    return NextResponse.json(regions)
+    return NextResponse.json(states)
   } catch (error) {
-    console.error('Error fetching regions:', error)
+    console.error('Error fetching states:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -49,7 +47,7 @@ export async function GET() {
   }
 }
 
-// POST - Create new region (admin only)
+// POST - Create new state (admin only)
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -84,8 +82,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create a single region
-    const newRegion = await prisma.region.create({
+    // Create a single state
+    const newState = await prisma.state.create({
       data: {
         name,
         code,
@@ -93,9 +91,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(newRegion)
+    return NextResponse.json(newState)
   } catch (error) {
-    console.error('Error creating region:', error)
+    console.error('Error creating state:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -103,7 +101,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update existing region (admin only)
+// PUT - Update existing state (admin only)
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -138,8 +136,8 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Update the region
-    const updatedRegion = await prisma.region.update({
+    // Update the state
+    const updatedState = await prisma.state.update({
       where: { id },
       data: {
         name,
@@ -148,9 +146,9 @@ export async function PUT(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(updatedRegion)
+    return NextResponse.json(updatedState)
   } catch (error) {
-    console.error('Error updating region:', error)
+    console.error('Error updating state:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -158,7 +156,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// PATCH - Toggle region status (admin only)
+// PATCH - Toggle state status (admin only)
 export async function PATCH(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -188,34 +186,34 @@ export async function PATCH(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json(
-        { message: 'Region ID is required' },
+        { message: 'State ID is required' },
         { status: 400 }
       )
     }
 
-    // Get current region status
-    const currentRegion = await prisma.region.findUnique({
+    // Get current state status
+    const currentState = await prisma.state.findUnique({
       where: { id }
     })
 
-    if (!currentRegion) {
+    if (!currentState) {
       return NextResponse.json(
-        { message: 'Region not found' },
+        { message: 'State not found' },
         { status: 404 }
       )
     }
 
     // Toggle the status
-    const updatedRegion = await prisma.region.update({
+    const updatedState = await prisma.state.update({
       where: { id },
       data: {
-        isActive: !currentRegion.isActive
+        isActive: !currentState.isActive
       }
     })
 
-    return NextResponse.json(updatedRegion)
+    return NextResponse.json(updatedState)
   } catch (error) {
-    console.error('Error toggling region status:', error)
+    console.error('Error toggling state status:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

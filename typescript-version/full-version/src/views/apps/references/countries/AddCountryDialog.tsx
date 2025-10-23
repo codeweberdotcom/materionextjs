@@ -15,7 +15,7 @@ import Autocomplete from '@mui/material/Autocomplete'
 import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
 
-type Region = {
+type State = {
   id: string
   name: string
   code: string
@@ -27,7 +27,7 @@ type Country = {
   name: string
   code: string
   isActive: boolean
-  regions?: Array<{
+  states?: Array<{
     id: string
     name: string
     code: string
@@ -38,37 +38,37 @@ type Country = {
 type AddCountryDialogProps = {
   open: boolean
   handleClose: () => void
-  onSubmit: (data: { name: string; code: string; regions: string[]; isActive: boolean }) => void
+  onSubmit: (data: { name: string; code: string; states: string[]; isActive: boolean }) => void
   editCountry?: Country | null
-  onUpdate?: (data: { id: string; name: string; code: string; regions: string[]; isActive: boolean }) => void
+  onUpdate?: (data: { id: string; name: string; code: string; states: string[]; isActive: boolean }) => void
 }
 
 const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }: AddCountryDialogProps) => {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    regions: [] as string[],
+    states: [] as string[],
     isActive: true
   })
-  const [regions, setRegions] = useState<Region[]>([])
+  const [states, setStates] = useState<State[]>([])
 
   const isEditMode = !!editCountry
 
   useEffect(() => {
-    const fetchRegions = async () => {
+    const fetchStates = async () => {
       try {
-        const response = await fetch('/api/regions')
+        const response = await fetch('/api/states')
         if (response.ok) {
           const data = await response.json()
-          setRegions(data)
+          setStates(data)
         }
       } catch (error) {
-        console.error('Error fetching regions:', error)
+        console.error('Error fetching states:', error)
       }
     }
 
     if (open) {
-      fetchRegions()
+      fetchStates()
     }
   }, [open])
 
@@ -83,7 +83,7 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
   }
 
   const handleCloseDialog = () => {
-    setFormData({ name: '', code: '', regions: [], isActive: true })
+    setFormData({ name: '', code: '', states: [], isActive: true })
     handleClose()
   }
 
@@ -93,14 +93,14 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
       setFormData({
         name: editCountry.name,
         code: editCountry.code,
-        regions: editCountry.regions ? editCountry.regions.map(r => r.id) : [],
+        states: editCountry.states ? editCountry.states.map(s => s.id) : [],
         isActive: editCountry.isActive
       })
     } else {
       setFormData({
         name: '',
         code: '',
-        regions: [],
+        states: [],
         isActive: true
       })
     }
@@ -138,31 +138,31 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
             <Grid size={{ xs: 12 }}>
               <Autocomplete
                 multiple
-                id='regions-autocomplete'
-                options={regions}
+                id='states-autocomplete'
+                options={states}
                 getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
-                value={regions.filter(region => formData.regions.includes(region.id))}
+                value={states.filter(state => formData.states.includes(state.id))}
                 onChange={(event, newValue) => {
                   setFormData({
                     ...formData,
-                    regions: newValue.map(region => typeof region === 'string' ? region : region.id)
+                    states: newValue.map(state => typeof state === 'string' ? state : state.id)
                   })
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label='Regions'
-                    placeholder='Search and select regions...'
+                    label='States'
+                    placeholder='Search and select states...'
                   />
                 )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => {
                     const { key, ...chipProps } = getTagProps({ index })
-                    const region = regions.find(r => r.id === (typeof option === 'string' ? option : option.id))
+                    const state = states.find(s => s.id === (typeof option === 'string' ? option : option.id))
                     return (
                       <Chip
                         key={key}
-                        label={region?.name || (typeof option === 'string' ? option : option.name)}
+                        label={state?.name || (typeof option === 'string' ? option : option.name)}
                         size='small'
                         {...chipProps}
                       />

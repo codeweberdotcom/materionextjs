@@ -262,7 +262,7 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
             href: '/apps/references/languages'
           },
           {
-            label: 'Countries & Regions',
+            label: 'Countries & States',
             icon: 'ri-flag-line',
             children: [
               {
@@ -270,9 +270,9 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
                 href: '/apps/references/countries'
               },
               {
-                label: 'Regions',
+                label: 'States',
                 icon: 'ri-map-pin-2-line',
-                href: '/apps/references/regions'
+                href: '/apps/references/states'
               },
               {
                 label: 'Cities',

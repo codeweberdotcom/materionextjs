@@ -45,7 +45,7 @@ import type { ThemeColor } from '@core/types'
 import type { Locale } from '@configs/i18n'
 
 // Component Imports
-import AddRegionDialog from './AddRegionDialog'
+import AddStateDialog from './AddStateDialog'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -59,7 +59,7 @@ declare module '@tanstack/table-core' {
   }
 }
 
-type Region = {
+type State = {
   id: string
   name: string
   code: string
@@ -99,40 +99,40 @@ const DebouncedInput = ({
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
 }
 
-const columnHelper = createColumnHelper<Region>()
+const columnHelper = createColumnHelper<State>()
 
-const RegionsListTable = () => {
-  const [data, setData] = useState<Region[]>([])
+const StatesListTable = () => {
+  const [data, setData] = useState<State[]>([])
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
   const [loading, setLoading] = useState(true)
-  const [addRegionOpen, setAddRegionOpen] = useState(false)
-  const [editRegion, setEditRegion] = useState<Region | null>(null)
+  const [addStateOpen, setAddStateOpen] = useState(false)
+  const [editState, setEditState] = useState<State | null>(null)
 
   const { lang: locale } = useParams()
 
-  // Fetch regions data
+  // Fetch states data
   useEffect(() => {
-    const fetchRegions = async () => {
+    const fetchStates = async () => {
       try {
-        const response = await fetch('/api/regions')
+        const response = await fetch('/api/states')
         if (response.ok) {
-          const regions = await response.json()
-          setData(regions)
-          setFilteredData(regions)
+          const states = await response.json()
+          setData(states)
+          setFilteredData(states)
         }
       } catch (error) {
-        console.error('Error fetching regions:', error)
-        toast.error('Failed to load regions')
+        console.error('Error fetching states:', error)
+        toast.error('Failed to load states')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchRegions()
+    fetchStates()
   }, [])
 
-  const columns = useMemo<ColumnDef<Region, any>[]>(() => [
+  const columns = useMemo<ColumnDef<State, any>[]>(() => [
     {
       id: 'select',
       header: ({ table }) => (
@@ -156,7 +156,7 @@ const RegionsListTable = () => {
       )
     },
     columnHelper.accessor('name', {
-      header: 'Region',
+      header: 'State',
       cell: ({ row }) => <Typography>{row.original.name}</Typography>
     }),
     columnHelper.accessor('code', {
@@ -179,7 +179,7 @@ const RegionsListTable = () => {
       header: 'Actions',
       cell: ({ row }) => (
         <div className='flex items-center'>
-          <IconButton onClick={() => handleEditRegion(row.original)} title='Edit Region'>
+          <IconButton onClick={() => handleEditState(row.original)} title='Edit State'>
             <i className='ri-edit-line text-textSecondary' />
           </IconButton>
           <Switch
@@ -187,7 +187,7 @@ const RegionsListTable = () => {
             onChange={() => handleToggleStatus(row.original.id)}
             size='small'
           />
-          <IconButton onClick={() => handleDeleteRegion(row.original.id, row.original.name)} title='Delete Region'>
+          <IconButton onClick={() => handleDeleteState(row.original.id, row.original.name)} title='Delete State'>
             <i className='ri-delete-bin-7-line text-textSecondary' />
           </IconButton>
         </div>
@@ -222,139 +222,135 @@ const RegionsListTable = () => {
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
-  const handleDeleteRegion = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete region "${name}"?`)) {
+  const handleDeleteState = async (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete state "${name}"?`)) {
       return
     }
 
     try {
-      const response = await fetch(`/api/admin/references/regions/${id}`, {
+      const response = await fetch(`/api/admin/references/states/${id}`, {
         method: 'DELETE'
       })
 
       if (response.ok) {
-        const updatedData = data.filter(region => region.id !== id)
+        const updatedData = data.filter(state => state.id !== id)
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success('Region deleted successfully!')
+        toast.success('State deleted successfully!')
       } else {
         const error = await response.json()
-        toast.error(error.message || 'Failed to delete region')
+        toast.error(error.message || 'Failed to delete state')
       }
     } catch (error) {
-      console.error('Error deleting region:', error)
-      toast.error('Failed to delete region')
+      console.error('Error deleting state:', error)
+      toast.error('Failed to delete state')
     }
   }
 
-  const handleEditRegion = (region: Region) => {
-    setEditRegion(region)
+  const handleEditState = (state: State) => {
+    setEditState(state)
   }
 
-  const handleUpdateRegion = async (regionData: { id: string; name: string; code: string }) => {
+  const handleUpdateState = async (stateData: { id: string; name: string; code: string }) => {
     try {
-      const response = await fetch('/api/admin/references/regions', {
+      const response = await fetch(`/api/admin/references/states/${stateData.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(regionData)
+        body: JSON.stringify({ name: stateData.name, code: stateData.code })
       })
 
       if (response.ok) {
-        const updatedRegion = await response.json()
-        const updatedData = data.map(region =>
-          region.id === updatedRegion.id ? updatedRegion : region
+        const updatedState = await response.json()
+        const updatedData = data.map(state =>
+          state.id === updatedState.id ? updatedState : state
         )
         setData(updatedData)
         setFilteredData(updatedData)
-        setEditRegion(null)
-        toast.success('Region updated successfully!')
+        setEditState(null)
+        toast.success('State updated successfully!')
       } else {
         const error = await response.json()
-        toast.error(error.message || 'Failed to update region')
+        toast.error(error.message || 'Failed to update state')
       }
     } catch (error) {
-      console.error('Error updating region:', error)
-      toast.error('Failed to update region')
+      console.error('Error updating state:', error)
+      toast.error('Failed to update state')
     }
   }
 
   const handleToggleStatus = async (id: string) => {
     try {
-      const response = await fetch('/api/admin/references/regions', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ id })
+      const response = await fetch(`/api/admin/references/states/${id}`, {
+        method: 'PATCH'
       })
 
       if (response.ok) {
-        const updatedRegion = await response.json()
-        const updatedData = data.map(region =>
-          region.id === updatedRegion.id ? updatedRegion : region
+        const updatedState = await response.json()
+        const updatedData = data.map(state =>
+          state.id === updatedState.id ? updatedState : state
         )
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success(`Region ${updatedRegion.isActive ? 'activated' : 'deactivated'} successfully!`)
+        toast.success(`State ${updatedState.isActive ? 'activated' : 'deactivated'} successfully!`)
       } else {
         const error = await response.json()
-        toast.error(error.message || 'Failed to toggle region status')
+        toast.error(error.message || 'Failed to toggle state status')
       }
     } catch (error) {
-      console.error('Error toggling region status:', error)
-      toast.error('Failed to toggle region status')
+      console.error('Error toggling state status:', error)
+      toast.error('Failed to toggle state status')
     }
   }
 
-  const handleAddRegion = async (regionData: { name: string; code: string }) => {
+  const handleAddState = async (stateData: { name: string; code: string }) => {
     try {
-      const response = await fetch('/api/admin/references/regions', {
+      const response = await fetch('/api/admin/references/states', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(regionData)
+        body: JSON.stringify(stateData)
       })
 
       if (response.ok) {
-        const newRegion = await response.json()
-        const updatedData = [...data, newRegion]
+        const newState = await response.json()
+        const updatedData = [...data, newState]
         setData(updatedData)
         setFilteredData(updatedData)
-        setAddRegionOpen(false)
-        toast.success('Region added successfully!')
+        setAddStateOpen(false)
+        toast.success('State added successfully!')
       } else {
         const error = await response.json()
-        toast.error(error.message || 'Failed to add region')
+        toast.error(error.message || 'Failed to add state')
       }
     } catch (error) {
-      console.error('Error adding region:', error)
-      toast.error('Failed to add region')
+      console.error('Error adding state:', error)
+      toast.error('Failed to add state')
     }
   }
 
   if (loading) {
-    return <Typography>Loading regions...</Typography>
+    return <Typography>Loading states...</Typography>
   }
 
   return (
     <>
     <Card>
-      <CardHeader title='Regions Management' />
+      <CardHeader title='States Management' />
       <Divider />
       <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
         <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
           <DebouncedInput
             value={globalFilter ?? ''}
             onChange={value => setGlobalFilter(String(value))}
-            placeholder='Search Region'
+            placeholder='Search State'
             className='max-sm:is-full'
           />
         </div>
-        <Button variant='contained' onClick={() => setAddRegionOpen(true)} className='max-sm:is-full'>
-          Add New Region
+        <Button variant='contained' onClick={() => setAddStateOpen(true)} className='max-sm:is-full'>
+          Add New State
         </Button>
       </div>
       <div className='overflow-x-auto'>
@@ -419,18 +415,18 @@ const RegionsListTable = () => {
         onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
       />
     </Card>
-    <AddRegionDialog
-      open={addRegionOpen || !!editRegion}
+    <AddStateDialog
+      open={addStateOpen || !!editState}
       handleClose={() => {
-        setAddRegionOpen(false)
-        setEditRegion(null)
+        setAddStateOpen(false)
+        setEditState(null)
       }}
-      onSubmit={handleAddRegion}
-      editRegion={editRegion}
-      onUpdate={handleUpdateRegion}
+      onSubmit={handleAddState}
+      editState={editState}
+      onUpdate={handleUpdateState}
     />
    </>
   )
 }
 
-export default RegionsListTable
+export default StatesListTable

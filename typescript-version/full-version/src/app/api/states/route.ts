@@ -4,17 +4,17 @@ import { NextResponse } from 'next/server'
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 
-// GET - Get all active regions (public access)
+// GET - Get all active states (public access)
 export async function GET() {
   try {
-    const regions = await prisma.region.findMany({
+    const states = await prisma.state.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json(regions)
+    return NextResponse.json(states)
   } catch (error) {
-    console.error('Error fetching regions:', error)
+    console.error('Error fetching states:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

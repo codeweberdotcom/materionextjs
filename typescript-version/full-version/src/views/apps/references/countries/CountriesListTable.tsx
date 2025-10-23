@@ -64,7 +64,7 @@ type Country = {
   name: string
   code: string
   isActive: boolean
-  regions?: Array<{
+  states?: Array<{
     id: string
     name: string
     code: string
@@ -182,17 +182,17 @@ const CountriesListTable = () => {
         )
       }),
       {
-        id: 'regions',
-        header: 'Regions',
+        id: 'states',
+        header: 'States',
         cell: ({ row }) => {
-          const regionsCount = row.original.regions ? row.original.regions.length : 0
+          const statesCount = row.original.states ? row.original.states.length : 0
           return (
             <div className='flex items-center gap-2'>
               <Chip
-                label={`${regionsCount} regions`}
+                label={`${statesCount} states`}
                 size='small'
-                variant={regionsCount > 0 ? 'filled' : 'outlined'}
-                color={regionsCount > 0 ? 'primary' : 'default'}
+                variant={statesCount > 0 ? 'filled' : 'outlined'}
+                color={statesCount > 0 ? 'primary' : 'default'}
               />
             </div>
           )
@@ -277,7 +277,7 @@ const CountriesListTable = () => {
     setEditCountry(country)
   }
 
-  const handleUpdateCountry = async (countryData: { id: string; name: string; code: string; regions: string[]; isActive: boolean }) => {
+  const handleUpdateCountry = async (countryData: { id: string; name: string; code: string; states: string[]; isActive: boolean }) => {
     try {
       console.log('Updating country with data:', countryData)
       const response = await fetch(`/api/admin/references/countries/${countryData.id}`, {
@@ -331,7 +331,7 @@ const CountriesListTable = () => {
     }
   }
 
-  const handleAddCountry = async (countryData: { name: string; code: string; regions: string[]; isActive: boolean }) => {
+  const handleAddCountry = async (countryData: { name: string; code: string; states: string[]; isActive: boolean }) => {
     try {
       const response = await fetch('/api/admin/references/countries', {
         method: 'POST',

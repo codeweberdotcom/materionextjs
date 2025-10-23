@@ -14,22 +14,22 @@ import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
 
 
-type Region = {
+type State = {
   id: string
   name: string
   code: string
   isActive: boolean
 }
 
-type AddRegionDialogProps = {
+type AddStateDialogProps = {
   open: boolean
   handleClose: () => void
   onSubmit: (data: { name: string; code: string }) => void
-  editRegion?: Region | null
+  editState?: State | null
   onUpdate?: (data: { id: string; name: string; code: string }) => void
 }
 
-const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: AddRegionDialogProps) => {
+const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: AddStateDialogProps) => {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -37,16 +37,16 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
   })
   const [errors, setErrors] = useState<{[key: string]: string}>({})
 
-  const isEditMode = !!editRegion
+  const isEditMode = !!editState
 
 
   // Populate form data when editing
   useEffect(() => {
-    if (editRegion) {
+    if (editState) {
       setFormData({
-        name: editRegion.name,
-        code: editRegion.code,
-        isActive: editRegion.isActive
+        name: editState.name,
+        code: editState.code,
+        isActive: editState.isActive
       })
     } else {
       setFormData({
@@ -55,7 +55,7 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
         isActive: true
       })
     }
-  }, [editRegion])
+  }, [editState])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,11 +64,11 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
     const newErrors: {[key: string]: string} = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Название региона обязательно'
+      newErrors.name = 'Название штата обязательно'
     }
 
     if (!formData.code.trim()) {
-      newErrors.code = 'Код региона обязателен'
+      newErrors.code = 'Код штата обязателен'
     }
 
 
@@ -79,8 +79,8 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
       return
     }
 
-    if (isEditMode && onUpdate && editRegion) {
-      onUpdate({ ...formData, id: editRegion.id })
+    if (isEditMode && onUpdate && editState) {
+      onUpdate({ ...formData, id: editState.id })
     } else {
       onSubmit(formData)
     }
@@ -94,7 +94,7 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
 
   return (
     <Dialog fullWidth open={open} onClose={handleCloseDialog} maxWidth='sm'>
-      <DialogTitle>{isEditMode ? 'Edit Region' : 'Add New Region'}</DialogTitle>
+      <DialogTitle>{isEditMode ? 'Edit State' : 'Add New State'}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <IconButton onClick={handleCloseDialog} className='absolute block-start-4 inline-end-4'>
@@ -104,8 +104,8 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='Region Name'
-                placeholder='Republic of Adygea'
+                label='State Name'
+                placeholder='California'
                 value={formData.name}
                 onChange={e => {
                   setFormData({ ...formData, name: e.target.value })
@@ -121,8 +121,8 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='Region Code'
-                placeholder='AD'
+                label='State Code'
+                placeholder='CA'
                 value={formData.code}
                 onChange={e => setFormData({ ...formData, code: e.target.value })}
                 error={!!errors.code}
@@ -148,7 +148,7 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
             Cancel
           </Button>
           <Button variant='contained' type='submit'>
-            {isEditMode ? 'Update Region' : 'Add Region'}
+            {isEditMode ? 'Update State' : 'Add State'}
           </Button>
         </DialogActions>
       </form>
@@ -156,4 +156,4 @@ const AddRegionDialog = ({ open, handleClose, onSubmit, editRegion, onUpdate }: 
   )
 }
 
-export default AddRegionDialog
+export default AddStateDialog

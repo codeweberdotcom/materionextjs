@@ -86,7 +86,7 @@ model Country {
       name        String   @unique
       code        String   @unique
       isActive    Boolean  @default(true)
-      regions     Region[]
+      states      State[]
       createdAt   DateTime @default(now())
       updatedAt   DateTime @updatedAt
   }
@@ -111,7 +111,7 @@ model Currency {
    updatedAt   DateTime @updatedAt
 }
 
-model Region {
+model State {
       id          String   @id @default(cuid())
       name        String
       code        String
@@ -121,19 +121,19 @@ model Region {
       createdAt   DateTime @default(now())
       updatedAt   DateTime @updatedAt
 
-      regionCities RegionCity[]
+      stateCities StateCity[]
 
       @@unique([name, id])
   }
 
-  model RegionCity {
+  model StateCity {
       id        String @id @default(cuid())
-      regionId  String
+      stateId   String
       cityId    String
-      region    Region @relation(fields: [regionId], references: [id], onDelete: Cascade)
+      state     State  @relation(fields: [stateId], references: [id], onDelete: Cascade)
       city      City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
 
-      @@unique([regionId, cityId])
+      @@unique([stateId, cityId])
   }
 
 
@@ -142,7 +142,7 @@ model City {
       name        String
       code        String
       isActive    Boolean  @default(true)
-      regionCities RegionCity[]
+      stateCities StateCity[]
       createdAt   DateTime @default(now())
       updatedAt   DateTime @updatedAt
 

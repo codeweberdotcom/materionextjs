@@ -26,8 +26,8 @@ export async function PUT(
       )
     }
 
-    const { name, code, regions, isActive } = body
-    console.log('Received update data:', { name, code, regions, isActive })
+    const { name, code, states, isActive } = body
+    console.log('Received update data:', { name, code, states, isActive })
 
     // Check authentication after reading the body
     const session = await getServerSession(authOptions)
@@ -71,42 +71,42 @@ export async function PUT(
         }
       })
 
-      // Handle regions update
-      if (regions !== undefined) {
-        // Get current regions for the country
-        const currentRegions = await prisma.region.findMany({
+      // Handle states update
+      if (states !== undefined) {
+        // Get current states for the country
+        const currentStates = await prisma.state.findMany({
           where: { countryId: countryId }
         })
 
-        const currentRegionIds: string[] = currentRegions.map((r: any) => r.id)
-        const newRegionIds: string[] = regions
+        const currentStateIds: string[] = currentStates.map((s: any) => s.id)
+        const newStateIds: string[] = states
 
-        // Regions to connect
-        const toConnect = newRegionIds.filter((id: string) => !currentRegionIds.includes(id))
-        // Regions to disconnect
-        const toDisconnect = currentRegionIds.filter((id: string) => !newRegionIds.includes(id))
+        // States to connect
+        const toConnect = newStateIds.filter((id: string) => !currentStateIds.includes(id))
+        // States to disconnect
+        const toDisconnect = currentStateIds.filter((id: string) => !newStateIds.includes(id))
 
-        // Connect new regions
+        // Connect new states
         if (toConnect.length > 0) {
-          await prisma.region.updateMany({
+          await prisma.state.updateMany({
             where: { id: { in: toConnect } },
             data: { countryId: countryId }
           })
         }
 
-        // Disconnect old regions
+        // Disconnect old states
         if (toDisconnect.length > 0) {
-          await prisma.region.updateMany({
+          await prisma.state.updateMany({
             where: { id: { in: toDisconnect } },
             data: { countryId: null }
           })
         }
       }
 
-      // Fetch the updated country with regions
+      // Fetch the updated country with states
       const finalCountry = await prisma.country.findUnique({
         where: { id: countryId },
-        include: { regions: true }
+        include: { states: true }
       })
 
       return NextResponse.json(finalCountry)
