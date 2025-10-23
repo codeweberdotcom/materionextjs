@@ -64,6 +64,12 @@ type State = {
   name: string
   code: string
   isActive: boolean
+  cities?: Array<{
+    id: string
+    name: string
+    code: string
+    isActive: boolean
+  }>
 }
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
@@ -115,7 +121,7 @@ const StatesListTable = () => {
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const response = await fetch('/api/states')
+        const response = await fetch('/api/admin/references/states')
         if (response.ok) {
           const states = await response.json()
           setData(states)
@@ -175,6 +181,23 @@ const StatesListTable = () => {
       )
     }),
     {
+      id: 'cities',
+      header: 'Cities',
+      cell: ({ row }) => {
+        const citiesCount = row.original.cities ? row.original.cities.length : 0
+        return (
+          <div className='flex items-center gap-2'>
+            <Chip
+              label={`${citiesCount} cities`}
+              size='small'
+              variant={citiesCount > 0 ? 'filled' : 'outlined'}
+              color={citiesCount > 0 ? 'primary' : 'default'}
+            />
+          </div>
+        )
+      }
+    },
+    {
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
@@ -233,9 +256,13 @@ const StatesListTable = () => {
       })
 
       if (response.ok) {
-        const updatedData = data.filter(state => state.id !== id)
-        setData(updatedData)
-        setFilteredData(updatedData)
+        // Refetch the data
+        const refetchResponse = await fetch('/api/admin/references/states')
+        if (refetchResponse.ok) {
+          const states = await refetchResponse.json()
+          setData(states)
+          setFilteredData(states)
+        }
         toast.success('State deleted successfully!')
       } else {
         const error = await response.json()
@@ -251,23 +278,24 @@ const StatesListTable = () => {
     setEditState(state)
   }
 
-  const handleUpdateState = async (stateData: { id: string; name: string; code: string }) => {
+  const handleUpdateState = async (stateData: { id: string; name: string; code: string; cities: string[]; isActive: boolean }) => {
     try {
       const response = await fetch(`/api/admin/references/states/${stateData.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ name: stateData.name, code: stateData.code })
+        body: JSON.stringify({ name: stateData.name, code: stateData.code, cities: stateData.cities, isActive: stateData.isActive })
       })
 
       if (response.ok) {
-        const updatedState = await response.json()
-        const updatedData = data.map(state =>
-          state.id === updatedState.id ? updatedState : state
-        )
-        setData(updatedData)
-        setFilteredData(updatedData)
+        // Refetch the data to ensure consistency
+        const refetchResponse = await fetch('/api/admin/references/states')
+        if (refetchResponse.ok) {
+          const states = await refetchResponse.json()
+          setData(states)
+          setFilteredData(states)
+        }
         setEditState(null)
         toast.success('State updated successfully!')
       } else {
@@ -287,13 +315,14 @@ const StatesListTable = () => {
       })
 
       if (response.ok) {
-        const updatedState = await response.json()
-        const updatedData = data.map(state =>
-          state.id === updatedState.id ? updatedState : state
-        )
-        setData(updatedData)
-        setFilteredData(updatedData)
-        toast.success(`State ${updatedState.isActive ? 'activated' : 'deactivated'} successfully!`)
+        // Refetch the data
+        const refetchResponse = await fetch('/api/admin/references/states')
+        if (refetchResponse.ok) {
+          const states = await refetchResponse.json()
+          setData(states)
+          setFilteredData(states)
+        }
+        toast.success('State status updated successfully!')
       } else {
         const error = await response.json()
         toast.error(error.message || 'Failed to toggle state status')
@@ -304,7 +333,7 @@ const StatesListTable = () => {
     }
   }
 
-  const handleAddState = async (stateData: { name: string; code: string }) => {
+  const handleAddState = async (stateData: { name: string; code: string; cities: string[]; isActive: boolean }) => {
     try {
       const response = await fetch('/api/admin/references/states', {
         method: 'POST',
@@ -315,10 +344,13 @@ const StatesListTable = () => {
       })
 
       if (response.ok) {
-        const newState = await response.json()
-        const updatedData = [...data, newState]
-        setData(updatedData)
-        setFilteredData(updatedData)
+        // Refetch the data
+        const refetchResponse = await fetch('/api/admin/references/states')
+        if (refetchResponse.ok) {
+          const states = await refetchResponse.json()
+          setData(states)
+          setFilteredData(states)
+        }
         setAddStateOpen(false)
         toast.success('State added successfully!')
       } else {

@@ -93,7 +93,6 @@ async function main() {
       password: hashedPassword,
       roleId: adminRole.id,
       language: 'Russian',
-      timezone: 'Europe/Moscow',
       currency: 'RUB',
       country: 'russia'
     }

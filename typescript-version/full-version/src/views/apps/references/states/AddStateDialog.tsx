@@ -12,33 +12,66 @@ import IconButton from '@mui/material/IconButton'
 import Box from '@mui/material/Box'
 import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import Autocomplete from '@mui/material/Autocomplete'
+import Chip from '@mui/material/Chip'
 
-
-type State = {
+type City = {
   id: string
   name: string
   code: string
   isActive: boolean
 }
 
+type State = {
+  id: string
+  name: string
+  code: string
+  isActive: boolean
+  cities?: Array<{
+    id: string
+    name: string
+    code: string
+    isActive: boolean
+  }>
+}
+
 type AddStateDialogProps = {
   open: boolean
   handleClose: () => void
-  onSubmit: (data: { name: string; code: string }) => void
+  onSubmit: (data: { name: string; code: string; cities: string[]; isActive: boolean }) => void
   editState?: State | null
-  onUpdate?: (data: { id: string; name: string; code: string }) => void
+  onUpdate?: (data: { id: string; name: string; code: string; cities: string[]; isActive: boolean }) => void
 }
 
 const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: AddStateDialogProps) => {
   const [formData, setFormData] = useState({
     name: '',
     code: '',
+    cities: [] as string[],
     isActive: true
   })
   const [errors, setErrors] = useState<{[key: string]: string}>({})
+  const [cities, setCities] = useState<City[]>([])
 
   const isEditMode = !!editState
 
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await fetch('/api/cities')
+        if (response.ok) {
+          const data = await response.json()
+          setCities(data)
+        }
+      } catch (error) {
+        console.error('Error fetching cities:', error)
+      }
+    }
+
+    if (open) {
+      fetchCities()
+    }
+  }, [open])
 
   // Populate form data when editing
   useEffect(() => {
@@ -46,12 +79,14 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
       setFormData({
         name: editState.name,
         code: editState.code,
+        cities: editState.cities ? editState.cities.map(c => c.id) : [],
         isActive: editState.isActive
       })
     } else {
       setFormData({
         name: '',
         code: '',
+        cities: [],
         isActive: true
       })
     }
@@ -82,13 +117,13 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
     if (isEditMode && onUpdate && editState) {
       onUpdate({ ...formData, id: editState.id })
     } else {
-      onSubmit(formData)
+      onSubmit({ ...formData, cities: formData.cities })
     }
     handleClose()
   }
 
   const handleCloseDialog = () => {
-    setFormData({ name: '', code: '', isActive: true })
+    setFormData({ name: '', code: '', cities: [], isActive: true })
     handleClose()
   }
 
@@ -128,6 +163,52 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
                 error={!!errors.code}
                 helperText={errors.code}
                 required
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <Autocomplete
+                multiple
+                id='cities-autocomplete'
+                options={cities}
+                getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
+                value={cities.filter(city => formData.cities.includes(city.id))}
+                onChange={(event, newValue) => {
+                  setFormData({
+                    ...formData,
+                    cities: newValue.map(city => typeof city === 'string' ? city : city.id)
+                  })
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label='Cities'
+                    placeholder='Search and select cities...'
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => {
+                    const { key, ...chipProps } = getTagProps({ index })
+                    const city = cities.find(c => c.id === (typeof option === 'string' ? option : option.id))
+                    return (
+                      <Chip
+                        key={city?.id || index}
+                        label={city?.name || (typeof option === 'string' ? option : option.name)}
+                        size='small'
+                        {...chipProps}
+                      />
+                    )
+                  })
+                }
+                renderOption={(props, option) => {
+                  const { key, ...otherProps } = props
+                  return (
+                    <li key={option.id} {...otherProps}>
+                      {option.name}
+                    </li>
+                  )
+                }}
+                filterSelectedOptions
+                fullWidth
               />
             </Grid>
             <Grid size={{ xs: 12 }}>

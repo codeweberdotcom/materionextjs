@@ -36,23 +36,22 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
-    name          String?
-    email         String    @unique
-    password      String
-    emailVerified DateTime?
-    image         String?
-    roleId        String
-    language      String    @default("Russian")
-    timezone      String    @default("Europe/Moscow")
-    currency      String    @default("RUB")
-    country       String    @default("russia")
-    role          Role      @relation(fields: [roleId], references: [id])
-    accounts      Account[]
-    sessions      Session[]
-    createdAt     DateTime  @default(now())
-    updatedAt     DateTime  @updatedAt
-  }
+     id            String    @id @default(cuid())
+     name          String?
+     email         String    @unique
+     password      String
+     emailVerified DateTime?
+     image         String?
+     roleId        String
+     language      String    @default("Russian")
+     currency      String    @default("RUB")
+     country       String    @default("russia")
+     role          Role      @relation(fields: [roleId], references: [id])
+     accounts      Account[]
+     sessions      Session[]
+     createdAt     DateTime  @default(now())
+     updatedAt     DateTime  @updatedAt
+   }
 
  model Role {
    id          String   @id @default(cuid())
@@ -91,15 +90,6 @@ model Country {
       updatedAt   DateTime @updatedAt
   }
 
-model Timezone {
-   id          String   @id @default(cuid())
-   name        String   @unique
-   value       String   @unique
-   offset      String
-   isActive    Boolean  @default(true)
-   createdAt   DateTime @default(now())
-   updatedAt   DateTime @updatedAt
-}
 
 model Currency {
    id          String   @id @default(cuid())
@@ -112,39 +102,29 @@ model Currency {
 }
 
 model State {
-      id          String   @id @default(cuid())
-      name        String
-      code        String
-      countryId   String?
-      country     Country? @relation(fields: [countryId], references: [id], onDelete: Cascade)
-      isActive    Boolean  @default(true)
-      createdAt   DateTime @default(now())
-      updatedAt   DateTime @updatedAt
+       id          String   @id @default(cuid())
+       name        String
+       code        String
+       countryId   String?
+       country     Country? @relation(fields: [countryId], references: [id], onDelete: Cascade)
+       isActive    Boolean  @default(true)
+       createdAt   DateTime @default(now())
+       updatedAt   DateTime @updatedAt
 
-      stateCities StateCity[]
+       cities      City[]
 
-      @@unique([name, id])
-  }
-
-  model StateCity {
-      id        String @id @default(cuid())
-      stateId   String
-      cityId    String
-      state     State  @relation(fields: [stateId], references: [id], onDelete: Cascade)
-      city      City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
-
-      @@unique([stateId, cityId])
-  }
-
+       @@unique([name, id])
+   }
 
 model City {
-      id          String   @id @default(cuid())
-      name        String
-      code        String
-      isActive    Boolean  @default(true)
-      stateCities StateCity[]
-      createdAt   DateTime @default(now())
-      updatedAt   DateTime @updatedAt
+       id          String   @id @default(cuid())
+       name        String
+       code        String
+       stateId     String?
+       state       State?   @relation(fields: [stateId], references: [id], onDelete: Cascade)
+       isActive    Boolean  @default(true)
+       createdAt   DateTime @default(now())
+       updatedAt   DateTime @updatedAt
 
-      @@unique([name, id])
-  }
+       @@unique([name, id])
+   }

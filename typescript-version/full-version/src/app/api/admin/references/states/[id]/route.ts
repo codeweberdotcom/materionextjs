@@ -38,7 +38,8 @@ export async function GET(
 
     // Fetch the state
     const state = await prisma.state.findUnique({
-      where: { id: stateId }
+      where: { id: stateId },
+      include: { cities: true }
     })
 
     if (!state) {
@@ -153,7 +154,7 @@ export async function PUT(
     } catch (error) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
-    const { name, code, isActive } = body
+    const { name, code, cities, isActive } = body
 
     if (!name || !code) {
       return NextResponse.json(
@@ -171,6 +172,38 @@ export async function PUT(
         isActive
       }
     })
+
+    // Handle cities update
+    if (cities !== undefined) {
+      // Get current cities for the state
+      const currentCities = await prisma.city.findMany({
+        where: { stateId: stateId }
+      })
+
+      const currentCityIds: string[] = currentCities.map((c: any) => c.id)
+      const newCityIds: string[] = cities
+
+      // Cities to connect
+      const toConnect = newCityIds.filter((id: string) => !currentCityIds.includes(id))
+      // Cities to disconnect
+      const toDisconnect = currentCityIds.filter((id: string) => !newCityIds.includes(id))
+
+      // Connect new cities
+      if (toConnect.length > 0) {
+        await prisma.city.updateMany({
+          where: { id: { in: toConnect } },
+          data: { stateId: stateId }
+        })
+      }
+
+      // Disconnect old cities
+      if (toDisconnect.length > 0) {
+        await prisma.city.updateMany({
+          where: { id: { in: toDisconnect } },
+          data: { stateId: null }
+        })
+      }
+    }
 
     return NextResponse.json(updatedState)
   } catch (error) {

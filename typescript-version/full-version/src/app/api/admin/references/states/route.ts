@@ -34,6 +34,7 @@ export async function GET() {
     // Fetch states from database
     const states = await prisma.state.findMany({
       where: { isActive: true },
+      include: { cities: true },
       orderBy: { name: 'asc' }
     })
 
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, code, isActive = true } = body
+    const { name, code, cities, isActive = true } = body
 
     if (!name || !code) {
       return NextResponse.json(
@@ -91,7 +92,21 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(newState)
+    // If cities are provided, connect them to the new state
+    if (cities && cities.length > 0) {
+      await prisma.city.updateMany({
+        where: { id: { in: cities } },
+        data: { stateId: newState.id }
+      })
+    }
+
+    // Fetch the updated state with cities
+    const updatedState = await prisma.state.findUnique({
+      where: { id: newState.id },
+      include: { cities: true }
+    })
+
+    return NextResponse.json(updatedState)
   } catch (error) {
     console.error('Error creating state:', error)
     return NextResponse.json(
@@ -127,7 +142,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { id, name, code, isActive } = body
+    const { id, name, code, cities, isActive } = body
 
     if (!id || !name || !code) {
       return NextResponse.json(
@@ -146,7 +161,30 @@ export async function PUT(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(updatedState)
+    // If cities are provided, update the connections
+    if (cities !== undefined) {
+      // Disconnect all existing cities from this state
+      await prisma.city.updateMany({
+        where: { stateId: id },
+        data: { stateId: null }
+      })
+
+      // Connect the new cities
+      if (cities.length > 0) {
+        await prisma.city.updateMany({
+          where: { id: { in: cities } },
+          data: { stateId: id }
+        })
+      }
+    }
+
+    // Fetch the updated state with cities
+    const finalState = await prisma.state.findUnique({
+      where: { id },
+      include: { cities: true }
+    })
+
+    return NextResponse.json(finalState)
   } catch (error) {
     console.error('Error updating state:', error)
     return NextResponse.json(
@@ -208,7 +246,8 @@ export async function PATCH(request: NextRequest) {
       where: { id },
       data: {
         isActive: !currentState.isActive
-      }
+      },
+      include: { cities: true }
     })
 
     return NextResponse.json(updatedState)

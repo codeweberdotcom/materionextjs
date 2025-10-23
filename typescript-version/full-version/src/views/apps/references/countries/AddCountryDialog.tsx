@@ -161,7 +161,7 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
                     const state = states.find(s => s.id === (typeof option === 'string' ? option : option.id))
                     return (
                       <Chip
-                        key={key}
+                        key={state?.id || index}
                         label={state?.name || (typeof option === 'string' ? option : option.name)}
                         size='small'
                         {...chipProps}
@@ -172,7 +172,7 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
                 renderOption={(props, option) => {
                   const { key, ...otherProps } = props
                   return (
-                    <li key={key} {...otherProps}>
+                    <li key={option.id} {...otherProps}>
                       {option.name}
                     </li>
                   )
