@@ -190,15 +190,14 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
         ]
       },
   {
-    label: 'Admin & Settings',
-    isSection: true,
+    label: dictionary['navigation'].adminAndSettings,
     children: [
       {
-        label: 'User Settings',
+        label: dictionary['navigation'].userSettings,
         icon: 'ri-user-settings-line',
         children: [
           {
-            label: 'User List',
+            label: dictionary['navigation'].userList,
             href: '/apps/user/list'
           },
           {

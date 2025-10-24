@@ -48,6 +48,9 @@ import type { Locale } from '@configs/i18n'
 import AddLanguageDialog from './AddLanguageDialog'
 import EditLanguageDialog from './EditLanguageDialog'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -103,6 +106,9 @@ const DebouncedInput = ({
 const columnHelper = createColumnHelper<Language>()
 
 const LanguagesListTable = () => {
+  // Hooks
+  const dictionary = useTranslation()
+
   const [data, setData] = useState<Language[]>([])
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -159,19 +165,19 @@ const LanguagesListTable = () => {
         )
       },
       columnHelper.accessor('name', {
-        header: 'Language',
+        header: dictionary.navigation.language,
         cell: ({ row }) => <Typography>{row.original.name}</Typography>
       }),
       columnHelper.accessor('code', {
-        header: 'Code',
+        header: dictionary.navigation.code,
         cell: ({ row }) => <Typography>{row.original.code}</Typography>
       }),
       columnHelper.accessor('isActive', {
-        header: 'Status',
+        header: dictionary.navigation.status,
         cell: ({ row }) => (
           <Chip
             variant='tonal'
-            label={row.original.isActive ? 'Active' : 'Inactive'}
+            label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
             size='small'
             color={row.original.isActive ? 'success' : 'secondary'}
           />
@@ -179,13 +185,13 @@ const LanguagesListTable = () => {
       }),
       {
         id: 'actions',
-        header: 'Actions',
+        header: dictionary.navigation.actions,
         cell: ({ row }) => (
           <div className='flex items-center'>
             <IconButton onClick={() => {
               setEditingLanguage(row.original)
               setEditLanguageOpen(true)
-            }} title='Edit Language'>
+            }} title={dictionary.navigation.editTranslation}>
               <i className='ri-edit-line text-textSecondary' />
             </IconButton>
             <Switch
@@ -193,7 +199,7 @@ const LanguagesListTable = () => {
               onChange={() => handleToggleLanguageStatus(row.original.id)}
               size='small'
             />
-            <IconButton onClick={() => handleDeleteLanguage(row.original.id, row.original.name)} title='Delete Language'>
+            <IconButton onClick={() => handleDeleteLanguage(row.original.id, row.original.name)} title={dictionary.navigation.deleteTranslation}>
               <i className='ri-delete-bin-7-line text-textSecondary' />
             </IconButton>
           </div>
@@ -335,25 +341,25 @@ const LanguagesListTable = () => {
   }
 
   if (loading) {
-    return <Typography>Loading languages...</Typography>
+    return <Typography>{dictionary.navigation.loadingLanguages}</Typography>
   }
 
   return (
     <>
       <Card>
-        <CardHeader title='Languages Management' />
+        <CardHeader title={dictionary.navigation.languagesManagement} />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
-              placeholder='Search Language'
+              placeholder={dictionary.navigation.searchLanguage}
               className='max-sm:is-full'
             />
           </div>
           <Button variant='contained' onClick={() => setAddLanguageOpen(true)} className='max-sm:is-full'>
-            Add New Language
+            {dictionary.navigation.addNewLanguage}
           </Button>
         </div>
         <div className='overflow-x-auto'>
@@ -387,7 +393,7 @@ const LanguagesListTable = () => {
               <tbody>
                 <tr>
                   <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                    No data available
+                    {dictionary.navigation.noDataAvailable}
                   </td>
                 </tr>
               </tbody>

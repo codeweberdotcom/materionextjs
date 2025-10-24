@@ -15,6 +15,9 @@ import FormControlLabel from '@mui/material/FormControlLabel'
 import Autocomplete from '@mui/material/Autocomplete'
 import Chip from '@mui/material/Chip'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 type City = {
   id: string
   name: string
@@ -44,6 +47,9 @@ type AddStateDialogProps = {
 }
 
 const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: AddStateDialogProps) => {
+  // Hooks
+  const dictionary = useTranslation()
+
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -99,11 +105,11 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
     const newErrors: {[key: string]: string} = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Название штата обязательно'
+      newErrors.name = dictionary.navigation.stateName + ' обязательно'
     }
 
     if (!formData.code.trim()) {
-      newErrors.code = 'Код штата обязателен'
+      newErrors.code = dictionary.navigation.stateCode + ' обязателен'
     }
 
 
@@ -129,7 +135,7 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
 
   return (
     <Dialog fullWidth open={open} onClose={handleCloseDialog} maxWidth='sm'>
-      <DialogTitle>{isEditMode ? 'Edit State' : 'Add New State'}</DialogTitle>
+      <DialogTitle>{isEditMode ? dictionary.navigation.editStateTitle : dictionary.navigation.addStateTitle}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <IconButton onClick={handleCloseDialog} className='absolute block-start-4 inline-end-4'>
@@ -139,8 +145,8 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='State Name'
-                placeholder='California'
+                label={dictionary.navigation.stateName}
+                placeholder={dictionary.navigation.stateName}
                 value={formData.name}
                 onChange={e => {
                   setFormData({ ...formData, name: e.target.value })
@@ -156,8 +162,8 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='State Code'
-                placeholder='CA'
+                label={dictionary.navigation.stateCode}
+                placeholder={dictionary.navigation.stateCode}
                 value={formData.code}
                 onChange={e => setFormData({ ...formData, code: e.target.value })}
                 error={!!errors.code}
@@ -181,8 +187,8 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label='Cities'
-                    placeholder='Search and select cities...'
+                    label={dictionary.navigation.cities}
+                    placeholder={dictionary.navigation.searchCity}
                   />
                 )}
                 renderTags={(value, getTagProps) =>
@@ -219,17 +225,17 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
                     onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
                   />
                 }
-                label={formData.isActive ? 'Active' : 'Inactive'}
+                label={formData.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button variant='outlined' onClick={handleCloseDialog}>
-            Cancel
+            {dictionary.navigation.cancel}
           </Button>
           <Button variant='contained' type='submit'>
-            {isEditMode ? 'Update State' : 'Add State'}
+            {isEditMode ? dictionary.navigation.updateState : dictionary.navigation.addState}
           </Button>
         </DialogActions>
       </form>

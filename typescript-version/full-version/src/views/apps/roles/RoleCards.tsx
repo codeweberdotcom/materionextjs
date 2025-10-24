@@ -1,5 +1,8 @@
 'use client'
 
+// React Imports
+import { useState, useEffect } from 'react'
+
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -12,10 +15,29 @@ import Button from '@mui/material/Button'
 import type { TypographyProps } from '@mui/material/Typography'
 import type { CardProps } from '@mui/material/Card'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Component Imports
 import RoleDialog from '@components/dialogs/role-dialog'
 import OpenDialogOnElementClick from '@components/dialogs/OpenDialogOnElementClick'
 import Link from '@components/Link'
+
+type Role = {
+  id: string
+  name: string
+  description?: string | null
+  permissions?: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+type User = {
+  id: string
+  fullName: string
+  avatar?: string
+  role: string
+}
 
 type CardDataType = {
   title: string
@@ -33,9 +55,41 @@ const cardData: CardDataType[] = [
 ]
 
 const RoleCards = () => {
+  // Hooks
+  const t = useTranslation()
+
+  // States
+  const [roles, setRoles] = useState<Role[]>([])
+  const [users, setUsers] = useState<User[]>([])
+
+  // Fetch roles and users
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [rolesResponse, usersResponse] = await Promise.all([
+          fetch('/api/admin/roles'),
+          fetch('/api/admin/users')
+        ])
+
+        if (rolesResponse.ok) {
+          const rolesData = await rolesResponse.json()
+          setRoles(rolesData)
+        }
+
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json()
+          setUsers(usersData)
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      }
+    }
+
+    fetchData()
+  }, [])
   // Vars
   const typographyProps: TypographyProps = {
-    children: 'Edit Role',
+    children: t.navigation.editRoleTitle,
     component: Link,
     color: 'primary',
     onClick: e => e.preventDefault()
@@ -54,11 +108,10 @@ const RoleCards = () => {
           <CardContent>
             <div className='flex flex-col items-end gap-4 text-right'>
               <Button variant='contained' size='small'>
-                Add Role
+                {t.navigation.addRole}
               </Button>
               <Typography>
-                Add new role, <br />
-                if it doesn&#39;t exist.
+                {t.navigation.addRoleDescription}
               </Typography>
             </div>
           </CardContent>
@@ -70,36 +123,42 @@ const RoleCards = () => {
   return (
     <>
       <Grid container spacing={6}>
-        {cardData.map((item, index) => (
-          <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={index}>
-            <Card>
-              <CardContent className='flex flex-col gap-4'>
-                <div className='flex items-center justify-between'>
-                  <Typography className='flex-grow'>{`Total ${item.totalUsers} users`}</Typography>
-                  <AvatarGroup total={item.totalUsers}>
-                    {item.avatars.map((img, index: number) => (
-                      <Avatar key={index} alt={item.title} src={`/images/avatars/${img}`} />
-                    ))}
-                  </AvatarGroup>
-                </div>
-                <div className='flex justify-between items-center'>
-                  <div className='flex flex-col items-start gap-1'>
-                    <Typography variant='h5'>{item.title}</Typography>
-                    <OpenDialogOnElementClick
-                      element={Typography}
-                      elementProps={typographyProps}
-                      dialog={RoleDialog}
-                      dialogProps={{ title: item.title }}
-                    />
+        {roles.map((role, index) => {
+          const roleUsers = users.filter(user => user.role === role.name)
+          return (
+            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={role.id}>
+              <Card>
+                <CardContent className='flex flex-col gap-4'>
+                  <div className='flex items-center justify-between'>
+                    <Typography className='flex-grow'>{t.navigation.totalUsersCount.replace('${count}', roleUsers.length.toString())}</Typography>
+                    <AvatarGroup total={roleUsers.length}>
+                      {roleUsers.slice(0, 3).map((user, userIndex) => (
+                        <Avatar key={user.id} alt={user.fullName} src={user.avatar || undefined} />
+                      ))}
+                    </AvatarGroup>
                   </div>
-                  <IconButton>
-                    <i className='ri-file-copy-line text-secondary' />
-                  </IconButton>
-                </div>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
+                  <div className='flex justify-between items-center'>
+                    <div className='flex flex-col items-start gap-1'>
+                      <Typography variant='h5'>{role.name}</Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        {role.description || 'No description'}
+                      </Typography>
+                      <OpenDialogOnElementClick
+                        element={Typography}
+                        elementProps={typographyProps}
+                        dialog={RoleDialog}
+                        dialogProps={{ title: role.name }}
+                      />
+                    </div>
+                    <IconButton>
+                      <i className='ri-file-copy-line text-secondary' />
+                    </IconButton>
+                  </div>
+                </CardContent>
+              </Card>
+            </Grid>
+          )
+        })}
         <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
           <OpenDialogOnElementClick element={Card} elementProps={CardProps} dialog={RoleDialog} />
         </Grid>

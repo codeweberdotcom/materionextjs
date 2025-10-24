@@ -47,6 +47,9 @@ import type { Locale } from '@configs/i18n'
 // Component Imports
 import AddStateDialog from './AddStateDialog'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -108,6 +111,9 @@ const DebouncedInput = ({
 const columnHelper = createColumnHelper<State>()
 
 const StatesListTable = () => {
+  // Hooks
+  const dictionary = useTranslation()
+
   const [data, setData] = useState<State[]>([])
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -162,19 +168,19 @@ const StatesListTable = () => {
       )
     },
     columnHelper.accessor('name', {
-      header: 'State',
+      header: dictionary.navigation.state,
       cell: ({ row }) => <Typography>{row.original.name}</Typography>
     }),
     columnHelper.accessor('code', {
-      header: 'Code',
+      header: dictionary.navigation.code,
       cell: ({ row }) => <Typography>{row.original.code}</Typography>
     }),
     columnHelper.accessor('isActive', {
-      header: 'Status',
+      header: dictionary.navigation.status,
       cell: ({ row }) => (
         <Chip
           variant='tonal'
-          label={row.original.isActive ? 'Active' : 'Inactive'}
+          label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
           size='small'
           color={row.original.isActive ? 'success' : 'secondary'}
         />
@@ -182,13 +188,13 @@ const StatesListTable = () => {
     }),
     {
       id: 'cities',
-      header: 'Cities',
+      header: dictionary.navigation.cities,
       cell: ({ row }) => {
         const citiesCount = row.original.cities ? row.original.cities.length : 0
         return (
           <div className='flex items-center gap-2'>
             <Chip
-              label={`${citiesCount} cities`}
+              label={`${citiesCount} ${dictionary.navigation.cities}`}
               size='small'
               variant={citiesCount > 0 ? 'filled' : 'outlined'}
               color={citiesCount > 0 ? 'primary' : 'default'}
@@ -199,10 +205,10 @@ const StatesListTable = () => {
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: dictionary.navigation.actions,
       cell: ({ row }) => (
         <div className='flex items-center'>
-          <IconButton onClick={() => handleEditState(row.original)} title='Edit State'>
+          <IconButton onClick={() => handleEditState(row.original)} title={dictionary.navigation.editTranslation}>
             <i className='ri-edit-line text-textSecondary' />
           </IconButton>
           <Switch
@@ -210,7 +216,7 @@ const StatesListTable = () => {
             onChange={() => handleToggleStatus(row.original.id)}
             size='small'
           />
-          <IconButton onClick={() => handleDeleteState(row.original.id, row.original.name)} title='Delete State'>
+          <IconButton onClick={() => handleDeleteState(row.original.id, row.original.name)} title={dictionary.navigation.deleteTranslation}>
             <i className='ri-delete-bin-7-line text-textSecondary' />
           </IconButton>
         </div>
@@ -364,25 +370,25 @@ const StatesListTable = () => {
   }
 
   if (loading) {
-    return <Typography>Loading states...</Typography>
+    return <Typography>{dictionary.navigation.loadingStates}</Typography>
   }
 
   return (
     <>
     <Card>
-      <CardHeader title='States Management' />
+      <CardHeader title={dictionary.navigation.statesManagement} />
       <Divider />
       <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
         <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
           <DebouncedInput
             value={globalFilter ?? ''}
             onChange={value => setGlobalFilter(String(value))}
-            placeholder='Search State'
+            placeholder={dictionary.navigation.searchState}
             className='max-sm:is-full'
           />
         </div>
         <Button variant='contained' onClick={() => setAddStateOpen(true)} className='max-sm:is-full'>
-          Add New State
+          {dictionary.navigation.addNewState}
         </Button>
       </div>
       <div className='overflow-x-auto'>
@@ -416,7 +422,7 @@ const StatesListTable = () => {
             <tbody>
               <tr>
                 <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                  No data available
+                  {dictionary.navigation.noDataAvailable}
                 </td>
               </tr>
             </tbody>

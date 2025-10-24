@@ -56,8 +56,7 @@ export async function GET() {
       contact: 'N/A',
       username: user.email.split('@')[0],
       country: user.country || 'russia',
-      language: user.language || 'Russian',
-      timezone: user.timezone || 'Europe/Moscow',
+      language: user.language || 'ru',
       currency: user.currency || 'RUB',
       currentPlan: 'basic',
       status: 'active',
@@ -86,7 +85,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, language, timezone, currency, country } = body
+    const { name, email, language, currency, country } = body
 
     // Find the current user
     const currentUser = await prisma.user.findUnique({
@@ -107,7 +106,6 @@ export async function PUT(request: NextRequest) {
         name: name || currentUser.name,
         email: email || currentUser.email,
         language: language || currentUser.language,
-        timezone: timezone || currentUser.timezone,
         currency: currency || currentUser.currency,
         country: country || currentUser.country
       },
@@ -141,8 +139,7 @@ export async function PUT(request: NextRequest) {
       contact: 'N/A',
       username: updatedUser.email.split('@')[0],
       country: updatedUser.country || 'russia',
-      language: updatedUser.language || 'Russian',
-      timezone: updatedUser.timezone || 'Europe/Moscow',
+      language: updatedUser.language || 'ru',
       currency: updatedUser.currency || 'RUB',
       currentPlan: 'basic',
       status: 'active',

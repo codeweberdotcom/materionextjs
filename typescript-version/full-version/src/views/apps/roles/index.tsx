@@ -1,6 +1,11 @@
+'use client'
+
 // MUI Imports
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
+
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
 
 // Type Imports
 import type { UsersType } from '@/types/apps/userTypes'
@@ -10,15 +15,16 @@ import RoleCards from './RoleCards'
 import RolesTable from './RolesTable'
 
 const Roles = ({ userData }: { userData?: UsersType[] }) => {
+  const t = useTranslation()
+
   return (
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <Typography variant='h4' className='mbe-1'>
-          Roles List
+          {t.navigation.rolesList}
         </Typography>
         <Typography>
-          A role provided access to predefined menus and features so that depending on assigned role an administrator
-          can have access to what he need
+          {t.navigation.rolesDescription}
         </Typography>
       </Grid>
       <Grid size={{ xs: 12 }}>
@@ -26,9 +32,9 @@ const Roles = ({ userData }: { userData?: UsersType[] }) => {
       </Grid>
       <Grid size={{ xs: 12 }} className='!pbs-12'>
         <Typography variant='h4' className='mbe-1'>
-          Total users with their roles
+          {t.navigation.totalUsersWithRoles}
         </Typography>
-        <Typography>Find all of your company&#39;s administrator accounts and their associate roles.</Typography>
+        <Typography>{t.navigation.findAdministrators}</Typography>
       </Grid>
       <Grid size={{ xs: 12 }}>
         <RolesTable tableData={userData} />

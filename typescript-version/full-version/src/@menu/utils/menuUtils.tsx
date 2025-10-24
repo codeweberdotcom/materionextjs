@@ -76,16 +76,17 @@ export const confirmUrlInChildren = (children: ChildrenType['children'], url: st
  *
  * @param {ReactNode} children - The children of the HorizontalMenu component.
  * @param {Function} mapFunction - A function to transform each child that doesn't have menuData.
+ * @param {string} locale - The current locale for localization.
  * @returns {ReactNode} The processed children suitable for inclusion in a VerticalMenu.
  */
-const processMenuChildren = (children: ReactNode, mapFunction: (child: ReactNode) => ReactNode): ReactNode => {
+const processMenuChildren = (children: ReactNode, mapFunction: (child: ReactNode, locale: string) => ReactNode, locale: string): ReactNode => {
   return Children.map(children, child => {
     // Skip processing for non-React elements
     if (!isValidElement(child)) return child
 
     // If child has menuData prop, create a GenerateVerticalMenu component
     // Otherwise, apply the transformation function to the child
-    return child.props?.menuData ? <GenerateVerticalMenu menuData={child.props.menuData} /> : mapFunction(child)
+    return child.props?.menuData ? <GenerateVerticalMenu menuData={child.props.menuData} locale={locale} /> : mapFunction(child, locale)
   })
 }
 
@@ -94,9 +95,10 @@ const processMenuChildren = (children: ReactNode, mapFunction: (child: ReactNode
  * HorizontalSubMenu, and HorizontalMenu) into their vertical equivalents.
  *
  * @param {ReactNode} children - The children of the menu to be transformed.
+ * @param {string} locale - The current locale for localization.
  * @returns {ReactNode} The transformed menu as a hierarchy of vertical menu components.
  */
-export const mapHorizontalToVerticalMenu = (children: ReactNode): ReactNode => {
+export const mapHorizontalToVerticalMenu = (children: ReactNode, locale: string): ReactNode => {
   return Children.map(children, child => {
     // If the child is not a valid React element, exclude it from the output
     if (!isValidElement(child)) return null
@@ -111,10 +113,10 @@ export const mapHorizontalToVerticalMenu = (children: ReactNode): ReactNode => {
         return <VerticalMenuItem {...rest}>{childChildren}</VerticalMenuItem>
       case HorizontalSubMenu:
         // Transform HorizontalSubMenu to VerticalSubMenu, recursively transforming its children
-        return <VerticalSubMenu {...rest}>{mapHorizontalToVerticalMenu(childChildren)}</VerticalSubMenu>
+        return <VerticalSubMenu {...rest}>{mapHorizontalToVerticalMenu(childChildren, locale)}</VerticalSubMenu>
       case HorizontalMenu:
         // For HorizontalMenu, process its children specifically, then wrap in VerticalMenu
-        const transformedChildren = processMenuChildren(childChildren, mapHorizontalToVerticalMenu)
+        const transformedChildren = processMenuChildren(childChildren, mapHorizontalToVerticalMenu, locale)
 
         return <VerticalMenu {...verticalMenuProps}>{transformedChildren}</VerticalMenu>
       default:

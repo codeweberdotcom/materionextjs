@@ -227,15 +227,15 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         ]
       },
   {
-    label: 'Admin & Settings',
+    label: dictionary['navigation'].adminAndSettings,
     isSection: true,
     children: [
       {
-        label: 'User Settings',
+        label: dictionary['navigation'].userSettings,
         icon: 'ri-user-settings-line',
         children: [
           {
-            label: 'User List',
+            label: dictionary['navigation'].userList,
             href: '/apps/user/list'
           },
           {
@@ -253,43 +253,48 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         ]
       },
       {
-        label: 'References',
+        label: dictionary['navigation'].references,
         icon: 'ri-database-2-line',
         children: [
           {
-            label: 'Languages',
+            label: dictionary['navigation'].languages,
             icon: 'ri-translate-2',
             href: '/apps/references/languages'
           },
           {
-            label: 'Countries & States',
+            label: dictionary['navigation'].countriesAndStates,
             icon: 'ri-flag-line',
             children: [
               {
-                label: 'Countries',
+                label: dictionary['navigation'].countries,
                 href: '/apps/references/countries'
               },
               {
-                label: 'States',
+                label: dictionary['navigation'].states,
                 icon: 'ri-map-pin-2-line',
                 href: '/apps/references/states'
               },
               {
-                label: 'Cities',
+                label: dictionary['navigation'].cities,
                 icon: 'ri-map-pin-4-line',
                 href: '/apps/references/cities'
               },
               {
-                label: 'Districts',
+                label: dictionary['navigation'].districts,
                 icon: 'ri-map-pin-5-line',
                 href: '/apps/references/districts'
               }
             ]
           },
           {
-            label: 'Currencies',
+            label: dictionary['navigation'].currencies,
             icon: 'ri-money-dollar-circle-line',
             href: '/apps/references/currencies'
+          },
+          {
+            label: dictionary['navigation'].translations,
+            icon: 'ri-global-line',
+            href: '/apps/references/translations'
           },
         ]
       }

@@ -9,14 +9,46 @@ import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Type Imports
 import type { UsersType } from '@/types/apps/userTypes'
 
+type Role = {
+  id: string
+  name: string
+  description?: string | null
+  permissions?: string | null
+  createdAt: Date
+  updatedAt: Date
+}
+
 const TableFilters = ({ setData, tableData }: { setData: (data: UsersType[]) => void; tableData?: UsersType[] }) => {
+  // Hooks
+  const dictionary = useTranslation()
+
   // States
   const [role, setRole] = useState<UsersType['role']>('')
   const [plan, setPlan] = useState<UsersType['currentPlan']>('')
   const [status, setStatus] = useState<UsersType['status']>('')
+  const [roles, setRoles] = useState<Role[]>([])
+
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await fetch('/api/admin/roles')
+        if (response.ok) {
+          const rolesData = await response.json()
+          setRoles(rolesData)
+        }
+      } catch (error) {
+        console.error('Error fetching roles:', error)
+      }
+    }
+
+    fetchRoles()
+  }, [])
 
   useEffect(() => {
     const filteredData = tableData?.filter(user => {
@@ -35,38 +67,38 @@ const TableFilters = ({ setData, tableData }: { setData: (data: UsersType[]) => 
       <Grid container spacing={5}>
         <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl fullWidth>
-            <InputLabel id='role-select'>Select Role</InputLabel>
+            <InputLabel id='role-select'>{dictionary.navigation.selectRoleFilter}</InputLabel>
             <Select
               fullWidth
               id='select-role'
               value={role}
               onChange={e => setRole(e.target.value)}
-              label='Select Role'
+              label={dictionary.navigation.selectRoleFilter}
               labelId='role-select'
-              inputProps={{ placeholder: 'Select Role' }}
+              inputProps={{ placeholder: dictionary.navigation.selectRoleFilter }}
             >
-              <MenuItem value=''>Select Role</MenuItem>
-              <MenuItem value='admin'>Admin</MenuItem>
-              <MenuItem value='author'>Author</MenuItem>
-              <MenuItem value='editor'>Editor</MenuItem>
-              <MenuItem value='maintainer'>Maintainer</MenuItem>
-              <MenuItem value='subscriber'>Subscriber</MenuItem>
+              <MenuItem value=''>{dictionary.navigation.selectRoleFilter}</MenuItem>
+              {roles.map(role => (
+                <MenuItem key={role.id} value={role.name}>
+                  {role.name}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl fullWidth>
-            <InputLabel id='plan-select'>Select Plan</InputLabel>
+            <InputLabel id='plan-select'>{dictionary.navigation.selectPlanFilter}</InputLabel>
             <Select
               fullWidth
               id='select-plan'
               value={plan}
               onChange={e => setPlan(e.target.value)}
-              label='Select Plan'
+              label={dictionary.navigation.selectPlanFilter}
               labelId='plan-select'
-              inputProps={{ placeholder: 'Select Plan' }}
+              inputProps={{ placeholder: dictionary.navigation.selectPlanFilter }}
             >
-              <MenuItem value=''>Select Plan</MenuItem>
+              <MenuItem value=''>{dictionary.navigation.selectPlanFilter}</MenuItem>
               <MenuItem value='basic'>Basic</MenuItem>
               <MenuItem value='company'>Company</MenuItem>
               <MenuItem value='enterprise'>Enterprise</MenuItem>
@@ -76,17 +108,17 @@ const TableFilters = ({ setData, tableData }: { setData: (data: UsersType[]) => 
         </Grid>
         <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl fullWidth>
-            <InputLabel id='status-select'>Select Status</InputLabel>
+            <InputLabel id='status-select'>{dictionary.navigation.selectStatusFilter}</InputLabel>
             <Select
               fullWidth
               id='select-status'
-              label='Select Status'
+              label={dictionary.navigation.selectStatusFilter}
               value={status}
               onChange={e => setStatus(e.target.value)}
               labelId='status-select'
-              inputProps={{ placeholder: 'Select Status' }}
+              inputProps={{ placeholder: dictionary.navigation.selectStatusFilter }}
             >
-              <MenuItem value=''>Select Status</MenuItem>
+              <MenuItem value=''>{dictionary.navigation.selectStatusFilter}</MenuItem>
               <MenuItem value='pending'>Pending</MenuItem>
               <MenuItem value='active'>Active</MenuItem>
               <MenuItem value='inactive'>Inactive</MenuItem>

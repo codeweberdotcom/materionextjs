@@ -20,6 +20,9 @@ import Chip from '@mui/material/Chip'
 import type { SelectChangeEvent } from '@mui/material/Select'
 import { toast } from 'react-toastify'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 type Data = {
   firstName: string
   lastName: string
@@ -31,8 +34,8 @@ type Data = {
   zipCode: string
   country: string
   language: string
-  timezone: string
   currency: string
+  role: string
 }
 
 // Vars
@@ -46,18 +49,21 @@ const initialData: Data = {
   state: '',
   zipCode: '',
   country: '',
-  language: '',
-  timezone: '',
-  currency: ''
+  language: 'en',
+  currency: '',
+  role: ''
 }
 
 const AccountDetails = () => {
+  // Hooks
+  const dictionary = useTranslation()
+
   // States
   const [formData, setFormData] = useState<Data>(initialData)
   const [fileInput, setFileInput] = useState<string>('')
   const [imgSrc, setImgSrc] = useState<string>('/images/avatars/1.png')
-  const [language, setLanguage] = useState<string>('English')
-  const [languages, setLanguages] = useState<string[]>([])
+  const [language, setLanguage] = useState<string>('en')
+  const [languages, setLanguages] = useState<{code: string, name: string}[]>([])
   const [currencies, setCurrencies] = useState<any[]>([])
   const [countries, setCountries] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -65,6 +71,11 @@ const AccountDetails = () => {
 
   const handleLanguageChange = (event: SelectChangeEvent<string>) => {
     setLanguage(event.target.value)
+    // Update formData.language with code
+    const selectedLang = languages.find(lang => lang.code === event.target.value)
+    if (selectedLang) {
+      handleFormChange('language', selectedLang.code)
+    }
   }
 
   const handleFormChange = (field: keyof Data, value: Data[keyof Data]) => {
@@ -154,11 +165,11 @@ const AccountDetails = () => {
             state: '',
             zipCode: '',
             country: userData.country || 'russia',
-            language: userData.language || 'Russian',
-            timezone: userData.timezone || 'Europe/Moscow',
-            currency: userData.currency || 'RUB'
+            language: userData.language || 'ru',
+            currency: userData.currency || 'RUB',
+            role: userData.role || ''
           })
-          setLanguage(userData.language || 'English')
+          setLanguage(userData.language || 'ru')
 
           // Set current avatar if exists
           if (userData.avatar) {
@@ -171,11 +182,18 @@ const AccountDetails = () => {
           return
         }
 
-        // Fetch available languages
-        const languagesResponse = await fetch('/api/languages')
-        if (languagesResponse.ok) {
-          const languagesData = await languagesResponse.json()
-          setLanguages(languagesData.map((lang: any) => lang.name))
+        // Fetch available languages from JSON
+        try {
+          const languagesData = await import('@/data/languages.json')
+          setLanguages(languagesData.default)
+        } catch (error) {
+          console.error('Error loading languages:', error)
+          setLanguages([
+            { code: 'en', name: 'English' },
+            { code: 'fr', name: 'French' },
+            { code: 'ar', name: 'Arabic' },
+            { code: 'ru', name: 'Russian' }
+          ])
         }
 
         // Fetch available currencies
@@ -216,8 +234,7 @@ const AccountDetails = () => {
         body: JSON.stringify({
           name: `${formData.firstName} ${formData.lastName}`.trim(),
           email: formData.email,
-          language: language || 'English',
-          timezone: formData.timezone,
+          language: language || 'en',
           currency: formData.currency,
           country: formData.country
         })
@@ -237,11 +254,11 @@ const AccountDetails = () => {
           state: '',
           zipCode: '',
           country: updatedUser.country || 'usa',
-          language: updatedUser.language || 'English',
-          timezone: updatedUser.timezone || 'gmt-05-et',
-          currency: updatedUser.currency || 'USD'
+          language: updatedUser.language || 'en',
+          currency: updatedUser.currency || 'USD',
+          role: updatedUser.role || ''
         })
-        setLanguage(updatedUser.language || 'English')
+        setLanguage(updatedUser.language || 'en')
 
         toast.success('Profile updated successfully!')
       } else {
@@ -283,14 +300,14 @@ const AccountDetails = () => {
       </CardContent>
       <CardContent>
         {loading ? (
-          <Typography>Loading user data...</Typography>
+          <Typography>{dictionary.forms.loadingUserData}</Typography>
         ) : (
           <form onSubmit={handleSubmit}>
           <Grid container spacing={5}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='First Name'
+                label={dictionary.forms.firstName}
                 value={formData.firstName}
                 placeholder='John'
                 onChange={e => handleFormChange('firstName', e.target.value)}
@@ -299,7 +316,7 @@ const AccountDetails = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Last Name'
+                label={dictionary.forms.lastName}
                 value={formData.lastName}
                 placeholder='Doe'
                 onChange={e => handleFormChange('lastName', e.target.value)}
@@ -308,7 +325,7 @@ const AccountDetails = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Email'
+                label={dictionary.forms.email}
                 value={formData.email}
                 placeholder='john.doe@gmail.com'
                 onChange={e => handleFormChange('email', e.target.value)}
@@ -317,7 +334,7 @@ const AccountDetails = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Organization'
+                label={dictionary.forms.organization}
                 value={formData.organization}
                 placeholder='ThemeSelection'
                 onChange={e => handleFormChange('organization', e.target.value)}
@@ -326,7 +343,7 @@ const AccountDetails = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Phone Number'
+                label={dictionary.forms.phoneNumber}
                 value={formData.phoneNumber}
                 placeholder='+1 (234) 567-8901'
                 onChange={e => handleFormChange('phoneNumber', e.target.value)}
@@ -335,7 +352,7 @@ const AccountDetails = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Address'
+                label={dictionary.forms.address}
                 value={formData.address}
                 placeholder='Address'
                 onChange={e => handleFormChange('address', e.target.value)}
@@ -344,7 +361,7 @@ const AccountDetails = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='State'
+                label={dictionary.forms.state}
                 value={formData.state}
                 placeholder='New York'
                 onChange={e => handleFormChange('state', e.target.value)}
@@ -354,7 +371,7 @@ const AccountDetails = () => {
               <TextField
                 fullWidth
                 type='number'
-                label='Zip Code'
+                label={dictionary.forms.zipCode}
                 value={formData.zipCode}
                 placeholder='123456'
                 onChange={e => handleFormChange('zipCode', e.target.value)}
@@ -372,7 +389,7 @@ const AccountDetails = () => {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label='Country'
+                    label={dictionary.forms.country}
                     required
                     placeholder='Search for a country...'
                   />
@@ -386,15 +403,15 @@ const AccountDetails = () => {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>
-                <InputLabel>Language</InputLabel>
+                <InputLabel>{dictionary.forms.language}</InputLabel>
                 <Select
-                  label='Language'
+                  label='Dashboard Language'
                   value={language}
                   onChange={handleLanguageChange}
                 >
-                  {languages.map(name => (
-                    <MenuItem key={name} value={name}>
-                      {name}
+                  {languages.map(lang => (
+                    <MenuItem key={lang.code} value={lang.code}>
+                      {lang.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -402,36 +419,7 @@ const AccountDetails = () => {
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>
-                <InputLabel>TimeZone</InputLabel>
-                <Select
-                  label='TimeZone'
-                  value={formData.timezone}
-                  onChange={e => handleFormChange('timezone', e.target.value)}
-                  MenuProps={{ PaperProps: { style: { maxHeight: 250 } } }}
-                >
-                  <MenuItem value='gmt-12'>(GMT-12:00) International Date Line West</MenuItem>
-                  <MenuItem value='gmt-11'>(GMT-11:00) Midway Island, Samoa</MenuItem>
-                  <MenuItem value='gmt-10'>(GMT-10:00) Hawaii</MenuItem>
-                  <MenuItem value='gmt-09'>(GMT-09:00) Alaska</MenuItem>
-                  <MenuItem value='gmt-08'>(GMT-08:00) Pacific Time (US & Canada)</MenuItem>
-                  <MenuItem value='gmt-08-baja'>(GMT-08:00) Tijuana, Baja California</MenuItem>
-                  <MenuItem value='gmt-07'>(GMT-07:00) Chihuahua, La Paz, Mazatlan</MenuItem>
-                  <MenuItem value='gmt-07-mt'>(GMT-07:00) Mountain Time (US & Canada)</MenuItem>
-                  <MenuItem value='gmt-06'>(GMT-06:00) Central America</MenuItem>
-                  <MenuItem value='gmt-06-ct'>(GMT-06:00) Central Time (US & Canada)</MenuItem>
-                  <MenuItem value='gmt-06-mc'>(GMT-06:00) Guadalajara, Mexico City, Monterrey</MenuItem>
-                  <MenuItem value='gmt-06-sk'>(GMT-06:00) Saskatchewan</MenuItem>
-                  <MenuItem value='gmt-05'>(GMT-05:00) Bogota, Lima, Quito, Rio Branco</MenuItem>
-                  <MenuItem value='gmt-05-et'>(GMT-05:00) Eastern Time (US & Canada)</MenuItem>
-                  <MenuItem value='gmt-05-ind'>(GMT-05:00) Indiana (East)</MenuItem>
-                  <MenuItem value='gmt-04'>(GMT-04:00) Atlantic Time (Canada)</MenuItem>
-                  <MenuItem value='gmt-04-clp'>(GMT-04:00) Caracas, La Paz</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Currency</InputLabel>
+                <InputLabel>{dictionary.forms.currency}</InputLabel>
                 <Select
                   label='Currency'
                   value={formData.currency}
@@ -444,6 +432,14 @@ const AccountDetails = () => {
                   ))}
                 </Select>
               </FormControl>
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                label='Role'
+                value={formData.role}
+                disabled
+              />
             </Grid>
             <Grid size={{ xs: 12 }} className='flex gap-4 flex-wrap'>
               <Button variant='contained' type='submit' disabled={saving}>

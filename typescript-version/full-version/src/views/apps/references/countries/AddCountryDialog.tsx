@@ -15,6 +15,9 @@ import Autocomplete from '@mui/material/Autocomplete'
 import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 type State = {
   id: string
   name: string
@@ -44,6 +47,9 @@ type AddCountryDialogProps = {
 }
 
 const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }: AddCountryDialogProps) => {
+  // Hooks
+  const dictionary = useTranslation()
+
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -108,7 +114,7 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
 
   return (
     <Dialog fullWidth open={open} onClose={handleCloseDialog} maxWidth='sm'>
-      <DialogTitle>{isEditMode ? 'Edit Country' : 'Add New Country'}</DialogTitle>
+      <DialogTitle>{isEditMode ? dictionary.navigation.editCountryTitle : dictionary.navigation.addCountryTitle}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <IconButton onClick={handleCloseDialog} className='absolute block-start-4 inline-end-4'>
@@ -118,7 +124,7 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='Country Name'
+                label={dictionary.navigation.countryName}
                 placeholder='United States'
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -128,7 +134,7 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='Country Code'
+                label={dictionary.navigation.countryCode}
                 placeholder='US'
                 value={formData.code}
                 onChange={e => setFormData({ ...formData, code: e.target.value })}
@@ -151,7 +157,7 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label='States'
+                    label={dictionary.navigation.states}
                     placeholder='Search and select states...'
                   />
                 )}
@@ -189,17 +195,17 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
                     onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
                   />
                 }
-                label={formData.isActive ? 'Active' : 'Inactive'}
+                label={formData.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button variant='outlined' onClick={handleCloseDialog}>
-            Cancel
+            {dictionary.navigation.cancel}
           </Button>
           <Button variant='contained' type='submit'>
-            {isEditMode ? 'Update Country' : 'Add Country'}
+            {isEditMode ? dictionary.navigation.updateCountry : dictionary.navigation.addCountry}
           </Button>
         </DialogActions>
       </form>

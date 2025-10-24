@@ -21,7 +21,7 @@ import { SubMenu as HorizontalSubMenu, MenuItem as HorizontalMenuItem } from '@m
 import { SubMenu as VerticalSubMenu, MenuItem as VerticalMenuItem, MenuSection } from '@menu/vertical-menu'
 
 // Generate a menu from the menu data array
-export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataType[] }) => {
+export const GenerateVerticalMenu = ({ menuData, locale }: { menuData: VerticalMenuDataType[]; locale?: string }) => {
   // Hooks
 
   const renderMenuItems = (data: VerticalMenuDataType[]) => {

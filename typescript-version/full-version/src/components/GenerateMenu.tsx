@@ -2,7 +2,6 @@
 import type { ReactNode } from 'react'
 
 // Next Imports
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Chip from '@mui/material/Chip'
@@ -28,9 +27,8 @@ import { SubMenu as VerticalSubMenu, MenuItem as VerticalMenuItem, MenuSection }
 import { getLocalizedUrl } from '@/utils/i18n'
 
 // Generate a menu from the menu data array
-export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataType[] }) => {
-  // Hooks
-  const { lang: locale } = useParams()
+export const GenerateVerticalMenu = ({ menuData, locale }: { menuData: VerticalMenuDataType[]; locale: string }) => {
+  const safeLocale = locale || 'en'
 
   const renderMenuItems = (data: VerticalMenuDataType[]) => {
     // Use the map method to iterate through the array of menu data
@@ -92,7 +90,7 @@ export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataT
       // Localize the href
       const href = rest.href?.startsWith('http')
         ? rest.href
-        : rest.href && (excludeLang ? rest.href : getLocalizedUrl(rest.href, locale as Locale))
+        : rest.href && (excludeLang ? rest.href : getLocalizedUrl(rest.href, safeLocale as Locale))
 
       const Icon = icon ? <i className={icon} /> : null
 
@@ -121,9 +119,8 @@ export const GenerateVerticalMenu = ({ menuData }: { menuData: VerticalMenuDataT
 }
 
 // Generate a menu from the menu data array
-export const GenerateHorizontalMenu = ({ menuData }: { menuData: HorizontalMenuDataType[] }) => {
-  // Hooks
-  const { lang: locale } = useParams()
+export const GenerateHorizontalMenu = ({ menuData, locale }: { menuData: HorizontalMenuDataType[]; locale: string }) => {
+  const safeLocale = locale || 'en'
 
   const renderMenuItems = (data: HorizontalMenuDataType[]) => {
     // Use the map method to iterate through the array of menu data
@@ -171,7 +168,7 @@ export const GenerateHorizontalMenu = ({ menuData }: { menuData: HorizontalMenuD
       // Localize the href
       const href = rest.href?.startsWith('http')
         ? rest.href
-        : rest.href && (excludeLang ? rest.href : getLocalizedUrl(rest.href, locale as Locale))
+        : rest.href && (excludeLang ? rest.href : getLocalizedUrl(rest.href, safeLocale as Locale))
 
       const Icon = icon ? <i className={icon} /> : null
 

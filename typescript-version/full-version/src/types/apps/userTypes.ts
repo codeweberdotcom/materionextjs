@@ -13,5 +13,6 @@ export type UsersType = {
   fullName: string
   username: string
   currentPlan: string
+  isActive: boolean
   avatarColor?: ThemeColor
 }

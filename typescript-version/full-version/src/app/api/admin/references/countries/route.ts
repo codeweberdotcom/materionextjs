@@ -18,18 +18,7 @@ export async function GET() {
       )
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+    // No admin check needed for creating reference data
 
     // Fetch countries from database
     const countries = await prisma.country.findMany({
@@ -60,18 +49,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+    // No admin check needed for fetching reference data
 
     const body = await request.json()
     const { name, code, states, isActive = true } = body

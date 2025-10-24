@@ -47,6 +47,9 @@ import type { Locale } from '@configs/i18n'
 // Component Imports
 import AddCityDialog from './AddCityDialog'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -108,6 +111,8 @@ const DebouncedInput = ({
 const columnHelper = createColumnHelper<City>()
 
 const CitiesListTable = () => {
+  const dictionary = useTranslation()
+
   const [data, setData] = useState<City[]>([])
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -162,19 +167,19 @@ const CitiesListTable = () => {
       )
     },
     columnHelper.accessor('name', {
-      header: 'City',
+      header: dictionary.navigation.city,
       cell: ({ row }) => <Typography>{row.original.name}</Typography>
     }),
     columnHelper.accessor('code', {
-      header: 'Code',
+      header: dictionary.navigation.code,
       cell: ({ row }) => <Typography>{row.original.code}</Typography>
     }),
     columnHelper.accessor('isActive', {
-      header: 'Status',
+      header: dictionary.navigation.status,
       cell: ({ row }) => (
         <Chip
           variant='tonal'
-          label={row.original.isActive ? 'Active' : 'Inactive'}
+          label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
           size='small'
           color={row.original.isActive ? 'success' : 'secondary'}
         />
@@ -182,13 +187,13 @@ const CitiesListTable = () => {
     }),
     {
       id: 'districts',
-      header: 'Districts',
+      header: dictionary.navigation.districts,
       cell: ({ row }) => {
         const districtsCount = row.original.districts ? row.original.districts.length : 0
         return (
           <div className='flex items-center gap-2'>
             <Chip
-              label={`${districtsCount} districts`}
+              label={`${districtsCount} ${dictionary.navigation.districts.toLowerCase()}`}
               size='small'
               variant={districtsCount > 0 ? 'filled' : 'outlined'}
               color={districtsCount > 0 ? 'primary' : 'default'}
@@ -199,10 +204,10 @@ const CitiesListTable = () => {
     },
     {
       id: 'actions',
-      header: 'Actions',
+      header: dictionary.navigation.actions,
       cell: ({ row }) => (
         <div className='flex items-center'>
-          <IconButton onClick={() => handleEditCity(row.original)} title='Edit City'>
+          <IconButton onClick={() => handleEditCity(row.original)} title={dictionary.navigation.editCity}>
             <i className='ri-edit-line text-textSecondary' />
           </IconButton>
           <Switch
@@ -210,7 +215,7 @@ const CitiesListTable = () => {
             onChange={() => handleToggleCityStatus(row.original.id)}
             size='small'
           />
-          <IconButton onClick={() => handleDeleteCity(row.original.id, row.original.name)} title='Delete City'>
+          <IconButton onClick={() => handleDeleteCity(row.original.id, row.original.name)} title={dictionary.navigation.deleteCity}>
             <i className='ri-delete-bin-7-line text-textSecondary' />
           </IconButton>
         </div>
@@ -246,7 +251,7 @@ const CitiesListTable = () => {
   })
 
   const handleDeleteCity = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete city "${name}"?`)) {
+    if (!confirm(dictionary.navigation.deleteCityConfirm.replace('${name}', name))) {
       return
     }
 
@@ -355,25 +360,25 @@ const CitiesListTable = () => {
   }
 
   if (loading) {
-    return <Typography>Loading cities...</Typography>
+    return <Typography>{dictionary.navigation.loadingCities}</Typography>
   }
 
   return (
     <>
       <Card>
-        <CardHeader title='Cities Management' />
+        <CardHeader title={dictionary.navigation.citiesManagement} />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
-              placeholder='Search City'
+              placeholder={dictionary.navigation.searchCity}
               className='max-sm:is-full'
             />
           </div>
           <Button variant='contained' onClick={() => setAddCityOpen(true)} className='max-sm:is-full'>
-            Add New City
+            {dictionary.navigation.addNewCity}
           </Button>
         </div>
       <div className='overflow-x-auto'>
@@ -407,7 +412,7 @@ const CitiesListTable = () => {
             <tbody>
               <tr>
                 <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                  No data available
+                  {dictionary.navigation.noDataAvailable}
                 </td>
               </tr>
             </tbody>

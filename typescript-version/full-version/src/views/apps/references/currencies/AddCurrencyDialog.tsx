@@ -12,6 +12,9 @@ import IconButton from '@mui/material/IconButton'
 import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 type Currency = {
   id: string
   name: string
@@ -29,6 +32,9 @@ type AddCurrencyDialogProps = {
 }
 
 const AddCurrencyDialog = ({ open, handleClose, onSubmit, editCurrency, onUpdate }: AddCurrencyDialogProps) => {
+  // Hooks
+  const dictionary = useTranslation()
+
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -98,7 +104,7 @@ const AddCurrencyDialog = ({ open, handleClose, onSubmit, editCurrency, onUpdate
 
   return (
     <Dialog fullWidth open={open} onClose={handleCloseDialog} maxWidth='sm'>
-      <DialogTitle>{isEditMode ? 'Edit Currency' : 'Add New Currency'}</DialogTitle>
+      <DialogTitle>{isEditMode ? dictionary.navigation.editCurrencyTitle : dictionary.navigation.addCurrencyTitle}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <IconButton onClick={handleCloseDialog} className='absolute block-start-4 inline-end-4'>
@@ -108,7 +114,7 @@ const AddCurrencyDialog = ({ open, handleClose, onSubmit, editCurrency, onUpdate
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='Currency Name'
+                label={dictionary.navigation.currencyName}
                 placeholder='US Dollar'
                 value={formData.name}
                 onChange={e => {
@@ -125,7 +131,7 @@ const AddCurrencyDialog = ({ open, handleClose, onSubmit, editCurrency, onUpdate
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='Currency Code'
+                label={dictionary.navigation.currencyCode}
                 placeholder='USD'
                 value={formData.code}
                 onChange={e => {
@@ -142,7 +148,7 @@ const AddCurrencyDialog = ({ open, handleClose, onSubmit, editCurrency, onUpdate
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='Currency Symbol'
+                label={dictionary.navigation.currencySymbol}
                 placeholder='$'
                 value={formData.symbol}
                 onChange={e => {
@@ -164,17 +170,17 @@ const AddCurrencyDialog = ({ open, handleClose, onSubmit, editCurrency, onUpdate
                     onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
                   />
                 }
-                label={formData.isActive ? 'Active' : 'Inactive'}
+                label={formData.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button variant='outlined' onClick={handleCloseDialog}>
-            Cancel
+            {dictionary.navigation.cancel}
           </Button>
           <Button variant='contained' type='submit'>
-            {isEditMode ? 'Update Currency' : 'Add Currency'}
+            {isEditMode ? dictionary.navigation.updateCurrency : dictionary.navigation.addCurrency}
           </Button>
         </DialogActions>
       </form>

@@ -1,3 +1,8 @@
+'use client'
+
+// React Imports
+import { useState, useEffect } from 'react'
+
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -17,6 +22,9 @@ import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 import OpenDialogOnElementClick from '@components/dialogs/OpenDialogOnElementClick'
 import CustomAvatar from '@core/components/mui/Avatar'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 interface UserDetailsProps {
   userData?: UsersType
 }
@@ -34,12 +42,24 @@ const defaultUserData: UsersType = {
   currentPlan: 'basic',
   status: 'active',
   avatar: '',
-  avatarColor: 'primary'
+  avatarColor: 'primary',
+  isActive: true
 }
 
 const UserDetails = ({ userData }: UserDetailsProps) => {
+  // Hooks
+  const dictionary = useTranslation()
+
   // Use provided userData or fallback to default
-  const user = userData || defaultUserData
+  const [user, setUser] = useState(defaultUserData)
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
+
+  // Update user when userData changes
+  useEffect(() => {
+    if (userData) {
+      setUser(userData)
+    }
+  }, [userData])
 
   // Split full name into first and last name
   const nameParts = user.fullName.split(' ')
@@ -50,6 +70,23 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
     color,
     variant
   })
+
+  const handleSuspendConfirm = async (confirmed: boolean) => {
+    if (confirmed) {
+      try {
+        const response = await fetch(`/api/admin/users/${user.id}`, {
+          method: 'PATCH'
+        })
+        if (response.ok) {
+          const updatedUser = await response.json()
+          setUser(updatedUser)
+        }
+      } catch (error) {
+        console.error('Error updating user status:', error)
+      }
+    }
+    setSuspendDialogOpen(false)
+  }
 
   return (
     <>
@@ -70,7 +107,7 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
                 </CustomAvatar>
                 <div>
                   <Typography variant='h5'>1.23k</Typography>
-                  <Typography>Task Done</Typography>
+                  <Typography>{dictionary.navigation.taskDone}</Typography>
                 </div>
               </div>
               <div className='flex items-center gap-4'>
@@ -79,54 +116,54 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
                 </CustomAvatar>
                 <div>
                   <Typography variant='h5'>568</Typography>
-                  <Typography>Project Done</Typography>
+                  <Typography>{dictionary.navigation.projectDone}</Typography>
                 </div>
               </div>
             </div>
           </div>
           <div>
-            <Typography variant='h5'>Details</Typography>
+            <Typography variant='h5'>{dictionary.navigation.details}</Typography>
             <Divider className='mlb-4' />
             <div className='flex flex-col gap-2'>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Username:
+                  {dictionary.navigation.usernameLabel}
                 </Typography>
                 <Typography>{user.username}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Email:
+                  {dictionary.navigation.emailLabel}
                 </Typography>
                 <Typography>{user.email}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Status:
+                  {dictionary.navigation.statusLabel}
                 </Typography>
                 <Typography color='text.primary'>{user.status}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Role:
+                  {dictionary.navigation.roleLabel}
                 </Typography>
                 <Typography color='text.primary'>{user.role}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Plan:
+                  {dictionary.navigation.planLabel}
                 </Typography>
                 <Typography color='text.primary'>{user.currentPlan}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Company:
+                  {dictionary.navigation.companyLabel}
                 </Typography>
                 <Typography color='text.primary'>{user.company}</Typography>
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  Country:
+                  {dictionary.navigation.countryLabel}
                 </Typography>
                 <Typography color='text.primary'>{user.country}</Typography>
               </div>
@@ -135,15 +172,22 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
           <div className='flex gap-4 justify-center'>
             <OpenDialogOnElementClick
               element={Button}
-              elementProps={buttonProps('Edit', 'primary', 'contained')}
+              elementProps={buttonProps(dictionary.navigation.edit, 'primary', 'contained')}
               dialog={EditUserInfo}
               dialogProps={{ data: user }}
             />
-            <OpenDialogOnElementClick
-              element={Button}
-              elementProps={buttonProps('Suspend', 'error', 'outlined')}
-              dialog={ConfirmationDialog}
-              dialogProps={{ type: 'suspend-account' }}
+            <Button
+              variant='outlined'
+              color={user.status === 'active' ? 'error' : 'success'}
+              onClick={() => setSuspendDialogOpen(true)}
+            >
+              {user.status === 'active' ? dictionary.navigation.suspend : dictionary.navigation.activate}
+            </Button>
+            <ConfirmationDialog
+              open={suspendDialogOpen}
+              setOpen={setSuspendDialogOpen}
+              type='suspend-account'
+              onConfirm={handleSuspendConfirm}
             />
           </div>
         </CardContent>

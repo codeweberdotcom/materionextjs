@@ -92,7 +92,7 @@ async function main() {
       name: 'Admin User',
       password: hashedPassword,
       roleId: adminRole.id,
-      language: 'Russian',
+      language: 'ru',
       currency: 'RUB',
       country: 'russia'
     }

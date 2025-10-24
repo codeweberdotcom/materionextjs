@@ -6,6 +6,10 @@ import InitColorSchemeScript from '@mui/material/InitColorSchemeScript'
 
 // Third-party Imports
 import 'react-perfect-scrollbar/dist/css/styles.css'
+import 'react-toastify/dist/ReactToastify.css'
+
+// Component Imports
+import { ToastContainer } from 'react-toastify'
 
 // Type Imports
 import type { ChildrenType } from '@core/types'
@@ -50,6 +54,7 @@ const RootLayout = async (props: ChildrenType & { params: Promise<{ lang: Locale
         <body className='flex is-full min-bs-full flex-auto flex-col' suppressHydrationWarning>
           <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
           {children}
+          <ToastContainer />
         </body>
       </html>
     </TranslationWrapper>

@@ -20,9 +20,13 @@ import Typography from '@mui/material/Typography'
 import Switch from '@mui/material/Switch'
 import IconButton from '@mui/material/IconButton'
 import { FormControlLabel } from '@mui/material'
+import Autocomplete from '@mui/material/Autocomplete'
 
 // Third-party Imports
 import { toast } from 'react-toastify'
+
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
 
 // Type Imports
 import type { UsersType } from '@/types/apps/userTypes'
@@ -40,7 +44,18 @@ const languages = ['English', 'Spanish', 'French', 'German', 'Hindi', 'Russian',
 
 const countries = ['Select Country', 'United States', 'United Kingdom', 'France', 'Germany', 'Russia', 'China', 'Japan', 'South Korea', 'Canada', 'Australia', 'Brazil', 'India', 'Italy', 'Spain', 'Portugal']
 
+type Role = {
+  id: string
+  name: string
+  description: string | null
+}
+
+// No mapping needed anymore
+
 const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
+  // Hooks
+  const dictionary = useTranslation()
+
   // States
   const [formData, setFormData] = useState({
     firstName: '',
@@ -49,49 +64,108 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
     role: '',
     company: '',
     contact: '',
-    country: ''
+    country: '',
+    avatar: null as File | null
   })
   const [saving, setSaving] = useState(false)
+  const [roles, setRoles] = useState<Role[]>([])
+  const [loadingRoles, setLoadingRoles] = useState(true)
+  const [countries, setCountries] = useState<any[]>([])
+  const [loadingCountries, setLoadingCountries] = useState(true)
+
+  // Fetch roles
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await fetch('/api/admin/roles')
+        if (response.ok) {
+          const rolesData = await response.json()
+          setRoles(rolesData)
+        }
+      } catch (error) {
+        console.error('Error fetching roles:', error)
+      } finally {
+        setLoadingRoles(false)
+      }
+    }
+
+    fetchRoles()
+  }, [])
+
+  // Fetch countries
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await fetch('/api/admin/references/countries')
+        if (response.ok) {
+          const countriesData = await response.json()
+          setCountries(countriesData)
+        }
+      } catch (error) {
+        console.error('Error fetching countries:', error)
+      } finally {
+        setLoadingCountries(false)
+      }
+    }
+
+    fetchCountries()
+  }, [])
 
   // Update local state when data prop changes
   useEffect(() => {
-    if (data) {
+    if (data && countries.length > 0 && roles.length > 0) {
       // Split full name into first and last name
       const nameParts = data.fullName.split(' ')
       const firstName = nameParts[0] || ''
       const lastName = nameParts.slice(1).join(' ') || ''
 
+      // Use database role name directly
+      const dbRole = data.role
+
+      // Find the country code from the user's country name
+      const userCountry = countries.find(c => c.name.toLowerCase() === data.country.toLowerCase())
+      const countryCode = userCountry ? userCountry.code : data.country
+
       setFormData({
         firstName,
         lastName,
         email: data.email,
-        role: data.role,
+        role: dbRole,
         company: data.company,
         contact: data.contact,
-        country: data.country
+        country: countryCode,
+        avatar: null
       })
     }
-  }, [data])
+  }, [data, countries, roles])
 
   const handleClose = () => {
     if (setOpen) {
       setOpen(false)
     }
     // Reset form data when closing
-    if (data) {
+    if (data && countries.length > 0 && roles.length > 0) {
       // Split full name into first and last name
       const nameParts = data.fullName.split(' ')
       const firstName = nameParts[0] || ''
       const lastName = nameParts.slice(1).join(' ') || ''
 
+      // Use database role name directly
+      const dbRole = data.role
+
+      // Find the country code from the user's country name
+      const userCountry = countries.find(c => c.name.toLowerCase() === data.country.toLowerCase())
+      const countryCode = userCountry ? userCountry.code : data.country
+
       setFormData({
         firstName,
         lastName,
         email: data.email,
-        role: data.role,
+        role: dbRole,
         company: data.company,
         contact: data.contact,
-        country: data.country
+        country: countryCode,
+        avatar: null
       })
     }
   }
@@ -101,26 +175,34 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
     setSaving(true)
 
     try {
+      // Validate required fields
+      if (!formData.role) {
+        toast.error(dictionary.navigation.roleRequired)
+        setSaving(false)
+        return
+      }
+
       // Combine first and last name into full name
       const fullName = `${formData.firstName} ${formData.lastName}`.trim()
 
+      const formDataToSend = new FormData()
+      formDataToSend.append('fullName', fullName)
+      formDataToSend.append('email', formData.email)
+      formDataToSend.append('role', formData.role)
+      formDataToSend.append('company', formData.company)
+      formDataToSend.append('contact', formData.contact)
+      formDataToSend.append('country', formData.country)
+      if (formData.avatar) {
+        formDataToSend.append('avatar', formData.avatar)
+      }
+
       const response = await fetch(`/api/admin/users/${data?.id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          fullName,
-          email: formData.email,
-          role: formData.role,
-          company: formData.company,
-          contact: formData.contact,
-          country: formData.country
-        })
+        body: formDataToSend
       })
 
       if (response.ok) {
-        toast.success('User updated successfully!')
+        toast.success(dictionary.navigation.userUpdatedSuccessfully)
         if (setOpen) {
           setOpen(false)
         }
@@ -128,11 +210,11 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
         window.location.reload()
       } else {
         const error = await response.json()
-        toast.error(error.message || 'Failed to update user')
+        toast.error(error.message || dictionary.navigation.failedToUpdateUser)
       }
     } catch (error) {
       console.error('Error updating user:', error)
-      toast.error('Failed to update user')
+      toast.error(dictionary.navigation.failedToUpdateUser)
     } finally {
       setSaving(false)
     }
@@ -141,9 +223,9 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
   return (
     <Dialog fullWidth open={open || false} onClose={handleClose} maxWidth='md' scroll='body' closeAfterTransition={false}>
       <DialogTitle variant='h4' className='flex gap-2 flex-col items-center sm:pbs-16 sm:pbe-6 sm:pli-16'>
-        <div className='max-sm:is-[80%] max-sm:text-center'>Edit User Information</div>
+        <div className='max-sm:is-[80%] max-sm:text-center'>{dictionary.navigation.editUserInformation}</div>
         <Typography component='span' className='flex flex-col text-center'>
-          Updating user details will receive a privacy audit.
+          {dictionary.navigation.updatingUserDetails}
         </Typography>
       </DialogTitle>
       <form onSubmit={handleSubmit}>
@@ -155,7 +237,7 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='First Name'
+                label={dictionary.navigation.firstName}
                 placeholder='John'
                 value={formData.firstName}
                 onChange={e => setFormData({ ...formData, firstName: e.target.value })}
@@ -164,7 +246,7 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Last Name'
+                label={dictionary.navigation.lastName}
                 placeholder='Doe'
                 value={formData.lastName}
                 onChange={e => setFormData({ ...formData, lastName: e.target.value })}
@@ -173,7 +255,7 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Email'
+                label={dictionary.navigation.email}
                 placeholder='john.doe@example.com'
                 value={formData.email}
                 onChange={e => setFormData({ ...formData, email: e.target.value })}
@@ -182,7 +264,7 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Company'
+                label={dictionary.navigation.company}
                 placeholder='Company Name'
                 value={formData.company}
                 onChange={e => setFormData({ ...formData, company: e.target.value })}
@@ -191,50 +273,71 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Contact'
+                label={dictionary.navigation.contact}
                 placeholder='+1 (234) 567-8901'
                 value={formData.contact}
                 onChange={e => setFormData({ ...formData, contact: e.target.value })}
               />
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                fullWidth
+                type='file'
+                label={dictionary.navigation.avatar}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={e => setFormData({ ...formData, avatar: (e.target as HTMLInputElement).files?.[0] || null })}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>
-                <InputLabel>Role</InputLabel>
+                <InputLabel>{dictionary.navigation.role}</InputLabel>
                 <Select
-                  label='Role'
                   value={formData.role}
+                  label={dictionary.navigation.role}
                   onChange={e => setFormData({ ...formData, role: e.target.value })}
+                  disabled={loadingRoles}
+                  required
                 >
-                  <MenuItem value='admin'>Admin</MenuItem>
-                  <MenuItem value='maintainer'>Maintainer</MenuItem>
-                  <MenuItem value='subscriber'>Subscriber</MenuItem>
+                  {roles.map((role) => (
+                    <MenuItem key={role.id} value={role.name}>
+                      {role.name}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Country</InputLabel>
-                <Select
-                  label='Country'
-                  value={formData.country}
-                  onChange={e => setFormData({ ...formData, country: e.target.value })}
-                >
-                  <MenuItem value='USA'>USA</MenuItem>
-                  <MenuItem value='UK'>UK</MenuItem>
-                  <MenuItem value='France'>France</MenuItem>
-                  <MenuItem value='Russia'>Russia</MenuItem>
-                  <MenuItem value='China'>China</MenuItem>
-                </Select>
-              </FormControl>
+              <Autocomplete
+                fullWidth
+                options={countries}
+                getOptionLabel={(option) => option.name}
+                value={countries.find(c => c.code === formData.country) || null}
+                onChange={(event, newValue) => {
+                  setFormData({ ...formData, country: newValue ? newValue.code : '' })
+                }}
+                disabled={loadingCountries}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={dictionary.navigation.country}
+                    placeholder={dictionary.navigation.searchCountries}
+                  />
+                )}
+                loading={loadingCountries}
+                loadingText={dictionary.navigation.loadingCountries}
+                noOptionsText={dictionary.navigation.noCountriesFound}
+              />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions className='justify-center pbs-0 sm:pbe-16 sm:pli-16'>
           <Button variant='contained' type='submit' disabled={saving}>
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? dictionary.navigation.saving : dictionary.navigation.saveChanges}
           </Button>
           <Button variant='outlined' color='secondary' onClick={handleClose}>
-            Cancel
+            {dictionary.navigation.cancel}
           </Button>
         </DialogActions>
       </form>

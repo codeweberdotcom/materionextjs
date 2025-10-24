@@ -3,6 +3,7 @@ import CredentialProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
 import type { NextAuthOptions, User } from 'next-auth'
 import type { Adapter } from 'next-auth/adapters'
+import bcrypt from 'bcrypt'
 
 // Initialize Prisma client
 import { PrismaClient } from '@prisma/client'
@@ -70,56 +71,40 @@ export const authOptions: NextAuthOptions = {
         const { email, password } = credentials as { email: string; password: string }
 
         try {
-          // ** Login API Call to match the user credentials and receive user data in response along with his role
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+          // Find user by email
+          const user = await prisma.user.findUnique({
+            where: { email },
+            include: { role: true }
+          })
 
-          let res
-          try {
-            const controller = new AbortController()
-            const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 seconds timeout
-
-            res = await fetch(`${baseUrl}/api/login`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ email, password }),
-              signal: controller.signal
-            })
-
-            clearTimeout(timeoutId)
-          } catch (fetchError) {
-            console.error('Fetch error:', fetchError)
-            throw new Error('Unable to connect to authentication server. Please check if the server is running.')
+          if (!user) {
+            throw new Error(JSON.stringify({ message: ['Email or Password is invalid'] }))
           }
 
-          let data
-          try {
-            data = await res.json()
-          } catch (parseError) {
-            console.error('Login API JSON parse error:', parseError)
-            throw new Error('Invalid response from login API')
+          // Check if user has a role
+          if (!user.role) {
+            throw new Error(JSON.stringify({ message: ['User role not found. Please contact administrator.'] }))
           }
 
-          if (res.status === 401) {
-            throw new Error(JSON.stringify(data))
+          // Verify password
+          const isPasswordValid = await bcrypt.compare(password, user.password)
+
+          if (!isPasswordValid) {
+            throw new Error(JSON.stringify({ message: ['Email or Password is invalid'] }))
           }
 
-          if (res.status === 200) {
-            /*
-             * Please unset all the sensitive information of the user either from API response or before returning
-             * user data below. Below return statement will set the user object in the token and the same is set in
-             * the session which will be accessible all over the app.
-             */
-            return {
-              id: data.id
-            }
+          /*
+           * Please unset all the sensitive information of the user either from API response or before returning
+           * user data below. Below return statement will set the user object in the token and the same is set in
+           * the session which will be accessible all over the app.
+           */
+          return {
+            id: user.id,
+            role: user.role
           }
-
-          return null
         } catch (e: any) {
           console.error('Auth error:', e)
-          throw new Error(e.message)
+          throw new Error(JSON.stringify({ message: [e.message] }))
         }
       }
     }),

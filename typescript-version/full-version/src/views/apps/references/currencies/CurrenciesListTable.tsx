@@ -47,6 +47,9 @@ import type { Locale } from '@configs/i18n'
 // Component Imports
 import AddCurrencyDialog from './AddCurrencyDialog'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -103,6 +106,9 @@ const DebouncedInput = ({
 const columnHelper = createColumnHelper<Currency>()
 
 const CurrenciesListTable = () => {
+  // Hooks
+  const dictionary = useTranslation()
+
   const [data, setData] = useState<Currency[]>([])
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -158,23 +164,23 @@ const CurrenciesListTable = () => {
         )
       },
       columnHelper.accessor('name', {
-        header: 'Currency',
+        header: dictionary.navigation.currency,
         cell: ({ row }) => <Typography>{row.original.name}</Typography>
       }),
       columnHelper.accessor('code', {
-        header: 'Code',
+        header: dictionary.navigation.code,
         cell: ({ row }) => <Typography>{row.original.code}</Typography>
       }),
       columnHelper.accessor('symbol', {
-        header: 'Symbol',
+        header: dictionary.navigation.currencySymbol,
         cell: ({ row }) => <Typography>{row.original.symbol}</Typography>
       }),
       columnHelper.accessor('isActive', {
-        header: 'Status',
+        header: dictionary.navigation.status,
         cell: ({ row }) => (
           <Chip
             variant='tonal'
-            label={row.original.isActive ? 'Active' : 'Inactive'}
+            label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
             size='small'
             color={row.original.isActive ? 'success' : 'secondary'}
           />
@@ -182,10 +188,10 @@ const CurrenciesListTable = () => {
       }),
       {
         id: 'actions',
-        header: 'Actions',
+        header: dictionary.navigation.actions,
         cell: ({ row }) => (
           <div className='flex items-center'>
-            <IconButton onClick={() => handleEditCurrency(row.original)} title='Edit Currency'>
+            <IconButton onClick={() => handleEditCurrency(row.original)} title={dictionary.navigation.editTranslation}>
               <i className='ri-edit-line text-textSecondary' />
             </IconButton>
             <Switch
@@ -193,7 +199,7 @@ const CurrenciesListTable = () => {
               onChange={() => handleToggleCurrencyStatus(row.original.id)}
               size='small'
             />
-            <IconButton onClick={() => handleDeleteCurrency(row.original.id, row.original.name)} title='Delete Currency'>
+            <IconButton onClick={() => handleDeleteCurrency(row.original.id, row.original.name)} title={dictionary.navigation.deleteTranslation}>
               <i className='ri-delete-bin-7-line text-textSecondary' />
             </IconButton>
           </div>
@@ -340,24 +346,24 @@ const CurrenciesListTable = () => {
   }
 
   if (loading) {
-    return <Typography>Loading currencies...</Typography>
+    return <Typography>{dictionary.navigation.loadingCurrencies}</Typography>
   }
 
   return (
     <Card>
-      <CardHeader title='Currencies Management' />
+      <CardHeader title={dictionary.navigation.currenciesManagement} />
       <Divider />
       <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
         <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
           <DebouncedInput
             value={globalFilter ?? ''}
             onChange={value => setGlobalFilter(String(value))}
-            placeholder='Search Currency'
+            placeholder={dictionary.navigation.searchCurrency}
             className='max-sm:is-full'
           />
         </div>
         <Button variant='contained' onClick={() => setAddCurrencyOpen(true)} className='max-sm:is-full'>
-          Add New Currency
+          {dictionary.navigation.addNewCurrency}
         </Button>
       </div>
       <div className='overflow-x-auto'>
@@ -391,7 +397,7 @@ const CurrenciesListTable = () => {
             <tbody>
               <tr>
                 <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                  No data available
+                  {dictionary.navigation.noDataAvailable}
                 </td>
               </tr>
             </tbody>

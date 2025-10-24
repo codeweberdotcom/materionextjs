@@ -39,7 +39,8 @@ const StyledDiv = styled.div<StyledDivProps>`
   `}
 `
 
-const Navigation = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof getDictionary>> }) => {
+const Navigation = ({ dictionary, locale }: { dictionary: Awaited<ReturnType<typeof getDictionary>>; locale: string }) => {
+  const safeLocale = locale || 'en'
   // Hooks
   const { settings } = useSettings()
   const { isBreakpointReached } = useHorizontalNav()
@@ -60,7 +61,7 @@ const Navigation = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof getD
           className: classnames(horizontalLayoutClasses.navigationContentWrapper, 'flex items-center is-full plb-2.5')
         })}
       >
-        <HorizontalMenu dictionary={dictionary} />
+        <HorizontalMenu dictionary={dictionary} locale={locale} />
       </StyledDiv>
     </div>
   )

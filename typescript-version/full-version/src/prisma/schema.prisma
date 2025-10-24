@@ -36,22 +36,23 @@ model Session {
 }
 
 model User {
-     id            String    @id @default(cuid())
-     name          String?
-     email         String    @unique
-     password      String
-     emailVerified DateTime?
-     image         String?
-     roleId        String
-     language      String    @default("Russian")
-     currency      String    @default("RUB")
-     country       String    @default("russia")
-     role          Role      @relation(fields: [roleId], references: [id])
-     accounts      Account[]
-     sessions      Session[]
-     createdAt     DateTime  @default(now())
-     updatedAt     DateTime  @updatedAt
-   }
+      id            String    @id @default(cuid())
+      name          String?
+      email         String    @unique
+      password      String
+      emailVerified DateTime?
+      image         String?
+      roleId        String
+      language      String    @default("Russian")
+      currency      String    @default("RUB")
+      country       String    @default("russia")
+      isActive      Boolean   @default(true)
+      role          Role      @relation(fields: [roleId], references: [id])
+      accounts      Account[]
+      sessions      Session[]
+      createdAt     DateTime  @default(now())
+      updatedAt     DateTime  @updatedAt
+    }
 
  model Role {
    id          String   @id @default(cuid())
@@ -142,4 +143,17 @@ model District {
     updatedAt   DateTime @updatedAt
 
     @@unique([name, id])
+}
+
+model Translation {
+    id          String   @id @default(cuid())
+    key         String   // e.g., "navigation.dashboards"
+    language    String   // e.g., "en", "fr", "ar"
+    value       String   // The translated text
+    namespace   String   @default("common") // e.g., "navigation", "common", "forms"
+    isActive    Boolean  @default(true)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@unique([key, language, namespace])
 }

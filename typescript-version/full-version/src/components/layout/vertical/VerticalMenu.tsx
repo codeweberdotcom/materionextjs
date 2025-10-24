@@ -1,5 +1,4 @@
 // Next Imports
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Chip from '@mui/material/Chip'
@@ -11,6 +10,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 // Type Imports
 import type { getDictionary } from '@/utils/getDictionary'
 import type { VerticalMenuContextProps } from '@menu/components/vertical-menu/Menu'
+import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import { Menu, SubMenu, MenuItem, MenuSection } from '@menu/vertical-menu'
@@ -38,6 +38,7 @@ type RenderExpandIconProps = {
 type Props = {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
   scrollMenu: (container: any, isPerfectScrollbar: boolean) => void
+  locale: Locale
 }
 
 const RenderExpandIcon = ({ open, transitionDuration }: RenderExpandIconProps) => (
@@ -46,15 +47,13 @@ const RenderExpandIcon = ({ open, transitionDuration }: RenderExpandIconProps) =
   </StyledVerticalNavExpandIcon>
 )
 
-const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
+const VerticalMenu = ({ dictionary, scrollMenu, locale }: Props) => {
   // Hooks
   const theme = useTheme()
   const verticalNavOptions = useVerticalNav()
-  const params = useParams()
 
   // Vars
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
-  const { lang: locale } = params
 
   const ScrollWrapper = isBreakpointReached ? 'div' : PerfectScrollbar
 
@@ -81,7 +80,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         renderExpandedMenuItemIcon={{ icon: <i className='ri-circle-line' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        <GenerateVerticalMenu menuData={menuData(dictionary)} />
+        <GenerateVerticalMenu menuData={menuData(dictionary)} locale={locale} />
       </Menu>
     </ScrollWrapper>
   )

@@ -47,6 +47,9 @@ import type { Locale } from '@configs/i18n'
 // Component Imports
 import AddDistrictDialog from './AddDistrictDialog'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -102,6 +105,8 @@ const DebouncedInput = ({
 const columnHelper = createColumnHelper<District>()
 
 const DistrictsListTable = () => {
+  const dictionary = useTranslation()
+
   const [data, setData] = useState<District[]>([])
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -156,19 +161,19 @@ const DistrictsListTable = () => {
       )
     },
     columnHelper.accessor('name', {
-      header: 'District',
+      header: dictionary.navigation.district,
       cell: ({ row }) => <Typography>{row.original.name}</Typography>
     }),
     columnHelper.accessor('code', {
-      header: 'Code',
+      header: dictionary.navigation.code,
       cell: ({ row }) => <Typography>{row.original.code}</Typography>
     }),
     columnHelper.accessor('isActive', {
-      header: 'Status',
+      header: dictionary.navigation.status,
       cell: ({ row }) => (
         <Chip
           variant='tonal'
-          label={row.original.isActive ? 'Active' : 'Inactive'}
+          label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
           size='small'
           color={row.original.isActive ? 'success' : 'secondary'}
         />
@@ -176,10 +181,10 @@ const DistrictsListTable = () => {
     }),
     {
       id: 'actions',
-      header: 'Actions',
+      header: dictionary.navigation.actions,
       cell: ({ row }) => (
         <div className='flex items-center'>
-          <IconButton onClick={() => handleEditDistrict(row.original)} title='Edit District'>
+          <IconButton onClick={() => handleEditDistrict(row.original)} title={dictionary.navigation.editDistrict}>
             <i className='ri-edit-line text-textSecondary' />
           </IconButton>
           <Switch
@@ -187,7 +192,7 @@ const DistrictsListTable = () => {
             onChange={() => handleToggleDistrictStatus(row.original.id)}
             size='small'
           />
-          <IconButton onClick={() => handleDeleteDistrict(row.original.id, row.original.name)} title='Delete District'>
+          <IconButton onClick={() => handleDeleteDistrict(row.original.id, row.original.name)} title={dictionary.navigation.deleteDistrict}>
             <i className='ri-delete-bin-7-line text-textSecondary' />
           </IconButton>
         </div>
@@ -223,7 +228,7 @@ const DistrictsListTable = () => {
   })
 
   const handleDeleteDistrict = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete district "${name}"?`)) {
+    if (!confirm(dictionary.navigation.deleteDistrictConfirm.replace('${name}', name))) {
       return
     }
 
@@ -332,25 +337,25 @@ const DistrictsListTable = () => {
   }
 
   if (loading) {
-    return <Typography>Loading districts...</Typography>
+    return <Typography>{dictionary.navigation.loadingDistricts}</Typography>
   }
 
   return (
     <>
       <Card>
-        <CardHeader title='Districts Management' />
+        <CardHeader title={dictionary.navigation.districtsManagement} />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
-              placeholder='Search District'
+              placeholder={dictionary.navigation.searchDistrict}
               className='max-sm:is-full'
             />
           </div>
           <Button variant='contained' onClick={() => setAddDistrictOpen(true)} className='max-sm:is-full'>
-            Add New District
+            {dictionary.navigation.addNewDistrict}
           </Button>
         </div>
       <div className='overflow-x-auto'>
@@ -384,7 +389,7 @@ const DistrictsListTable = () => {
             <tbody>
               <tr>
                 <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                  No data available
+                  {dictionary.navigation.noDataAvailable}
                 </td>
               </tr>
             </tbody>

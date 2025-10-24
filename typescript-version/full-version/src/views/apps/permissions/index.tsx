@@ -6,6 +6,8 @@ import { useEffect, useState, useMemo } from 'react'
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
+import CardHeader from '@mui/material/CardHeader'
+import Divider from '@mui/material/Divider'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
@@ -40,6 +42,9 @@ import type { PermissionRowType } from '@/types/apps/permissionTypes'
 // Component Imports
 import PermissionDialog from '@components/dialogs/permission-dialog'
 import OpenDialogOnElementClick from '@components/dialogs/OpenDialogOnElementClick'
+
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -116,6 +121,9 @@ const DebouncedInput = ({
 const columnHelper = createColumnHelper<PermissionsTypeWithAction>()
 
 const Permissions = ({ permissionsData }: { permissionsData?: PermissionRowType[] }) => {
+  // Hooks
+  const dictionary = useTranslation()
+
   // States
   const [open, setOpen] = useState(false)
   const [rowSelection, setRowSelection] = useState({})
@@ -127,7 +135,7 @@ const Permissions = ({ permissionsData }: { permissionsData?: PermissionRowType[
   // Vars
   const buttonProps: ButtonProps = {
     variant: 'contained',
-    children: 'Add Permission',
+    children: dictionary.navigation.addPermission,
     onClick: () => handleAddPermission(),
     className: 'max-sm:is-full'
   }
@@ -136,11 +144,11 @@ const Permissions = ({ permissionsData }: { permissionsData?: PermissionRowType[
   const columns = useMemo<ColumnDef<PermissionsTypeWithAction, any>[]>(
     () => [
       columnHelper.accessor('name', {
-        header: 'Name',
+        header: dictionary.navigation.name,
         cell: ({ row }) => <Typography color='text.primary'>{row.original.name}</Typography>
       }),
       columnHelper.accessor('assignedTo', {
-        header: 'Assigned To',
+        header: dictionary.navigation.assignedTo,
         cell: ({ row }) =>
           typeof row.original.assignedTo === 'string' ? (
             <Chip
@@ -164,11 +172,11 @@ const Permissions = ({ permissionsData }: { permissionsData?: PermissionRowType[
           )
       }),
       columnHelper.accessor('createdDate', {
-        header: 'Created Date',
+        header: dictionary.navigation.createdDate,
         cell: ({ row }) => <Typography>{row.original.createdDate}</Typography>
       }),
       columnHelper.accessor('action', {
-        header: 'Actions',
+        header: dictionary.navigation.actions,
         cell: ({ row }) => (
           <div className='flex items-center'>
             <IconButton onClick={() => handleEditPermission(row.original.name)}>
@@ -227,11 +235,13 @@ const Permissions = ({ permissionsData }: { permissionsData?: PermissionRowType[
   return (
     <>
       <Card>
+        <CardHeader title={dictionary.navigation.permissionsManagement} />
+        <Divider />
         <CardContent className='flex flex-col gap-4 sm:flex-row items-start sm:items-center justify-between'>
           <DebouncedInput
             value={globalFilter ?? ''}
             onChange={value => setGlobalFilter(String(value))}
-            placeholder='Search Permissions'
+            placeholder={dictionary.navigation.searchPermission}
             className='max-sm:is-full'
           />
           <OpenDialogOnElementClick
@@ -274,7 +284,7 @@ const Permissions = ({ permissionsData }: { permissionsData?: PermissionRowType[
               <tbody>
                 <tr>
                   <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                    No data available
+                    {dictionary.navigation.noDataAvailable}
                   </td>
                 </tr>
               </tbody>

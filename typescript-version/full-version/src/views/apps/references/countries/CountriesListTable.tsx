@@ -47,6 +47,9 @@ import type { Locale } from '@configs/i18n'
 // Component Imports
 import AddCountryDialog from './AddCountryDialog'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -108,6 +111,9 @@ const DebouncedInput = ({
 const columnHelper = createColumnHelper<Country>()
 
 const CountriesListTable = () => {
+  // Hooks
+  const dictionary = useTranslation()
+
   const [data, setData] = useState<Country[]>([])
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -163,19 +169,19 @@ const CountriesListTable = () => {
         )
       },
       columnHelper.accessor('name', {
-        header: 'Country',
+        header: dictionary.navigation.country,
         cell: ({ row }) => <Typography>{row.original.name}</Typography>
       }),
       columnHelper.accessor('code', {
-        header: 'Code',
+        header: dictionary.navigation.code,
         cell: ({ row }) => <Typography>{row.original.code}</Typography>
       }),
       columnHelper.accessor('isActive', {
-        header: 'Status',
+        header: dictionary.navigation.status,
         cell: ({ row }) => (
           <Chip
             variant='tonal'
-            label={row.original.isActive ? 'Active' : 'Inactive'}
+            label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
             size='small'
             color={row.original.isActive ? 'success' : 'secondary'}
           />
@@ -183,13 +189,13 @@ const CountriesListTable = () => {
       }),
       {
         id: 'states',
-        header: 'States',
+        header: dictionary.navigation.states,
         cell: ({ row }) => {
           const statesCount = row.original.states ? row.original.states.length : 0
           return (
             <div className='flex items-center gap-2'>
               <Chip
-                label={`${statesCount} states`}
+                label={`${statesCount} ${dictionary.navigation.states.toLowerCase()}`}
                 size='small'
                 variant={statesCount > 0 ? 'filled' : 'outlined'}
                 color={statesCount > 0 ? 'primary' : 'default'}
@@ -200,10 +206,10 @@ const CountriesListTable = () => {
       },
       {
         id: 'actions',
-        header: 'Actions',
+        header: dictionary.navigation.actions,
         cell: ({ row }) => (
           <div className='flex items-center'>
-            <IconButton onClick={() => handleEditCountry(row.original)} title='Edit Country'>
+            <IconButton onClick={() => handleEditCountry(row.original)} title={dictionary.navigation.editTranslation}>
               <i className='ri-edit-line text-textSecondary' />
             </IconButton>
             <Switch
@@ -211,7 +217,7 @@ const CountriesListTable = () => {
               onChange={() => handleToggleCountryStatus(row.original.id)}
               size='small'
             />
-            <IconButton onClick={() => handleDeleteCountry(row.original.id, row.original.name)} title='Delete Country'>
+            <IconButton onClick={() => handleDeleteCountry(row.original.id, row.original.name)} title={dictionary.navigation.deleteTranslation}>
               <i className='ri-delete-bin-7-line text-textSecondary' />
             </IconButton>
           </div>
@@ -359,25 +365,25 @@ const CountriesListTable = () => {
   }
 
   if (loading) {
-    return <Typography>Loading countries...</Typography>
+    return <Typography>{dictionary.navigation.loadingCountries}</Typography>
   }
 
   return (
     <>
       <Card>
-        <CardHeader title='Countries Management' />
+        <CardHeader title={dictionary.navigation.countriesManagement} />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <DebouncedInput
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
-              placeholder='Search Country'
+              placeholder={dictionary.navigation.searchCountry}
               className='max-sm:is-full'
             />
           </div>
           <Button variant='contained' onClick={() => setAddCountryOpen(true)} className='max-sm:is-full'>
-            Add New Country
+            {dictionary.navigation.addNewCountry}
           </Button>
         </div>
         <div className='overflow-x-auto'>
@@ -411,7 +417,7 @@ const CountriesListTable = () => {
               <tbody>
                 <tr>
                   <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                    No data available
+                    {dictionary.navigation.noDataAvailable}
                   </td>
                 </tr>
               </tbody>

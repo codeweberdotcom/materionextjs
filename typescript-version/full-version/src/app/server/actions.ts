@@ -55,21 +55,8 @@ export const getUserData = async (): Promise<UsersType[]> => {
 
     // Transform the data to match the expected UsersType format
     return users.map((user: any) => {
-      // Map database roles to expected UI roles
-      let uiRole = 'subscriber' // default fallback
-      switch (user.role?.name) {
-        case 'admin':
-          uiRole = 'admin'
-          break
-        case 'moderator':
-          uiRole = 'maintainer'
-          break
-        case 'user':
-          uiRole = 'subscriber'
-          break
-        default:
-          uiRole = 'subscriber'
-      }
+      // Use database role name directly
+      const uiRole = user.role?.name || 'subscriber'
 
       return {
         id: user.id, // Keep the original database ID as string
@@ -77,11 +64,12 @@ export const getUserData = async (): Promise<UsersType[]> => {
         company: 'N/A',
         role: uiRole,
         username: user.email.split('@')[0],
-        country: 'N/A',
+        country: user.country,
         contact: 'N/A',
         email: user.email,
         currentPlan: 'basic',
-        status: 'active',
+        status: (user.isActive ?? true) ? 'active' : 'inactive',
+        isActive: user.isActive ?? true,
         avatar: user.image || '',
         avatarColor: 'primary' as const
       }
@@ -102,8 +90,18 @@ export const getUserById = async (id: string) => {
 
     const user = await prisma.user.findUnique({
       where: { id },
-      include: {
-        role: true
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        country: true,
+        image: true,
+        isActive: true,
+        role: {
+          select: {
+            name: true
+          }
+        }
       }
     })
 
@@ -112,21 +110,17 @@ export const getUserById = async (id: string) => {
       return null
     }
 
-    // Map database roles to expected UI roles
-    let uiRole = 'subscriber' // default fallback
-    switch (user.role?.name) {
-      case 'admin':
-        uiRole = 'admin'
-        break
-      case 'moderator':
-        uiRole = 'maintainer'
-        break
-      case 'user':
-        uiRole = 'subscriber'
-        break
-      default:
-        uiRole = 'subscriber'
+    // Get country name from code
+    let countryName = 'N/A'
+    if (user.country) {
+      const country = await prisma.country.findUnique({
+        where: { code: user.country }
+      })
+      countryName = country?.name || user.country
     }
+
+    // Use database role name directly
+    const uiRole = user.role?.name || 'subscriber'
 
     return {
       id: user.id, // Keep the original database ID as string
@@ -134,11 +128,12 @@ export const getUserById = async (id: string) => {
       company: 'N/A',
       role: uiRole,
       username: user.email.split('@')[0],
-      country: 'N/A',
+      country: countryName,
       contact: 'N/A',
       email: user.email,
       currentPlan: 'basic',
-      status: 'active',
+      status: (user.isActive ?? true) ? 'active' : 'inactive',
+      isActive: user.isActive ?? true,
       avatar: user.image || '',
       avatarColor: 'primary' as const
     }
@@ -175,21 +170,8 @@ export const getProfileData = async () => {
       return profileData // Return fake data as fallback
     }
 
-    // Map database roles to expected UI roles
-    let uiRole = 'subscriber' // default fallback
-    switch (currentUser.role?.name) {
-      case 'admin':
-        uiRole = 'admin'
-        break
-      case 'moderator':
-        uiRole = 'maintainer'
-        break
-      case 'user':
-        uiRole = 'subscriber'
-        break
-      default:
-        uiRole = 'subscriber'
-    }
+    // Use database role name directly
+    const uiRole = currentUser.role?.name || 'subscriber'
 
     // Create user profile data with the expected structure
     const userProfileData = {

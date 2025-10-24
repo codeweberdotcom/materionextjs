@@ -100,7 +100,6 @@ export async function POST(req: Request) {
          roleId: defaultRole.id,
          country: 'russia', // Set Russia as default country
          language: 'Russian', // Set Russian as default language
-         timezone: 'Europe/Moscow', // Set Moscow timezone as default
          currency: 'RUB' // Set Russian Ruble as default currency
        },
        include: { role: true }

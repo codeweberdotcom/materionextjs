@@ -14,6 +14,9 @@ import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Chip from '@mui/material/Chip'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 type Country = {
   id: string
   name: string
@@ -49,6 +52,8 @@ type AddCityDialogProps = {
 }
 
 const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddCityDialogProps) => {
+  const dictionary = useTranslation()
+
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -104,11 +109,11 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
     const newErrors: {[key: string]: string} = {}
 
     if (!formData.name.trim()) {
-      newErrors.name = 'City name is required'
+      newErrors.name = `${dictionary.navigation.cityName} is required`
     }
 
     if (!formData.code.trim()) {
-      newErrors.code = 'City code is required'
+      newErrors.code = `${dictionary.navigation.cityCode} is required`
     }
 
     setErrors(newErrors)
@@ -134,7 +139,7 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
 
   return (
     <Dialog fullWidth open={open} onClose={handleCloseDialog} maxWidth='sm'>
-      <DialogTitle>{isEditMode ? 'Edit City' : 'Add New City'}</DialogTitle>
+      <DialogTitle>{isEditMode ? dictionary.navigation.editCityTitle : dictionary.navigation.addCityTitle}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <IconButton onClick={handleCloseDialog} className='absolute block-start-4 inline-end-4'>
@@ -144,7 +149,7 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='City Name'
+                label={dictionary.navigation.cityName}
                 placeholder='Los Angeles'
                 value={formData.name}
                 onChange={e => {
@@ -161,7 +166,7 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='City Code'
+                label={dictionary.navigation.cityCode}
                 placeholder='LA'
                 value={formData.code}
                 onChange={e => {
@@ -191,7 +196,7 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label='Districts'
+                    label={dictionary.navigation.districts}
                     placeholder='Search and select districts...'
                   />
                 )}
@@ -229,17 +234,17 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
                     onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
                   />
                 }
-                label={formData.isActive ? 'Active' : 'Inactive'}
+                label={formData.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button variant='outlined' onClick={handleCloseDialog}>
-            Cancel
+            {dictionary.navigation.cancel}
           </Button>
           <Button variant='contained' type='submit'>
-            {isEditMode ? 'Update City' : 'Add City'}
+            {isEditMode ? dictionary.navigation.updateCity : dictionary.navigation.addCity}
           </Button>
         </DialogActions>
       </form>

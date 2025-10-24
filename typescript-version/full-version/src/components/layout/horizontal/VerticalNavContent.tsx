@@ -49,6 +49,7 @@ const VerticalNavContent = ({ children }: ChildrenType) => {
   // Hooks
   const { isBreakpointReached } = useHorizontalNav()
   const { lang: locale } = useParams()
+  const safeLocale = Array.isArray(locale) ? locale[0] : locale || 'en'
 
   // Refs
   const shadowRef = useRef(null)
@@ -96,7 +97,7 @@ const VerticalNavContent = ({ children }: ChildrenType) => {
               onScrollY: container => scrollMenu(container, true)
             })}
       >
-        {mapHorizontalToVerticalMenu(children)}
+        {mapHorizontalToVerticalMenu(children, safeLocale)}
       </ScrollWrapper>
     </>
   )

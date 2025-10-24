@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -23,8 +23,8 @@ import type { Locale } from '@configs/i18n'
 import { useSettings } from '@core/hooks/useSettings'
 
 type LanguageDataType = {
-  langCode: Locale
-  langName: string
+  code: string
+  name: string
 }
 
 const getLocalePath = (pathName: string, locale: string) => {
@@ -36,25 +36,10 @@ const getLocalePath = (pathName: string, locale: string) => {
   return segments.join('/')
 }
 
-// Vars
-const languageData: LanguageDataType[] = [
-  {
-    langCode: 'en',
-    langName: 'English'
-  },
-  {
-    langCode: 'fr',
-    langName: 'French'
-  },
-  {
-    langCode: 'ar',
-    langName: 'Arabic'
-  }
-]
-
 const LanguageDropdown = () => {
   // States
   const [open, setOpen] = useState(false)
+  const [languageData, setLanguageData] = useState<LanguageDataType[]>([])
 
   // Refs
   const anchorRef = useRef<HTMLButtonElement>(null)
@@ -63,6 +48,10 @@ const LanguageDropdown = () => {
   const pathName = usePathname()
   const { settings } = useSettings()
   const { lang } = useParams()
+
+  useEffect(() => {
+    import('@/data/languages.json').then(data => setLanguageData(data.default))
+  }, [])
 
   const handleClose = () => {
     setOpen(false)
@@ -95,13 +84,13 @@ const LanguageDropdown = () => {
                 <MenuList onKeyDown={handleClose}>
                   {languageData.map(locale => (
                     <MenuItem
-                      key={locale.langCode}
+                      key={locale.code}
                       component={Link}
-                      href={getLocalePath(pathName, locale.langCode)}
+                      href={getLocalePath(pathName, locale.code)}
                       onClick={handleClose}
-                      selected={lang === locale.langCode}
+                      selected={lang === locale.code}
                     >
-                      {locale.langName}
+                      {locale.name}
                     </MenuItem>
                   ))}
                 </MenuList>

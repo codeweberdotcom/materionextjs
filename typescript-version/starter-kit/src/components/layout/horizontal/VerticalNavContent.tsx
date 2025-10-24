@@ -92,7 +92,7 @@ const VerticalNavContent = ({ children }: ChildrenType) => {
               onScrollY: container => scrollMenu(container, true)
             })}
       >
-        {mapHorizontalToVerticalMenu(children)}
+        {mapHorizontalToVerticalMenu(children, 'en')}
       </ScrollWrapper>
     </>
   )

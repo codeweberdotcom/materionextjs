@@ -20,6 +20,7 @@ import Chip from '@mui/material/Chip'
 import Typography from '@mui/material/Typography'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
+import Switch from '@mui/material/Switch'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
 import type { TextFieldProps } from '@mui/material/TextField'
@@ -41,6 +42,7 @@ import {
 } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
+import { toast } from 'react-toastify'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
@@ -50,6 +52,11 @@ import type { Locale } from '@configs/i18n'
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
 import OptionMenu from '@core/components/option-menu'
+import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
+import AddUserDrawer from '@views/apps/user/list/AddUserDrawer'
+
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
@@ -77,6 +84,15 @@ type UserRoleType = {
 
 type UserStatusType = {
   [key: string]: ThemeColor
+}
+
+type Role = {
+  id: string
+  name: string
+  description?: string | null
+  permissions?: string | null
+  createdAt: Date
+  updatedAt: Date
 }
 
 // Styled Components
@@ -143,12 +159,24 @@ const userStatusObj: UserStatusType = {
 const columnHelper = createColumnHelper<UsersTypeWithAction>()
 
 const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
+  // Hooks
+  const dictionary = useTranslation()
+
   // States
   const [role, setRole] = useState<UsersType['role']>('')
   const [rowSelection, setRowSelection] = useState({})
-  const [data, setData] = useState(...[tableData])
+  const [data, setData] = useState(tableData || [])
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
+  const [roles, setRoles] = useState<Role[]>([])
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteUserId, setDeleteUserId] = useState<string>('')
+  const [deleteUserName, setDeleteUserName] = useState<string>('')
+  const [editUser, setEditUser] = useState<UsersType | null>(null)
+  const [addUserOpen, setAddUserOpen] = useState(false)
+
+  // Check if current user is admin
+  const [isAdmin, setIsAdmin] = useState(false)
 
   // Hooks
   const { lang: locale } = useParams()
@@ -178,7 +206,7 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
         )
       },
       columnHelper.accessor('fullName', {
-        header: 'User',
+        header: dictionary.navigation.user,
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
             {getAvatar({ avatar: row.original.avatar, fullName: row.original.fullName })}
@@ -192,70 +220,94 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
         )
       }),
       columnHelper.accessor('email', {
-        header: 'Email',
+        header: dictionary.navigation.email,
         cell: ({ row }) => <Typography>{row.original.email}</Typography>
       }),
       columnHelper.accessor('role', {
-        header: 'Role',
-        cell: ({ row }) => (
-          <div className='flex items-center gap-2'>
-            <Icon
-              className={userRoleObj[row.original.role].icon}
-              sx={{ color: `var(--mui-palette-${userRoleObj[row.original.role].color}-main)`, fontSize: '1.375rem' }}
-            />
-            <Typography className='capitalize' color='text.primary'>
-              {row.original.role}
-            </Typography>
-          </div>
-        )
+        header: dictionary.navigation.role,
+        cell: ({ row }) => {
+          const roleInfo = userRoleObj[row.original.role] || userRoleObj.subscriber
+          return (
+            <div className='flex items-center gap-2'>
+              <Icon
+                className={roleInfo.icon}
+                sx={{ color: `var(--mui-palette-${roleInfo.color}-main)`, fontSize: '1.375rem' }}
+              />
+              <Typography className='capitalize' color='text.primary'>
+                {row.original.role}
+              </Typography>
+            </div>
+          )
+        }
       }),
       columnHelper.accessor('currentPlan', {
-        header: 'Plan',
+        header: dictionary.navigation.plan,
         cell: ({ row }) => (
           <Typography className='capitalize' color='text.primary'>
             {row.original.currentPlan}
           </Typography>
         )
       }),
-      columnHelper.accessor('status', {
-        header: 'Status',
+      columnHelper.accessor('isActive', {
+        header: dictionary.navigation.status,
         cell: ({ row }) => (
           <div className='flex items-center gap-3'>
             <Chip
               variant='tonal'
-              label={row.original.status}
+              label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
               size='small'
-              color={userStatusObj[row.original.status]}
+              color={row.original.isActive ? 'success' : 'secondary'}
               className='capitalize'
             />
           </div>
         )
       }),
       columnHelper.accessor('action', {
-        header: 'Actions',
+        header: dictionary.navigation.actions,
         cell: ({ row }) => (
           <div className='flex items-center'>
-            <IconButton onClick={() => setData(data?.filter(product => product.id !== row.original.id))}>
-              <i className='ri-delete-bin-7-line text-textSecondary' />
-            </IconButton>
+            {isAdmin && (
+              <IconButton
+                onClick={() => {
+                  setDeleteUserId(String(row.original.id))
+                  setDeleteUserName(row.original.fullName)
+                  setDeleteDialogOpen(true)
+                }}
+                disabled={row.original.role === 'admin'}
+              >
+                <i className='ri-delete-bin-line text-textSecondary' />
+              </IconButton>
+            )}
             <IconButton>
-              <Link href={getLocalizedUrl('/apps/user/view', locale as Locale)} className='flex'>
+              <Link href={getLocalizedUrl(`/apps/user/view?id=${row.original.id}`, locale as Locale)} className='flex'>
                 <i className='ri-eye-line text-textSecondary' />
               </Link>
             </IconButton>
+            <Switch
+              checked={row.original.isActive}
+              onChange={() => handleToggleUserStatus(String(row.original.id))}
+              size='small'
+              disabled={row.original.role === 'admin'}
+            />
             <OptionMenu
               iconButtonProps={{ size: 'medium' }}
               iconClassName='text-textSecondary'
               options={[
                 {
-                  text: 'Download',
+                  text: dictionary.navigation.download,
                   icon: 'ri-download-line',
                   menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
                 },
                 {
-                  text: 'Edit',
+                  text: dictionary.navigation.edit,
                   icon: 'ri-edit-box-line',
-                  menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
+                  menuItemProps: {
+                    className: 'flex items-center gap-2 text-textSecondary',
+                    onClick: () => {
+                      setEditUser(row.original)
+                      setAddUserOpen(true)
+                    }
+                  }
                 }
               ]}
             />
@@ -316,12 +368,100 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
       if (role && user.role !== role) return false
 
       return true
-    })
+    }) || []
 
     setFilteredData(filteredData)
-  }, [role, data, setFilteredData])
+  }, [role, data])
+
+  // Check if current user is admin
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const response = await fetch('/api/user/profile')
+        if (response.ok) {
+          const userData = await response.json()
+          setIsAdmin(userData.role === 'admin')
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error)
+      }
+    }
+
+    checkAdminStatus()
+  }, [])
+
+  // Fetch roles from API
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await fetch('/api/admin/roles')
+        if (response.ok) {
+          const rolesData = await response.json()
+          setRoles(rolesData)
+        }
+      } catch (error) {
+        console.error('Error fetching roles:', error)
+      }
+    }
+
+    fetchRoles()
+  }, [])
+
+  // Handle user deletion
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        // Refresh data from server
+        const refreshResponse = await fetch('/api/admin/users')
+        if (refreshResponse.ok) {
+          const updatedUsers = await refreshResponse.json()
+          setData(updatedUsers)
+        } else {
+          // If refresh fails, just remove from local data
+          setData(data?.filter(user => user.id !== userId))
+        }
+        toast.success(dictionary.navigation.deleteUser + ' successfully!')
+      } else {
+        const error = await response.json()
+        toast.error(error.message || dictionary.navigation.deleteUser + ' failed')
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      toast.error(dictionary.navigation.deleteUser + ' failed')
+    }
+  }
+
+  // Handle user status toggle
+  const handleToggleUserStatus = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH'
+      })
+
+      if (response.ok) {
+        const updatedUser = await response.json()
+        const updatedData = (data || []).map(user =>
+          user.id === updatedUser.id ? updatedUser : user
+        )
+        setData(updatedData)
+        setFilteredData(updatedData)
+        toast.success(`User ${updatedUser.isActive ? dictionary.navigation.active : dictionary.navigation.inactive} successfully!`)
+      } else {
+        const error = await response.json()
+        toast.error(error.message || 'Failed to toggle user status')
+      }
+    } catch (error) {
+      console.error('Error toggling user status:', error)
+      toast.error('Failed to toggle user status')
+    }
+  }
 
   return (
+    <>
     <Card>
       <CardContent className='flex justify-between flex-col gap-4 items-start sm:flex-row sm:items-center'>
         <Button
@@ -330,31 +470,31 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
           startIcon={<i className='ri-upload-2-line' />}
           className='max-sm:is-full'
         >
-          Export
+          {dictionary.navigation.export}
         </Button>
         <div className='flex gap-4 flex-col !items-start max-sm:is-full sm:flex-row sm:items-center'>
           <DebouncedInput
             value={globalFilter ?? ''}
             className='max-sm:is-full min-is-[220px]'
             onChange={value => setGlobalFilter(String(value))}
-            placeholder='Search User'
+            placeholder={dictionary.navigation.searchUser}
           />
           <FormControl size='small' className='max-sm:is-full'>
-            <InputLabel id='roles-app-role-select-label'>Select Role</InputLabel>
+            <InputLabel id='roles-app-role-select-label'>{dictionary.navigation.selectRoleFilter}</InputLabel>
             <Select
               value={role}
               onChange={e => setRole(e.target.value)}
-              label='Select Role'
+              label={dictionary.navigation.selectRoleFilter}
               id='roles-app-role-select'
               labelId='roles-app-role-select-label'
               className='min-is-[150px]'
             >
-              <MenuItem value=''>Select Role</MenuItem>
-              <MenuItem value='admin'>Admin</MenuItem>
-              <MenuItem value='author'>Author</MenuItem>
-              <MenuItem value='editor'>Editor</MenuItem>
-              <MenuItem value='maintainer'>Maintainer</MenuItem>
-              <MenuItem value='subscriber'>Subscriber</MenuItem>
+              <MenuItem value=''>{dictionary.navigation.selectRoleFilter}</MenuItem>
+              {roles.map(roleOption => (
+                <MenuItem key={roleOption.id} value={roleOption.name}>
+                  {roleOption.name.charAt(0).toUpperCase() + roleOption.name.slice(1)}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
         </div>
@@ -392,7 +532,7 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
             <tbody>
               <tr>
                 <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
-                  No data available
+                  {dictionary.navigation.noDataAvailable}
                 </td>
               </tr>
             </tbody>
@@ -421,12 +561,38 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
         count={table.getFilteredRowModel().rows.length}
         rowsPerPage={table.getState().pagination.pageSize}
         page={table.getState().pagination.pageIndex}
+        labelRowsPerPage={dictionary.navigation.rowsPerPage}
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}-${to} ${dictionary.navigation.of} ${count}`
+        }
         onPageChange={(_, page) => {
           table.setPageIndex(page)
         }}
         onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
       />
     </Card>
+    <ConfirmationDialog
+      open={deleteDialogOpen}
+      setOpen={setDeleteDialogOpen}
+      type='delete-user'
+      name={deleteUserName}
+      onConfirm={async (value) => {
+        if (value) {
+          await handleDeleteUser(deleteUserId, deleteUserName)
+        }
+      }}
+    />
+    <AddUserDrawer
+      open={addUserOpen}
+      handleClose={() => {
+        setAddUserOpen(false)
+        setEditUser(null)
+      }}
+      userData={data}
+      setData={setData}
+      editUser={editUser || undefined}
+    />
+    </>
   )
 }
 

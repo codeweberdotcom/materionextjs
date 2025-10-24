@@ -4,6 +4,7 @@
   "license": "Commercial",
   "private": true,
   "scripts": {
+    "predev": "tsx src/scripts/generate-languages.ts",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",

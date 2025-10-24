@@ -20,6 +20,7 @@ import HorizontalFooter from '@components/layout/horizontal/Footer'
 import Customizer from '@core/components/customizer'
 import ScrollToTop from '@core/components/scroll-to-top'
 import AuthGuard from '@/hocs/AuthGuard'
+import { TranslationProvider } from '@/contexts/TranslationContext'
 
 // Config Imports
 import { i18n } from '@configs/i18n'
@@ -42,32 +43,34 @@ const Layout = async (props: ChildrenType & { params: Promise<{ lang: Locale }> 
   return (
     <Providers direction={direction}>
       <AuthGuard locale={params.lang}>
-        <LayoutWrapper
-          systemMode={systemMode}
-          verticalLayout={
-            <VerticalLayout
-              navigation={<Navigation dictionary={dictionary} mode={mode} />}
-              navbar={<Navbar />}
-              footer={<VerticalFooter />}
+        <TranslationProvider dictionary={dictionary}>
+          <LayoutWrapper
+            systemMode={systemMode}
+            verticalLayout={
+              <VerticalLayout
+                navigation={<Navigation dictionary={dictionary} mode={mode} locale={params.lang} />}
+                navbar={<Navbar />}
+                footer={<VerticalFooter />}
+              >
+                {children}
+              </VerticalLayout>
+            }
+            horizontalLayout={
+              <HorizontalLayout header={<Header dictionary={dictionary} locale={params.lang} />} footer={<HorizontalFooter />}>
+                {children}
+              </HorizontalLayout>
+            }
+          />
+          <ScrollToTop className='mui-fixed'>
+            <Button
+              variant='contained'
+              className='is-10 bs-10 rounded-full p-0 min-is-0 flex items-center justify-center'
             >
-              {children}
-            </VerticalLayout>
-          }
-          horizontalLayout={
-            <HorizontalLayout header={<Header dictionary={dictionary} />} footer={<HorizontalFooter />}>
-              {children}
-            </HorizontalLayout>
-          }
-        />
-        <ScrollToTop className='mui-fixed'>
-          <Button
-            variant='contained'
-            className='is-10 bs-10 rounded-full p-0 min-is-0 flex items-center justify-center'
-          >
-            <i className='ri-arrow-up-line' />
-          </Button>
-        </ScrollToTop>
-        <Customizer dir={direction} />
+              <i className='ri-arrow-up-line' />
+            </Button>
+          </ScrollToTop>
+          <Customizer dir={direction} />
+        </TranslationProvider>
       </AuthGuard>
     </Providers>
   )

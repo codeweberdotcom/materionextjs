@@ -1,5 +1,4 @@
 // Next Imports
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import { useTheme } from '@mui/material/styles'
@@ -30,6 +29,9 @@ import verticalNavigationCustomStyles from '@core/styles/vertical/navigationCust
 import verticalMenuItemStyles from '@core/styles/vertical/menuItemStyles'
 import verticalMenuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 
+// Util Imports
+import { getLocalizedUrl } from '@/utils/i18n'
+
 // Menu Data Imports
 // import menuData from '@/data/navigation/horizontalMenuData'
 
@@ -54,17 +56,15 @@ const RenderVerticalExpandIcon = ({ open, transitionDuration }: RenderVerticalEx
   </StyledVerticalNavExpandIcon>
 )
 
-const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof getDictionary>> }) => {
+const HorizontalMenu = ({ dictionary, locale }: { dictionary: Awaited<ReturnType<typeof getDictionary>>; locale: string }) => {
   // Hooks
   const verticalNavOptions = useVerticalNav()
   const theme = useTheme()
   const { settings } = useSettings()
-  const params = useParams()
 
   // Vars
   const { skin } = settings
   const { transitionDuration } = verticalNavOptions
-  const { lang: locale } = params
 
   return (
     <HorizontalNav
