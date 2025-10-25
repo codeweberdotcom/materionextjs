@@ -201,7 +201,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           // If refresh fails, just remove from local data
           setData(data?.filter(user => user.id !== userId))
         }
-        toast.success(dictionary.navigation.deleteUser + ' successfully!')
+        toast.success(dictionary.navigation.deleteUser + ' ' + dictionary.navigation.successfully)
       } else {
         const error = await response.json()
         toast.error(error.message || dictionary.navigation.deleteUser + ' failed')
@@ -226,7 +226,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         )
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success(`User ${updatedUser.isActive ? dictionary.navigation.active : dictionary.navigation.inactive} successfully!`)
+        toast.success(`User ${updatedUser.isActive ? dictionary.navigation.active : dictionary.navigation.inactive} ${dictionary.navigation.successfully}`)
       } else {
         const error = await response.json()
         toast.error(error.message || 'Failed to toggle user status')

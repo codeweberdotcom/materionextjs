@@ -19,7 +19,13 @@ import { useForm, Controller } from 'react-hook-form'
 // Component Imports
 import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 const AccountDelete = () => {
+  // Hooks
+  const dictionary = useTranslation()
+
   // States
   const [open, setOpen] = useState(false)
 
@@ -40,7 +46,7 @@ const AccountDelete = () => {
 
   return (
     <Card>
-      <CardHeader title='Delete Account' />
+      <CardHeader title={dictionary.navigation.deleteAccount} />
       <CardContent>
         <form onSubmit={handleSubmit(onSubmit)}>
           <FormControl error={Boolean(errors.checkbox)} className='is-full mbe-6'>
@@ -49,13 +55,13 @@ const AccountDelete = () => {
               control={control}
               rules={{ required: true }}
               render={({ field }) => (
-                <FormControlLabel control={<Checkbox {...field} />} label='I confirm my account deactivation' />
+                <FormControlLabel control={<Checkbox {...field} />} label={dictionary.navigation.confirmAccountDeactivation} />
               )}
             />
             {errors.checkbox && <FormHelperText error>Please confirm you want to delete account</FormHelperText>}
           </FormControl>
           <Button variant='contained' color='error' type='submit' disabled={!checkboxValue}>
-            Deactivate Account
+            {dictionary.navigation.deactivateAccount}
           </Button>
           <ConfirmationDialog open={open} setOpen={setOpen} type='delete-account' />
         </form>

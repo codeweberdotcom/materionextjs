@@ -34,6 +34,9 @@ import { useAuth } from '@/hooks/useAuth'
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Styled component for badge content
 const BadgeContentSpan = styled('span')({
   width: 8,
@@ -57,6 +60,7 @@ const UserDropdown = () => {
   const { settings } = useSettings()
   const { lang: locale } = useParams()
   const { userRole, isAdmin, isModerator } = useAuth()
+  const dictionary = useTranslation()
 
   const handleDropdownOpen = () => {
     !open ? setOpen(true) : setOpen(false)
@@ -146,19 +150,19 @@ const UserDropdown = () => {
                   <Divider className='mlb-1' />
                   <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/user-profile')}>
                     <i className='ri-user-3-line' />
-                    <Typography color='text.primary'>My Profile</Typography>
+                    <Typography color='text.primary'>{dictionary.navigation.myProfile}</Typography>
                   </MenuItem>
                   <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/account-settings')}>
                     <i className='ri-settings-4-line' />
-                    <Typography color='text.primary'>Settings</Typography>
+                    <Typography color='text.primary'>{dictionary.navigation.settings}</Typography>
                   </MenuItem>
                   <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/pricing')}>
                     <i className='ri-money-dollar-circle-line' />
-                    <Typography color='text.primary'>Pricing</Typography>
+                    <Typography color='text.primary'>{dictionary.navigation.pricing}</Typography>
                   </MenuItem>
                   <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/faq')}>
                     <i className='ri-question-line' />
-                    <Typography color='text.primary'>FAQ</Typography>
+                    <Typography color='text.primary'>{dictionary.navigation.faq}</Typography>
                   </MenuItem>
 
                   {/* Role-based menu items */}
@@ -168,13 +172,13 @@ const UserDropdown = () => {
                   {isAdmin && (
                     <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/roles')}>
                       <i className='ri-shield-user-line text-error' />
-                      <Typography color='error.main'>Roles</Typography>
+                      <Typography color='error.main'>{dictionary.navigation.roles}</Typography>
                     </MenuItem>
                   )}
                   {isAdmin && (
                     <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/permissions')}>
                       <i className='ri-lock-2-line text-error' />
-                      <Typography color='error.main'>Permissions</Typography>
+                      <Typography color='error.main'>{dictionary.navigation.permissions}</Typography>
                     </MenuItem>
                   )}
 
@@ -184,7 +188,7 @@ const UserDropdown = () => {
                   {isModerator && (
                     <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/moderation')}>
                       <i className='ri-shield-check-line text-warning' />
-                      <Typography color='warning.main'>Moderation</Typography>
+                      <Typography color='warning.main'>{dictionary.navigation.moderation}</Typography>
                     </MenuItem>
                   )}
 
@@ -198,7 +202,7 @@ const UserDropdown = () => {
                       onClick={handleUserLogout}
                       sx={{ '& .MuiButton-endIcon': { marginInlineStart: 1.5 } }}
                     >
-                      Logout
+                      {dictionary.navigation.logout}
                     </Button>
                   </div>
                 </MenuList>

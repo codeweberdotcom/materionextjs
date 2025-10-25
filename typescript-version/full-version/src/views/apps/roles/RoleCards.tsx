@@ -12,7 +12,6 @@ import Avatar from '@mui/material/Avatar'
 import AvatarGroup from '@mui/material/AvatarGroup'
 import IconButton from '@mui/material/IconButton'
 import Button from '@mui/material/Button'
-import type { TypographyProps } from '@mui/material/Typography'
 import type { CardProps } from '@mui/material/Card'
 
 // Context Imports
@@ -21,7 +20,6 @@ import { useTranslation } from '@/contexts/TranslationContext'
 // Component Imports
 import RoleDialog from '@components/dialogs/role-dialog'
 import OpenDialogOnElementClick from '@components/dialogs/OpenDialogOnElementClick'
-import Link from '@components/Link'
 
 type Role = {
   id: string
@@ -87,13 +85,6 @@ const RoleCards = () => {
 
     fetchData()
   }, [])
-  // Vars
-  const typographyProps: TypographyProps = {
-    children: t.navigation.editRoleTitle,
-    component: Link,
-    color: 'primary',
-    onClick: e => e.preventDefault()
-  }
 
   const CardProps: CardProps = {
     className: 'cursor-pointer bs-full',
@@ -122,7 +113,7 @@ const RoleCards = () => {
 
   return (
     <>
-      <Grid container spacing={6}>
+      <Grid container spacing={6} alignItems="stretch">
         {roles.map((role, index) => {
           const roleUsers = users.filter(user => user.role === role.name)
           return (
@@ -131,10 +122,15 @@ const RoleCards = () => {
                 <CardContent className='flex flex-col gap-4'>
                   <div className='flex items-center justify-between'>
                     <Typography className='flex-grow'>{t.navigation.totalUsersCount.replace('${count}', roleUsers.length.toString())}</Typography>
-                    <AvatarGroup total={roleUsers.length}>
+                    <AvatarGroup total={Math.max(roleUsers.length, 1)}>
                       {roleUsers.slice(0, 3).map((user, userIndex) => (
                         <Avatar key={user.id} alt={user.fullName} src={user.avatar || undefined} />
                       ))}
+                      {roleUsers.length === 0 && (
+                        <Avatar>
+                          <i className='ri-user-line' />
+                        </Avatar>
+                      )}
                     </AvatarGroup>
                   </div>
                   <div className='flex justify-between items-center'>
@@ -143,16 +139,15 @@ const RoleCards = () => {
                       <Typography variant='body2' color='text.secondary'>
                         {role.description || 'No description'}
                       </Typography>
-                      <OpenDialogOnElementClick
-                        element={Typography}
-                        elementProps={typographyProps}
-                        dialog={RoleDialog}
-                        dialogProps={{ title: role.name }}
-                      />
                     </div>
-                    <IconButton>
-                      <i className='ri-file-copy-line text-secondary' />
-                    </IconButton>
+                    <OpenDialogOnElementClick
+                      element={IconButton}
+                      elementProps={{
+                        children: <i className='ri-edit-box-line text-secondary mui-1vkcxi3' />
+                      }}
+                      dialog={RoleDialog}
+                      dialogProps={{ title: role.name }}
+                    />
                   </div>
                 </CardContent>
               </Card>

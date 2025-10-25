@@ -24,9 +24,10 @@ type ConfirmationDialogProps = {
   type: ConfirmationType
   onConfirm?: (value: boolean) => void
   name?: string
+  isActive?: boolean
 }
 
-const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name }: ConfirmationDialogProps) => {
+const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: ConfirmationDialogProps) => {
   // Hooks
   const dictionary = useTranslation()
 
@@ -65,13 +66,13 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name }: Confirmati
             <Typography variant='h4'>
               {type === 'delete-account' && 'Are you sure you want to deactivate your account?'}
               {type === 'unsubscribe' && 'Are you sure to cancel your subscription?'}
-              {type === 'suspend-account' && dictionary.navigation.suspendConfirmTitle}
+              {type === 'suspend-account' && (isActive ? dictionary.navigation.suspendConfirmTitle : dictionary.navigation.activateConfirmTitle)}
               {type === 'delete-order' && 'Are you sure?'}
               {type === 'delete-customer' && 'Are you sure?'}
               {type === 'delete-user' && dictionary.navigation.deleteUserConfirm.replace('${name}', name || '')}
             </Typography>
             {type === 'suspend-account' && (
-              <Typography color='text.primary'>You won&#39;t be able to revert user!</Typography>
+              <Typography color='text.primary'>{isActive ? dictionary.navigation.suspendConfirmMessage : dictionary.navigation.activateConfirmMessage}</Typography>
             )}
             {type === 'delete-order' && (
               <Typography color='text.primary'>You won&#39;t be able to revert order!</Typography>
@@ -84,7 +85,7 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name }: Confirmati
         <DialogActions className='justify-center pbs-0 sm:pbe-16 sm:pli-16'>
           <Button variant='contained' onClick={() => handleConfirmation(true)}>
             {type === 'suspend-account'
-              ? dictionary.navigation.yesSuspendUser
+              ? (isActive ? dictionary.navigation.yesSuspendUser : dictionary.navigation.yesActivateUser)
               : type === 'delete-order'
                 ? 'Yes, Delete Order!'
                 : type === 'delete-customer'
@@ -100,7 +101,7 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name }: Confirmati
               handleConfirmation(false)
             }}
           >
-            Cancel
+            {dictionary.navigation.cancel}
           </Button>
         </DialogActions>
       </Dialog>
@@ -118,7 +119,7 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name }: Confirmati
           />
           <Typography variant='h4' className='mbe-2'>
             {userInput
-              ? `${type === 'delete-account' ? 'Deactivated' : type === 'unsubscribe' ? 'Unsubscribed' : type === 'delete-order' || 'delete-customer' ? 'Deleted' : 'Suspended!'}`
+              ? `${type === 'delete-account' ? 'Deactivated' : type === 'unsubscribe' ? 'Unsubscribed' : type === 'delete-order' || 'delete-customer' ? 'Deleted' : type === 'suspend-account' ? (isActive ? 'Suspended!' : 'Activated!') : 'Suspended!'}`
               : 'Cancelled'}
           </Typography>
           <Typography color='text.primary'>
@@ -126,19 +127,19 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name }: Confirmati
               <>
                 {type === 'delete-account' && 'Your account has been deactivated successfully.'}
                 {type === 'unsubscribe' && 'Your subscription cancelled successfully.'}
-                {type === 'suspend-account' && dictionary.navigation.userSuspended}
+                {type === 'suspend-account' && (isActive ? dictionary.navigation.userSuspended : dictionary.navigation.userActivated)}
                 {type === 'delete-order' && 'Your order deleted successfully.'}
                 {type === 'delete-customer' && 'Your customer removed successfully.'}
-                {type === 'delete-user' && dictionary.navigation.deleteUser + ' successfully.'}
+                {type === 'delete-user' && dictionary.navigation.deleteUser + ' ' + dictionary.navigation.successfully}
               </>
             ) : (
               <>
                 {type === 'delete-account' && 'Account Deactivation Cancelled!'}
                 {type === 'unsubscribe' && 'Unsubscription Cancelled!!'}
-                {type === 'suspend-account' && dictionary.navigation.cancelledSuspension}
+                {type === 'suspend-account' && (isActive ? dictionary.navigation.cancelledSuspension : dictionary.navigation.cancelledActivation)}
                 {type === 'delete-order' && 'Order Deletion Cancelled'}
                 {type === 'delete-customer' && 'Customer Deletion Cancelled'}
-                {type === 'delete-user' && dictionary.navigation.deleteUser + ' Cancelled'}
+                {type === 'delete-user' && dictionary.navigation.cancelled}
               </>
             )}
           </Typography>

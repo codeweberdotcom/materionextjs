@@ -192,7 +192,7 @@ const AddUserDrawer = (props: Props) => {
             user.id === updatedUser.id ? updatedUser : user
           )
           setData(updatedData)
-          toast.success(dictionary.navigation.updateUser + ' successfully')
+          toast.success(dictionary.navigation.updateUser + ' ' + dictionary.navigation.successfully)
         } else {
           toast.error('Failed to ' + dictionary.navigation.updateUser.toLowerCase())
         }
@@ -211,7 +211,7 @@ const AddUserDrawer = (props: Props) => {
         if (response.ok) {
           const newUser = await response.json()
           setData([...(userData ?? []), newUser])
-          toast.success(dictionary.navigation.addNewUser + ' successfully')
+          toast.success(dictionary.navigation.addNewUser + ' ' + dictionary.navigation.successfully)
         } else {
           toast.error('Failed to ' + dictionary.navigation.addNewUser.toLowerCase())
         }

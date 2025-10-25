@@ -8,6 +8,9 @@ import classnames from 'classnames'
 // Type Imports
 import type { Locale } from '@configs/i18n'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
 
@@ -20,10 +23,15 @@ type DefaultSuggestionsType = {
   }[]
 }
 
-const defaultSuggestions: DefaultSuggestionsType[] = [
-  {
-    sectionLabel: 'Popular Searches',
-    items: [
+const DefaultSuggestions = ({ setOpen }: { setOpen: (value: boolean) => void }) => {
+  // Hooks
+  const t = useTranslation()
+  const { lang: locale } = useParams()
+
+  const defaultSuggestions: DefaultSuggestionsType[] = [
+    {
+      sectionLabel: t.navigation.popularSearches,
+      items: [
       {
         label: 'Analytics',
         href: '/dashboards/analytics',
@@ -47,7 +55,7 @@ const defaultSuggestions: DefaultSuggestionsType[] = [
     ]
   },
   {
-    sectionLabel: 'Apps',
+    sectionLabel: t.navigation.apps,
     items: [
       {
         label: 'Calendar',
@@ -72,7 +80,7 @@ const defaultSuggestions: DefaultSuggestionsType[] = [
     ]
   },
   {
-    sectionLabel: 'Pages',
+    sectionLabel: t.navigation.pages,
     items: [
       {
         label: 'User Profile',
@@ -97,7 +105,7 @@ const defaultSuggestions: DefaultSuggestionsType[] = [
     ]
   },
   {
-    sectionLabel: 'Forms & Charts',
+    sectionLabel: t.navigation.formsAndCharts,
     items: [
       {
         label: 'Form Layouts',
@@ -122,10 +130,6 @@ const defaultSuggestions: DefaultSuggestionsType[] = [
     ]
   }
 ]
-
-const DefaultSuggestions = ({ setOpen }: { setOpen: (value: boolean) => void }) => {
-  // Hooks
-  const { lang: locale } = useParams()
 
   return (
     <div className='flex grow flex-wrap gap-x-[48px] gap-y-8 plb-14 pli-16 overflow-y-auto overflow-x-hidden bs-full'>

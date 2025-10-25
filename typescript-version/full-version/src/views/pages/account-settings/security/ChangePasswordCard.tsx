@@ -14,7 +14,13 @@ import IconButton from '@mui/material/IconButton'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 const ChangePasswordCard = () => {
+  // Hooks
+  const dictionary = useTranslation()
+
   // States
   const [isCurrentPasswordShown, setIsCurrentPasswordShown] = useState(false)
   const [isConfirmPasswordShown, setIsConfirmPasswordShown] = useState(false)
@@ -26,14 +32,14 @@ const ChangePasswordCard = () => {
 
   return (
     <Card>
-      <CardHeader title='Change Password' />
+      <CardHeader title={dictionary.navigation.changePassword} />
       <CardContent>
         <form>
           <Grid container spacing={6}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Current Password'
+                label={dictionary.navigation.currentPassword}
                 type={isCurrentPasswordShown ? 'text' : 'password'}
                 slotProps={{
                   input: {
@@ -58,7 +64,7 @@ const ChangePasswordCard = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='New Password'
+                label={dictionary.navigation.newPassword}
                 type={isNewPasswordShown ? 'text' : 'password'}
                 slotProps={{
                   input: {
@@ -81,7 +87,7 @@ const ChangePasswordCard = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Confirm New Password'
+                label={dictionary.navigation.confirmNewPassword}
                 type={isConfirmPasswordShown ? 'text' : 'password'}
                 slotProps={{
                   input: {
@@ -103,7 +109,7 @@ const ChangePasswordCard = () => {
             </Grid>
             <Grid size={{ xs: 12 }} className='flex flex-col gap-4'>
               <Typography variant='h6' color='text.secondary'>
-                Password Requirements:
+                {dictionary.navigation.passwordRequirements}
               </Typography>
               <div className='flex flex-col gap-4'>
                 <div className='flex items-center gap-2.5 text-textSecondary'>
@@ -121,9 +127,9 @@ const ChangePasswordCard = () => {
               </div>
             </Grid>
             <Grid size={{ xs: 12 }} className='flex gap-4'>
-              <Button variant='contained'>Save Changes</Button>
+              <Button variant='contained'>{dictionary.navigation.saveChanges}</Button>
               <Button variant='outlined' type='reset' color='secondary'>
-                Reset
+                {dictionary.navigation.reset}
               </Button>
             </Grid>
           </Grid>

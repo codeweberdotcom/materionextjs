@@ -1,3 +1,5 @@
+'use client'
+
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -20,7 +22,13 @@ import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 import UpgradePlan from '@components/dialogs/upgrade-plan'
 import OpenDialogOnElementClick from '@components/dialogs/OpenDialogOnElementClick'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 const CurrentPlan = ({ data }: { data?: PricingPlanType[] }) => {
+  // Hooks
+  const dictionary = useTranslation()
+
   const buttonProps = (children: string, color: ThemeColor, variant: ButtonProps['variant']): ButtonProps => ({
     children,
     variant,
@@ -29,7 +37,7 @@ const CurrentPlan = ({ data }: { data?: PricingPlanType[] }) => {
 
   return (
     <Card>
-      <CardHeader title='Current Plan' />
+      <CardHeader title={dictionary.navigation.currentPlan} />
       <CardContent>
         <Grid container spacing={6}>
           <Grid size={{ xs: 12, md: 6 }} className='flex flex-col gap-6'>
@@ -76,13 +84,13 @@ const CurrentPlan = ({ data }: { data?: PricingPlanType[] }) => {
           <Grid size={{ xs: 12 }} className='flex gap-4 flex-wrap'>
             <OpenDialogOnElementClick
               element={Button}
-              elementProps={buttonProps('Upgrade Plan', 'primary', 'contained')}
+              elementProps={buttonProps(dictionary.navigation.upgradePlan, 'primary', 'contained')}
               dialog={UpgradePlan}
               dialogProps={{ data: data }}
             />
             <OpenDialogOnElementClick
               element={Button}
-              elementProps={buttonProps('Cancel Subscription', 'error', 'outlined')}
+              elementProps={buttonProps(dictionary.navigation.cancelSubscription, 'error', 'outlined')}
               dialog={ConfirmationDialog}
               dialogProps={{ type: 'unsubscribe' }}
             />

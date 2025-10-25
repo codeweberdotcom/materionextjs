@@ -280,7 +280,7 @@ const AccountDetails = () => {
           <div className='flex flex-grow flex-col gap-4'>
             <div className='flex flex-col sm:flex-row gap-4'>
               <Button component='label' size='small' variant='contained' htmlFor='account-settings-upload-image'>
-                Upload New Photo
+                {dictionary.navigation.uploadNewPhoto}
                 <input
                   hidden
                   type='file'
@@ -291,10 +291,10 @@ const AccountDetails = () => {
                 />
               </Button>
               <Button size='small' variant='outlined' color='error' onClick={handleFileInputReset}>
-                Reset
+                {dictionary.navigation.reset}
               </Button>
             </div>
-            <Typography>Allowed JPG, GIF or PNG. Max size of 800K</Typography>
+            <Typography>{dictionary.navigation.allowedImageFormats}</Typography>
           </div>
         </div>
       </CardContent>
@@ -436,17 +436,17 @@ const AccountDetails = () => {
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
-                label='Role'
+                label={dictionary.forms.role}
                 value={formData.role}
                 disabled
               />
             </Grid>
             <Grid size={{ xs: 12 }} className='flex gap-4 flex-wrap'>
               <Button variant='contained' type='submit' disabled={saving}>
-                {saving ? 'Saving...' : 'Save Changes'}
+                {saving ? dictionary.navigation.saving : dictionary.navigation.saveChanges}
               </Button>
               <Button variant='outlined' type='reset' color='secondary' onClick={() => setFormData(initialData)}>
-                Reset
+                {dictionary.navigation.reset}
               </Button>
             </Grid>
           </Grid>

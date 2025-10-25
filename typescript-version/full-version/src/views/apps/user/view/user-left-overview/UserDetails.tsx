@@ -188,6 +188,7 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
               setOpen={setSuspendDialogOpen}
               type='suspend-account'
               onConfirm={handleSuspendConfirm}
+              isActive={user.status === 'active'}
             />
           </div>
         </CardContent>

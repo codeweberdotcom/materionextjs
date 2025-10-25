@@ -28,6 +28,9 @@ import NoResult from './NoResult'
 import useVerticalNav from '@menu/hooks/useVerticalNav'
 import { useSettings } from '@core/hooks/useSettings'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
 
@@ -115,7 +118,7 @@ const getFilteredResults = (sections: Section[]) => {
 }
 
 // Footer component for the search menu
-const CommandFooter = () => {
+const CommandFooter = ({ t }: { t: any }) => {
   return (
     <div cmdk-footer=''>
       <div className='flex items-center gap-1'>
@@ -125,23 +128,26 @@ const CommandFooter = () => {
         <kbd>
           <i className='ri-arrow-down-line text-base' />
         </kbd>
-        <span>to navigate</span>
+        <span>{t.navigation.toNavigate}</span>
       </div>
       <div className='flex items-center gap-1'>
         <kbd>
           <i className='ri-corner-down-left-line text-base' />
         </kbd>
-        <span>to open</span>
+        <span>{t.navigation.toOpen}</span>
       </div>
       <div className='flex items-center gap-1'>
         <kbd>esc</kbd>
-        <span>to close</span>
+        <span>{t.navigation.toClose}</span>
       </div>
     </div>
   )
 }
 
 const NavSearch = () => {
+  // Hooks
+  const t = useTranslation()
+
   // States
   const [open, setOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
@@ -224,7 +230,7 @@ const NavSearch = () => {
           <IconButton className='text-textPrimary' onClick={() => setOpen(true)}>
             <i className='ri-search-line text-textPrimary' />
           </IconButton>
-          <div className='whitespace-nowrap select-none text-textDisabled'>Search ⌘K</div>
+          <div className='whitespace-nowrap select-none text-textDisabled'>{t.navigation.searchShortcut}</div>
         </div>
       )}
       <CommandDialog open={open} onOpenChange={setOpen}>
@@ -233,7 +239,7 @@ const NavSearch = () => {
           <Description hidden />
           <i className='ri-search-line' />
           <CommandInput value={searchValue} onValueChange={setSearchValue} />
-          <span className='text-textDisabled'>[esc]</span>
+          <span className='text-textDisabled'>{t.navigation.esc}</span>
           <i className='ri-close-line cursor-pointer' onClick={() => setOpen(false)} />
         </div>
         <CommandList>
@@ -271,7 +277,7 @@ const NavSearch = () => {
             <DefaultSuggestions setOpen={setOpen} />
           )}
         </CommandList>
-        {isAboveMdScreen && <CommandFooter />}
+        {isAboveMdScreen && <CommandFooter t={t} />}
       </CommandDialog>
     </>
   )
