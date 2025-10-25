@@ -19,10 +19,15 @@ import Button from '@mui/material/Button'
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 type RoleDialogProps = {
   open: boolean
   setOpen: (open: boolean) => void
   title?: string
+  roleId?: string
+  onSuccess?: () => void
 }
 
 type DataType =
@@ -46,25 +51,55 @@ const defaultData: DataType[] = [
   'Payroll'
 ]
 
-const RoleDialog = ({ open, setOpen, title }: RoleDialogProps) => {
-  // States
-  const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>(
-    title
-      ? [
-          'user-management-read',
-          'user-management-write',
-          'user-management-create',
-          'disputes-management-read',
-          'disputes-management-write',
-          'disputes-management-create'
-        ]
-      : []
-  )
+const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps) => {
+  // Hooks
+  const t = useTranslation()
 
+  // States
+  const [roleName, setRoleName] = useState<string>(title || '')
+  const [roleDescription, setRoleDescription] = useState<string>('')
+  const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [isIndeterminateCheckbox, setIsIndeterminateCheckbox] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(false)
 
   const handleClose = () => {
     setOpen(false)
+    setRoleName('')
+    setRoleDescription('')
+    setSelectedCheckbox([])
+  }
+
+  const handleSubmit = async () => {
+    setLoading(true)
+    try {
+      const url = roleId ? `/api/admin/roles/${roleId}` : '/api/admin/roles'
+      const method = roleId ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: roleName,
+          description: roleDescription,
+          permissions: selectedCheckbox
+        })
+      })
+
+      if (response.ok) {
+        handleClose()
+        if (onSuccess) {
+          onSuccess()
+        }
+      } else {
+        console.error('Error saving role')
+      }
+    } catch (error) {
+      console.error('Error saving role:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const togglePermission = (id: string) => {
@@ -101,12 +136,36 @@ const RoleDialog = ({ open, setOpen, title }: RoleDialogProps) => {
     }
   }, [selectedCheckbox])
 
+  useEffect(() => {
+    if (open && roleId) {
+      const fetchRole = async () => {
+        try {
+          const response = await fetch(`/api/admin/roles/${roleId}`)
+          if (response.ok) {
+            const roleData = await response.json()
+            setRoleName(roleData.name)
+            setRoleDescription(roleData.description || '')
+            setSelectedCheckbox(roleData.permissions || [])
+          }
+        } catch (error) {
+          console.error('Error fetching role:', error)
+        }
+      }
+      fetchRole()
+    } else if (open && !roleId) {
+      // For new role
+      setRoleName('')
+      setRoleDescription('')
+      setSelectedCheckbox([])
+    }
+  }, [open, roleId])
+
   return (
     <Dialog fullWidth maxWidth='md' scroll='body' open={open} onClose={handleClose} closeAfterTransition={false}>
       <DialogTitle variant='h4' className='flex flex-col gap-2 text-center sm:pbs-16 sm:pbe-6 sm:pli-16'>
-        {title ? 'Edit Role' : 'Add Role'}
+        {roleId ? t.navigation.editRoleTitle : t.navigation.addRoleTitle}
         <Typography component='span' className='flex flex-col text-center'>
-          Set Role Permissions
+          Установить разрешения роли
         </Typography>
       </DialogTitle>
       <form onSubmit={e => e.preventDefault()}>
@@ -115,15 +174,24 @@ const RoleDialog = ({ open, setOpen, title }: RoleDialogProps) => {
             <i className='ri-close-line text-textSecondary' />
           </IconButton>
           <TextField
-            label='Role Name'
+            label={t.navigation.roleName}
             variant='outlined'
             fullWidth
-            placeholder='Enter Role Name'
-            defaultValue={title}
-            onChange={e => e.target.value}
+            placeholder={t.navigation.roleName}
+            value={roleName}
+            onChange={e => setRoleName(e.target.value)}
+          />
+          <div className='mb-4' />
+          <TextField
+            label={t.navigation.roleDescription}
+            variant='outlined'
+            fullWidth
+            placeholder={t.navigation.roleDescription}
+            value={roleDescription}
+            onChange={e => setRoleDescription(e.target.value)}
           />
           <Typography variant='h5' className='plb-6'>
-            Role Permissions
+            {t.navigation.rolesPermissions}
           </Typography>
           <div className='flex flex-col overflow-x-auto'>
             <table className={tableStyles.table}>
@@ -131,7 +199,7 @@ const RoleDialog = ({ open, setOpen, title }: RoleDialogProps) => {
                 <tr>
                   <th className='pis-0'>
                     <Typography className='font-medium whitespace-nowrap flex-grow min-is-[225px]' color='text.primary'>
-                      Administrator Access
+                      Доступ администратора
                     </Typography>
                   </th>
                   <th className='!text-end pie-0'>
@@ -144,7 +212,7 @@ const RoleDialog = ({ open, setOpen, title }: RoleDialogProps) => {
                           checked={selectedCheckbox.length === defaultData.length * 3}
                         />
                       }
-                      label='Select All'
+                      label='Выбрать все'
                     />
                   </th>
                 </tr>
@@ -167,12 +235,12 @@ const RoleDialog = ({ open, setOpen, title }: RoleDialogProps) => {
                             <FormControlLabel
                               className='mie-0'
                               control={<Checkbox checked={item.read} />}
-                              label='Read'
+                              label='Чтение'
                             />
                             <FormControlLabel
                               className='mie-0'
                               control={<Checkbox checked={item.write} />}
-                              label='Write'
+                              label='Запись'
                             />
                             <FormControlLabel
                               className='mie-0'
@@ -213,7 +281,7 @@ const RoleDialog = ({ open, setOpen, title }: RoleDialogProps) => {
                                   checked={selectedCheckbox.includes(`${id}-create`)}
                                 />
                               }
-                              label='Create'
+                              label='Создание'
                             />
                           </FormGroup>
                         )}
@@ -226,11 +294,11 @@ const RoleDialog = ({ open, setOpen, title }: RoleDialogProps) => {
           </div>
         </DialogContent>
         <DialogActions className='justify-center pbs-0 sm:pbe-16 sm:pli-16'>
-          <Button variant='contained' type='submit' onClick={handleClose}>
-            Submit
+          <Button variant='contained' type='submit' onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Сохранение...' : 'Отправить'}
           </Button>
           <Button variant='outlined' type='reset' color='secondary' onClick={handleClose}>
-            Cancel
+            Отмена
           </Button>
         </DialogActions>
       </form>

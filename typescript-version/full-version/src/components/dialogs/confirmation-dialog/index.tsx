@@ -16,7 +16,7 @@ import classnames from 'classnames'
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
 
-type ConfirmationType = 'delete-account' | 'unsubscribe' | 'suspend-account' | 'delete-order' | 'delete-customer' | 'delete-user'
+type ConfirmationType = 'delete-account' | 'unsubscribe' | 'suspend-account' | 'delete-order' | 'delete-customer' | 'delete-user' | 'delete-role'
 
 type ConfirmationDialogProps = {
   open: boolean
@@ -70,6 +70,7 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
               {type === 'delete-order' && 'Are you sure?'}
               {type === 'delete-customer' && 'Are you sure?'}
               {type === 'delete-user' && dictionary.navigation.deleteUserConfirm.replace('${name}', name || '')}
+              {type === 'delete-role' && dictionary.navigation.deleteRoleConfirm.replace('${name}', name || '')}
             </Typography>
             {type === 'suspend-account' && (
               <Typography color='text.primary'>{isActive ? dictionary.navigation.suspendConfirmMessage : dictionary.navigation.activateConfirmMessage}</Typography>
@@ -92,7 +93,9 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
                   ? 'Yes, Delete Customer!'
                   : type === 'delete-user'
                     ? dictionary.navigation.deleteUser
-                    : 'Yes'}
+                    : type === 'delete-role'
+                      ? dictionary.navigation.yesDeleteRole
+                      : 'Yes'}
           </Button>
           <Button
             variant='outlined'
@@ -131,6 +134,7 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
                 {type === 'delete-order' && 'Your order deleted successfully.'}
                 {type === 'delete-customer' && 'Your customer removed successfully.'}
                 {type === 'delete-user' && dictionary.navigation.deleteUser + ' ' + dictionary.navigation.successfully}
+                {type === 'delete-role' && dictionary.navigation.deleteRole + ' ' + dictionary.navigation.successfully}
               </>
             ) : (
               <>
@@ -140,6 +144,7 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
                 {type === 'delete-order' && 'Order Deletion Cancelled'}
                 {type === 'delete-customer' && 'Customer Deletion Cancelled'}
                 {type === 'delete-user' && dictionary.navigation.cancelled}
+                {type === 'delete-role' && dictionary.navigation.cancelled}
               </>
             )}
           </Typography>

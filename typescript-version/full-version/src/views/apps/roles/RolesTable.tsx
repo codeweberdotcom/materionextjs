@@ -142,6 +142,7 @@ const DebouncedInput = ({
 
 // Vars
 const userRoleObj: UserRoleType = {
+  superadmin: { icon: 'ri-vip-crown-line', color: 'warning' },
   admin: { icon: 'ri-vip-crown-line', color: 'error' },
   author: { icon: 'ri-computer-line', color: 'warning' },
   editor: { icon: 'ri-edit-box-line', color: 'info' },
@@ -231,7 +232,10 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
             <div className='flex items-center gap-2'>
               <Icon
                 className={roleInfo.icon}
-                sx={{ color: `var(--mui-palette-${roleInfo.color}-main)`, fontSize: '1.375rem' }}
+                sx={{
+                  color: row.original.role.toLowerCase() === 'superadmin' ? '#FFD700' : `var(--mui-palette-${roleInfo.color}-main)`,
+                  fontSize: '1.375rem'
+                }}
               />
               <Typography className='capitalize' color='text.primary'>
                 {row.original.role}
