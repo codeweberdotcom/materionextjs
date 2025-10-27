@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }
@@ -67,8 +67,11 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: 'Translations imported from JSON successfully',
-      importedCount: translationsToCreate.length
+      message: 'translationsImportSuccess',
+      importedCount: translationsToCreate.length,
+      // For client-side translation
+      translationKey: 'translationsImportSuccess',
+      translationParams: { count: translationsToCreate.length }
     })
   } catch (error) {
     console.error('Error importing translations:', error)

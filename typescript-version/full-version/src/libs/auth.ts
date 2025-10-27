@@ -61,14 +61,26 @@ export const authOptions: NextAuthOptions = {
        * username or password attributes manually in following credentials object.
        */
       credentials: {},
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         /*
          * You need to provide your own logic here that takes the credentials submitted and returns either
          * an object representing a user or value that is false/null if the credentials are invalid.
          * For e.g. return { id: 1, name: 'J Smith', email: 'jsmith@example.com' }
          * You can also use the `req` object to obtain additional parameters (i.e., the request IP address)
          */
-        const { email, password } = credentials as { email: string; password: string }
+        const { email, password, locale = 'en' } = credentials as { email: string; password: string; locale?: string }
+
+        // Load dictionary
+        let dict: any = {}
+        try {
+          const dictModule = await import(`../data/dictionaries/${locale}.json`)
+          dict = dictModule.default
+        } catch (error) {
+          console.error('Error loading dictionary:', error)
+          // Fallback to English
+          const dictModule = await import('../data/dictionaries/en.json')
+          dict = dictModule.default
+        }
 
         try {
           // Find user by email
@@ -78,19 +90,19 @@ export const authOptions: NextAuthOptions = {
           })
 
           if (!user) {
-            throw new Error(JSON.stringify({ message: ['Email or Password is invalid'] }))
+            throw new Error(dict.navigation?.invalidCredentials || 'Email or Password is invalid')
           }
 
           // Check if user has a role
           if (!user.role) {
-            throw new Error(JSON.stringify({ message: ['User role not found. Please contact administrator.'] }))
+            throw new Error(dict.navigation?.roleNotFound || 'User role not found. Please contact administrator.')
           }
 
           // Verify password
           const isPasswordValid = await bcrypt.compare(password, user.password)
 
           if (!isPasswordValid) {
-            throw new Error(JSON.stringify({ message: ['Email or Password is invalid'] }))
+            throw new Error(dict.navigation?.invalidCredentials || 'Email or Password is invalid')
           }
 
           /*
@@ -104,7 +116,7 @@ export const authOptions: NextAuthOptions = {
           }
         } catch (e: any) {
           console.error('Auth error:', e)
-          throw new Error(JSON.stringify({ message: [e.message] }))
+          throw new Error(e.message)
         }
       }
     }),

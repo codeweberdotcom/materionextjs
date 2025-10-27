@@ -58,13 +58,27 @@ const countriesData = [
 
 async function main() {
   // Create default role if it doesn't exist
+  const superadminRole = await prisma.role.upsert({
+    where: { name: 'superadmin' },
+    update: {
+      permissions: JSON.stringify(['all'])
+    },
+    create: {
+      name: 'superadmin',
+      description: 'Super Administrator role with full access',
+      permissions: JSON.stringify(['all'])
+    }
+  })
+
   const adminRole = await prisma.role.upsert({
     where: { name: 'admin' },
-    update: {},
+    update: {
+      permissions: JSON.stringify(['all'])
+    },
     create: {
       name: 'admin',
       description: 'Administrator role',
-      permissions: 'all'
+      permissions: JSON.stringify(['all'])
     }
   })
 
@@ -74,7 +88,77 @@ async function main() {
     create: {
       name: 'user',
       description: 'Regular user role',
-      permissions: 'read'
+      permissions: JSON.stringify({ 'Profile': ['Read'], 'Content': ['Read'] })
+    }
+  })
+
+  const moderatorRole = await prisma.role.upsert({
+    where: { name: 'moderator' },
+    update: {},
+    create: {
+      name: 'moderator',
+      description: 'Moderator role with content moderation permissions',
+      permissions: JSON.stringify({ 'Users': ['Read'], 'Roles': ['Read'], 'Content Moderation': ['Write'] })
+    }
+  })
+
+  const seoRole = await prisma.role.upsert({
+    where: { name: 'seo' },
+    update: {},
+    create: {
+      name: 'seo',
+      description: 'SEO specialist role',
+      permissions: JSON.stringify({ 'Content': ['Read', 'Write'], 'Analytics': ['Read'] })
+    }
+  })
+
+  const editorRole = await prisma.role.upsert({
+    where: { name: 'editor' },
+    update: {},
+    create: {
+      name: 'editor',
+      description: 'Content editor role',
+      permissions: JSON.stringify({ 'Content': ['Read', 'Write'], 'Media': ['Write'] })
+    }
+  })
+
+  const marketologRole = await prisma.role.upsert({
+    where: { name: 'marketolog' },
+    update: {},
+    create: {
+      name: 'marketolog',
+      description: 'Marketing specialist role',
+      permissions: JSON.stringify({ 'Marketing': ['Read', 'Write'], 'Analytics': ['Read'] })
+    }
+  })
+
+  const subscriberRole = await prisma.role.upsert({
+    where: { name: 'subscriber' },
+    update: {},
+    create: {
+      name: 'subscriber',
+      description: 'Subscriber role with limited access',
+      permissions: JSON.stringify({ 'Content': ['Read'], 'Profile': ['Read'] })
+    }
+  })
+
+  const supportRole = await prisma.role.upsert({
+    where: { name: 'support' },
+    update: {},
+    create: {
+      name: 'support',
+      description: 'Customer support role',
+      permissions: JSON.stringify({ 'Support': ['Read', 'Write'], 'Users': ['Read'] })
+    }
+  })
+
+  const managerRole = await prisma.role.upsert({
+    where: { name: 'manager' },
+    update: {},
+    create: {
+      name: 'manager',
+      description: 'Manager role with team management permissions',
+      permissions: JSON.stringify({ 'Users': ['Read', 'Write'], 'Reports': ['Read'], 'Team': ['Write'] })
     }
   })
 
@@ -92,6 +176,26 @@ async function main() {
       name: 'Admin User',
       password: hashedPassword,
       roleId: adminRole.id,
+      language: 'ru',
+      currency: 'RUB',
+      country: 'russia'
+    }
+  })
+
+  // Create superadmin user
+  const superadminPassword = await bcrypt.hash('admin123', 10)
+
+  const superadminUser = await prisma.user.upsert({
+    where: { email: 'superadmin@example.com' },
+    update: {
+      password: superadminPassword,
+      roleId: superadminRole.id
+    },
+    create: {
+      email: 'superadmin@example.com',
+      name: 'Superadmin User',
+      password: superadminPassword,
+      roleId: superadminRole.id,
       language: 'ru',
       currency: 'RUB',
       country: 'russia'
@@ -315,11 +419,84 @@ async function main() {
     })
   }
 
+  // Create email templates
+  const welcomeTemplate = await prisma.emailTemplate.upsert({
+    where: { name: 'welcome' },
+    update: {},
+    create: {
+      name: 'welcome',
+      subject: 'Добро пожаловать, {name}!',
+      content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #333;">Добро пожаловать, {name}!</h1>
+          <p>Спасибо за регистрацию в нашей системе.</p>
+          <p>Ваш аккаунт был успешно создан и готов к использованию.</p>
+          <div style="background-color: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 5px;">
+            <h3>Ваши данные для входа:</h3>
+            <p><strong>Email:</strong> {email}</p>
+            <p><strong>Дата регистрации:</strong> {date}</p>
+          </div>
+          <p>Если у вас возникнут вопросы, пожалуйста, свяжитесь с нашей службой поддержки.</p>
+          <p>С уважением,<br>Команда поддержки</p>
+        </div>
+      `
+    }
+  })
+
+  const passwordResetTemplate = await prisma.emailTemplate.upsert({
+    where: { name: 'password-reset' },
+    update: {},
+    create: {
+      name: 'password-reset',
+      subject: 'Восстановление пароля - {date}',
+      content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #333;">Восстановление пароля</h1>
+          <p>Вы получили это письмо, потому что был сделан запрос на восстановление пароля для вашего аккаунта.</p>
+          <div style="background-color: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 5px; text-align: center;">
+            <a href="{link}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Восстановить пароль
+            </a>
+          </div>
+          <p>Если вы не запрашивали восстановление пароля, пожалуйста, игнорируйте это письмо.</p>
+          <p>Ссылка действительна в течение 24 часов.</p>
+          <p>Если у вас возникнут проблемы, пожалуйста, свяжитесь с нашей службой поддержки.</p>
+          <p>С уважением,<br>Команда поддержки</p>
+        </div>
+      `
+    }
+  })
+
+  const orderConfirmationTemplate = await prisma.emailTemplate.upsert({
+    where: { name: 'order-confirmation' },
+    update: {},
+    create: {
+      name: 'order-confirmation',
+      subject: 'Подтверждение заказа #{orderId}',
+      content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #333;">Подтверждение заказа</h1>
+          <p>Здравствуйте, {name}!</p>
+          <p>Ваш заказ #{orderId} был успешно оформлен.</p>
+          <div style="background-color: #f5f5f5; padding: 20px; margin: 20px 0; border-radius: 5px;">
+            <h3>Детали заказа:</h3>
+            <p><strong>Номер заказа:</strong> #{orderId}</p>
+            <p><strong>Дата:</strong> {date}</p>
+            <p><strong>Сумма:</strong> {amount}</p>
+            <p><strong>Статус:</strong> Подтвержден</p>
+          </div>
+          <p>Спасибо за покупку! Мы свяжемся с вами в ближайшее время для уточнения деталей доставки.</p>
+          <p>С уважением,<br>Команда магазина</p>
+        </div>
+      `
+    }
+  })
+
+  console.log('Email templates created successfully!')
   console.log('Database seeded successfully!')
-  console.log('User created:')
-  console.log('- Email: admin@example.com')
-  console.log('- Password: admin123')
-  console.log('- Role: admin')
+  console.log('Users created:')
+  console.log('- Email: superadmin@example.com, Password: admin123, Role: superadmin (DEFAULT ADMIN)')
+  console.log('- Email: admin@example.com, Password: admin123, Role: admin')
 }
 
 main()

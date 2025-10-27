@@ -36,7 +36,8 @@ type Props = {
 }
 
 type FormValidateType = {
-  fullName: string
+  firstName: string
+  lastName: string
   username: string
   email: string
   role: string
@@ -89,6 +90,8 @@ const AddUserDrawer = (props: Props) => {
   const [roles, setRoles] = useState<Role[]>([])
   const [countries, setCountries] = useState<Country[]>([])
   const [loading, setLoading] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string>('')
+  const [isEditingOwnProfile, setIsEditingOwnProfile] = useState<boolean>(false)
 
   // Hooks
   const {
@@ -98,14 +101,16 @@ const AddUserDrawer = (props: Props) => {
     formState: { errors }
   } = useForm<FormValidateType>({
     defaultValues: {
-      fullName: editUser?.fullName || '',
+      firstName: editUser?.fullName?.split(' ')[0] || '',
+      lastName: editUser?.fullName?.split(' ').slice(1).join(' ') || '',
       username: editUser?.username || '',
       email: editUser?.email || '',
       role: editUser?.role || '',
       plan: editUser?.currentPlan || '',
       status: editUser?.status || '',
       // avatar is not in the form
-    }
+    },
+    mode: 'onChange'
   })
 
   // Fetch roles and countries
@@ -149,7 +154,8 @@ const AddUserDrawer = (props: Props) => {
         avatar: null
       })
       resetForm({
-        fullName: editUser.fullName || '',
+        firstName: editUser.fullName?.split(' ')[0] || '',
+        lastName: editUser.fullName?.split(' ').slice(1).join(' ') || '',
         username: editUser.username || '',
         email: editUser.email || '',
         role: editUser.role || '',
@@ -159,16 +165,31 @@ const AddUserDrawer = (props: Props) => {
       })
     } else {
       setFormData(initialData)
-      resetForm({ fullName: '', username: '', email: '', role: '', plan: '', status: '' })
+      resetForm({ firstName: '', lastName: '', username: '', email: '', role: '', plan: '', status: '' })
     }
   }, [editUser, resetForm])
 
+  // Check if editing own profile
+  useEffect(() => {
+    if (editUser && currentUserId) {
+      setIsEditingOwnProfile(editUser.id === currentUserId)
+    }
+  }, [editUser, currentUserId])
+
   const onSubmit = async (data: FormValidateType) => {
+    // Validate required fields
+    if (!isEditingOwnProfile && !data.role) {
+      toast.error(dictionary.navigation.roleRequired)
+      return
+    }
+
     const formDataToSend = new FormData()
-    formDataToSend.append('fullName', data.fullName)
+    formDataToSend.append('fullName', `${data.firstName} ${data.lastName}`.trim())
     formDataToSend.append('username', data.username)
     formDataToSend.append('email', data.email)
-    formDataToSend.append('role', data.role)
+    if (!isEditingOwnProfile) {
+      formDataToSend.append('role', data.role)
+    }
     formDataToSend.append('plan', data.plan)
     formDataToSend.append('status', data.status)
     formDataToSend.append('company', formData.company)
@@ -223,7 +244,7 @@ const AddUserDrawer = (props: Props) => {
 
     handleClose()
     setFormData(initialData)
-    resetForm({ fullName: '', username: '', email: '', role: '', plan: '', status: '' })
+    resetForm({ firstName: '', lastName: '', username: '', email: '', role: '', plan: '', status: '' })
   }
 
   const handleReset = () => {
@@ -249,20 +270,36 @@ const AddUserDrawer = (props: Props) => {
       <Divider />
       <div className='p-5'>
         <form onSubmit={handleSubmit(data => onSubmit(data))} className='flex flex-col gap-5'>
-          <Controller
-            name='fullName'
-            control={control}
-            rules={{ required: true }}
-            render={({ field }) => (
-              <TextField
-                {...field}
-                fullWidth
-                label={dictionary.navigation.fullName}
-                placeholder='John Doe'
-                {...(errors.fullName && { error: true, helperText: dictionary.navigation.fieldRequired })}
-              />
-            )}
-          />
+          <div className='flex gap-4'>
+            <Controller
+              name='firstName'
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label={dictionary.navigation.firstName}
+                  placeholder='John'
+                  {...(errors.firstName && { error: true, helperText: dictionary.navigation.fieldRequired })}
+                />
+              )}
+            />
+            <Controller
+              name='lastName'
+              control={control}
+              rules={{ required: true }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label={dictionary.navigation.lastName}
+                  placeholder='Doe'
+                  {...(errors.lastName && { error: true, helperText: dictionary.navigation.fieldRequired })}
+                />
+              )}
+            />
+          </div>
           <Controller
             name='username'
             control={control}
@@ -299,9 +336,14 @@ const AddUserDrawer = (props: Props) => {
            <Controller
              name='role'
              control={control}
-             rules={{ required: true }}
+             rules={{ required: !isEditingOwnProfile }}
              render={({ field }) => (
-               <Select label={dictionary.navigation.selectRoleFilter} {...field} error={Boolean(errors.role)} disabled={loading}>
+               <Select
+                 label={dictionary.navigation.selectRoleFilter}
+                 {...field}
+                 error={Boolean(errors.role)}
+                 disabled={loading || isEditingOwnProfile}
+               >
                  {roles.map(role => (
                    <MenuItem key={role.id} value={role.name}>
                      {role.name}
@@ -310,9 +352,9 @@ const AddUserDrawer = (props: Props) => {
                </Select>
              )}
            />
-           {errors.role && <FormHelperText error>{dictionary.navigation.fieldRequired}</FormHelperText>}
+           {errors.role && !isEditingOwnProfile && <FormHelperText error>{dictionary.navigation.fieldRequired}</FormHelperText>}
          </FormControl>
-          <FormControl fullWidth>
+         <FormControl fullWidth>
             <InputLabel id='country' error={Boolean(errors.plan)}>
               {dictionary.navigation.selectPlanFilter}
             </InputLabel>

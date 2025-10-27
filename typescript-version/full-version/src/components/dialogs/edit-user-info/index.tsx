@@ -72,6 +72,8 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
   const [loadingRoles, setLoadingRoles] = useState(true)
   const [countries, setCountries] = useState<any[]>([])
   const [loadingCountries, setLoadingCountries] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState<string>('')
+  const [isEditingOwnProfile, setIsEditingOwnProfile] = useState<boolean>(false)
 
   // Fetch roles
   useEffect(() => {
@@ -111,6 +113,23 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
     fetchCountries()
   }, [])
 
+  // Fetch current user profile to check if editing own profile
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch('/api/user/profile')
+        if (response.ok) {
+          const userData = await response.json()
+          setCurrentUserId(userData.id)
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error)
+      }
+    }
+
+    fetchCurrentUser()
+  }, [])
+
   // Update local state when data prop changes
   useEffect(() => {
     if (data && countries.length > 0 && roles.length > 0) {
@@ -136,8 +155,11 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
         country: countryCode,
         avatar: null
       })
+
+      // Check if editing own profile
+      setIsEditingOwnProfile(currentUserId === data.id)
     }
-  }, [data, countries, roles])
+  }, [data, countries, roles, currentUserId])
 
   const handleClose = () => {
     if (setOpen) {
@@ -150,8 +172,8 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
       const firstName = nameParts[0] || ''
       const lastName = nameParts.slice(1).join(' ') || ''
 
-      // Use database role name directly
-      const dbRole = data.role
+      // Use database role name directly (only if not editing own profile)
+      const dbRole = isEditingOwnProfile ? '' : data.role
 
       // Find the country code from the user's country name
       const userCountry = countries.find(c => c.name.toLowerCase() === data.country.toLowerCase())
@@ -161,7 +183,7 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
         firstName,
         lastName,
         email: data.email,
-        role: dbRole,
+        role: isEditingOwnProfile ? '' : dbRole,
         company: data.company,
         contact: data.contact,
         country: countryCode,
@@ -176,7 +198,7 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
 
     try {
       // Validate required fields
-      if (!formData.role) {
+      if (!isEditingOwnProfile && !formData.role) {
         toast.error(dictionary.navigation.roleRequired)
         setSaving(false)
         return
@@ -188,7 +210,9 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
       const formDataToSend = new FormData()
       formDataToSend.append('fullName', fullName)
       formDataToSend.append('email', formData.email)
-      formDataToSend.append('role', formData.role)
+      if (!isEditingOwnProfile) {
+        formDataToSend.append('role', formData.role)
+      }
       formDataToSend.append('company', formData.company)
       formDataToSend.append('contact', formData.contact)
       formDataToSend.append('country', formData.country)
@@ -289,24 +313,6 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
                 }}
                 onChange={e => setFormData({ ...formData, avatar: (e.target as HTMLInputElement).files?.[0] || null })}
               />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>{dictionary.navigation.role}</InputLabel>
-                <Select
-                  value={formData.role}
-                  label={dictionary.navigation.role}
-                  onChange={e => setFormData({ ...formData, role: e.target.value })}
-                  disabled={loadingRoles}
-                  required
-                >
-                  {roles.map((role) => (
-                    <MenuItem key={role.id} value={role.name}>
-                      {role.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>
               <Autocomplete

@@ -51,7 +51,7 @@ export async function PATCH(
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }
@@ -111,7 +111,7 @@ export async function PUT(
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }
@@ -185,7 +185,7 @@ export async function DELETE(
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }

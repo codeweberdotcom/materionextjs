@@ -20,18 +20,7 @@ export async function PUT(
       )
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+    // All authenticated users can delete roles
 
     const { id } = await params
 
@@ -46,19 +35,28 @@ export async function PUT(
       )
     }
 
+    // All role properties can be updated
+    const updateData: any = {
+      name,
+      description,
+      permissions: JSON.stringify(permissions || {})
+    }
+
     // Update the role
     const updatedRole = await prisma.role.update({
       where: { id },
-      data: {
-        name,
-        description,
-        permissions: JSON.stringify(permissions || [])
-      }
+      data: updateData
     })
 
     return NextResponse.json(updatedRole)
   } catch (error) {
     console.error('Error updating role:', error)
+    if ((error as any).code === 'P2002' && (error as any).meta?.target?.includes('name')) {
+      return NextResponse.json(
+        { message: 'Role name already exists' },
+        { status: 400 }
+      )
+    }
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -81,18 +79,7 @@ export async function GET(
       )
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+    // All authenticated users can update roles
 
     const { id } = await params
 
@@ -132,23 +119,10 @@ export async function DELETE(
       )
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+    // All authenticated users can view individual roles
 
     const { id } = await params
 
-    // Check if role is base role
-    const baseRoles = ['admin', 'editor', 'moderator', 'seo', 'support', 'user']
     const role = await prisma.role.findUnique({
       where: { id },
       include: { users: true }
@@ -158,13 +132,6 @@ export async function DELETE(
       return NextResponse.json(
         { message: 'Role not found' },
         { status: 404 }
-      )
-    }
-
-    if (baseRoles.includes(role.name.toLowerCase())) {
-      return NextResponse.json(
-        { message: 'Cannot delete base role' },
-        { status: 400 }
       )
     }
 

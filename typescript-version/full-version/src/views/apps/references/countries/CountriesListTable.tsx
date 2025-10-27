@@ -268,7 +268,7 @@ const CountriesListTable = () => {
         const updatedData = data.filter(country => country.id !== id)
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success('Country deleted successfully!')
+        toast.success('Country deleted ' + dictionary.navigation.successfully)
       } else {
         const error = await response.json()
         toast.error(error.message || 'Failed to delete country')
@@ -302,7 +302,7 @@ const CountriesListTable = () => {
         setData(updatedData)
         setFilteredData(updatedData)
         setEditCountry(null)
-        toast.success('Country updated successfully!')
+        toast.success('Country updated ' + dictionary.navigation.successfully)
       } else {
         const error = await response.json()
         toast.error(error.message || 'Failed to update country')
@@ -326,7 +326,7 @@ const CountriesListTable = () => {
         )
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success(`Country ${updatedCountry.isActive ? 'activated' : 'deactivated'} successfully!`)
+        toast.success(`Country ${updatedCountry.isActive ? 'activated' : 'deactivated'} ${dictionary.navigation.successfully}`)
       } else {
         const error = await response.json()
         toast.error(error.message || 'Failed to toggle country status')
@@ -353,7 +353,7 @@ const CountriesListTable = () => {
         setData(updatedData)
         setFilteredData(updatedData)
         setAddCountryOpen(false)
-        toast.success('Country added successfully!')
+        toast.success('Country added ' + dictionary.navigation.successfully)
       } else {
         const error = await response.json()
         toast.error(error.message || 'Failed to add country')

@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }
@@ -61,8 +61,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: 'Translations exported to JSON successfully',
-      exportedLanguages: Object.keys(jsonData)
+      message: 'translationsExportSuccess',
+      exportedLanguages: Object.keys(jsonData),
+      exportedCount: Object.keys(jsonData).length
     })
   } catch (error) {
     console.error('Error exporting translations:', error)

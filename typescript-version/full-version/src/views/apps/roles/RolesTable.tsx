@@ -176,9 +176,6 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [editUser, setEditUser] = useState<UsersType | null>(null)
   const [addUserOpen, setAddUserOpen] = useState(false)
 
-  // Check if current user is admin
-  const [isAdmin, setIsAdmin] = useState(false)
-
   // Hooks
   const { lang: locale } = useParams()
 
@@ -270,18 +267,15 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: dictionary.navigation.actions,
         cell: ({ row }) => (
           <div className='flex items-center'>
-            {isAdmin && (
-              <IconButton
-                onClick={() => {
-                  setDeleteUserId(String(row.original.id))
-                  setDeleteUserName(row.original.fullName)
-                  setDeleteDialogOpen(true)
-                }}
-                disabled={row.original.role === 'admin'}
-              >
-                <i className='ri-delete-bin-line text-textSecondary' />
-              </IconButton>
-            )}
+            <IconButton
+              onClick={() => {
+                setDeleteUserId(String(row.original.id))
+                setDeleteUserName(row.original.fullName)
+                setDeleteDialogOpen(true)
+              }}
+            >
+              <i className='ri-delete-bin-line text-textSecondary' />
+            </IconButton>
             <IconButton>
               <Link href={getLocalizedUrl(`/apps/user/view?id=${row.original.id}`, locale as Locale)} className='flex'>
                 <i className='ri-eye-line text-textSecondary' />
@@ -291,7 +285,6 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
               checked={row.original.isActive}
               onChange={() => handleToggleUserStatus(String(row.original.id))}
               size='small'
-              disabled={row.original.role === 'admin'}
             />
             <OptionMenu
               iconButtonProps={{ size: 'medium' }}
@@ -377,23 +370,6 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
     setFilteredData(filteredData)
   }, [role, data])
 
-  // Check if current user is admin
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const response = await fetch('/api/user/profile')
-        if (response.ok) {
-          const userData = await response.json()
-          setIsAdmin(userData.role === 'admin')
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error)
-      }
-    }
-
-    checkAdminStatus()
-  }, [])
-
   // Fetch roles from API
   useEffect(() => {
     const fetchRoles = async () => {
@@ -428,7 +404,7 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
           // If refresh fails, just remove from local data
           setData(data?.filter(user => user.id !== userId))
         }
-        toast.success(dictionary.navigation.deleteUser + ' successfully!')
+        toast.success(dictionary.navigation.deleteUser + ' ' + dictionary.navigation.successfully)
       } else {
         const error = await response.json()
         toast.error(error.message || dictionary.navigation.deleteUser + ' failed')
@@ -453,7 +429,7 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
         )
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success(`User ${updatedUser.isActive ? dictionary.navigation.active : dictionary.navigation.inactive} successfully!`)
+        toast.success(`${dictionary.navigation.user} ${updatedUser.isActive ? dictionary.navigation.active : dictionary.navigation.inactive} ${dictionary.navigation.successfully}`)
       } else {
         const error = await response.json()
         toast.error(error.message || 'Failed to toggle user status')

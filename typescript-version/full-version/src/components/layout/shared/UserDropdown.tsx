@@ -29,7 +29,6 @@ import type { Locale } from '@configs/i18n'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
-import { useAuth } from '@/hooks/useAuth'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
@@ -59,7 +58,6 @@ const UserDropdown = () => {
   const { data: session } = useSession()
   const { settings } = useSettings()
   const { lang: locale } = useParams()
-  const { userRole, isAdmin, isModerator } = useAuth()
   const dictionary = useTranslation()
 
   const handleDropdownOpen = () => {
@@ -132,19 +130,6 @@ const UserDropdown = () => {
                         {session?.user?.name || ''}
                       </Typography>
                       <Typography variant='caption'>{session?.user?.email || ''}</Typography>
-                      {userRole && (
-                        <div className='flex items-center gap-1'>
-                          <i className={`ri-shield-user-line text-xs ${
-                            isAdmin ? 'text-error' : isModerator ? 'text-warning' : 'text-primary'
-                          }`} />
-                          <Typography variant='caption' sx={{
-                            color: isAdmin ? 'error.main' : isModerator ? 'warning.main' : 'primary.main',
-                            fontWeight: 500
-                          }}>
-                            {userRole.name.charAt(0).toUpperCase() + userRole.name.slice(1)}
-                          </Typography>
-                        </div>
-                      )}
                     </div>
                   </div>
                   <Divider className='mlb-1' />
@@ -165,32 +150,20 @@ const UserDropdown = () => {
                     <Typography color='text.primary'>{dictionary.navigation.faq}</Typography>
                   </MenuItem>
 
-                  {/* Role-based menu items */}
-                  {isAdmin && (
-                    <Divider className='mlb-1' />
-                  )}
-                  {isAdmin && (
-                    <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/roles')}>
-                      <i className='ri-shield-user-line text-error' />
-                      <Typography color='error.main'>{dictionary.navigation.roles}</Typography>
-                    </MenuItem>
-                  )}
-                  {isAdmin && (
-                    <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/permissions')}>
-                      <i className='ri-lock-2-line text-error' />
-                      <Typography color='error.main'>{dictionary.navigation.permissions}</Typography>
-                    </MenuItem>
-                  )}
-
-                  {isModerator && (
-                    <Divider className='mlb-1' />
-                  )}
-                  {isModerator && (
-                    <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/moderation')}>
-                      <i className='ri-shield-check-line text-warning' />
-                      <Typography color='warning.main'>{dictionary.navigation.moderation}</Typography>
-                    </MenuItem>
-                  )}
+                  {/* All users can access these pages */}
+                  <Divider className='mlb-1' />
+                  <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/roles')}>
+                    <i className='ri-shield-user-line text-error' />
+                    <Typography color='error.main'>{dictionary.navigation.roles}</Typography>
+                  </MenuItem>
+                  <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/permissions')}>
+                    <i className='ri-lock-2-line text-error' />
+                    <Typography color='error.main'>{dictionary.navigation.permissions}</Typography>
+                  </MenuItem>
+                  <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/moderation')}>
+                    <i className='ri-shield-check-line text-warning' />
+                    <Typography color='warning.main'>{dictionary.navigation.moderation}</Typography>
+                  </MenuItem>
 
                   <div className='flex items-center plb-2 pli-4'>
                     <Button

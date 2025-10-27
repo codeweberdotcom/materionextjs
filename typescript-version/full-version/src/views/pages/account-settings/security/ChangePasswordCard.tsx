@@ -25,22 +25,68 @@ const ChangePasswordCard = () => {
   const [isCurrentPasswordShown, setIsCurrentPasswordShown] = useState(false)
   const [isConfirmPasswordShown, setIsConfirmPasswordShown] = useState(false)
   const [isNewPasswordShown, setIsNewPasswordShown] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const handleClickShowCurrentPassword = () => {
     setIsCurrentPasswordShown(!isCurrentPasswordShown)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (newPassword !== confirmPassword) {
+      setError('New password and confirm password do not match')
+      return
+    }
+
+    if (newPassword.length < 8) {
+      setError('New password must be at least 8 characters long')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const res = await fetch('/api/user/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.message)
+      } else {
+        setSuccess(data.message)
+        setCurrentPassword('')
+        setNewPassword('')
+        setConfirmPassword('')
+      }
+    } catch (err) {
+      setError('An error occurred')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <Card>
       <CardHeader title={dictionary.navigation.changePassword} />
       <CardContent>
-        <form>
+        <form onSubmit={handleSubmit}>
           <Grid container spacing={6}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label={dictionary.navigation.currentPassword}
                 type={isCurrentPasswordShown ? 'text' : 'password'}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -66,6 +112,8 @@ const ChangePasswordCard = () => {
                 fullWidth
                 label={dictionary.navigation.newPassword}
                 type={isNewPasswordShown ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -89,6 +137,8 @@ const ChangePasswordCard = () => {
                 fullWidth
                 label={dictionary.navigation.confirmNewPassword}
                 type={isConfirmPasswordShown ? 'text' : 'password'}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -127,13 +177,25 @@ const ChangePasswordCard = () => {
               </div>
             </Grid>
             <Grid size={{ xs: 12 }} className='flex gap-4'>
-              <Button variant='contained'>{dictionary.navigation.saveChanges}</Button>
+              <Button variant='contained' type='submit' disabled={loading}>
+                {dictionary.navigation.saveChanges}
+              </Button>
               <Button variant='outlined' type='reset' color='secondary'>
                 {dictionary.navigation.reset}
               </Button>
             </Grid>
           </Grid>
         </form>
+        {error && (
+          <Typography variant='body2' color='error' className='mt-2'>
+            {error}
+          </Typography>
+        )}
+        {success && (
+          <Typography variant='body2' color='success.main' className='mt-2'>
+            {success}
+          </Typography>
+        )}
       </CardContent>
     </Card>
   )

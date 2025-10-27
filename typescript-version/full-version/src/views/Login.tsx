@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 // Next Imports
 import Link from 'next/link'
@@ -38,6 +38,9 @@ import Illustrations from '@components/Illustrations'
 // Config Imports
 import themeConfig from '@configs/themeConfig'
 
+// Context Imports
+// import { useTranslation } from '@/contexts/TranslationContext'
+
 // Hook Imports
 import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
@@ -49,21 +52,11 @@ type ErrorType = {
   message: string[]
 }
 
-type FormData = InferInput<typeof schema>
-
-const schema = object({
-  email: pipe(string(), minLength(1, 'This field is required'), email('Please enter a valid email address')),
-  password: pipe(
-    string(),
-    nonEmpty('This field is required'),
-    minLength(5, 'Password must be at least 5 characters long')
-  )
-})
-
 const Login = ({ mode }: { mode: Mode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
+  const [loading, setLoading] = useState(false)
 
   // Vars
   const darkImg = '/images/pages/auth-v2-mask-dark.png'
@@ -78,6 +71,24 @@ const Login = ({ mode }: { mode: Mode }) => {
   const searchParams = useSearchParams()
   const { lang: locale } = useParams()
   const { settings } = useSettings()
+
+  // Dictionary
+  const [dictionary, setDictionary] = useState<any>(null)
+
+  useEffect(() => {
+    import(`@/data/dictionaries/${locale}.json`).then(module => setDictionary(module.default))
+  }, [locale])
+
+  const schema = useMemo(() => object({
+    email: pipe(string(), minLength(1, dictionary?.navigation?.fieldRequired || 'This field is required'), email(dictionary?.navigation?.invalidEmail || 'Please enter a valid email address')),
+    password: pipe(
+      string(),
+      nonEmpty(dictionary?.navigation?.fieldRequired || 'This field is required'),
+      minLength(5, dictionary?.navigation?.passwordTooShort || 'Password must be at least 5 characters long')
+    )
+  }), [dictionary])
+
+  type FormData = InferInput<typeof schema>
 
   const {
     control,
@@ -104,23 +115,27 @@ const Login = ({ mode }: { mode: Mode }) => {
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
-    const res = await signIn('credentials', {
-      email: data.email,
-      password: data.password,
-      redirect: false
-    })
+    setLoading(true)
+    try {
+      const res = await signIn('credentials', {
+        email: data.email,
+        password: data.password,
+        locale: locale,
+        redirect: false
+      })
 
-    if (res && res.ok && res.error === null) {
-      // Vars
-      const redirectURL = searchParams.get('redirectTo') ?? '/en/apps/references/countries'
+      if (res && res.ok && res.error === null) {
+        // Vars
+        const redirectURL = searchParams.get('redirectTo') ?? '/en/apps/references/countries'
 
-      router.replace(getLocalizedUrl(redirectURL, locale as Locale))
-    } else {
-      if (res?.error) {
-        const error = JSON.parse(res.error)
-
-        setErrorState(error)
+        router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+      } else {
+        if (res?.error) {
+          setErrorState({ message: [res.error] })
+        }
       }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -153,13 +168,12 @@ const Login = ({ mode }: { mode: Mode }) => {
         </div>
         <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset]'>
           <div>
-            <Typography variant='h4'>{`Welcome to ${themeConfig.templateName}!👋🏻`}</Typography>
-            <Typography>Please sign-in to your account and start the adventure</Typography>
+            <Typography variant='h4'>{dictionary?.navigation?.welcomeMessage?.replace('${templateName}', themeConfig.templateName) || `Welcome to ${themeConfig.templateName}!👋🏻`}</Typography>
+            <Typography>{dictionary?.navigation?.signInDescription || 'Please sign-in to your account and start the adventure'}</Typography>
           </div>
           <Alert icon={false} className='bg-primaryLight'>
             <Typography variant='body2' color='primary.main'>
-              Email: <span className='font-medium'>admin@example.com</span> / Pass:{' '}
-              <span className='font-medium'>admin123</span>
+              {dictionary?.navigation?.demoCredentials || 'Email: admin@example.com / Pass: admin123'}
             </Typography>
           </Alert>
 
@@ -180,7 +194,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                   fullWidth
                   autoFocus
                   type='email'
-                  label='Email'
+                  label={dictionary?.navigation?.emailLabel || 'Email'}
                   onChange={e => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)
@@ -200,7 +214,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                 <TextField
                   {...field}
                   fullWidth
-                  label='Password'
+                  label={dictionary?.navigation?.passwordLabel || 'Password'}
                   id='login-password'
                   type={isPasswordShown ? 'text' : 'password'}
                   autoComplete='current-password'
@@ -230,22 +244,22 @@ const Login = ({ mode }: { mode: Mode }) => {
               )}
             />
             <div className='flex justify-between items-center flex-wrap gap-x-3 gap-y-1'>
-              <FormControlLabel control={<Checkbox defaultChecked />} label='Remember me' />
+              <FormControlLabel control={<Checkbox defaultChecked />} label={dictionary?.navigation?.rememberMe || 'Remember me'} />
               <Typography className='text-end' color='primary.main' component={Link} href='/forgot-password'>
-                Forgot password?
+                {dictionary?.navigation?.forgotPassword || 'Forgot password?'}
               </Typography>
             </div>
-            <Button fullWidth variant='contained' type='submit'>
-              Log In
+            <Button fullWidth variant='contained' type='submit' disabled={loading}>
+              {loading ? dictionary?.navigation?.loggingIn || 'Logging in...' : dictionary?.navigation?.login || 'Log In'}
             </Button>
             <div className='flex justify-center items-center flex-wrap gap-2'>
-              <Typography>New on our platform?</Typography>
+              <Typography>{dictionary?.navigation?.newUser || 'New on our platform?'}</Typography>
               <Typography component={Link} href='/register' color='primary.main'>
-                Create an account
+                {dictionary?.navigation?.createAccount || 'Create an account'}
               </Typography>
             </div>
           </form>
-          <Divider className='gap-3'>or</Divider>
+          <Divider className='gap-3'>{dictionary?.navigation?.or || 'or'}</Divider>
           <Button
             color='secondary'
             className='self-center text-textPrimary'
@@ -253,7 +267,7 @@ const Login = ({ mode }: { mode: Mode }) => {
             sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
             onClick={() => signIn('google')}
           >
-            Sign in with Google
+            {dictionary?.navigation?.signInWithGoogle || 'Sign in with Google'}
           </Button>
         </div>
       </div>

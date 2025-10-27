@@ -4,11 +4,10 @@ import { useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { Box, CircularProgress } from '@mui/material'
-import { useAuth, type Permission } from '@/hooks/useAuth'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
-  requiredPermissions?: Permission[]
+  requiredPermissions?: string[]
   requiredRole?: string
   requireAllPermissions?: boolean
   fallbackPath?: string
@@ -16,13 +15,9 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({
   children,
-  requiredPermissions = [],
-  requiredRole,
-  requireAllPermissions = false,
   fallbackPath = '/login'
 }: ProtectedRouteProps) {
   const { data: session, status } = useSession()
-  const { hasPermission, hasAnyPermission, hasAllPermissions, hasRole } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
@@ -33,35 +28,8 @@ export function ProtectedRoute({
       return
     }
 
-    // Check role requirement
-    if (requiredRole && !hasRole(requiredRole)) {
-      router.push('/unauthorized')
-      return
-    }
-
-    // Check permission requirements
-    if (requiredPermissions.length > 0) {
-      const hasRequiredPermissions = requireAllPermissions
-        ? hasAllPermissions(requiredPermissions)
-        : hasAnyPermission(requiredPermissions)
-
-      if (!hasRequiredPermissions) {
-        router.push('/unauthorized')
-        return
-      }
-    }
-  }, [
-    status,
-    session,
-    requiredRole,
-    requiredPermissions,
-    requireAllPermissions,
-    hasRole,
-    hasAnyPermission,
-    hasAllPermissions,
-    router,
-    fallbackPath
-  ])
+    // No role or permission checks - all authenticated users can access all routes
+  }, [status, session, router, fallbackPath])
 
   // Show loading spinner while checking authentication
   if (status === 'loading') {
@@ -77,35 +45,8 @@ export function ProtectedRoute({
     )
   }
 
-  // Show loading spinner while checking permissions
-  if (status === 'authenticated' && (
-    (requiredRole && !hasRole(requiredRole)) ||
-    (requiredPermissions.length > 0 && !(
-      requireAllPermissions
-        ? hasAllPermissions(requiredPermissions)
-        : hasAnyPermission(requiredPermissions)
-    ))
-  )) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <CircularProgress />
-      </Box>
-    )
-  }
-
-  // Don't render children if not authenticated or authorized
-  if (status !== 'authenticated' ||
-      (requiredRole && !hasRole(requiredRole)) ||
-      (requiredPermissions.length > 0 && !(
-        requireAllPermissions
-          ? hasAllPermissions(requiredPermissions)
-          : hasAnyPermission(requiredPermissions)
-      ))) {
+  // Don't render children if not authenticated
+  if (status !== 'authenticated') {
     return null
   }
 

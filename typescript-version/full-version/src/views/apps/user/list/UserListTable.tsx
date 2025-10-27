@@ -131,6 +131,7 @@ const DebouncedInput = ({
 
 // Vars
 const userRoleObj: UserRoleType = {
+  superadmin: { icon: 'ri-vip-crown-line', color: 'warning' },
   admin: { icon: 'ri-vip-crown-line', color: 'error' },
   author: { icon: 'ri-computer-line', color: 'warning' },
   editor: { icon: 'ri-edit-box-line', color: 'info' },
@@ -165,24 +166,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   // Hooks
   const { lang: locale } = useParams()
 
-  // Check if current user is admin
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const response = await fetch('/api/user/profile')
-        if (response.ok) {
-          const userData = await response.json()
-          setIsAdmin(userData.role === 'admin')
-        }
-      } catch (error) {
-        console.error('Error checking admin status:', error)
-      }
-    }
-
-    checkAdminStatus()
-  }, [])
+  // No role checks needed - all authenticated users can manage users
 
   // Handle user deletion
   const handleDeleteUser = async (userId: string, userName: string) => {
@@ -226,7 +210,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         )
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success(`User ${updatedUser.isActive ? dictionary.navigation.active : dictionary.navigation.inactive} ${dictionary.navigation.successfully}`)
+        toast.success(`${dictionary.navigation.user} ${updatedUser.isActive ? dictionary.navigation.active : dictionary.navigation.inactive} ${dictionary.navigation.successfully}`)
       } else {
         const error = await response.json()
         toast.error(error.message || 'Failed to toggle user status')
@@ -287,7 +271,10 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
             <div className='flex items-center gap-2'>
               <Icon
                 className={roleInfo.icon}
-                sx={{ color: `var(--mui-palette-${roleInfo.color}-main)`, fontSize: '1.375rem' }}
+                sx={{
+                  color: row.original.role.toLowerCase() === 'superadmin' ? '#FFD700' : `var(--mui-palette-${roleInfo.color}-main)`,
+                  fontSize: '1.375rem'
+                }}
               />
               <Typography className='capitalize' color='text.primary'>
                 {row.original.role}
@@ -322,18 +309,15 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: dictionary.navigation.action,
         cell: ({ row }) => (
           <div className='flex items-center'>
-            {isAdmin && (
-              <IconButton
-                onClick={() => {
-                  setDeleteUserId(String(row.original.id))
-                  setDeleteUserName(row.original.fullName)
-                  setDeleteDialogOpen(true)
-                }}
-                disabled={row.original.role === 'admin'}
-              >
-                <i className='ri-delete-bin-line text-textSecondary' />
-              </IconButton>
-            )}
+            <IconButton
+              onClick={() => {
+                setDeleteUserId(String(row.original.id))
+                setDeleteUserName(row.original.fullName)
+                setDeleteDialogOpen(true)
+              }}
+            >
+              <i className='ri-delete-bin-line text-textSecondary' />
+            </IconButton>
             <IconButton>
               <Link href={getLocalizedUrl(`/apps/user/view?id=${row.original.id}`, locale as Locale)} className='flex'>
                 <i className='ri-eye-line text-textSecondary' />
@@ -343,7 +327,6 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
               checked={row.original.isActive}
               onChange={() => handleToggleUserStatus(String(row.original.id))}
               size='small'
-              disabled={row.original.role === 'admin'}
             />
             <OptionMenu
               iconButtonProps={{ size: 'medium' }}

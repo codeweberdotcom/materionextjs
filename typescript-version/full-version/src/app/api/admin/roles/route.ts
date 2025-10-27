@@ -17,18 +17,7 @@ export async function POST(request: Request) {
       )
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+    // All authenticated users can view roles
 
     const body = await request.json()
     const { name, description, permissions } = body
@@ -46,13 +35,19 @@ export async function POST(request: Request) {
       data: {
         name,
         description,
-        permissions: JSON.stringify(permissions || [])
+        permissions: JSON.stringify(permissions || {})
       }
     })
 
     return NextResponse.json(newRole)
   } catch (error) {
     console.error('Error creating role:', error)
+    if ((error as any).code === 'P2002' && (error as any).meta?.target?.includes('name')) {
+      return NextResponse.json(
+        { message: 'Role name already exists' },
+        { status: 400 }
+      )
+    }
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -72,20 +67,9 @@ export async function GET() {
       )
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { role: true }
-    })
+    // All authenticated users can create roles
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const baseRoles = ['superadmin', 'admin', 'editor', 'moderator', 'seo', 'support', 'user']
+    const baseRoles = ['superadmin', 'admin', 'manager', 'editor', 'moderator', 'seo', 'marketolog', 'support', 'subscriber', 'user']
 
     const roles = await prisma.role.findMany({
       orderBy: [
@@ -108,14 +92,25 @@ export async function GET() {
       return a.name.localeCompare(b.name)
     })
 
-    // Parse permissions as array
+    // Parse permissions in new format
     const rolesWithParsedPermissions = roles.map(role => {
-      if (!role.permissions) return { ...role, permissions: [] }
+      console.log(`Role: ${role.name}, Permissions: ${role.permissions}`)
+      if (!role.permissions) return { ...role, permissions: {} }
       try {
-        return { ...role, permissions: JSON.parse(role.permissions) }
+        const parsed = JSON.parse(role.permissions)
+        // Handle legacy format: "all" means all permissions
+        if (role.permissions === 'all') {
+          return { ...role, permissions: 'all' }
+        }
+        // Handle legacy format: simple string like "read"
+        if (typeof parsed === 'string') {
+          return { ...role, permissions: parsed }
+        }
+        // New format: object like { "Users": ["Read", "Write"] }
+        return { ...role, permissions: parsed }
       } catch {
         // Legacy format: "all" means all permissions
-        return { ...role, permissions: role.permissions === 'all' ? ['all'] : [] }
+        return { ...role, permissions: role.permissions === 'all' ? 'all' : {} }
       }
     })
 

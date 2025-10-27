@@ -17,9 +17,8 @@ import type { ThemeColor } from '@core/types'
 import type { UsersType } from '@/types/apps/userTypes'
 
 // Component Imports
-import EditUserInfo from '@components/dialogs/edit-user-info'
 import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
-import OpenDialogOnElementClick from '@components/dialogs/OpenDialogOnElementClick'
+import AddUserDrawer from '@views/apps/user/list/AddUserDrawer'
 import CustomAvatar from '@core/components/mui/Avatar'
 
 // Context Imports
@@ -53,6 +52,9 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
   // Use provided userData or fallback to default
   const [user, setUser] = useState(defaultUserData)
   const [suspendDialogOpen, setSuspendDialogOpen] = useState(false)
+  const [editDrawerOpen, setEditDrawerOpen] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string>('')
+  const [isOwnProfile, setIsOwnProfile] = useState<boolean>(false)
 
   // Update user when userData changes
   useEffect(() => {
@@ -60,6 +62,30 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
       setUser(userData)
     }
   }, [userData])
+
+  // Check if viewing own profile
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await fetch('/api/user/profile')
+        if (response.ok) {
+          const userData = await response.json()
+          setCurrentUserId(userData.id)
+        }
+      } catch (error) {
+        console.error('Error fetching current user:', error)
+      }
+    }
+
+    fetchCurrentUser()
+  }, [])
+
+  // Check if this is own profile
+  useEffect(() => {
+    if (userData && currentUserId) {
+      setIsOwnProfile(userData.id === currentUserId)
+    }
+  }, [userData, currentUserId])
 
   // Split full name into first and last name
   const nameParts = user.fullName.split(' ')
@@ -98,7 +124,6 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
                 <CustomAvatar alt='user-profile' src={user.avatar} variant='rounded' size={120} />
                 <Typography variant='h5'>{firstName} {lastName}</Typography>
               </div>
-              <Chip label={user.role} color='error' size='small' variant='tonal' />
             </div>
             <div className='flex items-center justify-around flex-wrap gap-4'>
               <div className='flex items-center gap-4'>
@@ -145,12 +170,6 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
               </div>
               <div className='flex items-center flex-wrap gap-x-1.5'>
                 <Typography className='font-medium' color='text.primary'>
-                  {dictionary.navigation.roleLabel}
-                </Typography>
-                <Typography color='text.primary'>{user.role}</Typography>
-              </div>
-              <div className='flex items-center flex-wrap gap-x-1.5'>
-                <Typography className='font-medium' color='text.primary'>
                   {dictionary.navigation.planLabel}
                 </Typography>
                 <Typography color='text.primary'>{user.currentPlan}</Typography>
@@ -170,16 +189,19 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
             </div>
           </div>
           <div className='flex gap-4 justify-center'>
-            <OpenDialogOnElementClick
-              element={Button}
-              elementProps={buttonProps(dictionary.navigation.edit, 'primary', 'contained')}
-              dialog={EditUserInfo}
-              dialogProps={{ data: user }}
-            />
+            <Button
+              variant='contained'
+              color='primary'
+              onClick={() => setEditDrawerOpen(true)}
+              disabled={isOwnProfile}
+            >
+              {dictionary.navigation.edit}
+            </Button>
             <Button
               variant='outlined'
               color={user.status === 'active' ? 'error' : 'success'}
               onClick={() => setSuspendDialogOpen(true)}
+              disabled={isOwnProfile}
             >
               {user.status === 'active' ? dictionary.navigation.suspend : dictionary.navigation.activate}
             </Button>
@@ -193,6 +215,13 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
           </div>
         </CardContent>
       </Card>
+      <AddUserDrawer
+        open={editDrawerOpen}
+        handleClose={() => setEditDrawerOpen(false)}
+        userData={[user]}
+        setData={(data) => setUser(data[0])}
+        editUser={user}
+      />
     </>
   )
 }

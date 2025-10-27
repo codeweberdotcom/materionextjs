@@ -365,7 +365,11 @@ const TranslationsListTable = () => {
 
       if (response.ok) {
         const result = await response.json()
-        toast.success(`Translations exported to JSON for languages: ${result.exportedLanguages.join(', ')}. Please restart the development server to see changes.`)
+        if (result.message === 'translationsExportSuccess') {
+          toast.success(dictionary.navigation.translationsExportSuccess.replace('${count}', result.exportedCount.toString()))
+        } else {
+          toast.success(result.message || 'Translations exported successfully')
+        }
       } else {
         const error = await response.json()
         toast.error(error.message || 'Failed to export translations')
@@ -391,7 +395,11 @@ const TranslationsListTable = () => {
           setData(translations)
           setFilteredData(translations)
         }
-        toast.success(`Translations imported from JSON successfully. Imported ${result.importedCount} translations.`)
+        if (result.message === 'translationsImportSuccess') {
+          toast.success(dictionary.navigation.translationsImportSuccess.replace('${count}', result.importedCount.toString()))
+        } else {
+          toast.success(result.message || 'Translations imported successfully')
+        }
       } else {
         const error = await response.json()
         toast.error(error.message || 'Failed to import translations')

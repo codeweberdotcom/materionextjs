@@ -213,6 +213,16 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
             href: '/apps/permissions'
           }
         ]
+      },
+      {
+        label: dictionary['navigation'].smtpSettings,
+        icon: 'ri-mail-settings-line',
+        href: '/apps/settings/smtp'
+      },
+      {
+        label: dictionary['navigation'].emailTemplates,
+        icon: 'ri-file-text-line',
+        href: '/apps/settings/email-templates'
       }
     ]
   },

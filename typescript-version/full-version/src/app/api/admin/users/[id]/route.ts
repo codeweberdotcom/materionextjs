@@ -38,11 +38,12 @@ export async function PUT(
 
     const { id: userId } = await params
 
-    // Allow admins to edit any user, or users to edit their own data
+    // Allow admins and superadmins to edit any user, or users to edit their own data
     const isAdmin = currentUser.role?.name === 'admin'
+    const isSuperadmin = currentUser.role?.name === 'superadmin'
     const isEditingOwnData = currentUser.id === userId
 
-    if (!isAdmin && !isEditingOwnData) {
+    if (!isAdmin && !isSuperadmin && !isEditingOwnData) {
       return NextResponse.json(
         { message: 'Access denied' },
         { status: 403 }
@@ -185,7 +186,7 @@ export async function PATCH(
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }
@@ -285,7 +286,7 @@ export async function DELETE(
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }

@@ -58,7 +58,7 @@ model User {
    id          String   @id @default(cuid())
    name        String   @unique
    description String?
-   permissions String?  @default("[]")
+   permissions String?  @default("{}")
    users       User[]
    createdAt   DateTime @default(now())
    updatedAt   DateTime @updatedAt
@@ -146,14 +146,24 @@ model District {
 }
 
 model Translation {
-    id          String   @id @default(cuid())
-    key         String   // e.g., "navigation.dashboards"
-    language    String   // e.g., "en", "fr", "ar"
-    value       String   // The translated text
-    namespace   String   @default("common") // e.g., "navigation", "common", "forms"
-    isActive    Boolean  @default(true)
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+     id          String   @id @default(cuid())
+     key         String   // e.g., "navigation.dashboards"
+     language    String   // e.g., "en", "fr", "ar"
+     value       String   // The translated text
+     namespace   String   @default("common") // e.g., "navigation", "common", "forms"
+     isActive    Boolean  @default(true)
+     createdAt   DateTime @default(now())
+     updatedAt   DateTime @updatedAt
 
-    @@unique([key, language, namespace])
-}
+     @@unique([key, language, namespace])
+   }
+
+model EmailTemplate {
+     id          String   @id @default(cuid())
+     name        String   @unique
+     subject     String
+     content     String
+     isActive    Boolean  @default(true)
+     createdAt   DateTime @default(now())
+     updatedAt   DateTime @updatedAt
+   }

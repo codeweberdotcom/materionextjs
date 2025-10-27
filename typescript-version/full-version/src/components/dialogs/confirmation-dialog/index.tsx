@@ -130,10 +130,10 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
               <>
                 {type === 'delete-account' && 'Your account has been deactivated successfully.'}
                 {type === 'unsubscribe' && 'Your subscription cancelled successfully.'}
-                {type === 'suspend-account' && (isActive ? dictionary.navigation.userSuspended : dictionary.navigation.userActivated)}
+                {type === 'suspend-account' && (isActive ? dictionary.navigation.user + ' ' + dictionary.navigation.suspended : dictionary.navigation.user + ' ' + dictionary.navigation.activated)}
                 {type === 'delete-order' && 'Your order deleted successfully.'}
                 {type === 'delete-customer' && 'Your customer removed successfully.'}
-                {type === 'delete-user' && dictionary.navigation.deleteUser + ' ' + dictionary.navigation.successfully}
+                {type === 'delete-user' && dictionary.navigation.user + ' ' + dictionary.navigation.deleteUser.toLowerCase() + ' ' + dictionary.navigation.successfully}
                 {type === 'delete-role' && dictionary.navigation.deleteRole + ' ' + dictionary.navigation.successfully}
               </>
             ) : (

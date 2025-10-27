@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }
@@ -124,18 +124,7 @@ export async function GET() {
       )
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+    // All authenticated users can create users
 
     const users = await prisma.user.findMany({
       select: {

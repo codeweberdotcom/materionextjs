@@ -32,7 +32,7 @@ export const GenerateVerticalMenu = ({ menuData, locale }: { menuData: VerticalM
 
   const renderMenuItems = (data: VerticalMenuDataType[]) => {
     // Use the map method to iterate through the array of menu data
-    return data.map((item: VerticalMenuDataType, index) => {
+    return data.map((item: VerticalMenuDataType, index: number) => {
       const menuSectionItem = item as VerticalSectionDataType
       const subMenuItem = item as VerticalSubMenuDataType
       const menuItem = item as VerticalMenuItemDataType

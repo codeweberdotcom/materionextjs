@@ -27,6 +27,9 @@ import type { Locale } from '@configs/i18n'
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
 
+// Third-party Imports
+import { toast } from 'react-toastify'
+
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
 
@@ -95,13 +98,14 @@ const RoleCards = () => {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [roleUsers, setRoleUsers] = useState<User[]>([])
 
-  // Fetch roles and users
+  // Fetch roles, users, and current user role
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [rolesResponse, usersResponse] = await Promise.all([
+        const [rolesResponse, usersResponse, profileResponse] = await Promise.all([
           fetch('/api/admin/roles'),
-          fetch('/api/admin/users')
+          fetch('/api/admin/users'),
+          fetch('/api/user/profile')
         ])
 
         if (rolesResponse.ok) {
@@ -113,6 +117,8 @@ const RoleCards = () => {
           const usersData = await usersResponse.json()
           setUsers(usersData)
         }
+
+        // Current user role no longer needed for restrictions
       } catch (error) {
         console.error('Error fetching data:', error)
       }
@@ -122,12 +128,13 @@ const RoleCards = () => {
   }, [])
 
   const handleRoleSuccess = () => {
-    // Refetch roles and users
+    // Refetch roles, users, and current user role
     const fetchData = async () => {
       try {
-        const [rolesResponse, usersResponse] = await Promise.all([
+        const [rolesResponse, usersResponse, profileResponse] = await Promise.all([
           fetch('/api/admin/roles'),
-          fetch('/api/admin/users')
+          fetch('/api/admin/users'),
+          fetch('/api/user/profile')
         ])
 
         if (rolesResponse.ok) {
@@ -139,6 +146,8 @@ const RoleCards = () => {
           const usersData = await usersResponse.json()
           setUsers(usersData)
         }
+
+        // Current user role no longer needed for restrictions
       } catch (error) {
         console.error('Error fetching data:', error)
       }
@@ -157,6 +166,8 @@ const RoleCards = () => {
         handleRoleSuccess()
         setDeleteDialogOpen(false)
         setRoleToDelete(null)
+        // Show success notification
+        toast.success(`${t.navigation.deleteRole} "${role.name}" ${t.navigation.successfully}`)
       } else if (response.status === 400) {
         const data = await response.json()
         if (data.users) {
@@ -165,11 +176,17 @@ const RoleCards = () => {
         }
         setDeleteDialogOpen(false)
         setRoleToDelete(null)
+        // Show error notification
+        toast.error(data.message || 'Error deleting role')
       } else {
         console.error('Error deleting role')
+        // Show error notification
+        toast.error('Error deleting role')
       }
     } catch (error) {
       console.error('Error deleting role:', error)
+      // Show error notification
+      toast.error('Error deleting role')
     }
   }
 
@@ -270,20 +287,12 @@ const RoleCards = () => {
                         dialog={RoleDialog}
                         dialogProps={{ title: role.name, roleId: role.id, onSuccess: handleRoleSuccess }}
                       />
-                      {(() => {
-                        const baseRoles = ['superadmin', 'admin', 'editor', 'moderator', 'seo', 'support', 'user']
-                        if (baseRoles.includes(role.name.toLowerCase())) {
-                          return null
-                        }
-                        return (
-                          <IconButton onClick={() => {
-                            setRoleToDelete(role)
-                            setDeleteDialogOpen(true)
-                          }}>
-                            <i className='ri-delete-bin-line text-secondary' />
-                          </IconButton>
-                        )
-                      })()}
+                      <IconButton onClick={() => {
+                        setRoleToDelete(role)
+                        setDeleteDialogOpen(true)
+                      }}>
+                        <i className='ri-delete-bin-line text-secondary' />
+                      </IconButton>
                     </div>
                   </div>
                 </CardContent>
@@ -311,3 +320,4 @@ const RoleCards = () => {
 }
 
 export default RoleCards
+

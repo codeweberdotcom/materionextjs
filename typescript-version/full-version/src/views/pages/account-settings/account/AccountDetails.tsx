@@ -35,7 +35,6 @@ type Data = {
   country: string
   language: string
   currency: string
-  role: string
 }
 
 // Vars
@@ -50,8 +49,7 @@ const initialData: Data = {
   zipCode: '',
   country: '',
   language: 'en',
-  currency: '',
-  role: ''
+  currency: ''
 }
 
 const AccountDetails = () => {
@@ -166,8 +164,7 @@ const AccountDetails = () => {
             zipCode: '',
             country: userData.country || 'russia',
             language: userData.language || 'ru',
-            currency: userData.currency || 'RUB',
-            role: userData.role || ''
+            currency: userData.currency || 'RUB'
           })
           setLanguage(userData.language || 'ru')
 
@@ -255,8 +252,7 @@ const AccountDetails = () => {
           zipCode: '',
           country: updatedUser.country || 'usa',
           language: updatedUser.language || 'en',
-          currency: updatedUser.currency || 'USD',
-          role: updatedUser.role || ''
+          currency: updatedUser.currency || 'USD'
         })
         setLanguage(updatedUser.language || 'en')
 
@@ -433,19 +429,14 @@ const AccountDetails = () => {
                 </Select>
               </FormControl>
             </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                label={dictionary.forms.role}
-                value={formData.role}
-                disabled
-              />
-            </Grid>
             <Grid size={{ xs: 12 }} className='flex gap-4 flex-wrap'>
               <Button variant='contained' type='submit' disabled={saving}>
                 {saving ? dictionary.navigation.saving : dictionary.navigation.saveChanges}
               </Button>
-              <Button variant='outlined' type='reset' color='secondary' onClick={() => setFormData(initialData)}>
+              <Button variant='outlined' type='reset' color='secondary' onClick={() => {
+                setFormData(initialData)
+                setLanguage('en')
+              }}>
                 {dictionary.navigation.reset}
               </Button>
             </Grid>
