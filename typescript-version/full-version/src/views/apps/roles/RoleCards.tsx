@@ -22,16 +22,21 @@ import { styled } from '@mui/material/styles'
 import type { CardProps } from '@mui/material/Card'
 
 // Type Imports
+import { toast } from 'react-toastify'
+
 import type { Locale } from '@configs/i18n'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
 
+// Hook Imports
+import { usePermissions } from '@/hooks/usePermissions'
+
 // Third-party Imports
-import { toast } from 'react-toastify'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
+import { getUserPermissions, isAdmin } from '@/utils/permissions'
 
 // Component Imports
 import RoleDialog from '@components/dialogs/role-dialog'
@@ -89,6 +94,7 @@ const RoleCards = () => {
   // Hooks
   const t = useTranslation()
   const { lang: locale } = useParams()
+  const { checkPermission, isSuperadmin, user } = usePermissions()
 
   // States
   const [roles, setRoles] = useState<Role[]>([])
@@ -97,9 +103,12 @@ const RoleCards = () => {
   const [roleToDelete, setRoleToDelete] = useState<Role | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [roleUsers, setRoleUsers] = useState<User[]>([])
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Fetch roles, users, and current user role
   useEffect(() => {
+    console.log('🔄 useEffect triggered - fetching data')
+
     const fetchData = async () => {
       try {
         const [rolesResponse, usersResponse, profileResponse] = await Promise.all([
@@ -110,11 +119,13 @@ const RoleCards = () => {
 
         if (rolesResponse.ok) {
           const rolesData = await rolesResponse.json()
+
           setRoles(rolesData)
         }
 
         if (usersResponse.ok) {
           const usersData = await usersResponse.json()
+
           setUsers(usersData)
         }
 
@@ -125,68 +136,128 @@ const RoleCards = () => {
     }
 
     fetchData()
+
+    // Log isSuperadmin and user role for debugging
+     console.log('=== DEBUG INFO ===')
+     console.log('Current user:', user)
+     console.log('Current user role:', user?.role)
+     console.log('Current user permissions (raw):', user?.role?.permissions)
+     console.log('Parsed user permissions:', getUserPermissions(user || null))
+     console.log('isSuperadmin:', isSuperadmin)
+     console.log('isAdmin:', isAdmin(user || null))
+     console.log('Current page permissions - module: roleManagement, action: read')
+     console.log('Has permission for current page:', checkPermission('roleManagement', 'read'))
+     console.log('=== END DEBUG ===')
   }, [])
 
   const handleRoleSuccess = () => {
-    // Refetch roles, users, and current user role
+    console.log('🔄 [ROLE SUCCESS] handleRoleSuccess called - refetching data in background')
+
+    // Refetch roles and users only (remove profile fetch to reduce API calls)
     const fetchData = async () => {
+      console.log('🔄 [ROLE SUCCESS] Starting background fetch')
       try {
-        const [rolesResponse, usersResponse, profileResponse] = await Promise.all([
+        const [rolesResponse, usersResponse] = await Promise.all([
           fetch('/api/admin/roles'),
-          fetch('/api/admin/users'),
-          fetch('/api/user/profile')
+          fetch('/api/admin/users')
         ])
+
+        console.log('🔄 [ROLE SUCCESS] API responses received - roles:', rolesResponse.status, 'users:', usersResponse.status)
 
         if (rolesResponse.ok) {
           const rolesData = await rolesResponse.json()
+          console.log('🔄 [ROLE SUCCESS] Roles data fetched:', rolesData.length, 'roles')
           setRoles(rolesData)
+          console.log('🔄 [ROLE SUCCESS] Roles state updated')
+        } else {
+          console.error('🔄 [ROLE SUCCESS] Failed to fetch roles:', rolesResponse.status)
         }
 
         if (usersResponse.ok) {
           const usersData = await usersResponse.json()
+          console.log('🔄 [ROLE SUCCESS] Users data fetched:', usersData.length, 'users')
           setUsers(usersData)
+          console.log('🔄 [ROLE SUCCESS] Users state updated')
+        } else {
+          console.error('🔄 [ROLE SUCCESS] Failed to fetch users:', usersResponse.status)
         }
-
-        // Current user role no longer needed for restrictions
       } catch (error) {
-        console.error('Error fetching data:', error)
+        console.error('🔄 [ROLE SUCCESS] Error fetching data:', error)
       }
+      console.log('🔄 [ROLE SUCCESS] Background fetch completed')
     }
 
     fetchData()
   }
 
   const handleDeleteRole = async (role: Role) => {
+    console.log('🗑️ [DELETE START] handleDeleteRole called for role:', role.name, role.id)
+    console.log('🗑️ [DELETE STATE] Current roles before delete:', roles.map(r => ({ id: r.id, name: r.name })))
+
+    if (isDeleting) {
+      console.log('🗑️ [DELETE SKIP] Delete already in progress, skipping')
+      return
+    }
+
+    setIsDeleting(true)
+    console.log('🗑️ [DELETE PROGRESS] Set isDeleting to true')
+
     try {
+      console.log('🗑️ [DELETE API] Making DELETE request to:', `/api/admin/roles/${role.id}`)
       const response = await fetch(`/api/admin/roles/${role.id}`, {
         method: 'DELETE'
       })
 
+      console.log('🗑️ [DELETE RESPONSE] Response status:', response.status)
+
       if (response.ok) {
-        handleRoleSuccess()
+        console.log('🗑️ [DELETE SUCCESS] Role deleted successfully from API')
+
+        // Immediately update local state for better UX (like in UserListTable)
+        console.log('🗑️ [DELETE LOCAL] Updating local state - filtering out role:', role.id)
+        const previousRoles = roles
+        setRoles(prevRoles => {
+          const filteredRoles = prevRoles.filter(r => r.id !== role.id)
+          console.log('🗑️ [DELETE LOCAL] Local state updated. Previous count:', previousRoles.length, 'New count:', filteredRoles.length)
+          console.log('🗑️ [DELETE LOCAL] Removed role:', role.name, 'Remaining roles:', filteredRoles.map(r => r.name))
+          return filteredRoles
+        })
+
+        // Close dialog immediately
         setDeleteDialogOpen(false)
         setRoleToDelete(null)
+        console.log('🗑️ [DELETE DIALOG] Dialog closed')
+
         // Show success notification
-        toast.success(`${t.navigation.deleteRole} "${role.name}" ${t.navigation.successfully}`)
+        toast.success(t.navigation.roleDeletedSuccessfully.replace('${roleName}', role.name))
+        console.log('🗑️ [DELETE TOAST] Success toast shown')
       } else if (response.status === 400) {
         const data = await response.json()
+        console.log('🗑️ [DELETE ERROR 400] Delete failed with 400, data:', data)
+
         if (data.users) {
           setErrorMessage(t.navigation.roleDeleteError.replace('${roleName}', role.name))
           setRoleUsers(data.users)
+          console.log('🗑️ [DELETE ERROR 400] Error message set with users:', data.users.length)
         }
+
         setDeleteDialogOpen(false)
         setRoleToDelete(null)
-        // Show error notification
-        toast.error(data.message || 'Error deleting role')
+
+        toast.error(t.navigation.roleDeleteError.replace('${roleName}', role.name))
       } else {
-        console.error('Error deleting role')
-        // Show error notification
-        toast.error('Error deleting role')
+        console.error('🗑️ [DELETE ERROR] Error deleting role - unexpected status')
+
+        toast.error(t.navigation.roleDeleteFailed)
       }
     } catch (error) {
-      console.error('Error deleting role:', error)
+      console.error('🗑️ [DELETE ERROR] Error deleting role:', error)
+
       // Show error notification
-      toast.error('Error deleting role')
+      toast.error(t.navigation.roleDeleteFailed)
+    } finally {
+      setIsDeleting(false)
+      console.log('🗑️ [DELETE FINISH] Set isDeleting to false')
     }
   }
 
@@ -202,9 +273,11 @@ const RoleCards = () => {
         <Grid size={{ xs: 7 }}>
           <CardContent>
             <div className='flex flex-col items-end gap-4 text-right'>
-              <Button variant='contained' size='small'>
-                {t.navigation.addRole}
-              </Button>
+              {(isSuperadmin || checkPermission('roleManagement', 'create')) && (
+                <Button variant='contained' size='small'>
+                  {t.navigation.addRole}
+                </Button>
+              )}
               <Typography>
                 {t.navigation.addRoleDescription}
               </Typography>
@@ -246,7 +319,9 @@ const RoleCards = () => {
       <Grid container spacing={6} alignItems="stretch">
         {roles.map((role, index) => {
           const roleUsers = users.filter(user => user.role === role.name)
-          return (
+
+          
+return (
             <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={role.id}>
               <Card>
                 <CardContent className='flex flex-col gap-4'>
@@ -267,7 +342,9 @@ const RoleCards = () => {
                     <div className='flex flex-col items-start gap-1'>
                       {(() => {
                         const roleInfo = userRoleObj[role.name.toLowerCase()] || userRoleObj.subscriber
-                        return (
+
+                        
+return (
                           <div className='flex items-center gap-2'>
                             <Icon className={roleInfo.icon} sx={{ color: role.name.toLowerCase() === 'superadmin' ? '#FFD700' : `var(--mui-palette-${roleInfo.color}-main)`, fontSize: '1.375rem' }} />
                             <Typography variant='h5'>{role.name}</Typography>
@@ -279,20 +356,37 @@ const RoleCards = () => {
                       </Typography>
                     </div>
                     <div className='flex gap-2'>
-                      <OpenDialogOnElementClick
-                        element={IconButton}
-                        elementProps={{
-                          children: <i className='ri-edit-box-line text-secondary mui-1vkcxi3' />
-                        }}
-                        dialog={RoleDialog}
-                        dialogProps={{ title: role.name, roleId: role.id, onSuccess: handleRoleSuccess }}
-                      />
-                      <IconButton onClick={() => {
-                        setRoleToDelete(role)
-                        setDeleteDialogOpen(true)
-                      }}>
-                        <i className='ri-delete-bin-line text-secondary' />
-                      </IconButton>
+                      {(isSuperadmin || checkPermission('roleManagement', 'read')) && (
+                        <OpenDialogOnElementClick
+                          element={IconButton}
+                          elementProps={{
+                            children: <i className='ri-eye-line text-secondary mui-1vkcxi3' />
+                          }}
+                          dialog={RoleDialog}
+                          dialogProps={{ title: role.name, roleId: role.id, onSuccess: handleRoleSuccess, readOnly: true }}
+                        />
+                      )}
+                      {(isSuperadmin || checkPermission('roleManagement', 'update')) && (
+                        <OpenDialogOnElementClick
+                          element={IconButton}
+                          elementProps={{
+                            children: <i className='ri-edit-box-line text-secondary mui-1vkcxi3' />
+                          }}
+                          dialog={RoleDialog}
+                          dialogProps={{ title: role.name, roleId: role.id, onSuccess: handleRoleSuccess }}
+                        />
+                      )}
+                      {(isSuperadmin || checkPermission('roleManagement', 'delete')) && !['superadmin', 'subscriber', 'admin', 'user', 'moderator', 'seo', 'editor', 'marketolog', 'support', 'manager'].includes(role.name.toLowerCase()) && (
+                        <IconButton
+                          onClick={() => {
+                            setRoleToDelete(role)
+                            setDeleteDialogOpen(true)
+                          }}
+                          disabled={isDeleting}
+                        >
+                          <i className='ri-delete-bin-line text-secondary' />
+                        </IconButton>
+                      )}
                     </div>
                   </div>
                 </CardContent>

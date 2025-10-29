@@ -77,8 +77,10 @@ type City = {
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
+
   addMeta({ itemRank })
-  return itemRank.passed
+  
+return itemRank.passed
 }
 
 const DebouncedInput = ({
@@ -127,8 +129,10 @@ const CitiesListTable = () => {
     const fetchCities = async () => {
       try {
         const response = await fetch('/api/cities')
+
         if (response.ok) {
           const cities = await response.json()
+
           setData(cities)
           setFilteredData(cities)
         }
@@ -190,7 +194,9 @@ const CitiesListTable = () => {
       header: dictionary.navigation.districts,
       cell: ({ row }) => {
         const districtsCount = row.original.districts ? row.original.districts.length : 0
-        return (
+
+        
+return (
           <div className='flex items-center gap-2'>
             <Chip
               label={`${districtsCount} ${dictionary.navigation.districts.toLowerCase()}`}
@@ -262,11 +268,13 @@ const CitiesListTable = () => {
 
       if (response.ok) {
         const updatedData = data.filter(city => city.id !== id)
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success('City deleted successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to delete city')
       }
     } catch (error) {
@@ -287,14 +295,17 @@ const CitiesListTable = () => {
 
       if (response.ok) {
         const updatedCity = await response.json()
+
         const updatedData = data.map(city =>
           city.id === updatedCity.id ? updatedCity : city
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success(`City ${updatedCity.isActive ? 'activated' : 'deactivated'} successfully!`)
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to toggle city status')
       }
     } catch (error) {
@@ -316,12 +327,14 @@ const CitiesListTable = () => {
       if (response.ok) {
         const newCity = await response.json()
         const updatedData = [...data, newCity]
+
         setData(updatedData)
         setFilteredData(updatedData)
         setAddCityOpen(false)
         toast.success('City added successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to add city')
       }
     } catch (error) {
@@ -342,15 +355,18 @@ const CitiesListTable = () => {
 
       if (response.ok) {
         const updatedCity = await response.json()
+
         const updatedData = data.map(city =>
           city.id === updatedCity.id ? updatedCity : city
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         setEditCity(null)
         toast.success('City updated successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to update city')
       }
     } catch (error) {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -56,6 +57,7 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
     states: [] as string[],
     isActive: true
   })
+
   const [states, setStates] = useState<State[]>([])
 
   const isEditMode = !!editCountry
@@ -64,8 +66,10 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
     const fetchStates = async () => {
       try {
         const response = await fetch('/api/states')
+
         if (response.ok) {
           const data = await response.json()
+
           setStates(data)
         }
       } catch (error) {
@@ -80,11 +84,13 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+
     if (isEditMode && onUpdate && editCountry) {
       onUpdate({ ...formData, id: editCountry.id })
     } else {
       onSubmit(formData)
     }
+
     handleClose()
   }
 
@@ -165,7 +171,9 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
                   value.map((option, index) => {
                     const { key, ...chipProps } = getTagProps({ index })
                     const state = states.find(s => s.id === (typeof option === 'string' ? option : option.id))
-                    return (
+
+                    
+return (
                       <Chip
                         key={state?.id || index}
                         label={state?.name || (typeof option === 'string' ? option : option.name)}
@@ -177,7 +185,9 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
                 }
                 renderOption={(props, option) => {
                   const { key, ...otherProps } = props
-                  return (
+
+                  
+return (
                     <li key={option.id} {...otherProps}>
                       {option.name}
                     </li>

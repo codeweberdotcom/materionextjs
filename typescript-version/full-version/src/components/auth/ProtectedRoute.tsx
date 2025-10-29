@@ -1,8 +1,10 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+
 import { useRouter } from 'next/navigation'
+
+import { useSession } from 'next-auth/react'
 import { Box, CircularProgress } from '@mui/material'
 
 interface ProtectedRouteProps {
@@ -25,7 +27,8 @@ export function ProtectedRoute({
 
     if (status === 'unauthenticated') {
       router.push(fallbackPath)
-      return
+      
+return
     }
 
     // No role or permission checks - all authenticated users can access all routes

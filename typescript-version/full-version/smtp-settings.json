@@ -1,9 +1,10 @@
 {
-  "host": "imap.mail.ru",
-  "port": "465",
+  "host": "smtp.mail.ru",
+  "port": "587",
   "username": "info@codeweber.com",
-  "password": "tZmat6uhZp651lYHjUSl",
-  "encryption": "ssl",
+  "password": "5MMDglTub2ViWemQK4LW",
+  "encryption": "tls",
   "fromEmail": "info@codeweber.com",
-  "fromName": "Test User"
+  "fromName": "Test User",
+  "updatedAt": "2025-10-29T11:24:38.709Z"
 }

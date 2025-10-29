@@ -6,18 +6,20 @@
 'use server'
 
 // Data Imports
+import { getServerSession } from 'next-auth'
+
 import { db as eCommerceData } from '@/fake-db/apps/ecommerce'
 import { db as academyData } from '@/fake-db/apps/academy'
 import { db as vehicleData } from '@/fake-db/apps/logistics'
 import { db as invoiceData } from '@/fake-db/apps/invoice'
-import { db as permissionData } from '@/fake-db/apps/permissions'
+
+// Removed import for permissions data
 import { db as profileData } from '@/fake-db/pages/userProfile'
 import { db as faqData } from '@/fake-db/pages/faq'
 import { db as pricingData } from '@/fake-db/pages/pricing'
 import { db as statisticsData } from '@/fake-db/pages/widgetExamples'
 
 // Database Imports
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/libs/auth'
 
 // Type Imports
@@ -76,7 +78,8 @@ export const getUserData = async (): Promise<UsersType[]> => {
     })
   } catch (error) {
     console.error('Error fetching users:', error instanceof Error ? error.message : String(error))
-    return []
+    
+return []
   }
 }
 
@@ -85,7 +88,8 @@ export const getUserById = async (id: string) => {
     // First check if id is a valid format
     if (!id || id.trim() === '') {
       console.error('Invalid user ID provided:', id)
-      return null
+      
+return null
     }
 
     const user = await prisma.user.findUnique({
@@ -107,15 +111,18 @@ export const getUserById = async (id: string) => {
 
     if (!user) {
       console.error('User not found with ID:', id)
-      return null
+      
+return null
     }
 
     // Get country name from code
     let countryName = 'N/A'
+
     if (user.country) {
       const country = await prisma.country.findUnique({
         where: { code: user.country }
       })
+
       countryName = country?.name || user.country
     }
 
@@ -139,12 +146,14 @@ export const getUserById = async (id: string) => {
     }
   } catch (error) {
     console.error('Error fetching user by ID:', error instanceof Error ? error.message : String(error))
-    return null
+    
+return null
   }
 }
 
 export const getPermissionsData = async () => {
-  return permissionData
+  // Return empty array for permissions since we're starting fresh
+  return []
 }
 
 export const getProfileData = async () => {
@@ -167,7 +176,8 @@ export const getProfileData = async () => {
 
     if (!currentUser) {
       console.error('User not found in database:', session.user.email)
-      return profileData // Return fake data as fallback
+      
+return profileData // Return fake data as fallback
     }
 
     // Use database role name directly
@@ -223,7 +233,8 @@ export const getProfileData = async () => {
     }
   } catch (error) {
     console.error('Error fetching profile data:', error instanceof Error ? error.message : String(error))
-    return profileData // Return fake data as fallback
+    
+return profileData // Return fake data as fallback
   }
 }
 

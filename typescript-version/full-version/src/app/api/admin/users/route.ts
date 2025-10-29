@@ -1,11 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
-import { PrismaClient } from '@prisma/client'
 import { writeFile } from 'fs/promises'
+
 import path from 'path'
 
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+import { getServerSession } from 'next-auth'
+
+import { PrismaClient } from '@prisma/client'
+
+import { authOptions } from '@/libs/auth'
+
+import { checkPermission } from '@/utils/permissions'
+
 const prisma = new PrismaClient()
+
+// Кеш для пользователей (простая in-memory кеш)
+let usersCache: any[] | null = null
+let usersCacheTimestamp: number = 0
+const USERS_CACHE_DURATION = 30 * 1000 // 30 секунд для тестирования
 
 // POST - Create new user (admin only)
 export async function POST(request: NextRequest) {
@@ -19,15 +32,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Check if user is admin
+    // Check permission for creating users
     const currentUser = await prisma.user.findUnique({
       where: { email: session.user.email },
       include: { role: true }
     })
 
-    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
+    if (!currentUser || !checkPermission(currentUser, 'Users', 'Create')) {
       return NextResponse.json(
-        { message: 'Admin access required' },
+        { message: 'Permission denied: Create Users required' },
         { status: 403 }
       )
     }
@@ -61,11 +74,13 @@ export async function POST(request: NextRequest) {
 
     // Create the user
     let imagePath = null
+
     if (avatar) {
       // Save the file to public/images/avatars
       const bytes = await avatar.arrayBuffer()
       const buffer = Buffer.from(bytes)
       const avatarPath = path.join(process.cwd(), 'public', 'images', 'avatars', avatar.name)
+
       await writeFile(avatarPath, buffer)
       imagePath = `/images/avatars/${avatar.name}`
     }
@@ -102,10 +117,15 @@ export async function POST(request: NextRequest) {
       avatarColor: 'primary' as const
     }
 
+    // Очищаем кеш после создания нового пользователя
+    usersCache = null
+    usersCacheTimestamp = 0
+
     return NextResponse.json(transformedUser)
   } catch (error) {
     console.error('Error creating user:', error || 'Unknown error')
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -113,8 +133,18 @@ export async function POST(request: NextRequest) {
 }
 
 // GET - Get all users (admin only)
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const url = new URL(request.url)
+    const clearCache = url.searchParams.get('clearCache')
+
+    // Если запрос на очистку кеша
+    if (clearCache === 'true') {
+      usersCache = null
+      usersCacheTimestamp = 0
+      return NextResponse.json({ message: 'Cache cleared' })
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.email) {
@@ -124,7 +154,24 @@ export async function GET() {
       )
     }
 
-    // All authenticated users can create users
+    // Check permission for reading users
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { role: true }
+    })
+
+    if (!currentUser || !checkPermission(currentUser, 'userManagement', 'read')) {
+      return NextResponse.json(
+        { message: 'Permission denied: Read Users required' },
+        { status: 403 }
+      )
+    }
+
+    // Проверяем кеш
+    const now = Date.now()
+    if (usersCache && (now - usersCacheTimestamp) < USERS_CACHE_DURATION) {
+      return NextResponse.json(usersCache)
+    }
 
     const users = await prisma.user.findMany({
       select: {
@@ -164,9 +211,13 @@ export async function GET() {
       }
     })
 
+    // Сохраняем в кеш
+    usersCache = transformedUsers
+    usersCacheTimestamp = now
     return NextResponse.json(transformedUsers)
   } catch (error) {
     console.error('Error fetching users:', error)
+
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

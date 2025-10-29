@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
+
 const prisma = new PrismaClient()
 
 // GET - Get all active countries (public access)
@@ -16,7 +17,8 @@ export async function GET() {
     return NextResponse.json(countries)
   } catch (error) {
     console.error('Error fetching countries:', error instanceof Error ? error.message : String(error))
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -54,7 +56,8 @@ export async function POST(request: Request) {
     return NextResponse.json(updatedCountry)
   } catch (error) {
     console.error('Error creating country:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

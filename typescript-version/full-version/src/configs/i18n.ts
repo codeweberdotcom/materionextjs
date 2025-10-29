@@ -1,6 +1,7 @@
 import languages from '@/data/languages.json'
 
 const langDirection: Record<string, 'ltr' | 'rtl'> = {}
+
 languages.forEach(lang => {
   langDirection[lang.code] = lang.code === 'ar' ? 'rtl' : 'ltr'
 })

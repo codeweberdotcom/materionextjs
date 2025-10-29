@@ -1,9 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import fs from 'fs'
+
+import path from 'path'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
 import { prisma } from '@/libs/prisma'
-import fs from 'fs'
-import path from 'path'
+
 
 // POST - Import translations from JSON files to database (admin only)
 export async function POST(request: NextRequest) {
@@ -38,6 +44,7 @@ export async function POST(request: NextRequest) {
 
     for (const language of languages) {
       const filePath = path.join(dictionariesPath, `${language}.json`)
+
       if (fs.existsSync(filePath)) {
         const jsonData = JSON.parse(fs.readFileSync(filePath, 'utf8'))
 
@@ -69,13 +76,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: 'translationsImportSuccess',
       importedCount: translationsToCreate.length,
+
       // For client-side translation
       translationKey: 'translationsImportSuccess',
       translationParams: { count: translationsToCreate.length }
     })
   } catch (error) {
     console.error('Error importing translations:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

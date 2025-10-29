@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
+
 import { prisma } from '../libs/prisma'
 
 // Country data
@@ -73,12 +74,36 @@ async function main() {
   const adminRole = await prisma.role.upsert({
     where: { name: 'admin' },
     update: {
-      permissions: JSON.stringify(['all'])
+      permissions: JSON.stringify({
+        userManagement: ['create', 'read', 'update', 'delete'],
+        roleManagement: ['read'],
+        countryManagement: ['create', 'read', 'update', 'delete'],
+        currencyManagement: ['create', 'read', 'update', 'delete'],
+        stateManagement: ['create', 'read', 'update', 'delete'],
+        cityManagement: ['create', 'read', 'update', 'delete'],
+        districtManagement: ['create', 'read', 'update', 'delete'],
+        languageManagement: ['create', 'read', 'update', 'delete'],
+        translationManagement: ['create', 'read', 'update', 'delete'],
+        emailTemplatesManagement: ['create', 'read', 'update', 'delete'],
+        smtpManagement: ['create', 'read', 'update', 'delete']
+      })
     },
     create: {
       name: 'admin',
       description: 'Administrator role',
-      permissions: JSON.stringify(['all'])
+      permissions: JSON.stringify({
+        userManagement: ['create', 'read', 'update', 'delete'],
+        roleManagement: ['read'],
+        countryManagement: ['create', 'read', 'update', 'delete'],
+        currencyManagement: ['create', 'read', 'update', 'delete'],
+        stateManagement: ['create', 'read', 'update', 'delete'],
+        cityManagement: ['create', 'read', 'update', 'delete'],
+        districtManagement: ['create', 'read', 'update', 'delete'],
+        languageManagement: ['create', 'read', 'update', 'delete'],
+        translationManagement: ['create', 'read', 'update', 'delete'],
+        emailTemplatesManagement: ['create', 'read', 'update', 'delete'],
+        smtpManagement: ['create', 'read', 'update', 'delete']
+      })
     }
   })
 
@@ -88,7 +113,12 @@ async function main() {
     create: {
       name: 'user',
       description: 'Regular user role',
-      permissions: JSON.stringify({ 'Profile': ['Read'], 'Content': ['Read'] })
+      permissions: JSON.stringify({
+        userManagement: ['create', 'read'],
+        roleManagement: ['create', 'read', 'update', 'delete'],
+        profileManagement: ['read', 'update'],
+        contentManagement: ['read']
+      })
     }
   })
 
@@ -98,7 +128,11 @@ async function main() {
     create: {
       name: 'moderator',
       description: 'Moderator role with content moderation permissions',
-      permissions: JSON.stringify({ 'Users': ['Read'], 'Roles': ['Read'], 'Content Moderation': ['Write'] })
+      permissions: JSON.stringify({
+        userManagement: ['read'],
+        roleManagement: ['read'],
+        contentModerationManagement: ['create', 'read', 'update', 'delete']
+      })
     }
   })
 
@@ -108,7 +142,10 @@ async function main() {
     create: {
       name: 'seo',
       description: 'SEO specialist role',
-      permissions: JSON.stringify({ 'Content': ['Read', 'Write'], 'Analytics': ['Read'] })
+      permissions: JSON.stringify({
+        contentManagement: ['create', 'read', 'update', 'delete'],
+        analyticsManagement: ['read']
+      })
     }
   })
 
@@ -118,7 +155,10 @@ async function main() {
     create: {
       name: 'editor',
       description: 'Content editor role',
-      permissions: JSON.stringify({ 'Content': ['Read', 'Write'], 'Media': ['Write'] })
+      permissions: JSON.stringify({
+        contentManagement: ['create', 'read', 'update', 'delete'],
+        mediaManagement: ['create', 'read', 'update', 'delete']
+      })
     }
   })
 
@@ -128,7 +168,10 @@ async function main() {
     create: {
       name: 'marketolog',
       description: 'Marketing specialist role',
-      permissions: JSON.stringify({ 'Marketing': ['Read', 'Write'], 'Analytics': ['Read'] })
+      permissions: JSON.stringify({
+        marketingManagement: ['create', 'read', 'update', 'delete'],
+        analyticsManagement: ['read']
+      })
     }
   })
 
@@ -138,7 +181,10 @@ async function main() {
     create: {
       name: 'subscriber',
       description: 'Subscriber role with limited access',
-      permissions: JSON.stringify({ 'Content': ['Read'], 'Profile': ['Read'] })
+      permissions: JSON.stringify({
+        contentManagement: ['read'],
+        profileManagement: ['read', 'update']
+      })
     }
   })
 
@@ -148,7 +194,10 @@ async function main() {
     create: {
       name: 'support',
       description: 'Customer support role',
-      permissions: JSON.stringify({ 'Support': ['Read', 'Write'], 'Users': ['Read'] })
+      permissions: JSON.stringify({
+        supportManagement: ['create', 'read', 'update', 'delete'],
+        userManagement: ['read']
+      })
     }
   })
 
@@ -158,7 +207,19 @@ async function main() {
     create: {
       name: 'manager',
       description: 'Manager role with team management permissions',
-      permissions: JSON.stringify({ 'Users': ['Read', 'Write'], 'Reports': ['Read'], 'Team': ['Write'] })
+      permissions: JSON.stringify({
+        userManagement: ['create', 'read', 'update', 'delete'],
+        roleManagement: ['create', 'read', 'update', 'delete'],
+        countryManagement: ['create', 'read', 'update', 'delete'],
+        currencyManagement: ['create', 'read', 'update', 'delete'],
+        stateManagement: ['create', 'read', 'update', 'delete'],
+        cityManagement: ['create', 'read', 'update', 'delete'],
+        districtManagement: ['create', 'read', 'update', 'delete'],
+        languageManagement: ['create', 'read', 'update', 'delete'],
+        translationManagement: ['create', 'read', 'update', 'delete'],
+        emailTemplatesManagement: ['create', 'read', 'update', 'delete'],
+        smtpManagement: ['read']
+      })
     }
   })
 

@@ -12,6 +12,9 @@ import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
 import type { ButtonProps } from '@mui/material/Button'
 
+// Third-party Imports
+import { toast } from 'react-toastify'
+
 // Type Imports
 import type { ThemeColor } from '@core/types'
 import type { UsersType } from '@/types/apps/userTypes'
@@ -23,6 +26,9 @@ import CustomAvatar from '@core/components/mui/Avatar'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
+
+// Hook Imports
+import { usePermissions } from '@/hooks/usePermissions'
 
 interface UserDetailsProps {
   userData?: UsersType
@@ -48,6 +54,7 @@ const defaultUserData: UsersType = {
 const UserDetails = ({ userData }: UserDetailsProps) => {
   // Hooks
   const dictionary = useTranslation()
+  const { checkPermission } = usePermissions()
 
   // Use provided userData or fallback to default
   const [user, setUser] = useState(defaultUserData)
@@ -55,6 +62,7 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
   const [editDrawerOpen, setEditDrawerOpen] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string>('')
   const [isOwnProfile, setIsOwnProfile] = useState<boolean>(false)
+  const [currentUserRole, setCurrentUserRole] = useState<string>('')
 
   // Update user when userData changes
   useEffect(() => {
@@ -68,9 +76,12 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
     const fetchCurrentUser = async () => {
       try {
         const response = await fetch('/api/user/profile')
+
         if (response.ok) {
           const userData = await response.json()
+
           setCurrentUserId(userData.id)
+          setCurrentUserRole(userData.role)
         }
       } catch (error) {
         console.error('Error fetching current user:', error)
@@ -91,6 +102,7 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
   const nameParts = user.fullName.split(' ')
   const firstName = nameParts[0] || 'Unknown'
   const lastName = nameParts.slice(1).join(' ') || 'User'
+
   const buttonProps = (children: string, color: ThemeColor, variant: ButtonProps['variant']): ButtonProps => ({
     children,
     color,
@@ -103,14 +115,23 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
         const response = await fetch(`/api/admin/users/${user.id}`, {
           method: 'PATCH'
         })
+
         if (response.ok) {
           const updatedUser = await response.json()
+
           setUser(updatedUser)
+        } else {
+          // Handle API error response
+          const errorData = await response.json()
+          console.error('API Error:', errorData.message)
+
+          toast.error(errorData.message || 'Failed to update user status')
         }
       } catch (error) {
         console.error('Error updating user status:', error)
       }
     }
+
     setSuspendDialogOpen(false)
   }
 
@@ -193,7 +214,11 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
               variant='contained'
               color='primary'
               onClick={() => setEditDrawerOpen(true)}
-              disabled={isOwnProfile}
+              disabled={
+                isOwnProfile ||
+                (user.role === 'superadmin' && currentUserRole !== 'superadmin') ||
+                !checkPermission('userManagement', 'update')
+              }
             >
               {dictionary.navigation.edit}
             </Button>
@@ -201,7 +226,11 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
               variant='outlined'
               color={user.status === 'active' ? 'error' : 'success'}
               onClick={() => setSuspendDialogOpen(true)}
-              disabled={isOwnProfile}
+              disabled={
+                isOwnProfile ||
+                user.role === 'superadmin' ||
+                !checkPermission('userManagement', 'update')
+              }
             >
               {user.status === 'active' ? dictionary.navigation.suspend : dictionary.navigation.activate}
             </Button>

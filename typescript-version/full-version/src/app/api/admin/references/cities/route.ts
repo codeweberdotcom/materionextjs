@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
 
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
+
 const prisma = new PrismaClient()
 
 // GET - Get all cities (admin only)
@@ -43,7 +47,8 @@ export async function GET() {
     return NextResponse.json(cities)
   } catch (error) {
     console.error('Error fetching cities:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -76,11 +81,13 @@ export async function POST(request: NextRequest) {
     }
 
     let body
+
     try {
       body = await request.json()
     } catch (error) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
+
     const { name, code, districts = [], isActive = true } = body
 
     if (!name || !code) {
@@ -108,7 +115,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newCity)
   } catch (error) {
     console.error('Error creating city:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -44,6 +45,7 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
     namespace: 'common',
     isActive: true
   })
+
   const [errors, setErrors] = useState<{[key: string]: string}>({})
 
   const isEditMode = !!editTranslation
@@ -114,6 +116,7 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
     } else {
       onSubmit(formData)
     }
+
     handleClose()
   }
 
@@ -140,6 +143,7 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
                 value={formData.key}
                 onChange={e => {
                   setFormData({ ...formData, key: e.target.value })
+
                   if (errors.key) {
                     setErrors({ ...errors, key: '' })
                   }
@@ -159,6 +163,7 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
                     ...formData,
                     language: newValue ? newValue.code : ''
                   })
+
                   if (errors.language) {
                     setErrors({ ...errors, language: '' })
                   }
@@ -175,7 +180,9 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
                 )}
                 renderOption={(props, option) => {
                   const { key, ...otherProps } = props
-                  return (
+
+                  
+return (
                     <li key={option.code} {...otherProps}>
                       {option.name}
                     </li>
@@ -192,6 +199,7 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
                 value={formData.value}
                 onChange={e => {
                   setFormData({ ...formData, value: e.target.value })
+
                   if (errors.value) {
                     setErrors({ ...errors, value: '' })
                   }
@@ -223,7 +231,9 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
                 )}
                 renderOption={(props, option) => {
                   const { key, ...otherProps } = props
-                  return (
+
+                  
+return (
                     <li key={option.value} {...otherProps}>
                       {option.label}
                     </li>

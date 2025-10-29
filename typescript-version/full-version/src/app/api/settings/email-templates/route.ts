@@ -1,12 +1,14 @@
 // Next Imports
 import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
-import { hasPermission } from '@/utils/rbac'
+import { checkPermission } from '@/utils/permissions'
 
 // In-memory storage for demo purposes
 // In production, this should be replaced with database storage
-let emailTemplates: any[] = [
+const emailTemplates: any[] = [
   {
     id: '1',
     name: 'Welcome Email',
@@ -28,16 +30,20 @@ let emailTemplates: any[] = [
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || !hasPermission(session.user, 'email-templates-management-read')) {
+
+    if (!session || !checkPermission(session.user, 'Email Templates', 'Read')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       )
     }
-    return NextResponse.json(emailTemplates)
+
+    
+return NextResponse.json(emailTemplates)
   } catch (error) {
     console.error('Error fetching email templates:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Failed to fetch email templates' },
       { status: 500 }
     )
@@ -47,12 +53,14 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || !hasPermission(session.user, 'email-templates-management-write')) {
+
+    if (!session || !checkPermission(session.user, 'Email Templates', 'Write')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       )
     }
+
     const body = await req.json()
     const { name, subject, content } = body
 
@@ -77,7 +85,8 @@ export async function POST(req: Request) {
     return NextResponse.json(newTemplate)
   } catch (error) {
     console.error('Error creating email template:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Failed to create email template' },
       { status: 500 }
     )

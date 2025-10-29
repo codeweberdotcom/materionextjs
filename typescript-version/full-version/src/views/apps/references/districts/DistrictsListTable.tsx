@@ -50,6 +50,12 @@ import AddDistrictDialog from './AddDistrictDialog'
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
 
+// Hook Imports
+import { usePermissions } from '@/hooks/usePermissions'
+
+// Util Imports
+import { checkPermission } from '@/utils/permissions'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -71,8 +77,10 @@ type District = {
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
+
   addMeta({ itemRank })
-  return itemRank.passed
+  
+return itemRank.passed
 }
 
 const DebouncedInput = ({
@@ -106,6 +114,12 @@ const columnHelper = createColumnHelper<District>()
 
 const DistrictsListTable = () => {
   const dictionary = useTranslation()
+  const { checkPermission } = usePermissions()
+
+  // Permission checks
+  const canCreate = checkPermission('districtManagement', 'create')
+  const canUpdate = checkPermission('districtManagement', 'update')
+  const canDelete = checkPermission('districtManagement', 'delete')
 
   const [data, setData] = useState<District[]>([])
   const [filteredData, setFilteredData] = useState(data)
@@ -121,8 +135,10 @@ const DistrictsListTable = () => {
     const fetchDistricts = async () => {
       try {
         const response = await fetch('/api/districts')
+
         if (response.ok) {
           const districts = await response.json()
+
           setData(districts)
           setFilteredData(districts)
         }
@@ -137,69 +153,86 @@ const DistrictsListTable = () => {
     fetchDistricts()
   }, [])
 
-  const columns = useMemo<ColumnDef<District, any>[]>(() => [
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <Checkbox
-          {...{
-            checked: table.getIsAllRowsSelected(),
-            indeterminate: table.getIsSomeRowsSelected(),
-            onChange: table.getToggleAllRowsSelectedHandler()
-          }}
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          {...{
-            checked: row.getIsSelected(),
-            disabled: !row.getCanSelect(),
-            indeterminate: row.getIsSomeSelected(),
-            onChange: row.getToggleSelectedHandler()
-          }}
-        />
-      )
+  const columns = useMemo<ColumnDef<District, any>[]>(
+    () => {
+      const baseColumns: ColumnDef<District, any>[] = [
+        {
+          id: 'select',
+          header: ({ table }) => (
+            <Checkbox
+              {...{
+                checked: table.getIsAllRowsSelected(),
+                indeterminate: table.getIsSomeRowsSelected(),
+                onChange: table.getToggleAllRowsSelectedHandler()
+              }}
+            />
+          ),
+          cell: ({ row }) => (
+            <Checkbox
+              {...{
+                checked: row.getIsSelected(),
+                disabled: !row.getCanSelect(),
+                indeterminate: row.getIsSomeSelected(),
+                onChange: row.getToggleSelectedHandler()
+              }}
+            />
+          )
+        },
+        columnHelper.accessor('name', {
+          header: dictionary.navigation.district,
+          cell: ({ row }) => <Typography>{row.original.name}</Typography>
+        }),
+        columnHelper.accessor('code', {
+          header: dictionary.navigation.code,
+          cell: ({ row }) => <Typography>{row.original.code}</Typography>
+        }),
+        columnHelper.accessor('isActive', {
+          header: dictionary.navigation.status,
+          cell: ({ row }) => (
+            <Chip
+              variant='tonal'
+              label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
+              size='small'
+              color={row.original.isActive ? 'success' : 'secondary'}
+            />
+          )
+        })
+      ]
+
+      // Add actions column only if user has any management permissions
+      if (canCreate || canUpdate || canDelete) {
+        baseColumns.push({
+          id: 'actions',
+          header: dictionary.navigation.actions,
+          cell: ({ row }) => (
+            <div className='flex items-center'>
+              {canUpdate && (
+                <IconButton onClick={() => handleEditDistrict(row.original)} title={dictionary.navigation.editDistrict}>
+                  <i className='ri-edit-line text-textSecondary' />
+                </IconButton>
+              )}
+              {canUpdate && (
+                <Switch
+                  checked={row.original.isActive}
+                  onChange={() => handleToggleDistrictStatus(row.original.id)}
+                  size='small'
+                />
+              )}
+              {canDelete && (
+                <IconButton onClick={() => handleDeleteDistrict(row.original.id, row.original.name)} title={dictionary.navigation.deleteDistrict}>
+                  <i className='ri-delete-bin-7-line text-textSecondary' />
+                </IconButton>
+              )}
+            </div>
+          ),
+          enableSorting: false
+        })
+      }
+
+      return baseColumns
     },
-    columnHelper.accessor('name', {
-      header: dictionary.navigation.district,
-      cell: ({ row }) => <Typography>{row.original.name}</Typography>
-    }),
-    columnHelper.accessor('code', {
-      header: dictionary.navigation.code,
-      cell: ({ row }) => <Typography>{row.original.code}</Typography>
-    }),
-    columnHelper.accessor('isActive', {
-      header: dictionary.navigation.status,
-      cell: ({ row }) => (
-        <Chip
-          variant='tonal'
-          label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
-          size='small'
-          color={row.original.isActive ? 'success' : 'secondary'}
-        />
-      )
-    }),
-    {
-      id: 'actions',
-      header: dictionary.navigation.actions,
-      cell: ({ row }) => (
-        <div className='flex items-center'>
-          <IconButton onClick={() => handleEditDistrict(row.original)} title={dictionary.navigation.editDistrict}>
-            <i className='ri-edit-line text-textSecondary' />
-          </IconButton>
-          <Switch
-            checked={row.original.isActive}
-            onChange={() => handleToggleDistrictStatus(row.original.id)}
-            size='small'
-          />
-          <IconButton onClick={() => handleDeleteDistrict(row.original.id, row.original.name)} title={dictionary.navigation.deleteDistrict}>
-            <i className='ri-delete-bin-7-line text-textSecondary' />
-          </IconButton>
-        </div>
-      ),
-      enableSorting: false
-    }
-  ], [data])
+    [data, canCreate, canUpdate, canDelete]
+  )
 
   const table = useReactTable({
     data: filteredData,
@@ -239,11 +272,13 @@ const DistrictsListTable = () => {
 
       if (response.ok) {
         const updatedData = data.filter(district => district.id !== id)
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success('District deleted successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to delete district')
       }
     } catch (error) {
@@ -264,14 +299,17 @@ const DistrictsListTable = () => {
 
       if (response.ok) {
         const updatedDistrict = await response.json()
+
         const updatedData = data.map(district =>
           district.id === updatedDistrict.id ? updatedDistrict : district
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success(`District ${updatedDistrict.isActive ? 'activated' : 'deactivated'} successfully!`)
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to toggle district status')
       }
     } catch (error) {
@@ -293,12 +331,14 @@ const DistrictsListTable = () => {
       if (response.ok) {
         const newDistrict = await response.json()
         const updatedData = [...data, newDistrict]
+
         setData(updatedData)
         setFilteredData(updatedData)
         setAddDistrictOpen(false)
         toast.success('District added successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to add district')
       }
     } catch (error) {
@@ -319,15 +359,18 @@ const DistrictsListTable = () => {
 
       if (response.ok) {
         const updatedDistrict = await response.json()
+
         const updatedData = data.map(district =>
           district.id === updatedDistrict.id ? updatedDistrict : district
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         setEditDistrict(null)
         toast.success('District updated successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to update district')
       }
     } catch (error) {
@@ -354,9 +397,11 @@ const DistrictsListTable = () => {
               className='max-sm:is-full'
             />
           </div>
-          <Button variant='contained' onClick={() => setAddDistrictOpen(true)} className='max-sm:is-full'>
-            {dictionary.navigation.addNewDistrict}
-          </Button>
+          {canCreate && (
+            <Button variant='contained' onClick={() => setAddDistrictOpen(true)} className='max-sm:is-full'>
+              {dictionary.navigation.addNewDistrict}
+            </Button>
+          )}
         </div>
       <div className='overflow-x-auto'>
         <table className={tableStyles.table}>

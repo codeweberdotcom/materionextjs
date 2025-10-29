@@ -17,6 +17,7 @@ import VerticalNavContent from './VerticalNavContent'
 // Hook Imports
 import useVerticalNav from '@menu/hooks/useVerticalNav'
 import { useSettings } from '@core/hooks/useSettings'
+import { usePermissions } from '@/hooks/usePermissions'
 
 // Styled Component Imports
 import StyledHorizontalNavExpandIcon from '@menu/styles/horizontal/StyledHorizontalNavExpandIcon'
@@ -61,6 +62,12 @@ const HorizontalMenu = ({ dictionary, locale }: { dictionary: Awaited<ReturnType
   const verticalNavOptions = useVerticalNav()
   const theme = useTheme()
   const { settings } = useSettings()
+  const { checkPermission, isSuperadmin } = usePermissions()
+
+  // Debug logging
+  console.log('HorizontalMenu - isSuperadmin:', isSuperadmin)
+  console.log('HorizontalMenu - roleManagement permission:', checkPermission('roleManagement', 'read'))
+  console.log('HorizontalMenu - permissionsManagement permission:', checkPermission('permissionsManagement', 'read'))
 
   // Vars
   const { skin } = settings
@@ -190,12 +197,17 @@ const HorizontalMenu = ({ dictionary, locale }: { dictionary: Awaited<ReturnType
             </MenuItem>
             <MenuItem href={`/${locale}/apps/invoice/add`}>{dictionary['navigation'].add}</MenuItem>
           </SubMenu>
-          <SubMenu label='User Settings' icon={<i className='ri-user-settings-line' />}>
-            <MenuItem href={`/${locale}/apps/user/list`}>User List</MenuItem>
-            <MenuItem href={`/${locale}/apps/user/view`}>{dictionary['navigation'].view}</MenuItem>
-            <MenuItem href={`/${locale}/apps/roles`}>{dictionary['navigation'].roles}</MenuItem>
-            <MenuItem href={`/${locale}/apps/permissions`}>{dictionary['navigation'].permissions}</MenuItem>
-          </SubMenu>
+          {(isSuperadmin || checkPermission('userManagement', 'read')) && (
+            <SubMenu label='User Settings' icon={<i className='ri-user-settings-line' />}>
+              <MenuItem href={`/${locale}/apps/user/list`}>User List</MenuItem>
+              {(isSuperadmin || checkPermission('roleManagement', 'read')) && (
+                <MenuItem href={`/${locale}/apps/roles`}>{dictionary['navigation'].roles}</MenuItem>
+              )}
+              {(isSuperadmin || checkPermission('permissionsManagement', 'read')) && (
+                <MenuItem href={`/${locale}/apps/permissions`}>{dictionary['navigation'].permissions}</MenuItem>
+              )}
+            </SubMenu>
+          )}
         </SubMenu>
         <SubMenu label={dictionary['navigation'].pages} icon={<i className='ri-file-list-2-line' />}>
           <MenuItem href={`/${locale}/pages/user-profile`} icon={<i className='ri-user-line' />}>

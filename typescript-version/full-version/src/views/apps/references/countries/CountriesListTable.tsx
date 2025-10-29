@@ -50,6 +50,12 @@ import AddCountryDialog from './AddCountryDialog'
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
 
+// Hook Imports
+import { usePermissions } from '@/hooks/usePermissions'
+
+// Util Imports
+import { checkPermission } from '@/utils/permissions'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -77,8 +83,10 @@ type Country = {
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
+
   addMeta({ itemRank })
-  return itemRank.passed
+  
+return itemRank.passed
 }
 
 const DebouncedInput = ({
@@ -113,6 +121,12 @@ const columnHelper = createColumnHelper<Country>()
 const CountriesListTable = () => {
   // Hooks
   const dictionary = useTranslation()
+  const { checkPermission } = usePermissions()
+
+  // Permission checks
+  const canCreate = checkPermission('countryManagement', 'create')
+  const canUpdate = checkPermission('countryManagement', 'update')
+  const canDelete = checkPermission('countryManagement', 'delete')
 
   const [data, setData] = useState<Country[]>([])
   const [filteredData, setFilteredData] = useState(data)
@@ -128,8 +142,10 @@ const CountriesListTable = () => {
     const fetchCountries = async () => {
       try {
         const response = await fetch('/api/countries')
+
         if (response.ok) {
           const countries = await response.json()
+
           setData(countries)
           setFilteredData(countries)
         }
@@ -145,87 +161,103 @@ const CountriesListTable = () => {
   }, [])
 
   const columns = useMemo<ColumnDef<Country, any>[]>(
-    () => [
-      {
-        id: 'select',
-        header: ({ table }) => (
-          <Checkbox
-            {...{
-              checked: table.getIsAllRowsSelected(),
-              indeterminate: table.getIsSomeRowsSelected(),
-              onChange: table.getToggleAllRowsSelectedHandler()
-            }}
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            {...{
-              checked: row.getIsSelected(),
-              disabled: !row.getCanSelect(),
-              indeterminate: row.getIsSomeSelected(),
-              onChange: row.getToggleSelectedHandler()
-            }}
-          />
-        )
-      },
-      columnHelper.accessor('name', {
-        header: dictionary.navigation.country,
-        cell: ({ row }) => <Typography>{row.original.name}</Typography>
-      }),
-      columnHelper.accessor('code', {
-        header: dictionary.navigation.code,
-        cell: ({ row }) => <Typography>{row.original.code}</Typography>
-      }),
-      columnHelper.accessor('isActive', {
-        header: dictionary.navigation.status,
-        cell: ({ row }) => (
-          <Chip
-            variant='tonal'
-            label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
-            size='small'
-            color={row.original.isActive ? 'success' : 'secondary'}
-          />
-        )
-      }),
-      {
-        id: 'states',
-        header: dictionary.navigation.states,
-        cell: ({ row }) => {
-          const statesCount = row.original.states ? row.original.states.length : 0
-          return (
-            <div className='flex items-center gap-2'>
-              <Chip
-                label={`${statesCount} ${dictionary.navigation.states.toLowerCase()}`}
-                size='small'
-                variant={statesCount > 0 ? 'filled' : 'outlined'}
-                color={statesCount > 0 ? 'primary' : 'default'}
-              />
-            </div>
-          )
-        }
-      },
-      {
-        id: 'actions',
-        header: dictionary.navigation.actions,
-        cell: ({ row }) => (
-          <div className='flex items-center'>
-            <IconButton onClick={() => handleEditCountry(row.original)} title={dictionary.navigation.editTranslation}>
-              <i className='ri-edit-line text-textSecondary' />
-            </IconButton>
-            <Switch
-              checked={row.original.isActive}
-              onChange={() => handleToggleCountryStatus(row.original.id)}
-              size='small'
+    () => {
+      const baseColumns: ColumnDef<Country, any>[] = [
+        {
+          id: 'select',
+          header: ({ table }) => (
+            <Checkbox
+              {...{
+                checked: table.getIsAllRowsSelected(),
+                indeterminate: table.getIsSomeRowsSelected(),
+                onChange: table.getToggleAllRowsSelectedHandler()
+              }}
             />
-            <IconButton onClick={() => handleDeleteCountry(row.original.id, row.original.name)} title={dictionary.navigation.deleteTranslation}>
-              <i className='ri-delete-bin-7-line text-textSecondary' />
-            </IconButton>
-          </div>
-        ),
-        enableSorting: false
+          ),
+          cell: ({ row }) => (
+            <Checkbox
+              {...{
+                checked: row.getIsSelected(),
+                disabled: !row.getCanSelect(),
+                indeterminate: row.getIsSomeSelected(),
+                onChange: row.getToggleSelectedHandler()
+              }}
+            />
+          )
+        },
+        columnHelper.accessor('name', {
+          header: dictionary.navigation.country,
+          cell: ({ row }) => <Typography>{row.original.name}</Typography>
+        }),
+        columnHelper.accessor('code', {
+          header: dictionary.navigation.code,
+          cell: ({ row }) => <Typography>{row.original.code}</Typography>
+        }),
+        columnHelper.accessor('isActive', {
+          header: dictionary.navigation.status,
+          cell: ({ row }) => (
+            <Chip
+              variant='tonal'
+              label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
+              size='small'
+              color={row.original.isActive ? 'success' : 'secondary'}
+            />
+          )
+        }),
+        {
+          id: 'states',
+          header: dictionary.navigation.states,
+          cell: ({ row }) => {
+            const statesCount = row.original.states ? row.original.states.length : 0
+
+
+ return (
+              <div className='flex items-center gap-2'>
+                <Chip
+                  label={`${statesCount} ${dictionary.navigation.states.toLowerCase()}`}
+                  size='small'
+                  variant={statesCount > 0 ? 'filled' : 'outlined'}
+                  color={statesCount > 0 ? 'primary' : 'default'}
+                />
+              </div>
+            )
+          }
+        }
+      ]
+
+      // Add actions column only if user has any management permissions
+      if (canCreate || canUpdate || canDelete) {
+        baseColumns.push({
+          id: 'actions',
+          header: dictionary.navigation.actions,
+          cell: ({ row }) => (
+            <div className='flex items-center'>
+              {canUpdate && (
+                <IconButton onClick={() => handleEditCountry(row.original)} title={dictionary.navigation.editTranslation}>
+                  <i className='ri-edit-line text-textSecondary' />
+                </IconButton>
+              )}
+              {canUpdate && (
+                <Switch
+                  checked={row.original.isActive}
+                  onChange={() => handleToggleCountryStatus(row.original.id)}
+                  size='small'
+                />
+              )}
+              {canDelete && (
+                <IconButton onClick={() => handleDeleteCountry(row.original.id, row.original.name)} title={dictionary.navigation.deleteTranslation}>
+                  <i className='ri-delete-bin-7-line text-textSecondary' />
+                </IconButton>
+              )}
+            </div>
+          ),
+          enableSorting: false
+        })
       }
-    ],
-    [data]
+
+      return baseColumns
+    },
+    [data, canCreate, canUpdate, canDelete]
   )
 
   const table = useReactTable({
@@ -266,11 +298,13 @@ const CountriesListTable = () => {
 
       if (response.ok) {
         const updatedData = data.filter(country => country.id !== id)
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success('Country deleted ' + dictionary.navigation.successfully)
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to delete country')
       }
     } catch (error) {
@@ -286,6 +320,7 @@ const CountriesListTable = () => {
   const handleUpdateCountry = async (countryData: { id: string; name: string; code: string; states: string[]; isActive: boolean }) => {
     try {
       console.log('Updating country with data:', countryData)
+
       const response = await fetch(`/api/admin/references/countries/${countryData.id}`, {
         method: 'PUT',
         headers: {
@@ -296,15 +331,18 @@ const CountriesListTable = () => {
 
       if (response.ok) {
         const updatedCountry = await response.json()
+
         const updatedData = data.map(country =>
           country.id === updatedCountry.id ? updatedCountry : country
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         setEditCountry(null)
         toast.success('Country updated ' + dictionary.navigation.successfully)
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to update country')
       }
     } catch (error) {
@@ -321,14 +359,17 @@ const CountriesListTable = () => {
 
       if (response.ok) {
         const updatedCountry = await response.json()
+
         const updatedData = data.map(country =>
           country.id === updatedCountry.id ? updatedCountry : country
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success(`Country ${updatedCountry.isActive ? 'activated' : 'deactivated'} ${dictionary.navigation.successfully}`)
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to toggle country status')
       }
     } catch (error) {
@@ -350,12 +391,14 @@ const CountriesListTable = () => {
       if (response.ok) {
         const newCountry = await response.json()
         const updatedData = [...data, newCountry]
+
         setData(updatedData)
         setFilteredData(updatedData)
         setAddCountryOpen(false)
         toast.success('Country added ' + dictionary.navigation.successfully)
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to add country')
       }
     } catch (error) {
@@ -382,9 +425,11 @@ const CountriesListTable = () => {
               className='max-sm:is-full'
             />
           </div>
-          <Button variant='contained' onClick={() => setAddCountryOpen(true)} className='max-sm:is-full'>
-            {dictionary.navigation.addNewCountry}
-          </Button>
+          {canCreate && (
+            <Button variant='contained' onClick={() => setAddCountryOpen(true)} className='max-sm:is-full'>
+              {dictionary.navigation.addNewCountry}
+            </Button>
+          )}
         </div>
         <div className='overflow-x-auto'>
           <table className={tableStyles.table}>

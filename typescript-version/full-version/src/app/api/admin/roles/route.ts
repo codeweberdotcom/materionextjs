@@ -1,9 +1,53 @@
 import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+
 import { PrismaClient } from '@prisma/client'
 
+import { authOptions } from '@/libs/auth'
+import { checkPermission, isSuperadmin } from '@/utils/permissions'
+
 const prisma = new PrismaClient()
+
+// Кеш для парсированных ролей (простая in-memory кеш)
+let rolesCache: any[] | null = null
+let cacheTimestamp: number = 0
+const CACHE_DURATION = 30 * 1000 // 30 секунд для тестирования
+
+// Функция для парсинга разрешений роли
+function parseRolePermissions(role: any) {
+  if (!role.permissions) return { ...role, permissions: {} }
+
+  // Если уже распарсено, возвращаем как есть
+  if (typeof role.permissions === 'object') {
+    return role
+  }
+
+  try {
+    // Пытаемся распарсить JSON
+    const parsed = JSON.parse(role.permissions)
+
+    // Если это строка "all", возвращаем как есть
+    if (role.permissions === '"all"' || parsed === 'all') {
+      return { ...role, permissions: 'all' }
+    }
+
+    // Если это объект, возвращаем распарсенный
+    if (typeof parsed === 'object' && parsed !== null) {
+      return { ...role, permissions: parsed }
+    }
+
+    // Если это строка, возвращаем как есть
+    if (typeof parsed === 'string') {
+      return { ...role, permissions: parsed }
+    }
+
+    return { ...role, permissions: {} }
+  } catch {
+    // Если не удалось распарсить, возвращаем пустой объект
+    return { ...role, permissions: {} }
+  }
+}
 
 // POST - Create a new role (admin only)
 export async function POST(request: Request) {
@@ -17,7 +61,18 @@ export async function POST(request: Request) {
       )
     }
 
-    // All authenticated users can view roles
+    // Check permission for creating roles (skip for superadmin)
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { role: true }
+    })
+
+    if (!currentUser || (!isSuperadmin(currentUser) && !checkPermission(currentUser, 'roleManagement', 'create'))) {
+      return NextResponse.json(
+        { message: 'Permission denied: Create Roles required' },
+        { status: 403 }
+      )
+    }
 
     const body = await request.json()
     const { name, description, permissions } = body
@@ -39,16 +94,23 @@ export async function POST(request: Request) {
       }
     })
 
+    // Очищаем кеш после создания новой роли
+    rolesCache = null
+    cacheTimestamp = 0
+
     return NextResponse.json(newRole)
   } catch (error) {
     console.error('Error creating role:', error)
+
     if ((error as any).code === 'P2002' && (error as any).meta?.target?.includes('name')) {
       return NextResponse.json(
         { message: 'Role name already exists' },
         { status: 400 }
       )
     }
-    return NextResponse.json(
+
+
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -56,8 +118,18 @@ export async function POST(request: Request) {
 }
 
 // GET - Get all roles (admin only)
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const url = new URL(request.url)
+    const clearCache = url.searchParams.get('clearCache')
+
+    // Если запрос на очистку кеша
+    if (clearCache === 'true') {
+      rolesCache = null
+      cacheTimestamp = 0
+      return NextResponse.json({ message: 'Cache cleared' })
+    }
+
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.email) {
@@ -67,8 +139,24 @@ export async function GET() {
       )
     }
 
-    // All authenticated users can create roles
+    // Check permission for reading roles (skip for superadmin)
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      include: { role: true }
+    })
 
+    if (!currentUser || (!isSuperadmin(currentUser) && !checkPermission(currentUser, 'roleManagement', 'read'))) {
+      return NextResponse.json(
+        { message: 'Permission denied: Read Roles required' },
+        { status: 403 }
+      )
+    }
+
+    // Проверяем кеш
+    const now = Date.now()
+    if (rolesCache && (now - cacheTimestamp) < CACHE_DURATION) {
+      return NextResponse.json(rolesCache)
+    }
     const baseRoles = ['superadmin', 'admin', 'manager', 'editor', 'moderator', 'seo', 'marketolog', 'support', 'subscriber', 'user']
 
     const roles = await prisma.role.findMany({
@@ -87,25 +175,30 @@ export async function GET() {
       if (aIndex !== -1 && bIndex !== -1) {
         return aIndex - bIndex
       }
+
       if (aIndex !== -1 && bIndex === -1) return -1
       if (bIndex !== -1 && aIndex === -1) return 1
+
       return a.name.localeCompare(b.name)
     })
 
     // Parse permissions in new format
-    const rolesWithParsedPermissions = roles.map(role => {
-      console.log(`Role: ${role.name}, Permissions: ${role.permissions}`)
+    const rolesWithParsedPermissions = sortedRoles.map(role => {
       if (!role.permissions) return { ...role, permissions: {} }
+
       try {
         const parsed = JSON.parse(role.permissions)
+
         // Handle legacy format: "all" means all permissions
         if (role.permissions === 'all') {
           return { ...role, permissions: 'all' }
         }
+
         // Handle legacy format: simple string like "read"
         if (typeof parsed === 'string') {
           return { ...role, permissions: parsed }
         }
+
         // New format: object like { "Users": ["Read", "Write"] }
         return { ...role, permissions: parsed }
       } catch {
@@ -114,9 +207,13 @@ export async function GET() {
       }
     })
 
+    // Сохраняем в кеш
+    rolesCache = rolesWithParsedPermissions
+    cacheTimestamp = now
     return NextResponse.json(rolesWithParsedPermissions)
   } catch (error) {
     console.error('Error fetching roles:', error)
+
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

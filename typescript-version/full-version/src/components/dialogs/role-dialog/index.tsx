@@ -31,6 +31,7 @@ type RoleDialogProps = {
   title?: string
   roleId?: string
   onSuccess?: () => void
+  readOnly?: boolean
 }
 
 type DataType =
@@ -42,7 +43,7 @@ type DataType =
       select?: boolean
     }
 
-const defaultData: DataType[] = [
+const defaultData: string[] = [
   'userManagement',
   'roleManagement',
   'countryManagement',
@@ -57,25 +58,26 @@ const defaultData: DataType[] = [
 ]
 
 const permissionIds = {
-  userManagement: 'user-management',
-  roleManagement: 'role-management',
-  countryManagement: 'country-management',
-  currencyManagement: 'currency-management',
-  stateManagement: 'state-management',
-  cityManagement: 'city-management',
-  districtManagement: 'district-management',
-  languageManagement: 'language-management',
-  translationManagement: 'translation-management',
-  emailTemplatesManagement: 'email-templates-management',
-  smtpManagement: 'smtp-management'
+  userManagement: 'userManagement',
+  roleManagement: 'roleManagement',
+  countryManagement: 'countryManagement',
+  currencyManagement: 'currencyManagement',
+  stateManagement: 'stateManagement',
+  cityManagement: 'cityManagement',
+  districtManagement: 'districtManagement',
+  languageManagement: 'languageManagement',
+  translationManagement: 'translationManagement',
+  emailTemplatesManagement: 'emailTemplatesManagement',
+  smtpManagement: 'smtpManagement'
 }
 
 const allPermissions = defaultData.flatMap(item => {
-  const id = permissionIds[item as keyof typeof permissionIds]
-  return [`${id}-read`, `${id}-write`, `${id}-create`]
+  const id = (permissionIds as any)[item]
+
+  return [`${id}-create`, `${id}-read`, `${id}-update`, `${id}-delete`]
 })
 
-const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps) => {
+const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false }: RoleDialogProps) => {
   // Hooks
   const t = useTranslation()
 
@@ -104,12 +106,23 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
   const handleSubmit = async () => {
     setLoading(true)
     setError('')
+
     try {
       const url = roleId ? `/api/admin/roles/${roleId}` : '/api/admin/roles'
       const method = roleId ? 'PUT' : 'POST'
 
-      const isAllSelected = selectedCheckbox.length === defaultData.length * 3
-      const permissionsToSend = isAllSelected ? ['all'] : selectedCheckbox
+      const isAllSelected = selectedCheckbox.length === defaultData.length * 4
+      const permissionsToSend = isAllSelected ? ['all'] : selectedCheckbox.reduce((acc, perm) => {
+        // Find the module by matching the prefix
+        const moduleEntry = Object.entries(permissionIds).find(([key, id]) => perm.startsWith(`${id}-`))
+        if (moduleEntry) {
+          const [moduleKey, moduleId] = moduleEntry
+          const action = perm.replace(`${moduleId}-`, '')
+          if (!acc[moduleKey]) acc[moduleKey] = []
+          acc[moduleKey].push(action)
+        }
+        return acc
+      }, {} as Record<string, string[]>)
 
       const response = await fetch(url, {
         method,
@@ -125,24 +138,22 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
 
       if (response.ok) {
         handleClose()
+
         if (onSuccess) {
           onSuccess()
         }
-        // Show success notification
-        toast.success(
-          roleId
-            ? `${t.navigation.role} "${roleName}" ${t.navigation.updated} ${t.navigation.successfully}`
-            : `${t.navigation.role} "${roleName}" ${t.navigation.created} ${t.navigation.successfully}`
-        )
+
+        toast.success(roleId ? t.navigation.roleUpdatedSuccessfully : t.navigation.roleCreatedSuccessfully)
       } else {
         const errorData = await response.json()
+
         setError(errorData.message || 'Error saving role')
-        // Show error notification
+
         toast.error(errorData.message || 'Error saving role')
       }
     } catch (error) {
       setError((error as Error).message || 'Error saving role')
-      // Show error notification
+
       toast.error((error as Error).message || 'Error saving role')
     } finally {
       setLoading(false)
@@ -151,16 +162,18 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
 
   const togglePermission = (id: string) => {
     const newSelected = [...selectedCheckbox]
+
     if (newSelected.includes(id)) {
       newSelected.splice(newSelected.indexOf(id), 1)
     } else {
       newSelected.push(id)
     }
+
     setSelectedCheckbox(newSelected)
   }
 
   const handleSelectAllCheckbox = () => {
-    if (selectedCheckbox.length === defaultData.length * 3) {
+    if (selectedCheckbox.length === defaultData.length * 4) {
       setSelectedCheckbox([])
     } else {
       setSelectedCheckbox(allPermissions)
@@ -168,7 +181,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
   }
 
   useEffect(() => {
-    if (selectedCheckbox.length > 0 && selectedCheckbox.length < defaultData.length * 3) {
+    if (selectedCheckbox.length > 0 && selectedCheckbox.length < defaultData.length * 4) {
       setIsIndeterminateCheckbox(true)
     } else {
       setIsIndeterminateCheckbox(false)
@@ -180,8 +193,10 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
       const fetchRole = async () => {
         try {
           const response = await fetch(`/api/admin/roles/${roleId}`)
+
           if (response.ok) {
             const roleData = await response.json()
+
             setRoleName(roleData.name)
             setRoleDescription(roleData.description || '')
 
@@ -192,14 +207,27 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
             if (roleData.name.toLowerCase() === 'superadmin') {
               setSelectedCheckbox(allPermissions)
               setIsBaseRole(true)
+
               // isSuperadmin should be true only if the ROLE being edited is superadmin
               setIsSuperadmin(true)
             } else {
-              if (roleData.permissions.includes('all')) {
-                setSelectedCheckbox(allPermissions)
-              } else {
-                setSelectedCheckbox(roleData.permissions || [])
+              try {
+                const parsedPermissions = JSON.parse(roleData.permissions)
+                if (parsedPermissions === 'all' || (Array.isArray(parsedPermissions) && parsedPermissions.includes('all'))) {
+                  setSelectedCheckbox(allPermissions)
+                } else if (typeof parsedPermissions === 'object' && parsedPermissions !== null) {
+                  // Convert object to array of permissions
+                  const permissionsArray = Object.entries(parsedPermissions).flatMap(([module, actions]) =>
+                    (actions as string[]).map(action => `${(permissionIds as any)[module]}-${action}`)
+                  )
+                  setSelectedCheckbox(permissionsArray)
+                } else {
+                  setSelectedCheckbox([])
+                }
+              } catch {
+                setSelectedCheckbox([])
               }
+
               setIsSuperadmin(false)
               setIsBaseRole(isBaseRole)
             }
@@ -207,8 +235,10 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
             // Check if this is the current user's role
             try {
               const profileResponse = await fetch('/api/user/profile')
+
               if (profileResponse.ok) {
                 const profileData = await profileResponse.json()
+
                 setCurrentUserRole(profileData.role)
                 setIsCurrentUserRole(roleData.name.toLowerCase() === profileData.role.toLowerCase())
               }
@@ -220,6 +250,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
           console.error('Error fetching role:', error)
         }
       }
+
       fetchRole()
     } else if (open && !roleId) {
       // For new role
@@ -235,9 +266,9 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
   return (
     <Dialog fullWidth maxWidth='md' scroll='body' open={open} onClose={handleClose} closeAfterTransition={false}>
       <DialogTitle variant='h4' className='flex flex-col gap-2 text-center sm:pbs-16 sm:pbe-6 sm:pli-16'>
-        {roleId ? t.navigation.editRoleTitle : t.navigation.addRoleTitle}
+        {readOnly ? t.navigation.viewRoleTitle : (roleId ? t.navigation.editRoleTitle : t.navigation.addRoleTitle)}
         <Typography component='span' className='flex flex-col text-center'>
-          {t.navigation.setRolePermissions}
+          {readOnly ? t.navigation.viewRolePermissions : t.navigation.setRolePermissions}
         </Typography>
       </DialogTitle>
       {error && (
@@ -257,6 +288,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
             placeholder={t.navigation.roleName}
             value={roleName}
             onChange={e => setRoleName(e.target.value)}
+            disabled={readOnly}
           />
           <div className='mb-4' />
           <TextField
@@ -266,6 +298,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
             placeholder={t.navigation.roleDescription}
             value={roleDescription}
             onChange={e => setRoleDescription(e.target.value)}
+            disabled={readOnly}
           />
           <Typography variant='h5' className='plb-6'>
             {t.navigation.rolesPermissions}
@@ -280,17 +313,19 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
                     </Typography>
                   </th>
                   <th className='!text-end pie-0'>
-                    <FormControlLabel
-                      className='mie-0 capitalize'
-                      control={
-                        <Checkbox
-                          onChange={handleSelectAllCheckbox}
-                          indeterminate={isIndeterminateCheckbox}
-                          checked={selectedCheckbox.length === defaultData.length * 3}
-                        />
-                      }
-                      label={t.navigation.selectAll}
-                    />
+                    {!readOnly && (
+                      <FormControlLabel
+                        className='mie-0 capitalize'
+                        control={
+                          <Checkbox
+                            onChange={handleSelectAllCheckbox}
+                            indeterminate={isIndeterminateCheckbox}
+                            checked={selectedCheckbox.length === defaultData.length * 4}
+                          />
+                        }
+                        label={t.navigation.selectAll}
+                      />
+                    )}
                   </th>
                 </tr>
                 {defaultData.map((item, index) => {
@@ -303,65 +338,60 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
                           className='font-medium whitespace-nowrap flex-grow min-is-[225px]'
                           color='text.primary'
                         >
-                          {typeof item === 'object' ? item.title : t.navigation[item as keyof typeof t.navigation]}
+                          {t.navigation[item as keyof typeof t.navigation]}
                         </Typography>
                       </td>
                       <td className='!text-end pie-0'>
-                        {typeof item === 'object' ? (
-                          <FormGroup className='flex-row gap-6 flex-nowrap justify-end'>
-                            <FormControlLabel
-                              className='mie-0'
-                              control={<Checkbox checked={item.read} disabled={isCurrentUserRole || (isSuperadmin && currentUserRole.toLowerCase() !== 'superadmin')} />}
-                              label={t.navigation.read}
-                            />
-                            <FormControlLabel
-                              className='mie-0'
-                              control={<Checkbox checked={item.write} disabled={isSuperadmin || isCurrentUserRole} />}
-                              label={t.navigation.write}
-                            />
-                            <FormControlLabel
-                              className='mie-0'
-                              control={<Checkbox checked={item.select} disabled={isSuperadmin || isCurrentUserRole} />}
-                              label={t.navigation.delete}
-                            />
-                          </FormGroup>
-                        ) : (
-                          <FormGroup className='flex-row gap-6 flex-nowrap justify-end'>
-                            <FormControlLabel
-                              className='mie-0'
-                              control={
-                                <Checkbox
-                                  id={`${id}-read`}
-                                  onChange={() => togglePermission(`${id}-read`)}
-                                  checked={selectedCheckbox.includes(`${id}-read`)}
-                                />
-                              }
-                              label={t.navigation.read}
-                            />
-                            <FormControlLabel
-                              className='mie-0'
-                              control={
-                                <Checkbox
-                                  id={`${id}-write`}
-                                  onChange={() => togglePermission(`${id}-write`)}
-                                  checked={selectedCheckbox.includes(`${id}-write`)}
-                                />
-                              }
-                              label={t.navigation.write}
-                            />
-                            <FormControlLabel
-                              className='mie-0 text-textPrimary'
-                              control={
-                                <Checkbox
-                                  id={`${id}-create`}
-                                  onChange={() => togglePermission(`${id}-create`)}
-                                  checked={selectedCheckbox.includes(`${id}-create`)}
-                                />
-                              }
-                              label={t.navigation.create}
-                            />
-                          </FormGroup>
-                        )}
+                        <FormGroup className='flex-row gap-4 flex-nowrap justify-end'>
+                          <FormControlLabel
+                            className='mie-0'
+                            control={
+                              <Checkbox
+                                id={`${id}-create`}
+                                onChange={() => togglePermission(`${id}-create`)}
+                                checked={selectedCheckbox.includes(`${id}-create`)}
+                                disabled={readOnly}
+                              />
+                            }
+                            label={t.navigation.create}
+                          />
+                          <FormControlLabel
+                            className='mie-0'
+                            control={
+                              <Checkbox
+                                id={`${id}-read`}
+                                onChange={() => togglePermission(`${id}-read`)}
+                                checked={selectedCheckbox.includes(`${id}-read`)}
+                                disabled={readOnly}
+                              />
+                            }
+                            label={t.navigation.read}
+                          />
+                          <FormControlLabel
+                            className='mie-0'
+                            control={
+                              <Checkbox
+                                id={`${id}-update`}
+                                onChange={() => togglePermission(`${id}-update`)}
+                                checked={selectedCheckbox.includes(`${id}-update`)}
+                                disabled={readOnly}
+                              />
+                            }
+                            label={t.navigation.update}
+                          />
+                          <FormControlLabel
+                            className='mie-0 text-textPrimary'
+                            control={
+                              <Checkbox
+                                id={`${id}-delete`}
+                                onChange={() => togglePermission(`${id}-delete`)}
+                                checked={selectedCheckbox.includes(`${id}-delete`)}
+                                disabled={readOnly}
+                              />
+                            }
+                            label={t.navigation.delete}
+                          />
+                        </FormGroup>
                       </td>
                     </tr>
                   )
@@ -371,12 +401,21 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess }: RoleDialogProps
           </div>
         </DialogContent>
         <DialogActions className='justify-center pbs-0 sm:pbe-16 sm:pli-16'>
-          <Button variant='contained' type='submit' onClick={handleSubmit} disabled={loading}>
-            {loading ? t.navigation.saving : t.navigation.submit}
-          </Button>
-          <Button variant='outlined' type='reset' color='secondary' onClick={handleClose}>
-            {t.navigation.cancel}
-          </Button>
+          {!readOnly && (
+            <>
+              <Button variant='contained' type='submit' onClick={handleSubmit} disabled={loading}>
+                {loading ? t.navigation.saving : t.navigation.submit}
+              </Button>
+              <Button variant='outlined' type='button' color='secondary' onClick={handleClose}>
+                {t.navigation.cancel}
+              </Button>
+            </>
+          )}
+          {readOnly && (
+            <Button variant='outlined' type='button' color='secondary' onClick={handleClose}>
+              {t.navigation.close}
+            </Button>
+          )}
         </DialogActions>
       </form>
     </Dialog>

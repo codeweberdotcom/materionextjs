@@ -1,9 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
+import { checkPermission } from '@/utils/permissions'
 
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
+
 const prisma = new PrismaClient()
 
 // PUT - Update country (admin only)
@@ -16,17 +21,20 @@ export async function PUT(
 
     // Read request body first before any other operations
     let body
+
     try {
       body = await request.json()
     } catch (error) {
       console.error('Failed to parse request body:', error)
-      return NextResponse.json(
+      
+return NextResponse.json(
         { message: 'Invalid JSON in request body' },
         { status: 400 }
       )
     }
 
     const { name, code, states, isActive } = body
+
     console.log('Received update data:', { name, code, states, isActive })
 
     // Check authentication after reading the body
@@ -39,15 +47,10 @@ export async function PUT(
       )
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    // Check permission for updating countries
+    if (!checkPermission(session.user as any, 'countryManagement', 'update')) {
       return NextResponse.json(
-        { message: 'Admin access required' },
+        { message: 'Insufficient permissions' },
         { status: 403 }
       )
     }
@@ -83,6 +86,7 @@ export async function PUT(
 
         // States to connect
         const toConnect = newStateIds.filter((id: string) => !currentStateIds.includes(id))
+
         // States to disconnect
         const toDisconnect = currentStateIds.filter((id: string) => !newStateIds.includes(id))
 
@@ -117,11 +121,13 @@ export async function PUT(
           { status: 404 }
         )
       }
+
       throw error
     }
   } catch (error) {
     console.error('Error updating country:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -143,15 +149,10 @@ export async function PATCH(
       )
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    // Check permission for updating countries (status toggle)
+    if (!checkPermission(session.user as any, 'countryManagement', 'update')) {
       return NextResponse.json(
-        { message: 'Admin access required' },
+        { message: 'Insufficient permissions' },
         { status: 403 }
       )
     }
@@ -181,7 +182,8 @@ export async function PATCH(
     return NextResponse.json(updatedCountry)
   } catch (error) {
     console.error('Error toggling country status:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -203,15 +205,10 @@ export async function DELETE(
       )
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    // Check permission for deleting countries
+    if (!checkPermission(session.user as any, 'countryManagement', 'delete')) {
       return NextResponse.json(
-        { message: 'Admin access required' },
+        { message: 'Insufficient permissions' },
         { status: 403 }
       )
     }
@@ -235,11 +232,13 @@ export async function DELETE(
           { status: 404 }
         )
       }
+
       throw error
     }
   } catch (error) {
     console.error('Error deleting country:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

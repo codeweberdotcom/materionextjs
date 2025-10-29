@@ -1,5 +1,5 @@
 // React Imports
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 // MUI Imports
 import CardContent from '@mui/material/CardContent'
@@ -38,8 +38,10 @@ const TableFilters = ({ setData, tableData }: { setData: (data: UsersType[]) => 
     const fetchRoles = async () => {
       try {
         const response = await fetch('/api/admin/roles')
+
         if (response.ok) {
           const rolesData = await response.json()
+
           setRoles(rolesData)
         }
       } catch (error) {
@@ -48,19 +50,23 @@ const TableFilters = ({ setData, tableData }: { setData: (data: UsersType[]) => 
     }
 
     fetchRoles()
-  }, [])
+  }, []) // Empty dependency array is correct - we only want to fetch roles once on mount
 
-  useEffect(() => {
-    const filteredData = tableData?.filter(user => {
+  // Memoize filtered data to prevent unnecessary re-renders
+  const filteredData = useMemo(() => {
+    return tableData?.filter(user => {
       if (role && user.role !== role) return false
       if (plan && user.currentPlan !== plan) return false
       if (status && user.status !== status) return false
 
       return true
-    })
+    }) || []
+  }, [role, plan, status, tableData])
 
-    setData(filteredData || [])
-  }, [role, plan, status, tableData, setData])
+  // Update data only when filtered data changes
+  useEffect(() => {
+    setData(filteredData)
+  }, [filteredData, setData])
 
   return (
     <CardContent>

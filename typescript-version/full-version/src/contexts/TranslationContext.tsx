@@ -1,7 +1,8 @@
 'use client'
 
 // React Imports
-import { createContext, useContext, ReactNode } from 'react'
+import type { ReactNode } from 'react';
+import { createContext, useContext } from 'react'
 
 // Type Imports
 import type { Locale } from '@configs/i18n'
@@ -16,8 +17,11 @@ export const TranslationProvider = ({ children, dictionary }: { children: ReactN
 
 export const useTranslation = () => {
   const context = useContext(TranslationContext)
+
   if (!context) {
     throw new Error('useTranslation must be used within a TranslationProvider')
   }
-  return context
+
+  
+return context
 }

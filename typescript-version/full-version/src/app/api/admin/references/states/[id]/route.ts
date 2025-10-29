@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
 
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
+
 const prisma = new PrismaClient()
 
 // GET - Get a single state (admin only)
@@ -52,7 +56,8 @@ export async function GET(
     return NextResponse.json(state)
   } catch (error) {
     console.error('Error fetching state:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -112,7 +117,8 @@ export async function PATCH(
     return NextResponse.json(updatedState)
   } catch (error) {
     console.error('Error toggling state status:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -149,11 +155,13 @@ export async function PUT(
 
     const { id: stateId } = await params
     let body
+
     try {
       body = await request.json()
     } catch (error) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
+
     const { name, code, cities, isActive } = body
 
     if (!name || !code) {
@@ -185,6 +193,7 @@ export async function PUT(
 
       // Cities to connect
       const toConnect = newCityIds.filter((id: string) => !currentCityIds.includes(id))
+
       // Cities to disconnect
       const toDisconnect = currentCityIds.filter((id: string) => !newCityIds.includes(id))
 
@@ -208,7 +217,8 @@ export async function PUT(
     return NextResponse.json(updatedState)
   } catch (error) {
     console.error('Error updating state:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -262,11 +272,13 @@ export async function DELETE(
           { status: 404 }
         )
       }
+
       throw error
     }
   } catch (error) {
     console.error('Error deleting state:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

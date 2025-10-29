@@ -72,8 +72,10 @@ type Currency = {
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
+
   addMeta({ itemRank })
-  return itemRank.passed
+  
+return itemRank.passed
 }
 
 const DebouncedInput = ({
@@ -123,8 +125,10 @@ const CurrenciesListTable = () => {
     const fetchCurrencies = async () => {
       try {
         const response = await fetch('/api/currencies')
+
         if (response.ok) {
           const currencies = await response.json()
+
           setData(currencies)
           setFilteredData(currencies)
         }
@@ -248,11 +252,13 @@ const CurrenciesListTable = () => {
 
       if (response.ok) {
         const updatedData = data.filter(currency => currency.id !== id)
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success('Currency deleted successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to delete currency')
       }
     } catch (error) {
@@ -273,14 +279,17 @@ const CurrenciesListTable = () => {
 
       if (response.ok) {
         const updatedCurrency = await response.json()
+
         const updatedData = data.map(currency =>
           currency.id === updatedCurrency.id ? updatedCurrency : currency
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success(`Currency ${updatedCurrency.isActive ? 'activated' : 'deactivated'} successfully!`)
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to toggle currency status')
       }
     } catch (error) {
@@ -302,12 +311,14 @@ const CurrenciesListTable = () => {
       if (response.ok) {
         const newCurrency = await response.json()
         const updatedData = [...data, newCurrency]
+
         setData(updatedData)
         setFilteredData(updatedData)
         setAddCurrencyOpen(false)
         toast.success('Currency added successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to add currency')
       }
     } catch (error) {
@@ -328,15 +339,18 @@ const CurrenciesListTable = () => {
 
       if (response.ok) {
         const updatedCurrency = await response.json()
+
         const updatedData = data.map(currency =>
           currency.id === updatedCurrency.id ? updatedCurrency : currency
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         setEditCurrency(null)
         toast.success('Currency updated successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to update currency')
       }
     } catch (error) {

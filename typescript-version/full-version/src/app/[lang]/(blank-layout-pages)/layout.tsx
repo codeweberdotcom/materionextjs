@@ -26,7 +26,9 @@ const Layout = async (props: Props) => {
 
   return (
     <Providers direction={direction}>
-      <BlankLayout systemMode={systemMode}>{children}</BlankLayout>
+      <BlankLayout systemMode={systemMode}>
+        {children}
+      </BlankLayout>
     </Providers>
   )
 }

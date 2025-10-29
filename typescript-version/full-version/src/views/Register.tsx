@@ -2,11 +2,11 @@
 
 // React Imports
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+
+import { useRouter , useParams } from 'next/navigation'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Typography from '@mui/material/Typography'
@@ -41,12 +41,14 @@ import { getLocalizedUrl } from '@/utils/i18n'
 const RegisterV2 = ({ mode }: { mode: Mode }) => {
   // States
   const [isPasswordShown, setIsPasswordShown] = useState(false)
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: ''
   })
+
   const [errors, setErrors] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -81,6 +83,8 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
       ...prev,
       [field]: event.target.value
     }))
+
+
     // Clear errors when user starts typing
     if (errors.length > 0) {
       setErrors([])
@@ -115,7 +119,8 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
     }
 
     setErrors(newErrors)
-    return newErrors.length === 0
+    
+return newErrors.length === 0
   }
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -142,6 +147,7 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
       })
 
       let data
+
       try {
         data = await response.json()
       } catch (parseError) {

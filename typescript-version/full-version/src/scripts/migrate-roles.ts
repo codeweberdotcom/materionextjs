@@ -101,27 +101,32 @@ function convertPermissions(oldPermissions: string[]): Record<string, string[]> 
       if (!newPermissions[module]) {
         newPermissions[module] = []
       }
+
       if (!newPermissions[module].includes(action)) {
         newPermissions[module].push(action)
       }
     })
-    return newPermissions
+    
+return newPermissions
   }
 
   if (oldPermissions.includes('read')) {
     // For simple 'read' permission, give read access to basic modules
     newPermissions['Profile'] = ['Read']
     newPermissions['Content'] = ['Read']
-    return newPermissions
+    
+return newPermissions
   }
 
   // Convert each permission
   oldPermissions.forEach(permission => {
     const mapping = permissionMapping[permission]
+
     if (mapping) {
       if (!newPermissions[mapping.module]) {
         newPermissions[mapping.module] = []
       }
+
       if (!newPermissions[mapping.module].includes(mapping.action)) {
         newPermissions[mapping.module].push(mapping.action)
       }

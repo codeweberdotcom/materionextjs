@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
 import { prisma } from '@/libs/prisma'
 
@@ -37,7 +40,8 @@ export async function GET() {
     return NextResponse.json(districts)
   } catch (error) {
     console.error('Error fetching districts:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -70,11 +74,13 @@ export async function POST(request: NextRequest) {
     }
 
     let body
+
     try {
       body = await request.json()
     } catch (error) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
+
     const { name, code, isActive = true } = body
 
     if (!name || !code) {
@@ -96,7 +102,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newDistrict)
   } catch (error) {
     console.error('Error creating district:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

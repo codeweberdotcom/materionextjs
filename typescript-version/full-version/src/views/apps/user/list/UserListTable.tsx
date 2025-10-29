@@ -56,6 +56,9 @@ import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
 
+// Hook Imports
+import { usePermissions } from '@/hooks/usePermissions'
+
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
 import { getLocalizedUrl } from '@/utils/i18n'
@@ -151,6 +154,12 @@ const columnHelper = createColumnHelper<UsersTypeWithAction>()
 const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   // Hooks
   const dictionary = useTranslation()
+  const { checkPermission } = usePermissions()
+
+  // Permission checks
+  const canDelete = checkPermission('userManagement', 'delete')
+  const canUpdate = checkPermission('userManagement', 'update')
+  const canCreate = checkPermission('userManagement', 'create')
 
   // States
   const [addUserOpen, setAddUserOpen] = useState(false)
@@ -178,21 +187,25 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       if (response.ok) {
         // Refresh data from server
         const refreshResponse = await fetch('/api/admin/users')
+
         if (refreshResponse.ok) {
           const updatedUsers = await refreshResponse.json()
+
           setData(updatedUsers)
         } else {
           // If refresh fails, just remove from local data
           setData(data?.filter(user => user.id !== userId))
         }
+
         toast.success(dictionary.navigation.deleteUser + ' ' + dictionary.navigation.successfully)
       } else {
         const error = await response.json()
-        toast.error(error.message || dictionary.navigation.deleteUser + ' failed')
+
+        // Removed error toast notification for user deletion
       }
     } catch (error) {
       console.error('Error deleting user:', error)
-      toast.error(dictionary.navigation.deleteUser + ' failed')
+      toast.error((error as Error).message || dictionary.navigation.deleteUser + ' failed')
     }
   }
 
@@ -205,19 +218,22 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
       if (response.ok) {
         const updatedUser = await response.json()
+
         const updatedData = (data || []).map(user =>
           user.id === updatedUser.id ? updatedUser : user
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success(`${dictionary.navigation.user} ${updatedUser.isActive ? dictionary.navigation.active : dictionary.navigation.inactive} ${dictionary.navigation.successfully}`)
       } else {
         const error = await response.json()
-        toast.error(error.message || 'Failed to toggle user status')
+
+        // Removed error toast notification for user status toggle
       }
     } catch (error) {
       console.error('Error toggling user status:', error)
-      toast.error('Failed to toggle user status')
+      toast.error(error.message || 'Failed to toggle user status')
     }
   }
 
@@ -267,7 +283,9 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: dictionary.navigation.role,
         cell: ({ row }) => {
           const roleInfo = userRoleObj[row.original.role] || userRoleObj.subscriber
-          return (
+
+
+return (
             <div className='flex items-center gap-2'>
               <Icon
                 className={roleInfo.icon}
@@ -309,25 +327,29 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: dictionary.navigation.action,
         cell: ({ row }) => (
           <div className='flex items-center'>
-            <IconButton
-              onClick={() => {
-                setDeleteUserId(String(row.original.id))
-                setDeleteUserName(row.original.fullName)
-                setDeleteDialogOpen(true)
-              }}
-            >
-              <i className='ri-delete-bin-line text-textSecondary' />
-            </IconButton>
+            {canDelete && row.original.role.toLowerCase() !== 'superadmin' && (
+              <IconButton
+                onClick={() => {
+                  setDeleteUserId(String(row.original.id))
+                  setDeleteUserName(row.original.fullName)
+                  setDeleteDialogOpen(true)
+                }}
+              >
+                <i className='ri-delete-bin-line text-textSecondary' />
+              </IconButton>
+            )}
             <IconButton>
               <Link href={getLocalizedUrl(`/apps/user/view?id=${row.original.id}`, locale as Locale)} className='flex'>
                 <i className='ri-eye-line text-textSecondary' />
               </Link>
             </IconButton>
-            <Switch
-              checked={row.original.isActive}
-              onChange={() => handleToggleUserStatus(String(row.original.id))}
-              size='small'
-            />
+            {canUpdate && row.original.role.toLowerCase() !== 'superadmin' && (
+              <Switch
+                checked={row.original.isActive}
+                onChange={() => handleToggleUserStatus(String(row.original.id))}
+                size='small'
+              />
+            )}
             <OptionMenu
               iconButtonProps={{ size: 'medium' }}
               iconClassName='text-textSecondary'
@@ -337,7 +359,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                   icon: 'ri-download-line',
                   menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
                 },
-                {
+                ...(canUpdate && row.original.role.toLowerCase() !== 'superadmin' ? [{
                   text: dictionary.navigation.edit,
                   icon: 'ri-edit-box-line',
                   menuItemProps: {
@@ -347,7 +369,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
                       setAddUserOpen(true)
                     }
                   }
-                }
+                }] : [])
               ]}
             />
           </div>
@@ -356,7 +378,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       })
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, filteredData]
+    [data, filteredData, canDelete, canUpdate]
   )
 
   const table = useReactTable({
@@ -424,9 +446,11 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
               placeholder={dictionary.navigation.searchUser}
               className='max-sm:is-full'
             />
-            <Button variant='contained' onClick={() => setAddUserOpen(!addUserOpen)} className='max-sm:is-full'>
-              {dictionary.navigation.addNewUser}
-            </Button>
+            {canCreate && (
+              <Button variant='contained' onClick={() => setAddUserOpen(!addUserOpen)} className='max-sm:is-full'>
+                {dictionary.navigation.addNewUser}
+              </Button>
+            )}
           </div>
         </div>
         <div className='overflow-x-auto'>

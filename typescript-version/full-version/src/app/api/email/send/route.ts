@@ -1,5 +1,6 @@
 // Next Imports
 import { NextResponse } from 'next/server'
+
 import { sendEmail } from '@/utils/email'
 
 export async function POST(req: Request) {
@@ -43,7 +44,8 @@ export async function POST(req: Request) {
     })
   } catch (error) {
     console.error('Email sending error:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       {
         message: error instanceof Error ? error.message : 'Failed to send email'
       },

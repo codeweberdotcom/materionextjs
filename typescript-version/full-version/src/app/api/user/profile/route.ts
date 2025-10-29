@@ -1,7 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+
 import { PrismaClient } from '@prisma/client'
+
+import { authOptions } from '@/libs/auth'
 
 const prisma = new PrismaClient()
 
@@ -33,6 +37,7 @@ export async function GET() {
 
     // Map database roles to expected UI roles
     let uiRole = 'subscriber'
+
     switch (user.role?.name) {
       case 'admin':
         uiRole = 'admin'
@@ -65,7 +70,8 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error fetching user profile:', error instanceof Error ? error.message : String(error))
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -116,6 +122,7 @@ export async function PUT(request: NextRequest) {
 
     // Map database roles to expected UI roles
     let uiRole = 'subscriber'
+
     switch (updatedUser.role?.name) {
       case 'admin':
         uiRole = 'admin'
@@ -148,7 +155,8 @@ export async function PUT(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error updating user profile:', error instanceof Error ? error.message : String(error))
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

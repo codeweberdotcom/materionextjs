@@ -1,7 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+
 import { PrismaClient } from '@prisma/client'
+
+import { authOptions } from '@/libs/auth'
 
 const prisma = new PrismaClient()
 
@@ -77,7 +81,8 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error uploading avatar:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

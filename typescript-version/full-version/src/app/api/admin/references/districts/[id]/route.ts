@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
 import { prisma } from '@/libs/prisma'
 
@@ -56,7 +59,8 @@ export async function PATCH(
     return NextResponse.json(updatedDistrict)
   } catch (error) {
     console.error('Error toggling district status:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -93,11 +97,13 @@ export async function PUT(
 
     const { id: districtId } = await params
     let body
+
     try {
       body = await request.json()
     } catch (error) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
+
     const { name, code, isActive } = body
 
     if (!name || !code) {
@@ -120,7 +126,8 @@ export async function PUT(
     return NextResponse.json(updatedDistrict)
   } catch (error) {
     console.error('Error updating district:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -174,11 +181,13 @@ export async function DELETE(
           { status: 404 }
         )
       }
+
       throw error
     }
   } catch (error) {
     console.error('Error deleting district:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

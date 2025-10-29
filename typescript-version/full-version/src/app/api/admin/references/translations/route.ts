@@ -1,9 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import fs from 'fs'
+
+import path from 'path'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
 import { prisma } from '@/libs/prisma'
-import fs from 'fs'
-import path from 'path'
+
 
 // Function to export translations to JSON
 async function exportTranslationsToJSON() {
@@ -17,6 +23,7 @@ async function exportTranslationsToJSON() {
   })
 
   const jsonData: Record<string, Record<string, Record<string, string>>> = {}
+
   translations.forEach(t => {
     if (!jsonData[t.language]) jsonData[t.language] = {}
     if (!jsonData[t.language][t.namespace]) jsonData[t.language][t.namespace] = {}
@@ -24,8 +31,10 @@ async function exportTranslationsToJSON() {
   })
 
   const dictionariesPath = path.join(process.cwd(), 'src/data/dictionaries')
+
   for (const [language, namespaces] of Object.entries(jsonData)) {
     const filePath = path.join(dictionariesPath, `${language}.json`)
+
     fs.writeFileSync(filePath, JSON.stringify(namespaces, null, 2))
   }
 }
@@ -67,7 +76,8 @@ export async function GET() {
     return NextResponse.json(translations)
   } catch (error) {
     console.error('Error fetching translations:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -100,11 +110,13 @@ export async function POST(request: NextRequest) {
     }
 
     let body
+
     try {
       body = await request.json()
     } catch (error) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
+
     const { key, language, value, namespace = 'common', isActive = true } = body
 
     if (!key || !language || !value) {
@@ -148,13 +160,15 @@ export async function POST(request: NextRequest) {
       await exportTranslationsToJSON()
     } catch (exportError) {
       console.error('Error exporting to JSON:', exportError)
+
       // Don't fail the main request if export fails
     }
 
     return NextResponse.json(newTranslation)
   } catch (error) {
     console.error('Error creating translation:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

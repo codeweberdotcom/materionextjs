@@ -18,6 +18,8 @@ import Divider from '@mui/material/Divider'
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Hook Imports
+import { usePermissions } from '@/hooks/usePermissions'
+import { toast } from 'react-toastify'
 
 type SmtpPreset = {
   host: string
@@ -30,6 +32,10 @@ type SmtpPreset = {
 const SmtpSettings = () => {
   // Hooks
   const dictionary = useTranslation()
+  const { checkPermission } = usePermissions()
+
+  // Permission checks
+  const canUpdate = checkPermission('smtpManagement', 'update')
 
   // States
   const [formData, setFormData] = useState({
@@ -41,9 +47,12 @@ const SmtpSettings = () => {
     fromEmail: '',
     fromName: ''
   })
+
   const [loading, setLoading] = useState(false)
   const [fetchLoading, setFetchLoading] = useState(true)
   const [testLoading, setTestLoading] = useState(false)
+  const [sendTestLoading, setSendTestLoading] = useState(false)
+  const [testRecipientEmail, setTestRecipientEmail] = useState('')
   const [message, setMessage] = useState('')
 
   // Email provider presets
@@ -92,13 +101,16 @@ const SmtpSettings = () => {
 
   const applyPreset = (provider: string) => {
     const preset = presets[provider]
+
     if (preset) {
       setFormData(prev => ({
         ...prev,
         ...preset
       }))
       const providerName = dictionary?.navigation?.[provider] || provider
+
       setMessage(`Настройки для ${providerName} применены!`)
+
       // Clear message after 3 seconds
       setTimeout(() => setMessage(''), 3000)
     }
@@ -109,8 +121,10 @@ const SmtpSettings = () => {
     const fetchSettings = async () => {
       try {
         const response = await fetch('/api/settings/smtp')
+
         if (response.ok) {
           const settings = await response.json()
+
           setFormData(settings)
         }
       } catch (error) {
@@ -144,6 +158,7 @@ const SmtpSettings = () => {
 
       return newData
     })
+
     // Clear message when user makes changes
     if (message) setMessage('')
   }
@@ -163,14 +178,15 @@ const SmtpSettings = () => {
       })
 
       if (response.ok) {
-        setMessage('Настройки SMTP сохранены успешно!')
-        setTimeout(() => setMessage(''), 3000)
+        toast.success('Настройки SMTP сохранены успешно!')
+      } else if (response.status === 401) {
+        toast.error('У вас нет прав для изменения настроек SMTP')
       } else {
         const error = await response.json()
-        setMessage(error.message || 'Ошибка при сохранении настроек.')
+        toast.error(error.message || 'Ошибка при сохранении настроек.')
       }
     } catch (error) {
-      setMessage('Ошибка при сохранении настроек.')
+      toast.error('Ошибка при сохранении настроек.')
     } finally {
       setLoading(false)
     }
@@ -192,15 +208,53 @@ const SmtpSettings = () => {
       const result = await response.json()
 
       if (result.success) {
-        setMessage('Подключение успешно!')
-        setTimeout(() => setMessage(''), 3000)
+        toast.success('Подключение успешно!')
+      } else if (response.status === 401) {
+        toast.error('У вас нет прав для тестирования SMTP соединения')
       } else {
-        setMessage(result.message || 'Ошибка подключения')
+        toast.error(result.message || 'Ошибка подключения')
       }
     } catch (error) {
-      setMessage('Ошибка при тестировании подключения.')
+      toast.error('Ошибка при тестировании подключения.')
     } finally {
       setTestLoading(false)
+    }
+  }
+
+  const handleSendTestEmail = async () => {
+    if (!testRecipientEmail) {
+      toast.error('Пожалуйста, введите email получателя')
+      return
+    }
+
+    setSendTestLoading(true)
+    setMessage('')
+
+    try {
+      const response = await fetch('/api/settings/smtp/send-test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ...formData,
+          recipientEmail: testRecipientEmail
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        toast.success('Тестовое письмо отправлено успешно!')
+      } else if (response.status === 401) {
+        toast.error('У вас нет прав для отправки тестового письма')
+      } else {
+        toast.error(result.message || 'Ошибка отправки письма')
+      }
+    } catch (error) {
+      toast.error('Ошибка при отправке тестового письма.')
+    } finally {
+      setSendTestLoading(false)
     }
   }
 
@@ -215,204 +269,204 @@ const SmtpSettings = () => {
   }
 
   return (
-    <Card>
-      <CardHeader title={dictionary?.navigation?.smtpSettings || 'SMTP Settings'} />
-      <CardContent>
-        {message && (
-          <Alert severity={message.includes('применены') || message.includes('applied') || message.includes('успешно') || message.includes('successfully') || message.includes('сохранены') || message.includes('saved') ? 'success' : 'error'} sx={{ mb: 4 }}>
-            {message}
-          </Alert>
-        )}
+    <>
+      <Card>
+        <CardHeader title={dictionary?.navigation?.smtpSettings || 'SMTP Settings'} />
+        <CardContent>
+          {message && (
+            <Alert severity={message.includes('применены') || message.includes('applied') || message.includes('успешно') || message.includes('successfully') || message.includes('сохранены') || message.includes('saved') ? 'success' : 'error'} sx={{ mb: 4 }}>
+              {message}
+            </Alert>
+          )}
 
-        {/* Provider Presets */}
-        <Typography variant='h6' gutterBottom>
-          {dictionary?.navigation?.smtpPresets || 'Provider Presets'}
-        </Typography>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '32px' }}>
-          {Object.keys(presets).map(provider => (
-            <Button
-              key={provider}
-              variant='outlined'
-              size='small'
-              onClick={() => applyPreset(provider)}
-              startIcon={
-                provider === 'gmail' ? <i className='ri-google-line' /> :
-                provider === 'outlook' ? <i className='ri-microsoft-line' /> :
-                provider === 'yandex' ? <i className='ri-global-line' /> :
-                provider === 'mailru' ? <i className='ri-mail-line' /> :
-                provider === 'beget' ? <i className='ri-server-line' /> :
-                provider === 'yahoo' ? <i className='ri-yahoo-line' /> :
-                provider === 'regru' ? <i className='ri-global-line' /> :
-                provider === 'rambler' ? <i className='ri-mail-line' /> :
-                <i className='ri-mail-settings-line' />
-              }
-              sx={{
-                textTransform: 'none',
-                fontSize: '0.875rem',
-                py: 1,
-                minWidth: 'auto'
-              }}
-            >
-              {dictionary?.navigation?.[provider] || provider}
-            </Button>
-          ))}
-        </div>
-        <Divider sx={{ mb: 4 }} />
+          {/* Provider Presets */}
+          {canUpdate && (
+            <>
+              <Typography variant='h6' gutterBottom>
+                {dictionary?.navigation?.smtpPresets || 'Provider Presets'}
+              </Typography>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '32px' }}>
+                {Object.keys(presets).map(provider => (
+                  <Button
+                    key={provider}
+                    variant='outlined'
+                    size='small'
+                    onClick={() => applyPreset(provider)}
+                    startIcon={
+                      provider === 'gmail' ? <i className='ri-google-line' /> :
+                      provider === 'outlook' ? <i className='ri-microsoft-line' /> :
+                      provider === 'yandex' ? <i className='ri-global-line' /> :
+                      provider === 'mailru' ? <i className='ri-mail-line' /> :
+                      provider === 'beget' ? <i className='ri-server-line' /> :
+                      provider === 'yahoo' ? <i className='ri-yahoo-line' /> :
+                      provider === 'regru' ? <i className='ri-global-line' /> :
+                      provider === 'rambler' ? <i className='ri-mail-line' /> :
+                      <i className='ri-mail-settings-line' />
+                    }
+                    sx={{
+                      textTransform: 'none',
+                      fontSize: '0.875rem',
+                      py: 1,
+                      minWidth: 'auto'
+                    }}
+                  >
+                    {dictionary?.navigation?.[provider] || provider}
+                  </Button>
+                ))}
+              </div>
+            </>
+          )}
+          <Divider sx={{ mb: 4 }} />
 
-        {/* Manual Configuration */}
-        <Typography variant='h6' gutterBottom>
-          {dictionary?.navigation?.other || 'Other'}
-        </Typography>
+          {/* Manual Configuration */}
+          <Typography variant='h6' gutterBottom>
+            {dictionary?.navigation?.other || 'Other'}
+          </Typography>
 
-        {/* Provider-specific notes */}
-        {formData.host.includes('yandex') && (
-          <Alert severity='info' sx={{ mb: 3 }}>
-            <Typography variant='body2'>
-              <strong>Yandex SMTP Notes:</strong><br />
-              • Use your full email address as username (e.g., user@yandex.ru)<br />
-              • Make sure "Access for mail programs" is enabled in Yandex Mail settings<br />
-              • Password should be your Yandex account password or app password<br />
-              • If using app password, generate it in Yandex security settings<br />
-              • TLS encryption with port 587 is recommended<br />
-              • Test connection only works after saving valid credentials
-            </Typography>
-          </Alert>
-        )}
+          <form onSubmit={handleSubmit}>
+            <Grid container spacing={4}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={dictionary?.navigation?.smtpHost || 'SMTP Host'}
+                  value={formData.host}
+                  onChange={(e) => handleChange('host', e.target.value)}
+                  required
+                  disabled={!canUpdate}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={dictionary?.navigation?.smtpPort || 'SMTP Port'}
+                  type='number'
+                  value={formData.port}
+                  onChange={(e) => handleChange('port', e.target.value)}
+                  required
+                  helperText="Port is automatically set when encryption changes"
+                  disabled={!canUpdate}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={dictionary?.navigation?.smtpUsername || 'SMTP Username'}
+                  value={formData.username}
+                  onChange={(e) => handleChange('username', e.target.value)}
+                  required
+                  disabled={!canUpdate}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={dictionary?.navigation?.smtpPassword || 'SMTP Password'}
+                  type='password'
+                  value={formData.password}
+                  onChange={(e) => handleChange('password', e.target.value)}
+                  required
+                  disabled={!canUpdate}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={dictionary?.navigation?.smtpEncryption || 'Encryption'}
+                  select
+                  value={formData.encryption}
+                  onChange={(e) => handleChange('encryption', e.target.value)}
+                  SelectProps={{
+                    native: true
+                  }}
+                  helperText="Port will be set automatically based on encryption"
+                  disabled={!canUpdate}
+                >
+                  <option value='none'>None (Port 25)</option>
+                  <option value='ssl'>SSL (Port 465)</option>
+                  <option value='tls'>TLS (Port 587)</option>
+                </TextField>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={dictionary?.navigation?.smtpFromEmail || 'From Email'}
+                  type='email'
+                  value={formData.fromEmail}
+                  onChange={(e) => handleChange('fromEmail', e.target.value)}
+                  required
+                  disabled={!canUpdate}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label={dictionary?.navigation?.smtpFromName || 'From Name'}
+                  value={formData.fromName}
+                  onChange={(e) => handleChange('fromName', e.target.value)}
+                  required
+                  disabled={!canUpdate}
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  {canUpdate && (
+                    <Button
+                      type='submit'
+                      variant='contained'
+                      disabled={loading}
+                      sx={{ flex: 1, minWidth: '120px' }}
+                    >
+                      {loading ? dictionary?.navigation?.saving || 'Saving...' : dictionary?.navigation?.save || 'Save'}
+                    </Button>
+                  )}
+                  {canUpdate && (
+                    <Button
+                      variant='outlined'
+                      disabled={testLoading}
+                      onClick={handleTestConnection}
+                      sx={{ flex: 1, minWidth: '120px' }}
+                    >
+                      {testLoading ? dictionary?.navigation?.testingConnection || 'Testing...' : dictionary?.navigation?.testConnection || 'Test Connection'}
+                    </Button>
+                  )}
+                </div>
+              </Grid>
+            </Grid>
+          </form>
 
-        {/* General authentication note */}
-        {(!formData.username || !formData.password) && (
-          <Alert severity='warning' sx={{ mb: 3 }}>
-            <Typography variant='body2'>
-              <strong>Authentication Required:</strong><br />
-              Please enter your email credentials and save settings before testing the connection.
-            </Typography>
-          </Alert>
-        )}
+        </CardContent>
+      </Card>
 
-        {formData.host.includes('mail.ru') && (
-          <Alert severity='info' sx={{ mb: 3 }}>
-            <Typography variant='body2'>
-              <strong>Mail.ru SMTP Notes:</strong><br />
-              • Use your full email address as username (e.g., info@codeweber.com)<br />
-              • Enable "SMTP" in Mail.ru settings under "Mail programs"<br />
-              • Use your account password or app password<br />
-              • SSL encryption with port 465 is recommended<br />
-              • Make sure 2-factor authentication doesn't block SMTP access
-            </Typography>
-          </Alert>
-        )}
-
-        {formData.host.includes('rambler') && (
-          <Alert severity='info' sx={{ mb: 3 }}>
-            <Typography variant='body2'>
-              <strong>Rambler SMTP Notes:</strong><br />
-              • Use your full email address as username<br />
-              • Enable SMTP access in account settings<br />
-              • SSL encryption is recommended
-            </Typography>
-          </Alert>
-        )}
-        <form onSubmit={handleSubmit}>
+      {/* Test Email Widget */}
+      <Card sx={{ mt: 4 }}>
+        <CardHeader title={dictionary?.navigation?.testEmail || 'Test Email'} />
+        <CardContent>
           <Grid container spacing={4}>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label={dictionary?.navigation?.smtpHost || 'SMTP Host'}
-                value={formData.host}
-                onChange={(e) => handleChange('host', e.target.value)}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label={dictionary?.navigation?.smtpPort || 'SMTP Port'}
-                type='number'
-                value={formData.port}
-                onChange={(e) => handleChange('port', e.target.value)}
-                required
-                helperText="Port is automatically set when encryption changes"
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label={dictionary?.navigation?.smtpUsername || 'SMTP Username'}
-                value={formData.username}
-                onChange={(e) => handleChange('username', e.target.value)}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label={dictionary?.navigation?.smtpPassword || 'SMTP Password'}
-                type='password'
-                value={formData.password}
-                onChange={(e) => handleChange('password', e.target.value)}
-                required
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label={dictionary?.navigation?.smtpEncryption || 'Encryption'}
-                select
-                value={formData.encryption}
-                onChange={(e) => handleChange('encryption', e.target.value)}
-                SelectProps={{
-                  native: true
-                }}
-                helperText="Port will be set automatically based on encryption"
-              >
-                <option value='none'>None (Port 25)</option>
-                <option value='ssl'>SSL (Port 465)</option>
-                <option value='tls'>TLS (Port 587)</option>
-              </TextField>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label={dictionary?.navigation?.smtpFromEmail || 'From Email'}
+                label={dictionary?.navigation?.recipientEmail || 'Recipient Email'}
                 type='email'
-                value={formData.fromEmail}
-                onChange={(e) => handleChange('fromEmail', e.target.value)}
-                required
+                value={testRecipientEmail}
+                onChange={(e) => setTestRecipientEmail(e.target.value)}
+                placeholder="test@example.com"
+                disabled={!canUpdate}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                label={dictionary?.navigation?.smtpFromName || 'From Name'}
-                value={formData.fromName}
-                onChange={(e) => handleChange('fromName', e.target.value)}
-                required
-              />
-            </Grid>
-            <Grid item xs={12}>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <Button
-                  type='submit'
-                  variant='contained'
-                  disabled={loading}
-                  sx={{ flex: 1, minWidth: '120px' }}
-                >
-                  {loading ? dictionary?.navigation?.saving || 'Saving...' : dictionary?.navigation?.save || 'Save'}
-                </Button>
-                <Button
-                  variant='outlined'
-                  disabled={testLoading}
-                  onClick={handleTestConnection}
-                  sx={{ flex: 1, minWidth: '120px' }}
-                >
-                  {testLoading ? dictionary?.navigation?.testingConnection || 'Testing...' : dictionary?.navigation?.testConnection || 'Test Connection'}
-                </Button>
-              </div>
+              <Button
+                variant='contained'
+                disabled={sendTestLoading || !canUpdate}
+                onClick={handleSendTestEmail}
+                sx={{ height: '56px' }}
+              >
+                {sendTestLoading ? dictionary?.navigation?.sending || 'Sending...' : dictionary?.navigation?.sendTestEmail || 'Send Test Email'}
+              </Button>
             </Grid>
           </Grid>
-        </form>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </>
   )
 }
 

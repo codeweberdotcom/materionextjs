@@ -1,11 +1,15 @@
 // Next Imports
-import { NextResponse } from 'next/server'
-import { testSmtpConnection } from '@/utils/email'
 import fs from 'fs'
 import path from 'path'
+
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
+import { testSmtpConnection } from '@/utils/email'
+
 import { authOptions } from '@/libs/auth'
-import { hasPermission } from '@/utils/rbac'
+import { checkPermission } from '@/utils/permissions'
 
 // Simple settings storage (in production, use database)
 const SETTINGS_FILE = path.join(process.cwd(), 'smtp-settings.json')
@@ -24,13 +28,16 @@ const getStoredSettings = () => {
   } catch (error) {
     console.error('Error reading SMTP settings file:', error)
   }
-  return {}
+
+  
+return {}
 }
 
 const saveStoredSettings = (settings: any) => {
   try {
     // Ensure directory exists
     const dir = path.dirname(SETTINGS_FILE)
+
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true })
     }
@@ -46,12 +53,14 @@ const saveStoredSettings = (settings: any) => {
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || !hasPermission(session.user, 'smtp-management-write')) {
+
+    if (!session || !checkPermission(session.user, 'smtpManagement', 'update')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       )
     }
+
     const body = await req.json()
     const { host, port, username, password, encryption, fromEmail, fromName } = body
 
@@ -63,14 +72,8 @@ export async function POST(req: Request) {
       )
     }
 
-    // Test SMTP connection before saving
-    const testResult = await testSmtpConnection()
-    if (!testResult.success) {
-      return NextResponse.json(
-        { message: testResult.message },
-        { status: 400 }
-      )
-    }
+    // Note: SMTP connection test is not performed during save operation
+    // Users can test connection separately using the test endpoint
 
     // Save settings to file for demo purposes
     const settingsToSave = {
@@ -94,7 +97,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'SMTP settings saved successfully' })
   } catch (error) {
     console.error('Error saving SMTP settings:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Failed to save SMTP settings' },
       { status: 500 }
     )
@@ -104,14 +108,18 @@ export async function POST(req: Request) {
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || !hasPermission(session.user, 'smtp-management-read')) {
+
+    if (!session || !checkPermission(session.user, 'smtpManagement', 'read')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       )
     }
+
+
     // Try to get stored settings first, then fall back to environment variables
     const storedSettings = getStoredSettings()
+
     const settings = {
       host: storedSettings.host || process.env.SMTP_HOST || 'smtp.gmail.com',
       port: storedSettings.port || process.env.SMTP_PORT || '587',
@@ -130,7 +138,8 @@ export async function GET() {
     return NextResponse.json(settings)
   } catch (error) {
     console.error('Error fetching SMTP settings:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Failed to fetch SMTP settings' },
       { status: 500 }
     )

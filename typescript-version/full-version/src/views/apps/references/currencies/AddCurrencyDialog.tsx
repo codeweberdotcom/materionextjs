@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -41,6 +42,7 @@ const AddCurrencyDialog = ({ open, handleClose, onSubmit, editCurrency, onUpdate
     symbol: '',
     isActive: true
   })
+
   const [errors, setErrors] = useState<{[key: string]: string}>({})
 
   const isEditMode = !!editCurrency
@@ -94,6 +96,7 @@ const AddCurrencyDialog = ({ open, handleClose, onSubmit, editCurrency, onUpdate
     } else {
       onSubmit(formData)
     }
+
     handleClose()
   }
 
@@ -119,6 +122,7 @@ const AddCurrencyDialog = ({ open, handleClose, onSubmit, editCurrency, onUpdate
                 value={formData.name}
                 onChange={e => {
                   setFormData({ ...formData, name: e.target.value })
+
                   if (errors.name) {
                     setErrors({ ...errors, name: '' })
                   }
@@ -136,6 +140,7 @@ const AddCurrencyDialog = ({ open, handleClose, onSubmit, editCurrency, onUpdate
                 value={formData.code}
                 onChange={e => {
                   setFormData({ ...formData, code: e.target.value })
+
                   if (errors.code) {
                     setErrors({ ...errors, code: '' })
                   }
@@ -153,6 +158,7 @@ const AddCurrencyDialog = ({ open, handleClose, onSubmit, editCurrency, onUpdate
                 value={formData.symbol}
                 onChange={e => {
                   setFormData({ ...formData, symbol: e.target.value })
+
                   if (errors.symbol) {
                     setErrors({ ...errors, symbol: '' })
                   }

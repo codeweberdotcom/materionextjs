@@ -1,11 +1,20 @@
 'use client'
 
+// React Imports
+import { useEffect } from 'react'
+
+// Next Imports
+import { useRouter } from 'next/navigation'
+
 // MUI Imports
 import Grid from '@mui/material/Grid2'
 import Typography from '@mui/material/Typography'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
+
+// Hook Imports
+import { usePermissions } from '@/hooks/usePermissions'
 
 // Type Imports
 import type { UsersType } from '@/types/apps/userTypes'
@@ -16,6 +25,19 @@ import RolesTable from './RolesTable'
 
 const Roles = ({ userData }: { userData?: UsersType[] }) => {
   const t = useTranslation()
+  const { checkPermission, isLoading } = usePermissions()
+  const router = useRouter()
+
+  useEffect(() => {
+    // Не проверяем разрешения, пока сессия загружается
+    if (isLoading) return
+
+    const hasPermission = checkPermission('roleManagement', 'read')
+    console.log('Client-side permission check:', hasPermission, 'for roleManagement read')
+    if (!hasPermission) {
+      router.push('/not-authorized')
+    }
+  }, [checkPermission, router, isLoading])
 
   return (
     <Grid container spacing={6}>

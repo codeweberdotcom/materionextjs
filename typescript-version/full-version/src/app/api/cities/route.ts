@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
+
 const prisma = new PrismaClient()
 
 // GET - Get all active cities (public access)
@@ -20,7 +21,8 @@ export async function GET() {
     return NextResponse.json(cities)
   } catch (error) {
     console.error('Error fetching cities:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

@@ -1,9 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import fs from 'fs'
+
+import path from 'path'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
 import { prisma } from '@/libs/prisma'
-import fs from 'fs'
-import path from 'path'
+
 
 // POST - Export translations to JSON files (admin only)
 export async function POST(request: NextRequest) {
@@ -42,6 +48,7 @@ export async function POST(request: NextRequest) {
 
     // Group translations by language and namespace
     const jsonData: Record<string, Record<string, Record<string, string>>> = {}
+
     translations.forEach(t => {
       if (!jsonData[t.language]) jsonData[t.language] = {}
       if (!jsonData[t.language][t.namespace]) jsonData[t.language][t.namespace] = {}
@@ -56,6 +63,7 @@ export async function POST(request: NextRequest) {
     for (const language of availableLanguages) {
       if (jsonData[language]) {
         const filePath = path.join(dictionariesPath, `${language}.json`)
+
         fs.writeFileSync(filePath, JSON.stringify(jsonData[language], null, 2))
       }
     }
@@ -67,7 +75,8 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error exporting translations:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

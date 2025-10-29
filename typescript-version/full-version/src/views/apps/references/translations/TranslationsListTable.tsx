@@ -73,8 +73,10 @@ type Translation = {
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
+
   addMeta({ itemRank })
-  return itemRank.passed
+  
+return itemRank.passed
 }
 
 const DebouncedInput = ({
@@ -124,8 +126,10 @@ const TranslationsListTable = () => {
     const fetchTranslations = async () => {
       try {
         const response = await fetch('/api/admin/references/translations')
+
         if (response.ok) {
           const translations = await response.json()
+
           setData(translations)
           setFilteredData(translations)
         }
@@ -260,11 +264,13 @@ const TranslationsListTable = () => {
 
       if (response.ok) {
         const updatedData = data.filter(translation => translation.id !== id)
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success('Translation deleted successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to delete translation')
       }
     } catch (error) {
@@ -285,14 +291,17 @@ const TranslationsListTable = () => {
 
       if (response.ok) {
         const updatedTranslation = await response.json()
+
         const updatedData = data.map(translation =>
           translation.id === updatedTranslation.id ? updatedTranslation : translation
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success(`Translation ${updatedTranslation.isActive ? 'activated' : 'deactivated'} successfully!`)
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to toggle translation status')
       }
     } catch (error) {
@@ -314,12 +323,14 @@ const TranslationsListTable = () => {
       if (response.ok) {
         const newTranslation = await response.json()
         const updatedData = [...data, newTranslation]
+
         setData(updatedData)
         setFilteredData(updatedData)
         setAddTranslationOpen(false)
         toast.success('Translation added successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to add translation')
       }
     } catch (error) {
@@ -340,15 +351,18 @@ const TranslationsListTable = () => {
 
       if (response.ok) {
         const updatedTranslation = await response.json()
+
         const updatedData = data.map(translation =>
           translation.id === updatedTranslation.id ? updatedTranslation : translation
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         setEditTranslation(null)
         toast.success('Translation updated successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to update translation')
       }
     } catch (error) {
@@ -365,6 +379,7 @@ const TranslationsListTable = () => {
 
       if (response.ok) {
         const result = await response.json()
+
         if (result.message === 'translationsExportSuccess') {
           toast.success(dictionary.navigation.translationsExportSuccess.replace('${count}', result.exportedCount.toString()))
         } else {
@@ -372,6 +387,7 @@ const TranslationsListTable = () => {
         }
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to export translations')
       }
     } catch (error) {
@@ -388,13 +404,17 @@ const TranslationsListTable = () => {
 
       if (response.ok) {
         const result = await response.json()
+
         // Refresh data
         const translationsResponse = await fetch('/api/admin/references/translations')
+
         if (translationsResponse.ok) {
           const translations = await translationsResponse.json()
+
           setData(translations)
           setFilteredData(translations)
         }
+
         if (result.message === 'translationsImportSuccess') {
           toast.success(dictionary.navigation.translationsImportSuccess.replace('${count}', result.importedCount.toString()))
         } else {
@@ -402,6 +422,7 @@ const TranslationsListTable = () => {
         }
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to import translations')
       }
     } catch (error) {

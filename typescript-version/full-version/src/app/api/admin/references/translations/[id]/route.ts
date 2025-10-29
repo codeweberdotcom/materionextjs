@@ -1,9 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import fs from 'fs'
+
+import path from 'path'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
 import { prisma } from '@/libs/prisma'
-import fs from 'fs'
-import path from 'path'
+
 
 // Function to export translations to JSON
 async function exportTranslationsToJSON() {
@@ -17,6 +23,7 @@ async function exportTranslationsToJSON() {
   })
 
   const jsonData: Record<string, Record<string, Record<string, string>>> = {}
+
   translations.forEach(t => {
     if (!jsonData[t.language]) jsonData[t.language] = {}
     if (!jsonData[t.language][t.namespace]) jsonData[t.language][t.namespace] = {}
@@ -24,8 +31,10 @@ async function exportTranslationsToJSON() {
   })
 
   const dictionariesPath = path.join(process.cwd(), 'src/data/dictionaries')
+
   for (const [language, namespaces] of Object.entries(jsonData)) {
     const filePath = path.join(dictionariesPath, `${language}.json`)
+
     fs.writeFileSync(filePath, JSON.stringify(namespaces, null, 2))
   }
 }
@@ -83,7 +92,8 @@ export async function PATCH(
     return NextResponse.json(updatedTranslation)
   } catch (error) {
     console.error('Error toggling translation status:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -120,11 +130,13 @@ export async function PUT(
 
     const { id: translationId } = await params
     let body
+
     try {
       body = await request.json()
     } catch (error) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
+
     const { key, language, value, namespace, isActive } = body
 
     if (!key || !language || !value) {
@@ -151,13 +163,15 @@ export async function PUT(
       await exportTranslationsToJSON()
     } catch (exportError) {
       console.error('Error exporting to JSON:', exportError)
+
       // Don't fail the main request if export fails
     }
 
     return NextResponse.json(updatedTranslation)
   } catch (error) {
     console.error('Error updating translation:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -211,11 +225,13 @@ export async function DELETE(
           { status: 404 }
         )
       }
+
       throw error
     }
   } catch (error) {
     console.error('Error deleting translation:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

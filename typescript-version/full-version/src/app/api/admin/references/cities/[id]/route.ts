@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
 
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
+
 const prisma = new PrismaClient()
 
 // PATCH - Toggle city status (admin only)
@@ -59,7 +63,8 @@ export async function PATCH(
     return NextResponse.json(updatedCity)
   } catch (error) {
     console.error('Error toggling city status:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -96,11 +101,13 @@ export async function PUT(
 
     const { id: cityId } = await params
     let body
+
     try {
       body = await request.json()
     } catch (error) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
+
     const { name, code, districts = [], isActive } = body
 
     if (!name || !code) {
@@ -131,7 +138,8 @@ export async function PUT(
     return NextResponse.json(updatedCity)
   } catch (error) {
     console.error('Error updating city:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -185,11 +193,13 @@ export async function DELETE(
           { status: 404 }
         )
       }
+
       throw error
     }
   } catch (error) {
     console.error('Error deleting city:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

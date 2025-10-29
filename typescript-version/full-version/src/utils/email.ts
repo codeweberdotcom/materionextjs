@@ -13,20 +13,69 @@ export interface SmtpConfig {
 
 // Get SMTP configuration from environment variables or database
 export const getSmtpConfig = async (): Promise<SmtpConfig> => {
+  console.log('🔍 [SMTP CONFIG] Getting SMTP configuration...')
+
   try {
     // Try to fetch from API first (only in server-side context)
     if (typeof window === 'undefined') {
       try {
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+        console.log('🔍 [SMTP CONFIG] Fetching from API:', `${baseUrl}/api/settings/smtp`)
+
+        // Try direct file read first (bypass API to avoid auth issues)
+        try {
+          const fs = require('fs')
+          const path = require('path')
+          const SETTINGS_FILE = path.join(process.cwd(), 'smtp-settings.json')
+
+          if (fs.existsSync(SETTINGS_FILE)) {
+            const data = fs.readFileSync(SETTINGS_FILE, 'utf8')
+            const settings = JSON.parse(data)
+
+            console.log('🔍 [SMTP CONFIG] Direct file read successful:', {
+              ...settings,
+              password: settings.password ? '***provided***' : 'missing'
+            })
+
+            // Check if settings have actual values (not just defaults)
+            const hasValidSettings = settings.username && settings.password && settings.host
+
+            if (hasValidSettings) {
+              console.log('✅ [SMTP CONFIG] Using direct file settings')
+              return {
+                host: settings.host,
+                port: settings.port,
+                username: settings.username,
+                password: settings.password,
+                encryption: settings.encryption,
+                fromEmail: settings.fromEmail,
+                fromName: settings.fromName
+              }
+            }
+          } else {
+            console.log('🔍 [SMTP CONFIG] Settings file does not exist')
+          }
+        } catch (fileError) {
+          console.error('❌ [SMTP CONFIG] Error reading settings file directly:', fileError)
+        }
+
         const response = await fetch(`${baseUrl}/api/settings/smtp`)
+
+        console.log('🔍 [SMTP CONFIG] API response status:', response.status)
 
         if (response.ok) {
           const settings = await response.json()
+          console.log('🔍 [SMTP CONFIG] API response data:', {
+            ...settings,
+            password: settings.password ? '***provided***' : 'missing'
+          })
 
           // Check if settings have actual values (not just defaults)
           const hasValidSettings = settings.username && settings.password && settings.host
+          console.log('🔍 [SMTP CONFIG] Has valid settings:', hasValidSettings)
 
           if (hasValidSettings) {
+            console.log('✅ [SMTP CONFIG] Using API settings')
             return {
               host: settings.host,
               port: settings.port,
@@ -37,17 +86,22 @@ export const getSmtpConfig = async (): Promise<SmtpConfig> => {
               fromName: settings.fromName
             }
           }
+        } else {
+          console.log('❌ [SMTP CONFIG] API request failed')
         }
       } catch (error) {
-        console.error('Error fetching SMTP settings from API:', error)
+        console.error('❌ [SMTP CONFIG] Error fetching SMTP settings from API:', error)
       }
+    } else {
+      console.log('🔍 [SMTP CONFIG] Client-side context, skipping API fetch')
     }
   } catch (error) {
-    console.error('Error fetching SMTP settings from API:', error)
+    console.error('❌ [SMTP CONFIG] Error in SMTP config fetch:', error)
   }
 
   // Fallback to environment variables
-  return {
+  console.log('🔄 [SMTP CONFIG] Using fallback environment variables')
+  const fallbackConfig = {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: process.env.SMTP_PORT || '587',
     username: process.env.SMTP_USERNAME || '',
@@ -56,6 +110,13 @@ export const getSmtpConfig = async (): Promise<SmtpConfig> => {
     fromEmail: process.env.SMTP_FROM_EMAIL || 'admin@example.com',
     fromName: process.env.SMTP_FROM_NAME || 'Admin'
   }
+
+  console.log('🔄 [SMTP CONFIG] Fallback config:', {
+    ...fallbackConfig,
+    password: fallbackConfig.password ? '***provided***' : 'missing'
+  })
+
+  return fallbackConfig
 }
 
 // Create email transporter
@@ -84,6 +145,8 @@ export const createTransporter = async () => {
       ciphers: 'SSLv3',
       rejectUnauthorized: false
     }
+
+
     // Require TLS for Yandex and other providers
     if (config.host.includes('yandex') || config.host.includes('mail.ru') || config.host.includes('rambler')) {
       transporterConfig.requireTLS = true
@@ -101,6 +164,8 @@ export const createTransporter = async () => {
     transporterConfig.auth.type = 'login'
   } else if (config.host.includes('mail.ru') || config.host.includes('rambler')) {
     transporterConfig.auth.type = 'login'
+
+
     // Mail.ru and Rambler may need different TLS settings
     if (config.encryption === 'tls') {
       transporterConfig.tls = {
@@ -135,6 +200,7 @@ export const sendEmail = async (options: {
       // Only fetch in server-side context
       if (typeof window === 'undefined') {
         const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/settings/email-templates/${options.templateId}`)
+
         if (response.ok) {
           const template = await response.json()
 
@@ -157,16 +223,20 @@ export const sendEmail = async (options: {
   }
 
   const info = await transporter.sendMail(mailOptions)
-  return info
+
+  
+return info
 }
 
 // Replace template variables
 const replaceVariables = (text: string, variables: Record<string, string>): string => {
   let result = text
+
   Object.entries(variables).forEach(([key, value]) => {
     result = result.replace(new RegExp(`{${key}}`, 'g'), value)
   })
-  return result
+  
+return result
 }
 
 // Test SMTP connection
@@ -175,7 +245,15 @@ export const testSmtpConnection = async (): Promise<{ success: boolean; message:
     const config = await getSmtpConfig()
 
     // Check if we have credentials
+    console.log('🔍 [SMTP TEST] Checking credentials:', {
+      hasUsername: !!config.username,
+      hasPassword: !!config.password,
+      usernameLength: config.username?.length || 0,
+      passwordLength: config.password?.length || 0
+    })
+
     if (!config.username || !config.password) {
+      console.log('❌ [SMTP TEST] Missing credentials detected')
       return {
         success: false,
         message: 'Missing credentials. Please enter your email and password.'
@@ -191,8 +269,25 @@ export const testSmtpConnection = async (): Promise<{ success: boolean; message:
       username: config.username ? '***provided***' : 'missing'
     })
 
-    await transporter.verify()
-    return { success: true, message: 'SMTP connection successful' }
+    // Enable detailed logging for SMTP connection
+    console.log('🔄 [SMTP TEST] Starting SMTP connection verification...')
+
+    // Create a new transporter with debug logging enabled
+    const debugTransporter = nodemailer.createTransport({
+      ...transporter.options,
+      logger: true,
+      debug: true
+    } as any)
+
+    try {
+      await debugTransporter.verify()
+      console.log('✅ [SMTP TEST] SMTP connection verification successful')
+    } catch (error) {
+      console.log('❌ [SMTP TEST] SMTP connection verification failed:', error)
+      throw error
+    }
+    
+return { success: true, message: 'SMTP connection successful' }
   } catch (error) {
     console.error('SMTP connection test failed:', error)
     let errorMessage = 'Unknown error'

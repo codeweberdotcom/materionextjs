@@ -41,6 +41,7 @@ const StyledDiv = styled.div<StyledDivProps>`
 
 const Navigation = ({ dictionary, locale }: { dictionary: Awaited<ReturnType<typeof getDictionary>>; locale: string }) => {
   const safeLocale = locale || 'en'
+
   // Hooks
   const { settings } = useSettings()
   const { isBreakpointReached } = useHorizontalNav()

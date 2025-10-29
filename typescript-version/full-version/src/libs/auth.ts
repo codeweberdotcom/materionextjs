@@ -8,7 +8,31 @@ import bcrypt from 'bcrypt'
 // Initialize Prisma client
 import { PrismaClient } from '@prisma/client'
 import { PrismaAdapter } from '@auth/prisma-adapter'
+
 import { prisma } from './prisma'
+
+// Cache utilities (simple in-memory cache for demo)
+const cache = new Map<string, { data: any; expires: number }>()
+
+const getCache = async (key: string) => {
+  const item = cache.get(key)
+  if (item && Date.now() < item.expires) {
+    return item.data
+  }
+  cache.delete(key)
+  return null
+}
+
+const setCache = async (key: string, data: any, ttlSeconds: number) => {
+  cache.set(key, {
+    data,
+    expires: Date.now() + (ttlSeconds * 1000)
+  })
+}
+
+const deleteCache = async (key: string) => {
+  cache.delete(key)
+}
 
 // Extend NextAuth types
 declare module 'next-auth' {
@@ -72,13 +96,17 @@ export const authOptions: NextAuthOptions = {
 
         // Load dictionary
         let dict: any = {}
+
         try {
           const dictModule = await import(`../data/dictionaries/${locale}.json`)
+
           dict = dictModule.default
         } catch (error) {
           console.error('Error loading dictionary:', error)
+
           // Fallback to English
           const dictModule = await import('../data/dictionaries/en.json')
+
           dict = dictModule.default
         }
 
@@ -91,6 +119,11 @@ export const authOptions: NextAuthOptions = {
 
           if (!user) {
             throw new Error(dict.navigation?.invalidCredentials || 'Email or Password is invalid')
+          }
+
+          // Check if user is active
+          if (!user.isActive) {
+            throw new Error(dict.navigation?.accountSuspended || 'Your account has been suspended. Please contact administrator.')
           }
 
           // Check if user has a role
@@ -163,27 +196,58 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
       }
-      return token
+
+      
+return token
     },
     async session({ session, token }) {
+      console.log('🔍 [SESSION CHECK] Checking session for user:', token.id)
+
       if (token.id && session.user) {
-        // Fetch the user from the database
-        try {
-          const user = await prisma.user.findUnique({
+        // Check cache first (30 seconds TTL)
+        const cacheKey = `user_status_${token.id}`
+        const cachedData = await getCache(cacheKey)
+
+        let user
+        if (cachedData) {
+          console.log('📋 [SESSION CHECK] Using cached user data for:', cachedData.name)
+          user = cachedData
+        } else {
+          // Fetch from database if not cached
+          console.log('🗄️ [SESSION CHECK] Fetching user from database')
+          user = await prisma.user.findUnique({
             where: { id: token.id as string },
             include: { role: true }
           })
+
           if (user) {
-            session.user.id = user.id
-            session.user.name = user.name
-            session.user.email = user.email
-            session.user.image = user.image
-            session.user.role = { id: user.role.id, name: user.role.name }
+            // Cache user data for 30 seconds
+            await setCache(cacheKey, user, 30)
+            console.log('💾 [SESSION CHECK] User data cached for 30 seconds:', user.name)
           }
-        } catch (error) {
-          console.error('Error fetching user for session:', error)
-          // Fallback to basic session data
-          session.user.id = token.id as string
+        }
+
+        if (user) {
+          console.log(' [SESSION CHECK] User found:', user.name, '- Active status:', user.isActive)
+
+          // Check if user is still active during session validation
+          if (!user.isActive) {
+            console.log('🚫 [SESSION CHECK] User is INACTIVE - throwing error for:', user.name)
+            // Clear cache for inactive user
+            await deleteCache(cacheKey)
+            // Return null to invalidate the session
+            throw new Error('User account is suspended')
+          }
+
+          console.log('✅ [SESSION CHECK] User is ACTIVE - session valid for:', user.name)
+
+          session.user.id = user.id
+          session.user.name = user.name
+          session.user.email = user.email
+          session.user.image = user.image
+          session.user.role = { id: user.role.id, name: user.role.name, description: user.role.description, permissions: user.role.permissions }
+        } else {
+          console.log('❌ [SESSION CHECK] User not found in database')
         }
       }
 

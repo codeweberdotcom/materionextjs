@@ -116,6 +116,7 @@ const Login = ({ mode }: { mode: Mode }) => {
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
     setLoading(true)
+
     try {
       const res = await signIn('credentials', {
         email: data.email,

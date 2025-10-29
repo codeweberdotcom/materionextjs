@@ -45,11 +45,13 @@ const EmailTemplates = () => {
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTemplate, setEditingTemplate] = useState<EmailTemplate | null>(null)
+
   const [formData, setFormData] = useState({
     name: '',
     subject: '',
     content: ''
   })
+
   const [message, setMessage] = useState('')
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewTemplate, setPreviewTemplate] = useState<EmailTemplate | null>(null)
@@ -65,8 +67,10 @@ const EmailTemplates = () => {
   const fetchTemplates = async () => {
     try {
       const response = await fetch('/api/settings/email-templates')
+
       if (response.ok) {
         const data = await response.json()
+
         setTemplates(data)
       }
     } catch (error) {
@@ -135,10 +139,12 @@ const EmailTemplates = () => {
   // Replace variables in template
   const replaceVariables = (text: string, variables: Record<string, string>): string => {
     let result = text
+
     Object.entries(variables).forEach(([key, value]) => {
       result = result.replace(new RegExp(`{${key}}`, 'g'), value)
     })
-    return result
+    
+return result
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -148,6 +154,7 @@ const EmailTemplates = () => {
       const url = editingTemplate
         ? `/api/settings/email-templates/${editingTemplate.id}`
         : '/api/settings/email-templates'
+
       const method = editingTemplate ? 'PUT' : 'POST'
 
       const response = await fetch(url, {
@@ -160,6 +167,7 @@ const EmailTemplates = () => {
 
       if (response.ok) {
         const updatedTemplate = await response.json()
+
         if (editingTemplate) {
           setTemplates(prev => prev.map(t => t.id === editingTemplate.id ? updatedTemplate : t))
           setMessage('Шаблон обновлен успешно!')
@@ -167,10 +175,12 @@ const EmailTemplates = () => {
           setTemplates(prev => [...prev, updatedTemplate])
           setMessage('Шаблон создан успешно!')
         }
+
         setDialogOpen(false)
         setTimeout(() => setMessage(''), 3000)
       } else {
         const error = await response.json()
+
         setMessage(error.message || 'Ошибка при сохранении шаблона.')
       }
     } catch (error) {

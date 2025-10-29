@@ -69,8 +69,10 @@ const AccountDetails = () => {
 
   const handleLanguageChange = (event: SelectChangeEvent<string>) => {
     setLanguage(event.target.value)
+
     // Update formData.language with code
     const selectedLang = languages.find(lang => lang.code === event.target.value)
+
     if (selectedLang) {
       handleFormChange('language', selectedLang.code)
     }
@@ -89,23 +91,27 @@ const AccountDetails = () => {
       // Validate file type
       if (!file.type.startsWith('image/')) {
         toast.error('Please select an image file')
-        return
+        
+return
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         toast.error('File size must be less than 5MB')
-        return
+        
+return
       }
 
       try {
         // Show preview immediately
         const reader = new FileReader()
+
         reader.onload = () => setImgSrc(reader.result as string)
         reader.readAsDataURL(file)
 
         // Upload file to server
         const formData = new FormData()
+
         formData.append('avatar', file)
 
         const response = await fetch('/api/user/avatar', {
@@ -115,15 +121,20 @@ const AccountDetails = () => {
 
         if (response.ok) {
           const result = await response.json()
+
           setImgSrc(result.avatarUrl)
           toast.success('Avatar uploaded successfully!')
         } else {
           const error = await response.json()
+
           toast.error(error.message || 'Failed to upload avatar')
+
           // Reset to previous image on error
           const profileResponse = await fetch('/api/user/profile')
+
           if (profileResponse.ok) {
             const userData = await profileResponse.json()
+
             setImgSrc(userData.avatar || '/images/avatars/1.png')
           }
         }
@@ -145,6 +156,7 @@ const AccountDetails = () => {
       try {
         // Fetch user profile
         const response = await fetch('/api/user/profile')
+
         if (response.ok) {
           const userData = await response.json()
 
@@ -176,12 +188,14 @@ const AccountDetails = () => {
           // User is not authenticated, redirect to login
           toast.error('Please log in to access your account settings')
           window.location.href = '/en/login'
-          return
+          
+return
         }
 
         // Fetch available languages from JSON
         try {
           const languagesData = await import('@/data/languages.json')
+
           setLanguages(languagesData.default)
         } catch (error) {
           console.error('Error loading languages:', error)
@@ -195,15 +209,19 @@ const AccountDetails = () => {
 
         // Fetch available currencies
          const currenciesResponse = await fetch('/api/currencies')
+
          if (currenciesResponse.ok) {
            const currenciesData = await currenciesResponse.json()
+
            setCurrencies(currenciesData)
          }
 
          // Fetch available countries
          const countriesResponse = await fetch('/api/countries')
+
          if (countriesResponse.ok) {
            const countriesData = await countriesResponse.json()
+
            setCountries(countriesData)
          }
       } catch (error) {

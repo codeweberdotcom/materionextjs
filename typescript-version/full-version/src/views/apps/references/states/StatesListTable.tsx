@@ -50,6 +50,12 @@ import AddStateDialog from './AddStateDialog'
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
 
+// Hook Imports
+import { usePermissions } from '@/hooks/usePermissions'
+
+// Util Imports
+import { checkPermission } from '@/utils/permissions'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -77,8 +83,10 @@ type State = {
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
+
   addMeta({ itemRank })
-  return itemRank.passed
+  
+return itemRank.passed
 }
 
 const DebouncedInput = ({
@@ -113,6 +121,12 @@ const columnHelper = createColumnHelper<State>()
 const StatesListTable = () => {
   // Hooks
   const dictionary = useTranslation()
+  const { checkPermission } = usePermissions()
+
+  // Permission checks
+  const canCreate = checkPermission('stateManagement', 'create')
+  const canUpdate = checkPermission('stateManagement', 'update')
+  const canDelete = checkPermission('stateManagement', 'delete')
 
   const [data, setData] = useState<State[]>([])
   const [filteredData, setFilteredData] = useState(data)
@@ -128,8 +142,10 @@ const StatesListTable = () => {
     const fetchStates = async () => {
       try {
         const response = await fetch('/api/admin/references/states')
+
         if (response.ok) {
           const states = await response.json()
+
           setData(states)
           setFilteredData(states)
         }
@@ -144,86 +160,105 @@ const StatesListTable = () => {
     fetchStates()
   }, [])
 
-  const columns = useMemo<ColumnDef<State, any>[]>(() => [
-    {
-      id: 'select',
-      header: ({ table }) => (
-        <Checkbox
-          {...{
-            checked: table.getIsAllRowsSelected(),
-            indeterminate: table.getIsSomeRowsSelected(),
-            onChange: table.getToggleAllRowsSelectedHandler()
-          }}
-        />
-      ),
-      cell: ({ row }) => (
-        <Checkbox
-          {...{
-            checked: row.getIsSelected(),
-            disabled: !row.getCanSelect(),
-            indeterminate: row.getIsSomeSelected(),
-            onChange: row.getToggleSelectedHandler()
-          }}
-        />
-      )
-    },
-    columnHelper.accessor('name', {
-      header: dictionary.navigation.state,
-      cell: ({ row }) => <Typography>{row.original.name}</Typography>
-    }),
-    columnHelper.accessor('code', {
-      header: dictionary.navigation.code,
-      cell: ({ row }) => <Typography>{row.original.code}</Typography>
-    }),
-    columnHelper.accessor('isActive', {
-      header: dictionary.navigation.status,
-      cell: ({ row }) => (
-        <Chip
-          variant='tonal'
-          label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
-          size='small'
-          color={row.original.isActive ? 'success' : 'secondary'}
-        />
-      )
-    }),
-    {
-      id: 'cities',
-      header: dictionary.navigation.cities,
-      cell: ({ row }) => {
-        const citiesCount = row.original.cities ? row.original.cities.length : 0
-        return (
-          <div className='flex items-center gap-2'>
-            <Chip
-              label={`${citiesCount} ${dictionary.navigation.cities}`}
-              size='small'
-              variant={citiesCount > 0 ? 'filled' : 'outlined'}
-              color={citiesCount > 0 ? 'primary' : 'default'}
+  const columns = useMemo<ColumnDef<State, any>[]>(
+    () => {
+      const baseColumns: ColumnDef<State, any>[] = [
+        {
+          id: 'select',
+          header: ({ table }) => (
+            <Checkbox
+              {...{
+                checked: table.getIsAllRowsSelected(),
+                indeterminate: table.getIsSomeRowsSelected(),
+                onChange: table.getToggleAllRowsSelectedHandler()
+              }}
             />
-          </div>
-        )
+          ),
+          cell: ({ row }) => (
+            <Checkbox
+              {...{
+                checked: row.getIsSelected(),
+                disabled: !row.getCanSelect(),
+                indeterminate: row.getIsSomeSelected(),
+                onChange: row.getToggleSelectedHandler()
+              }}
+            />
+          )
+        },
+        columnHelper.accessor('name', {
+          header: dictionary.navigation.state,
+          cell: ({ row }) => <Typography>{row.original.name}</Typography>
+        }),
+        columnHelper.accessor('code', {
+          header: dictionary.navigation.code,
+          cell: ({ row }) => <Typography>{row.original.code}</Typography>
+        }),
+        columnHelper.accessor('isActive', {
+          header: dictionary.navigation.status,
+          cell: ({ row }) => (
+            <Chip
+              variant='tonal'
+              label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
+              size='small'
+              color={row.original.isActive ? 'success' : 'secondary'}
+            />
+          )
+        }),
+        {
+          id: 'cities',
+          header: dictionary.navigation.cities,
+          cell: ({ row }) => {
+            const citiesCount = row.original.cities ? row.original.cities.length : 0
+
+
+ return (
+              <div className='flex items-center gap-2'>
+                <Chip
+                  label={`${citiesCount} ${dictionary.navigation.cities}`}
+                  size='small'
+                  variant={citiesCount > 0 ? 'filled' : 'outlined'}
+                  color={citiesCount > 0 ? 'primary' : 'default'}
+                />
+              </div>
+            )
+          }
+        }
+      ]
+
+      // Add actions column only if user has any management permissions
+      if (canCreate || canUpdate || canDelete) {
+        baseColumns.push({
+          id: 'actions',
+          header: dictionary.navigation.actions,
+          cell: ({ row }) => (
+            <div className='flex items-center'>
+              {canUpdate && (
+                <IconButton onClick={() => handleEditState(row.original)} title={dictionary.navigation.editTranslation}>
+                  <i className='ri-edit-line text-textSecondary' />
+                </IconButton>
+              )}
+              {canUpdate && (
+                <Switch
+                  checked={row.original.isActive}
+                  onChange={() => handleToggleStatus(row.original.id)}
+                  size='small'
+                />
+              )}
+              {canDelete && (
+                <IconButton onClick={() => handleDeleteState(row.original.id, row.original.name)} title={dictionary.navigation.deleteTranslation}>
+                  <i className='ri-delete-bin-7-line text-textSecondary' />
+                </IconButton>
+              )}
+            </div>
+          ),
+          enableSorting: false
+        })
       }
+
+      return baseColumns
     },
-    {
-      id: 'actions',
-      header: dictionary.navigation.actions,
-      cell: ({ row }) => (
-        <div className='flex items-center'>
-          <IconButton onClick={() => handleEditState(row.original)} title={dictionary.navigation.editTranslation}>
-            <i className='ri-edit-line text-textSecondary' />
-          </IconButton>
-          <Switch
-            checked={row.original.isActive}
-            onChange={() => handleToggleStatus(row.original.id)}
-            size='small'
-          />
-          <IconButton onClick={() => handleDeleteState(row.original.id, row.original.name)} title={dictionary.navigation.deleteTranslation}>
-            <i className='ri-delete-bin-7-line text-textSecondary' />
-          </IconButton>
-        </div>
-      ),
-      enableSorting: false
-    }
-  ], [data])
+    [data, canCreate, canUpdate, canDelete]
+  )
 
   const table = useReactTable({
     data: filteredData,
@@ -264,14 +299,18 @@ const StatesListTable = () => {
       if (response.ok) {
         // Refetch the data
         const refetchResponse = await fetch('/api/admin/references/states')
+
         if (refetchResponse.ok) {
           const states = await refetchResponse.json()
+
           setData(states)
           setFilteredData(states)
         }
+
         toast.success('State deleted successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to delete state')
       }
     } catch (error) {
@@ -297,15 +336,19 @@ const StatesListTable = () => {
       if (response.ok) {
         // Refetch the data to ensure consistency
         const refetchResponse = await fetch('/api/admin/references/states')
+
         if (refetchResponse.ok) {
           const states = await refetchResponse.json()
+
           setData(states)
           setFilteredData(states)
         }
+
         setEditState(null)
         toast.success('State updated successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to update state')
       }
     } catch (error) {
@@ -323,14 +366,18 @@ const StatesListTable = () => {
       if (response.ok) {
         // Refetch the data
         const refetchResponse = await fetch('/api/admin/references/states')
+
         if (refetchResponse.ok) {
           const states = await refetchResponse.json()
+
           setData(states)
           setFilteredData(states)
         }
+
         toast.success('State status updated successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to toggle state status')
       }
     } catch (error) {
@@ -352,15 +399,19 @@ const StatesListTable = () => {
       if (response.ok) {
         // Refetch the data
         const refetchResponse = await fetch('/api/admin/references/states')
+
         if (refetchResponse.ok) {
           const states = await refetchResponse.json()
+
           setData(states)
           setFilteredData(states)
         }
+
         setAddStateOpen(false)
         toast.success('State added successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to add state')
       }
     } catch (error) {
@@ -387,9 +438,11 @@ const StatesListTable = () => {
             className='max-sm:is-full'
           />
         </div>
-        <Button variant='contained' onClick={() => setAddStateOpen(true)} className='max-sm:is-full'>
-          {dictionary.navigation.addNewState}
-        </Button>
+        {canCreate && (
+          <Button variant='contained' onClick={() => setAddStateOpen(true)} className='max-sm:is-full'>
+            {dictionary.navigation.addNewState}
+          </Button>
+        )}
       </div>
       <div className='overflow-x-auto'>
         <table className={tableStyles.table}>

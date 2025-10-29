@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
 import { prisma } from '@/libs/prisma'
 
@@ -37,7 +40,8 @@ export async function GET() {
     return NextResponse.json(currencies)
   } catch (error) {
     console.error('Error fetching currencies:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -92,7 +96,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newCurrency)
   } catch (error) {
     console.error('Error creating currency:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

@@ -10,7 +10,8 @@
 import { NextResponse } from 'next/server'
 
 // Data Imports
-import { db } from '@/fake-db/apps/permissions'
+// Since we're starting fresh, return empty array for permissions
+const db: any[] = []
 
 export async function GET() {
   return NextResponse.json(db)

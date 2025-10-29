@@ -9,7 +9,6 @@ import 'react-perfect-scrollbar/dist/css/styles.css'
 import 'react-toastify/dist/ReactToastify.css'
 
 // Component Imports
-import { ToastContainer } from 'react-toastify'
 
 // Type Imports
 import type { ChildrenType } from '@core/types'
@@ -19,6 +18,9 @@ import type { Locale } from '@configs/i18n'
 
 // HOC Imports
 import TranslationWrapper from '@/hocs/TranslationWrapper'
+
+// Context Imports
+import { NextAuthProvider } from '@/contexts/nextAuthProvider'
 
 // Config Imports
 import { i18n } from '@configs/i18n'
@@ -49,15 +51,16 @@ const RootLayout = async (props: ChildrenType & { params: Promise<{ lang: Locale
   const direction = i18n.langDirection[params.lang]
 
   return (
-    <TranslationWrapper headersList={headersList} lang={params.lang}>
-      <html id='__next' lang={params.lang} dir={direction} suppressHydrationWarning>
-        <body className='flex is-full min-bs-full flex-auto flex-col' suppressHydrationWarning>
-          <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
-          {children}
-          <ToastContainer />
-        </body>
-      </html>
-    </TranslationWrapper>
+    <NextAuthProvider>
+      <TranslationWrapper headersList={headersList} lang={params.lang}>
+        <html id='__next' lang={params.lang} dir={direction} suppressHydrationWarning>
+          <body className='flex is-full min-bs-full flex-auto flex-col' suppressHydrationWarning>
+            <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
+            {children}
+          </body>
+        </html>
+      </TranslationWrapper>
+    </NextAuthProvider>
   )
 }
 

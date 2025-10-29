@@ -108,6 +108,7 @@ const AddUserDrawer = (props: Props) => {
       role: editUser?.role || '',
       plan: editUser?.currentPlan || '',
       status: editUser?.status || '',
+
       // avatar is not in the form
     },
     mode: 'onChange'
@@ -117,6 +118,7 @@ const AddUserDrawer = (props: Props) => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
+
       try {
         const [rolesResponse, countriesResponse] = await Promise.all([
           fetch('/api/admin/roles'),
@@ -125,11 +127,13 @@ const AddUserDrawer = (props: Props) => {
 
         if (rolesResponse.ok) {
           const rolesData = await rolesResponse.json()
+
           setRoles(rolesData)
         }
 
         if (countriesResponse.ok) {
           const countriesData = await countriesResponse.json()
+
           setCountries(countriesData)
         }
       } catch (error) {
@@ -161,6 +165,7 @@ const AddUserDrawer = (props: Props) => {
         role: editUser.role || '',
         plan: editUser.currentPlan || '',
         status: editUser.status || '',
+
         // avatar is not in the form
       })
     } else {
@@ -180,21 +185,26 @@ const AddUserDrawer = (props: Props) => {
     // Validate required fields
     if (!isEditingOwnProfile && !data.role) {
       toast.error(dictionary.navigation.roleRequired)
-      return
+      
+return
     }
 
     const formDataToSend = new FormData()
+
     formDataToSend.append('fullName', `${data.firstName} ${data.lastName}`.trim())
     formDataToSend.append('username', data.username)
     formDataToSend.append('email', data.email)
+
     if (!isEditingOwnProfile) {
       formDataToSend.append('role', data.role)
     }
+
     formDataToSend.append('plan', data.plan)
     formDataToSend.append('status', data.status)
     formDataToSend.append('company', formData.company)
     formDataToSend.append('country', formData.country)
     formDataToSend.append('contact', formData.contact)
+
     if (formData.avatar) {
       formDataToSend.append('avatar', formData.avatar)
     }
@@ -209,17 +219,19 @@ const AddUserDrawer = (props: Props) => {
 
         if (response.ok) {
           const updatedUser = await response.json()
+
           const updatedData = (userData || []).map(user =>
             user.id === updatedUser.id ? updatedUser : user
           )
+
           setData(updatedData)
           toast.success(dictionary.navigation.updateUser + ' ' + dictionary.navigation.successfully)
         } else {
-          toast.error('Failed to ' + dictionary.navigation.updateUser.toLowerCase())
+          // Removed error toast notification for user update
         }
       } catch (error) {
         console.error('Error updating user:', error)
-        toast.error('Error ' + dictionary.navigation.updateUser.toLowerCase())
+        toast.error('Failed to ' + dictionary.navigation.updateUser.toLowerCase())
       }
     } else {
       // Add new user
@@ -231,6 +243,7 @@ const AddUserDrawer = (props: Props) => {
 
         if (response.ok) {
           const newUser = await response.json()
+
           setData([...(userData ?? []), newUser])
           toast.success(dictionary.navigation.addNewUser + ' ' + dictionary.navigation.successfully)
         } else {
@@ -238,7 +251,7 @@ const AddUserDrawer = (props: Props) => {
         }
       } catch (error) {
         console.error('Error creating user:', error)
-        toast.error('Error ' + dictionary.navigation.addNewUser.toLowerCase())
+        // Removed error toast notification for user creation
       }
     }
 
@@ -400,6 +413,7 @@ const AddUserDrawer = (props: Props) => {
               shrink: true,
             }}
             onChange={e => setFormData({ ...formData, avatar: (e.target as HTMLInputElement).files?.[0] || null })}
+
             // avatar is not in the form
           />
           <TextField

@@ -225,7 +225,9 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: dictionary.navigation.role,
         cell: ({ row }) => {
           const roleInfo = userRoleObj[row.original.role] || userRoleObj.subscriber
-          return (
+
+          
+return (
             <div className='flex items-center gap-2'>
               <Icon
                 className={roleInfo.icon}
@@ -267,25 +269,29 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: dictionary.navigation.actions,
         cell: ({ row }) => (
           <div className='flex items-center'>
-            <IconButton
-              onClick={() => {
-                setDeleteUserId(String(row.original.id))
-                setDeleteUserName(row.original.fullName)
-                setDeleteDialogOpen(true)
-              }}
-            >
-              <i className='ri-delete-bin-line text-textSecondary' />
-            </IconButton>
+            {row.original.role.toLowerCase() !== 'superadmin' && (
+              <IconButton
+                onClick={() => {
+                  setDeleteUserId(String(row.original.id))
+                  setDeleteUserName(row.original.fullName)
+                  setDeleteDialogOpen(true)
+                }}
+              >
+                <i className='ri-delete-bin-line text-textSecondary' />
+              </IconButton>
+            )}
             <IconButton>
               <Link href={getLocalizedUrl(`/apps/user/view?id=${row.original.id}`, locale as Locale)} className='flex'>
                 <i className='ri-eye-line text-textSecondary' />
               </Link>
             </IconButton>
-            <Switch
-              checked={row.original.isActive}
-              onChange={() => handleToggleUserStatus(String(row.original.id))}
-              size='small'
-            />
+            {row.original.role.toLowerCase() !== 'superadmin' && (
+              <Switch
+                checked={row.original.isActive}
+                onChange={() => handleToggleUserStatus(String(row.original.id))}
+                size='small'
+              />
+            )}
             <OptionMenu
               iconButtonProps={{ size: 'medium' }}
               iconClassName='text-textSecondary'
@@ -295,7 +301,7 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
                   icon: 'ri-download-line',
                   menuItemProps: { className: 'flex items-center gap-2 text-textSecondary' }
                 },
-                {
+                ...(row.original.role.toLowerCase() !== 'superadmin' ? [{
                   text: dictionary.navigation.edit,
                   icon: 'ri-edit-box-line',
                   menuItemProps: {
@@ -305,7 +311,7 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
                       setAddUserOpen(true)
                     }
                   }
-                }
+                }] : [])
               ]}
             />
           </div>
@@ -375,8 +381,10 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
     const fetchRoles = async () => {
       try {
         const response = await fetch('/api/admin/roles')
+
         if (response.ok) {
           const rolesData = await response.json()
+
           setRoles(rolesData)
         }
       } catch (error) {
@@ -397,16 +405,20 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
       if (response.ok) {
         // Refresh data from server
         const refreshResponse = await fetch('/api/admin/users')
+
         if (refreshResponse.ok) {
           const updatedUsers = await refreshResponse.json()
+
           setData(updatedUsers)
         } else {
           // If refresh fails, just remove from local data
           setData(data?.filter(user => user.id !== userId))
         }
+
         toast.success(dictionary.navigation.deleteUser + ' ' + dictionary.navigation.successfully)
       } else {
         const error = await response.json()
+
         toast.error(error.message || dictionary.navigation.deleteUser + ' failed')
       }
     } catch (error) {
@@ -424,14 +436,17 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
       if (response.ok) {
         const updatedUser = await response.json()
+
         const updatedData = (data || []).map(user =>
           user.id === updatedUser.id ? updatedUser : user
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success(`${dictionary.navigation.user} ${updatedUser.isActive ? dictionary.navigation.active : dictionary.navigation.inactive} ${dictionary.navigation.successfully}`)
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to toggle user status')
       }
     } catch (error) {

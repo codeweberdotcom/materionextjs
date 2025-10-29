@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -60,6 +61,7 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
     districts: [] as string[],
     isActive: true
   })
+
   const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [districts, setDistricts] = useState<District[]>([])
 
@@ -69,8 +71,10 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
     const fetchDistricts = async () => {
       try {
         const response = await fetch('/api/districts')
+
         if (response.ok) {
           const data = await response.json()
+
           setDistricts(data)
         }
       } catch (error) {
@@ -128,6 +132,7 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
     } else {
       onSubmit({ ...formData, districts: formData.districts })
     }
+
     handleClose()
   }
 
@@ -154,6 +159,7 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
                 value={formData.name}
                 onChange={e => {
                   setFormData({ ...formData, name: e.target.value })
+
                   if (errors.name) {
                     setErrors({ ...errors, name: '' })
                   }
@@ -171,6 +177,7 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
                 value={formData.code}
                 onChange={e => {
                   setFormData({ ...formData, code: e.target.value })
+
                   if (errors.code) {
                     setErrors({ ...errors, code: '' })
                   }
@@ -204,7 +211,9 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
                   value.map((option, index) => {
                     const { key, ...chipProps } = getTagProps({ index })
                     const district = districts.find(d => d.id === (typeof option === 'string' ? option : option.id))
-                    return (
+
+                    
+return (
                       <Chip
                         key={district?.id || index}
                         label={district?.name || (typeof option === 'string' ? option : option.name)}
@@ -216,7 +225,9 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
                 }
                 renderOption={(props, option) => {
                   const { key, ...otherProps } = props
-                  return (
+
+                  
+return (
                     <li key={option.id} {...otherProps}>
                       {option.name}
                     </li>

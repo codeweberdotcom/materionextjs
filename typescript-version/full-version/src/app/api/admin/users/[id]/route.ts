@@ -1,10 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
-import { PrismaClient } from '@prisma/client'
 import { writeFile, mkdir } from 'fs/promises'
+
 import path from 'path'
+
 import { existsSync } from 'fs'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+import { getServerSession } from 'next-auth'
+
+import { PrismaClient } from '@prisma/client'
+
+import { authOptions } from '@/libs/auth'
 
 const prisma = new PrismaClient()
 
@@ -39,6 +46,7 @@ export async function PUT(
     const { id: userId } = await params
 
     // Allow admins and superadmins to edit any user, or users to edit their own data
+    // But prevent editing superadmin users unless you're a superadmin
     const isAdmin = currentUser.role?.name === 'admin'
     const isSuperadmin = currentUser.role?.name === 'superadmin'
     const isEditingOwnData = currentUser.id === userId
@@ -49,11 +57,41 @@ export async function PUT(
         { status: 403 }
       )
     }
+
+    // Find the user to update to check their role
+    const userToUpdateCheck = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        role: {
+          select: {
+            name: true
+          }
+        }
+      }
+    })
+
+    if (!userToUpdateCheck) {
+      return NextResponse.json(
+        { message: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    // Prevent non-superadmin users from editing superadmin users
+    if (userToUpdateCheck.role?.name === 'superadmin' && !isSuperadmin) {
+      return NextResponse.json(
+        { message: 'Cannot edit superadmin users' },
+        { status: 403 }
+      )
+    }
+
     const contentType = request.headers.get('content-type') || ''
     let body: any = {}
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData()
+
       body = {
         fullName: formData.get('fullName') as string,
         email: formData.get('email') as string,
@@ -72,7 +110,7 @@ export async function PUT(
     // Handle both fullName and separate firstName/lastName
     const nameToUpdate = fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : undefined)
 
-    // Find the user to update
+    // Find the user to update (full data)
     const userToUpdate = await prisma.user.findUnique({
       where: { id: userId }
     })
@@ -86,10 +124,12 @@ export async function PUT(
 
     // Use role name directly
     let dbRoleId = userToUpdate.roleId
+
     if (role) {
       const dbRole = await prisma.role.findUnique({
         where: { name: role }
       })
+
       if (dbRole) {
         dbRoleId = dbRole.id
       }
@@ -106,6 +146,7 @@ export async function PUT(
     if (newAvatar && newAvatar instanceof File) {
       // Ensure uploads directory exists
       const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars')
+
       if (!existsSync(uploadsDir)) {
         await mkdir(uploadsDir, { recursive: true })
       }
@@ -118,6 +159,7 @@ export async function PUT(
       // Save the file
       const bytes = await newAvatar.arrayBuffer()
       const buffer = Buffer.from(bytes)
+
       await writeFile(filePath, buffer)
 
       // Set the relative path for the database
@@ -134,6 +176,30 @@ export async function PUT(
 
     // Use database role name directly
     const uiRole = updatedUser.role?.name || 'subscriber'
+
+    // Очищаем кеш после обновления пользователя
+    try {
+      await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/users?clearCache=true`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    } catch (e) {
+      // Игнорируем ошибки очистки кеша
+    }
+
+    // Очищаем кеш после изменения статуса пользователя
+    try {
+      await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/users?clearCache=true`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    } catch (e) {
+      // Игнорируем ошибки очистки кеша
+    }
 
     return NextResponse.json({
       id: updatedUser.id,
@@ -156,7 +222,9 @@ export async function PUT(
     } else {
       console.error('Error updating user: Unknown error')
     }
-    return NextResponse.json(
+
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -222,6 +290,14 @@ export async function PATCH(
       )
     }
 
+    // Prevent deactivating superadmin users
+    if (userToToggle.role?.name === 'superadmin') {
+      return NextResponse.json(
+        { message: 'Cannot deactivate superadmin users' },
+        { status: 403 }
+      )
+    }
+
     // Toggle the isActive status
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -256,7 +332,8 @@ export async function PATCH(
     })
   } catch (error) {
     console.error('Error toggling user status:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -303,7 +380,15 @@ export async function DELETE(
 
     // Find the user to delete
     const userToDelete = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
+      select: {
+        id: true,
+        role: {
+          select: {
+            name: true
+          }
+        }
+      }
     })
 
     if (!userToDelete) {
@@ -313,17 +398,39 @@ export async function DELETE(
       )
     }
 
+    // Prevent deleting superadmin users
+    if (userToDelete.role?.name === 'superadmin') {
+      return NextResponse.json(
+        { message: 'Cannot delete superadmin users' },
+        { status: 403 }
+      )
+    }
+
     // Delete the user
     await prisma.user.delete({
       where: { id: userId }
     })
+
+    // Очищаем кеш после удаления пользователя
+    // Используем простой HTTP запрос для очистки кеша
+    try {
+      await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/users?clearCache=true`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    } catch (e) {
+      // Игнорируем ошибки очистки кеша
+    }
 
     return NextResponse.json({
       message: 'User deleted successfully'
     })
   } catch (error) {
     console.error('Error deleting user:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

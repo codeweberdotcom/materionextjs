@@ -1,21 +1,27 @@
 // Next Imports
 import { NextResponse } from 'next/server'
-import { testSmtpConnection } from '@/utils/email'
+
 import { getServerSession } from 'next-auth'
+
+import { testSmtpConnection } from '@/utils/email'
 import { authOptions } from '@/libs/auth'
-import { hasPermission } from '@/utils/rbac'
+import { checkPermission } from '@/utils/permissions'
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || !hasPermission(session.user, 'smtp-management-write')) {
+
+    if (!session || !checkPermission(session.user, 'smtpManagement', 'update')) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
         { status: 401 }
       )
     }
+
     const body = await req.json()
     const { host, port, username, password, encryption } = body
+
+    console.log('SMTP test request body:', { host, port, username: username ? '***provided***' : 'missing', password: password ? '***provided***' : 'missing', encryption })
 
     // If specific settings are provided, temporarily override
     if (host && username && password) {
@@ -37,6 +43,7 @@ export async function POST(req: Request) {
       try {
         // Ensure directory exists
         const dir = path.dirname(SETTINGS_FILE)
+
         if (!fs.existsSync(dir)) {
           fs.mkdirSync(dir, { recursive: true })
         }
@@ -45,7 +52,8 @@ export async function POST(req: Request) {
         console.log('Testing with provided settings:', { ...testSettings, password: '***hidden***' })
       } catch (error) {
         console.error('Error saving test settings:', error)
-        return NextResponse.json(
+        
+return NextResponse.json(
           {
             success: false,
             message: 'Failed to save test settings'
@@ -63,7 +71,8 @@ export async function POST(req: Request) {
     })
   } catch (error) {
     console.error('SMTP test error:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       {
         success: false,
         message: error instanceof Error ? error.message : 'Unknown error occurred'

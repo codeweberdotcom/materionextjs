@@ -1,9 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
+import { checkPermission } from '@/utils/permissions'
 
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
+
 const prisma = new PrismaClient()
 
 // GET - Get all countries (admin only)
@@ -30,7 +35,8 @@ export async function GET() {
     return NextResponse.json(countries)
   } catch (error) {
     console.error('Error fetching countries:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -49,7 +55,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // No admin check needed for fetching reference data
+    // Check permission for creating countries
+    if (!checkPermission(session.user as any, 'countryManagement', 'create')) {
+      return NextResponse.json(
+        { message: 'Insufficient permissions' },
+        { status: 403 }
+      )
+    }
 
     const body = await request.json()
     const { name, code, states, isActive = true } = body
@@ -87,7 +99,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(updatedCountry)
   } catch (error) {
     console.error('Error creating country:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

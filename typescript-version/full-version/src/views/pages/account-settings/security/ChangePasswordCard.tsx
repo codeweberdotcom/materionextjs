@@ -43,22 +43,27 @@ const ChangePasswordCard = () => {
 
     if (newPassword !== confirmPassword) {
       setError('New password and confirm password do not match')
-      return
+      
+return
     }
 
     if (newPassword.length < 8) {
       setError('New password must be at least 8 characters long')
-      return
+      
+return
     }
 
     setLoading(true)
+
     try {
       const res = await fetch('/api/user/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
       })
+
       const data = await res.json()
+
       if (!res.ok) {
         setError(data.message)
       } else {

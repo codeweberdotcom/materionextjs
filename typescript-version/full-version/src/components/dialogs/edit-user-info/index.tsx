@@ -67,6 +67,7 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
     country: '',
     avatar: null as File | null
   })
+
   const [saving, setSaving] = useState(false)
   const [roles, setRoles] = useState<Role[]>([])
   const [loadingRoles, setLoadingRoles] = useState(true)
@@ -80,8 +81,10 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
     const fetchRoles = async () => {
       try {
         const response = await fetch('/api/admin/roles')
+
         if (response.ok) {
           const rolesData = await response.json()
+
           setRoles(rolesData)
         }
       } catch (error) {
@@ -99,8 +102,10 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
     const fetchCountries = async () => {
       try {
         const response = await fetch('/api/admin/references/countries')
+
         if (response.ok) {
           const countriesData = await response.json()
+
           setCountries(countriesData)
         }
       } catch (error) {
@@ -118,8 +123,10 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
     const fetchCurrentUser = async () => {
       try {
         const response = await fetch('/api/user/profile')
+
         if (response.ok) {
           const userData = await response.json()
+
           setCurrentUserId(userData.id)
         }
       } catch (error) {
@@ -165,6 +172,8 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
     if (setOpen) {
       setOpen(false)
     }
+
+
     // Reset form data when closing
     if (data && countries.length > 0 && roles.length > 0) {
       // Split full name into first and last name
@@ -201,21 +210,26 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
       if (!isEditingOwnProfile && !formData.role) {
         toast.error(dictionary.navigation.roleRequired)
         setSaving(false)
-        return
+        
+return
       }
 
       // Combine first and last name into full name
       const fullName = `${formData.firstName} ${formData.lastName}`.trim()
 
       const formDataToSend = new FormData()
+
       formDataToSend.append('fullName', fullName)
       formDataToSend.append('email', formData.email)
+
       if (!isEditingOwnProfile) {
         formDataToSend.append('role', formData.role)
       }
+
       formDataToSend.append('company', formData.company)
       formDataToSend.append('contact', formData.contact)
       formDataToSend.append('country', formData.country)
+
       if (formData.avatar) {
         formDataToSend.append('avatar', formData.avatar)
       }
@@ -227,13 +241,17 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
 
       if (response.ok) {
         toast.success(dictionary.navigation.userUpdatedSuccessfully)
+
         if (setOpen) {
           setOpen(false)
         }
+
+
         // Refresh the page to show updated data
         window.location.reload()
       } else {
         const error = await response.json()
+
         toast.error(error.message || dictionary.navigation.failedToUpdateUser)
       }
     } catch (error) {

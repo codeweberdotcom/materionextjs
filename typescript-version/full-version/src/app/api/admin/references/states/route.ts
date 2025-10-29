@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
 
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
+
 const prisma = new PrismaClient()
 
 // GET - Get all states (admin only)
@@ -41,7 +45,8 @@ export async function GET() {
     return NextResponse.json(states)
   } catch (error) {
     console.error('Error fetching states:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -109,7 +114,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(updatedState)
   } catch (error) {
     console.error('Error creating state:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -187,7 +193,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(finalState)
   } catch (error) {
     console.error('Error updating state:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -253,7 +260,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json(updatedState)
   } catch (error) {
     console.error('Error toggling state status:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

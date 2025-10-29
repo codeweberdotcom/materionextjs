@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -56,6 +57,7 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
     cities: [] as string[],
     isActive: true
   })
+
   const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [cities, setCities] = useState<City[]>([])
 
@@ -65,8 +67,10 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
     const fetchCities = async () => {
       try {
         const response = await fetch('/api/cities')
+
         if (response.ok) {
           const data = await response.json()
+
           setCities(data)
         }
       } catch (error) {
@@ -125,6 +129,7 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
     } else {
       onSubmit({ ...formData, cities: formData.cities })
     }
+
     handleClose()
   }
 
@@ -150,6 +155,7 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
                 value={formData.name}
                 onChange={e => {
                   setFormData({ ...formData, name: e.target.value })
+
                   if (errors.name) {
                     setErrors({ ...errors, name: '' })
                   }
@@ -195,7 +201,9 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
                   value.map((option, index) => {
                     const { key, ...chipProps } = getTagProps({ index })
                     const city = cities.find(c => c.id === (typeof option === 'string' ? option : option.id))
-                    return (
+
+                    
+return (
                       <Chip
                         key={city?.id || index}
                         label={city?.name || (typeof option === 'string' ? option : option.name)}
@@ -207,7 +215,9 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
                 }
                 renderOption={(props, option) => {
                   const { key, ...otherProps } = props
-                  return (
+
+                  
+return (
                     <li key={option.id} {...otherProps}>
                       {option.name}
                     </li>

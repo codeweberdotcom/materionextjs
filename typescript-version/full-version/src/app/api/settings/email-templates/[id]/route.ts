@@ -1,11 +1,13 @@
 // Next Imports
 import { NextResponse } from 'next/server'
+
 import { getServerSession } from 'next-auth'
+
 import { authOptions } from '@/libs/auth'
-import { hasPermission } from '@/utils/rbac'
+import { checkPermission } from '@/utils/permissions'
 
 // In-memory storage (same as in the main route)
-let emailTemplates: any[] = [
+const emailTemplates: any[] = [
   {
     id: '1',
     name: 'Welcome Email',
@@ -30,12 +32,14 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || !hasPermission(session.user, 'email-templates-management-write')) {
+
+    if (!session || !checkPermission(session.user, 'Email Templates', 'Write')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       )
     }
+
     const body = await req.json()
     const { name, subject, content } = body
     const templateId = params.id
@@ -48,6 +52,7 @@ export async function PUT(
     }
 
     const templateIndex = emailTemplates.findIndex(t => t.id === templateId)
+
     if (templateIndex === -1) {
       return NextResponse.json(
         { message: 'Template not found' },
@@ -68,7 +73,8 @@ export async function PUT(
     return NextResponse.json(updatedTemplate)
   } catch (error) {
     console.error('Error updating email template:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Failed to update email template' },
       { status: 500 }
     )
@@ -81,15 +87,18 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session || !hasPermission(session.user, 'email-templates-management-write')) {
+
+    if (!session || !checkPermission(session.user, 'Email Templates', 'Write')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       )
     }
+
     const templateId = params.id
 
     const templateIndex = emailTemplates.findIndex(t => t.id === templateId)
+
     if (templateIndex === -1) {
       return NextResponse.json(
         { message: 'Template not found' },
@@ -102,7 +111,8 @@ export async function DELETE(
     return NextResponse.json({ message: 'Template deleted successfully' })
   } catch (error) {
     console.error('Error deleting email template:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Failed to delete email template' },
       { status: 500 }
     )

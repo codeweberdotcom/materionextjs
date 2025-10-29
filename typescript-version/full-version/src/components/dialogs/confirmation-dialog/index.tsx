@@ -50,6 +50,7 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
       setUserInput(value)
       setSecondDialog(true)
     }
+
     setOpen(false)
   }
 

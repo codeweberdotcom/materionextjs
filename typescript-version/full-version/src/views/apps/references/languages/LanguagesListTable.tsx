@@ -72,8 +72,10 @@ type Language = {
 
 const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
+
   addMeta({ itemRank })
-  return itemRank.passed
+  
+return itemRank.passed
 }
 
 const DebouncedInput = ({
@@ -124,8 +126,10 @@ const LanguagesListTable = () => {
     const fetchLanguages = async () => {
       try {
         const response = await fetch('/api/languages')
+
         if (response.ok) {
           const languages = await response.json()
+
           setData(languages)
           setFilteredData(languages)
         }
@@ -248,11 +252,13 @@ const LanguagesListTable = () => {
 
       if (response.ok) {
         const updatedData = data.filter(lang => lang.id !== id)
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success('Language deleted successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to delete language')
       }
     } catch (error) {
@@ -274,12 +280,14 @@ const LanguagesListTable = () => {
       if (response.ok) {
         const newLanguage = await response.json()
         const updatedData = [...data, newLanguage]
+
         setData(updatedData)
         setFilteredData(updatedData)
         setAddLanguageOpen(false)
         toast.success('Language added successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to add language')
       }
     } catch (error) {
@@ -301,6 +309,7 @@ const LanguagesListTable = () => {
       if (response.ok) {
         const updatedLanguage = await response.json()
         const updatedData = data.map(lang => lang.id === id ? updatedLanguage : lang)
+
         setData(updatedData)
         setFilteredData(updatedData)
         setEditLanguageOpen(false)
@@ -308,6 +317,7 @@ const LanguagesListTable = () => {
         toast.success('Language updated successfully!')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to update language')
       }
     } catch (error) {
@@ -324,14 +334,17 @@ const LanguagesListTable = () => {
 
       if (response.ok) {
         const updatedLanguage = await response.json()
+
         const updatedData = data.map(lang =>
           lang.id === updatedLanguage.id ? updatedLanguage : lang
         )
+
         setData(updatedData)
         setFilteredData(updatedData)
         toast.success(`Language ${updatedLanguage.isActive ? 'activated' : 'deactivated'} successfully!`)
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Failed to toggle language status')
       }
     } catch (error) {
