@@ -1,21 +1,30 @@
+const { createServer } = require('http');
+const { parse } = require('url');
+const next = require('next');
 const { Server } = require('socket.io');
-const http = require('http');
-const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: ["http://localhost:3000", "http://localhost:3002"],
-    methods: ["GET", "POST"]
-  }
-});
+const dev = process.env.NODE_ENV !== 'production';
+const app = next({ dev });
+const handle = app.getRequestHandler();
 
 const prisma = new PrismaClient();
 
 // Store active users
 const activeUsers = new Map();
+
+app.prepare().then(() => {
+  const server = createServer((req, res) => {
+    const parsedUrl = parse(req.url, true);
+    handle(req, res, parsedUrl);
+  });
+
+  const io = new Server(server, {
+    cors: {
+      origin: ["http://localhost:3000"],
+      methods: ["GET", "POST"]
+    }
+  });
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
@@ -286,25 +295,26 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 3003;
+  const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, () => {
-  console.log(`Socket.IO server running on port ${PORT}`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', async () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  await prisma.$disconnect();
-  server.close(() => {
-    console.log('Process terminated');
+  server.listen(PORT, () => {
+    console.log(`Next.js + Socket.IO server running on port ${PORT}`);
   });
-});
 
-process.on('SIGINT', async () => {
-  console.log('SIGINT received, shutting down gracefully');
-  await prisma.$disconnect();
-  server.close(() => {
-    console.log('Process terminated');
+  // Graceful shutdown
+  process.on('SIGTERM', async () => {
+    console.log('SIGTERM received, shutting down gracefully');
+    await prisma.$disconnect();
+    server.close(() => {
+      console.log('Process terminated');
+    });
+  });
+
+  process.on('SIGINT', async () => {
+    console.log('SIGINT received, shutting down gracefully');
+    await prisma.$disconnect();
+    server.close(() => {
+      console.log('Process terminated');
+    });
   });
 });

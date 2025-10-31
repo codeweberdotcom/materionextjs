@@ -36,6 +36,7 @@ import { formatDateToMonthShort } from './utils'
 
 // Custom Hooks
 import { useSocket } from '@/hooks/useSocket'
+import { useUnreadByContact } from '@/hooks/useUnreadByContact'
 
 export const statusObj: StatusObjType = {
   busy: 'error',
@@ -56,6 +57,7 @@ type Props = {
   isBelowMdScreen: boolean
   isBelowSmScreen: boolean
   messageInputRef: RefObject<HTMLDivElement>
+  unreadCount: number
 }
 
 type RenderChatType = {
@@ -68,9 +70,9 @@ type RenderChatType = {
 }
 
 // Render contacts list (all users except current)
-const renderContacts = (props: RenderChatType & { session: any; socket: any }) => {
+const renderContacts = (props: RenderChatType & { session: any; socket: any; unreadByContact: { [contactId: string]: number } }) => {
   // Props
-  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen, session, socket } = props
+  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen, session, socket, unreadByContact } = props
 
   return chatStore.contacts.map(contact => {
     const isContactActive = chatStore.activeUser?.id === contact.id
@@ -90,6 +92,10 @@ const renderContacts = (props: RenderChatType & { session: any; socket: any }) =
     const lastMessage = contactChat?.chat && contactChat.chat.length > 0 ? contactChat.chat[contactChat.chat.length - 1]?.message : null
     console.log('💬 Последнее сообщение из чата:', lastMessage)
     console.log('📝 Альтернатива lastMessage из chat.lastMessage:', contactChat?.lastMessage)
+
+    // Get unread count for this contact
+    const unreadCount = unreadByContact[contact.id] || 0
+    console.log('📊 Непрочитанные сообщения для контакта', contact.id, ':', unreadCount)
 
     return (
       <li
@@ -147,15 +153,19 @@ const renderContacts = (props: RenderChatType & { session: any; socket: any }) =
           </Typography>
         </div>
         <div className='flex flex-col items-end justify-start'>
-          <Typography
-            variant='body2'
-            color='inherit'
-            className={classnames('truncate', {
-              'text-textDisabled': !isContactActive
-            })}
-          >
-            {contact.status}
-          </Typography>
+          {unreadCount > 0 ? (
+            <Chip label={unreadCount > 99 ? '99+' : unreadCount} color='error' size='small' />
+          ) : (
+            <Typography
+              variant='body2'
+              color='inherit'
+              className={classnames('truncate', {
+                'text-textDisabled': !isContactActive
+              })}
+            >
+              {contact.status}
+            </Typography>
+          )}
         </div>
       </li>
     )
@@ -184,12 +194,14 @@ const SidebarLeft = (props: Props) => {
     isBelowLgScreen,
     isBelowMdScreen,
     isBelowSmScreen,
-    messageInputRef
+    messageInputRef,
+    unreadCount
   } = props
 
   // Hooks
   const { data: session } = useSession()
   const { socket } = useSocket(session?.user?.id || null)
+  const { unreadByContact } = useUnreadByContact()
 
   // Make session available in renderContacts function
   const currentSession = session
@@ -243,6 +255,11 @@ const SidebarLeft = (props: Props) => {
               setUserSidebar(true)
             }}
           />
+          {unreadCount > 0 && (
+            <div className='flex items-center justify-center bg-error text-white rounded-full min-w-5 h-5 px-1 text-xs font-medium'>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </div>
+          )}
           <div className='flex is-full items-center flex-auto sm:gap-x-3'>
             <Autocomplete
               fullWidth
@@ -323,7 +340,8 @@ const SidebarLeft = (props: Props) => {
               isBelowMdScreen,
               setBackdropOpen,
               session: currentSession,
-              socket
+              socket,
+              unreadByContact
             })}
           </ul>
         </ScrollWrapper>

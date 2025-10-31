@@ -26,6 +26,7 @@ import ChatContent from './ChatContent'
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
 import { useSocket } from '@/hooks/useSocket'
+import { useUnreadMessages } from '@/hooks/useUnreadMessages'
 
 // Util Imports
 import { commonLayoutClasses } from '@layouts/utils/layoutClasses'
@@ -44,6 +45,7 @@ const ChatWrapper = () => {
   const chatStore = useSelector((state: RootState) => state.chatReducer)
   const { data: session } = useSession()
   const { socket, isConnected } = useSocket(session?.user?.id || null)
+  const { unreadCount } = useUnreadMessages()
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
   const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))
@@ -231,6 +233,7 @@ const ChatWrapper = () => {
         isBelowMdScreen={isBelowMdScreen}
         isBelowSmScreen={isBelowSmScreen}
         messageInputRef={messageInputRef}
+        unreadCount={unreadCount}
       />
 
       <ChatContent

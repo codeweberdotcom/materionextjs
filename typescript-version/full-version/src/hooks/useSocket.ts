@@ -10,7 +10,7 @@ export const useSocket = (userId: string | null) => {
     if (!userId) return;
 
     // Create socket connection
-    const newSocket = io('http://localhost:3003', {
+    const newSocket = io('http://localhost:3000', {
       transports: ['websocket', 'polling'],
     });
 
