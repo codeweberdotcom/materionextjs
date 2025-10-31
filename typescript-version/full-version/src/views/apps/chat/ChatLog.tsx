@@ -10,6 +10,7 @@ import CardContent from '@mui/material/CardContent'
 // Third-party Imports
 import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
+import { useSession } from 'next-auth/react'
 
 // Type Imports
 import type { ChatType, ChatDataType, UserChatType, ProfileUserType } from '@/types/apps/chatTypes'
@@ -20,8 +21,11 @@ import CustomAvatar from '@core/components/mui/Avatar'
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
 
+// Custom Hooks
+import { useChat } from '@/hooks/useChat'
+
 type MsgGroupType = {
-  senderId: number
+  senderId: string
   messages: Omit<UserChatType, 'senderId'>[]
 }
 
@@ -104,6 +108,10 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
   // Vars
   const activeUserChat = chatStore.chats.find((chat: ChatType) => chat.userId === chatStore.activeUser?.id)
 
+  // Hooks
+  const { data: session } = useSession()
+  const { messages: socketMessages, markMessagesAsRead, room } = useChat(chatStore.activeUser?.id?.toString())
+
   // Refs
   const scrollRef = useRef(null)
 
@@ -128,6 +136,36 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatStore])
 
+  // Scroll to bottom when socket messages change
+  useEffect(() => {
+    if (socketMessages && socketMessages.length) {
+      scrollToBottom()
+    }
+  }, [socketMessages])
+
+  // Mark messages as read when chat is opened
+  useEffect(() => {
+    console.log('🔍 [DEBUG] useEffect для markMessagesAsRead:', {
+      activeUserId: chatStore.activeUser?.id,
+      sessionUserId: session?.user?.id,
+      markMessagesAsReadExists: !!markMessagesAsRead,
+      socketMessagesLength: socketMessages?.length || 0,
+      roomId: room?.id
+    })
+
+    if (chatStore.activeUser?.id && session?.user?.id && markMessagesAsRead && room?.id) {
+      console.log('👁️ Чат открыт, помечаем сообщения как прочитанные')
+      markMessagesAsRead()
+    } else {
+      console.log('⚠️ Условия для markMessagesAsRead не выполнены:', {
+        hasActiveUser: !!chatStore.activeUser?.id,
+        hasSessionUser: !!session?.user?.id,
+        hasMarkMessagesAsRead: !!markMessagesAsRead,
+        hasRoom: !!room?.id
+      })
+    }
+  }, [chatStore.activeUser?.id, session?.user?.id, room?.id])
+
   return (
     <ScrollWrapper
       isBelowLgScreen={isBelowLgScreen}
@@ -135,7 +173,75 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
       className='bg-[var(--mui-palette-customColors-chatBg)]'
     >
       <CardContent className='p-0'>
-        {activeUserChat &&
+        {/* Render Socket.IO messages if available, otherwise fallback to Redux */}
+        {socketMessages && socketMessages.length > 0 ? (
+          socketMessages.map((message, index) => {
+            const isSender = message.senderId === session?.user?.id;
+
+            return (
+              <div key={message.id} className={classnames('flex gap-4 p-5', { 'flex-row-reverse': isSender })}>
+                {!isSender ? (
+                  contacts.find(contact => contact.id === message.senderId)?.avatar ? (
+                    <Avatar
+                      alt={contacts.find(contact => contact.id === message.senderId)?.fullName}
+                      src={contacts.find(contact => contact.id === message.senderId)?.avatar}
+                      className='is-8 bs-8'
+                    />
+                  ) : (
+                    <CustomAvatar
+                      color={contacts.find(contact => contact.id === message.senderId)?.avatarColor}
+                      skin='light'
+                      size={32}
+                    >
+                      {getInitials(contacts.find(contact => contact.id === message.senderId)?.fullName as string)}
+                    </CustomAvatar>
+                  )
+                ) : profileUser.avatar ? (
+                  <Avatar alt={profileUser.fullName} src={profileUser.avatar} className='is-8 bs-8' />
+                ) : (
+                  <CustomAvatar alt={profileUser.fullName} src={profileUser.avatar} size={32} />
+                )}
+                <div
+                  className={classnames('flex flex-col gap-2', {
+                    'items-end': isSender,
+                    'max-is-[65%]': !isBelowMdScreen,
+                    'max-is-[75%]': isBelowMdScreen && !isBelowSmScreen,
+                    'max-is-[calc(100%-5.75rem)]': isBelowSmScreen
+                  })}
+                >
+                  <Typography
+                    className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
+                      'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                      'bg-primary text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                    })}
+                    style={{ wordBreak: 'break-word' }}
+                  >
+                    {message.content}
+                  </Typography>
+                  <div className='flex items-center gap-2'>
+                    {isSender && (
+                      <>
+                        {message.readAt ? (
+                          <i className='ri-check-double-line text-success text-base' />
+                        ) : (
+                          <i className='ri-check-line text-base' />
+                        )}
+                      </>
+                    )}
+                    <Typography variant='caption'>
+                      {new Date(message.createdAt).toLocaleString('en-US', {
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: true
+                      })}
+                    </Typography>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          activeUserChat &&
           formatedChatData(activeUserChat.chat, profileUser).map((msgGroup, index) => {
             const isSender = msgGroup.senderId === profileUser.id
 
@@ -225,7 +331,8 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                 </div>
               </div>
             )
-          })}
+          })
+        )}
       </CardContent>
     </ScrollWrapper>
   )

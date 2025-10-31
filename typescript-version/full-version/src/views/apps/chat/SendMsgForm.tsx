@@ -16,6 +16,7 @@ import MenuItem from '@mui/material/MenuItem'
 // Third-party Imports
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
+import { useSession } from 'next-auth/react'
 
 // Type Imports
 import type { ContactType } from '@/types/apps/chatTypes'
@@ -26,6 +27,9 @@ import { sendMsg } from '@/redux-store/slices/chat'
 
 // Component Imports
 import CustomIconButton from '@core/components/mui/IconButton'
+
+// Custom Hooks
+import { useChat } from '@/hooks/useChat'
 
 type Props = {
   dispatch: AppDispatch
@@ -93,6 +97,10 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
   // Refs
   const anchorRef = useRef<HTMLButtonElement>(null)
 
+  // Hooks
+  const { data: session } = useSession()
+  const { sendMessage } = useChat(activeUser?.id?.toString())
+
   const open = Boolean(anchorEl)
 
   const handleToggle = () => {
@@ -111,7 +119,12 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
     event.preventDefault()
 
     if (msg.trim() !== '') {
-      dispatch(sendMsg({ msg }))
+      // Send via Socket.IO if connected, otherwise fallback to Redux
+      if (session?.user?.id && sendMessage) {
+        sendMessage(msg)
+      } else {
+        dispatch(sendMsg({ msg }))
+      }
       setMsg('')
     }
   }

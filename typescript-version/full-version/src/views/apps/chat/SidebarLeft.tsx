@@ -15,6 +15,7 @@ import IconButton from '@mui/material/IconButton'
 // Third-party Imports
 import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
+import { useSession } from 'next-auth/react'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
@@ -33,6 +34,9 @@ import AvatarWithBadge from './AvatarWithBadge'
 import { getInitials } from '@/utils/getInitials'
 import { formatDateToMonthShort } from './utils'
 
+// Custom Hooks
+import { useSocket } from '@/hooks/useSocket'
+
 export const statusObj: StatusObjType = {
   busy: 'error',
   away: 'warning',
@@ -42,7 +46,7 @@ export const statusObj: StatusObjType = {
 
 type Props = {
   chatStore: ChatDataType
-  getActiveUserData: (id: number) => void
+  getActiveUserData: (id: string) => void
   dispatch: AppDispatch
   backdropOpen: boolean
   setBackdropOpen: (value: boolean) => void
@@ -56,65 +60,102 @@ type Props = {
 
 type RenderChatType = {
   chatStore: ChatDataType
-  getActiveUserData: (id: number) => void
+  getActiveUserData: (id: string) => void
   setSidebarOpen: (value: boolean) => void
   backdropOpen: boolean
   setBackdropOpen: (value: boolean) => void
   isBelowMdScreen: boolean
 }
 
-// Render chat list
-const renderChat = (props: RenderChatType) => {
+// Render contacts list (all users except current)
+const renderContacts = (props: RenderChatType & { session: any; socket: any }) => {
   // Props
-  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen } = props
+  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen, session, socket } = props
 
-  return chatStore.chats.map(chat => {
-    const contact = chatStore.contacts.find(contact => contact.id === chat.userId) || chatStore.contacts[0]
-    const isChatActive = chatStore.activeUser?.id === contact.id
+  return chatStore.contacts.map(contact => {
+    const isContactActive = chatStore.activeUser?.id === contact.id
+
+    // Find the chat for this contact to get the last message
+    console.log('🔍 Поиск чата для контакта:', contact.id, contact.fullName)
+    console.log('📋 Все чаты в store:', chatStore.chats.map(c => ({ id: c.id, userId: c.userId, lastMessage: c.lastMessage, chatLength: c.chat.length })))
+
+    const contactChat = chatStore.chats.find(chat => {
+      const match = chat.id === contact.id.toString()
+      console.log('🔎 Проверка чата:', chat.id, '===', contact.id.toString(), '=', match)
+      return match
+    })
+
+    console.log('🎯 Найден чат для контакта:', contactChat ? { id: contactChat.id, lastMessage: contactChat.lastMessage, chatLength: contactChat.chat.length } : 'не найден')
+
+    const lastMessage = contactChat?.chat && contactChat.chat.length > 0 ? contactChat.chat[contactChat.chat.length - 1]?.message : null
+    console.log('💬 Последнее сообщение из чата:', lastMessage)
+    console.log('📝 Альтернатива lastMessage из chat.lastMessage:', contactChat?.lastMessage)
 
     return (
       <li
-        key={chat.id}
+        key={`contact-${Math.random()}-${contact.about || 'no-about'}`}
         className={classnames('flex items-start gap-4 pli-3 plb-2 cursor-pointer rounded mbe-1', {
-          'bg-primary shadow-xs': isChatActive,
-          'text-[var(--mui-palette-primary-contrastText)]': isChatActive
+          'bg-primary shadow-xs': isContactActive,
+          'text-[var(--mui-palette-primary-contrastText)]': isContactActive
         })}
         onClick={() => {
-          getActiveUserData(chat.userId)
+          console.log('🔍 Clicking on contact:', contact)
+          console.log('👤 Current session user ID:', session?.user?.id)
+          console.log('🔌 Socket connected:', socket?.connected)
+
+          if (socket && session?.user?.id) {
+            console.log('📤 Emitting getOrCreateRoom with:', {
+              user1Id: session.user.id,
+              user2Id: contact.id.toString()
+            })
+
+            // Listen for room data response
+            const handleRoomData = (data: any) => {
+              console.log('📨 Received roomData:', data)
+              socket.off('roomData', handleRoomData)
+            }
+
+            socket.on('roomData', handleRoomData)
+
+            // Emit to socket to get or create room between current user and selected contact
+            socket.emit('getOrCreateRoom', {
+              user1Id: session.user.id,
+              user2Id: contact.id.toString()
+            })
+          } else {
+            console.warn('⚠️ Cannot create room: socket or session missing')
+          }
+
+          // Set active user for UI
+          console.log('🎯 Setting active user:', contact.id)
+          getActiveUserData(contact.id)
           isBelowMdScreen && setSidebarOpen(false)
           isBelowMdScreen && backdropOpen && setBackdropOpen(false)
         }}
       >
         <AvatarWithBadge
           src={contact.avatar}
-          isChatActive={isChatActive}
+          isChatActive={isContactActive}
           alt={contact.fullName}
           badgeColor={statusObj[contact.status]}
           color={contact.avatarColor}
         />
         <div className='min-is-0 flex-auto'>
-          <Typography color='inherit'>{contact?.fullName}</Typography>
-          {chat.chat.length ? (
-            <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
-              {chat.chat[chat.chat.length - 1].message}
-            </Typography>
-          ) : (
-            <Typography variant='body2' color={isChatActive ? 'inherit' : 'text.secondary'} className='truncate'>
-              {contact.role}
-            </Typography>
-          )}
+          <Typography color='inherit'>{contact.fullName}</Typography>
+          <Typography variant='body2' color={isContactActive ? 'inherit' : 'text.secondary'} className='truncate'>
+            {lastMessage || 'No messages yet'}
+          </Typography>
         </div>
         <div className='flex flex-col items-end justify-start'>
           <Typography
             variant='body2'
             color='inherit'
             className={classnames('truncate', {
-              'text-textDisabled': !isChatActive
+              'text-textDisabled': !isContactActive
             })}
           >
-            {chat.chat.length ? formatDateToMonthShort(chat.chat[chat.chat.length - 1].time) : null}
+            {contact.status}
           </Typography>
-          {chat.unseenMsgs > 0 ? <Chip label={chat.unseenMsgs} color='error' size='small' /> : null}
         </div>
       </li>
     )
@@ -146,16 +187,24 @@ const SidebarLeft = (props: Props) => {
     messageInputRef
   } = props
 
+  // Hooks
+  const { data: session } = useSession()
+  const { socket } = useSocket(session?.user?.id || null)
+
+  // Make session available in renderContacts function
+  const currentSession = session
+
   // States
   const [userSidebar, setUserSidebar] = useState(false)
   const [searchValue, setSearchValue] = useState<string | null>()
 
   const handleChange = (event: any, newValue: string | null) => {
     setSearchValue(newValue)
-    dispatch(addNewChat({ id: chatStore.contacts.find(contact => contact.fullName === newValue)?.id }))
-    getActiveUserData(
-      chatStore.contacts.find(contact => contact.fullName === newValue)?.id || (chatStore.activeUser?.id as number)
-    )
+    const contact = chatStore.contacts.find(contact => contact.fullName === newValue)
+    if (contact) {
+      dispatch(addNewChat({ id: contact.id }))
+      getActiveUserData(contact.id)
+    }
     isBelowMdScreen && setSidebarOpen(false)
     setBackdropOpen(false)
     setSearchValue(null)
@@ -266,13 +315,15 @@ const SidebarLeft = (props: Props) => {
         </div>
         <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
           <ul className='p-3 pbs-4'>
-            {renderChat({
+            {renderContacts({
               chatStore,
               getActiveUserData,
               backdropOpen,
               setSidebarOpen,
               isBelowMdScreen,
-              setBackdropOpen
+              setBackdropOpen,
+              session: currentSession,
+              socket
             })}
           </ul>
         </ScrollWrapper>

@@ -53,7 +53,6 @@ const SmtpSettings = () => {
   const [testLoading, setTestLoading] = useState(false)
   const [sendTestLoading, setSendTestLoading] = useState(false)
   const [testRecipientEmail, setTestRecipientEmail] = useState('')
-  const [message, setMessage] = useState('')
 
   // Email provider presets
   const presets: Record<string, SmtpPreset> = {
@@ -109,10 +108,7 @@ const SmtpSettings = () => {
       }))
       const providerName = dictionary?.navigation?.[provider] || provider
 
-      setMessage(`Настройки для ${providerName} применены!`)
-
-      // Clear message after 3 seconds
-      setTimeout(() => setMessage(''), 3000)
+      toast.success(`Настройки для ${providerName} применены!`)
     }
   }
 
@@ -160,13 +156,11 @@ const SmtpSettings = () => {
     })
 
     // Clear message when user makes changes
-    if (message) setMessage('')
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setMessage('')
 
     try {
       const response = await fetch('/api/settings/smtp', {
@@ -194,7 +188,6 @@ const SmtpSettings = () => {
 
   const handleTestConnection = async () => {
     setTestLoading(true)
-    setMessage('')
 
     try {
       const response = await fetch('/api/settings/smtp/test', {
@@ -228,7 +221,6 @@ const SmtpSettings = () => {
     }
 
     setSendTestLoading(true)
-    setMessage('')
 
     try {
       const response = await fetch('/api/settings/smtp/send-test', {
@@ -273,12 +265,6 @@ const SmtpSettings = () => {
       <Card>
         <CardHeader title={dictionary?.navigation?.smtpSettings || 'SMTP Settings'} />
         <CardContent>
-          {message && (
-            <Alert severity={message.includes('применены') || message.includes('applied') || message.includes('успешно') || message.includes('successfully') || message.includes('сохранены') || message.includes('saved') ? 'success' : 'error'} sx={{ mb: 4 }}>
-              {message}
-            </Alert>
-          )}
-
           {/* Provider Presets */}
           {canUpdate && (
             <>

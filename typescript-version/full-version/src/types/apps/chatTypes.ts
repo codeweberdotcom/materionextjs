@@ -6,7 +6,7 @@ export type StatusType = 'busy' | 'away' | 'online' | 'offline'
 export type StatusObjType = Record<StatusType, ThemeColor>
 
 export type ProfileUserType = {
-  id: number
+  id: string
   role: string
   about: string
   avatar: string
@@ -19,7 +19,7 @@ export type ProfileUserType = {
 }
 
 export type ContactType = {
-  id: number
+  id: string
   fullName: string
   role: string
   about: string
@@ -31,15 +31,16 @@ export type ContactType = {
 export type UserChatType = {
   message: string
   time: string | Date
-  senderId: number
+  senderId: string
   msgStatus?: Record<'isSent' | 'isDelivered' | 'isSeen', boolean>
 }
 
 export type ChatType = {
-  id: number
-  userId: number
+  id: string
+  userId: string
   unseenMsgs: number
   chat: UserChatType[]
+  lastMessage?: string
 }
 
 export type ChatDataType = {
