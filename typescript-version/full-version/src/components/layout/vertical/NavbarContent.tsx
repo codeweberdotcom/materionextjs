@@ -1,5 +1,5 @@
-// Third-party Imports
 import classnames from 'classnames'
+// Third-party Imports
 
 // Type Imports
 import type { ShortcutsType } from '@components/layout/shared/ShortcutsDropdown'
@@ -115,7 +115,7 @@ const NavbarContent = () => {
         <LanguageDropdown />
         <ModeDropdown />
         <ShortcutsDropdown shortcuts={shortcuts} />
-        <NotificationsDropdown notifications={notifications} />
+        <NotificationsDropdown notifications={[]} />
         <UserDropdown />
       </div>
     </div>

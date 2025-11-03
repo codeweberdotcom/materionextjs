@@ -29,6 +29,7 @@ import { addNewChat } from '@/redux-store/slices/chat'
 import CustomAvatar from '@core/components/mui/Avatar'
 import UserProfileLeft from './UserProfileLeft'
 import AvatarWithBadge from './AvatarWithBadge'
+import { useTranslation } from '@/contexts/TranslationContext'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
@@ -67,35 +68,27 @@ type RenderChatType = {
   backdropOpen: boolean
   setBackdropOpen: (value: boolean) => void
   isBelowMdScreen: boolean
+  navigation: any
 }
 
 // Render contacts list (all users except current)
-const renderContacts = (props: RenderChatType & { session: any; socket: any; unreadByContact: { [contactId: string]: number } }) => {
+const renderContacts = (props: RenderChatType & { session: any; socket: any; unreadByContact: { [contactId: string]: number }; navigation: any }) => {
   // Props
-  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen, session, socket, unreadByContact } = props
+  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen, session, socket, unreadByContact, navigation } = props
 
   return chatStore.contacts.map(contact => {
     const isContactActive = chatStore.activeUser?.id === contact.id
 
     // Find the chat for this contact to get the last message
-    console.log('🔍 Поиск чата для контакта:', contact.id, contact.fullName)
-    console.log('📋 Все чаты в store:', chatStore.chats.map(c => ({ id: c.id, userId: c.userId, lastMessage: c.lastMessage, chatLength: c.chat.length })))
-
     const contactChat = chatStore.chats.find(chat => {
       const match = chat.id === contact.id.toString()
-      console.log('🔎 Проверка чата:', chat.id, '===', contact.id.toString(), '=', match)
       return match
     })
 
-    console.log('🎯 Найден чат для контакта:', contactChat ? { id: contactChat.id, lastMessage: contactChat.lastMessage, chatLength: contactChat.chat.length } : 'не найден')
-
     const lastMessage = contactChat?.chat && contactChat.chat.length > 0 ? contactChat.chat[contactChat.chat.length - 1]?.message : null
-    console.log('💬 Последнее сообщение из чата:', lastMessage)
-    console.log('📝 Альтернатива lastMessage из chat.lastMessage:', contactChat?.lastMessage)
 
     // Get unread count for this contact
     const unreadCount = unreadByContact[contact.id] || 0
-    console.log('📊 Непрочитанные сообщения для контакта', contact.id, ':', unreadCount)
 
     return (
       <li
@@ -105,19 +98,9 @@ const renderContacts = (props: RenderChatType & { session: any; socket: any; unr
           'text-[var(--mui-palette-primary-contrastText)]': isContactActive
         })}
         onClick={() => {
-          console.log('🔍 Clicking on contact:', contact)
-          console.log('👤 Current session user ID:', session?.user?.id)
-          console.log('🔌 Socket connected:', socket?.connected)
-
           if (socket && session?.user?.id) {
-            console.log('📤 Emitting getOrCreateRoom with:', {
-              user1Id: session.user.id,
-              user2Id: contact.id.toString()
-            })
-
             // Listen for room data response
             const handleRoomData = (data: any) => {
-              console.log('📨 Received roomData:', data)
               socket.off('roomData', handleRoomData)
             }
 
@@ -128,12 +111,9 @@ const renderContacts = (props: RenderChatType & { session: any; socket: any; unr
               user1Id: session.user.id,
               user2Id: contact.id.toString()
             })
-          } else {
-            console.warn('⚠️ Cannot create room: socket or session missing')
           }
 
           // Set active user for UI
-          console.log('🎯 Setting active user:', contact.id)
           getActiveUserData(contact.id)
           isBelowMdScreen && setSidebarOpen(false)
           isBelowMdScreen && backdropOpen && setBackdropOpen(false)
@@ -149,7 +129,7 @@ const renderContacts = (props: RenderChatType & { session: any; socket: any; unr
         <div className='min-is-0 flex-auto'>
           <Typography color='inherit'>{contact.fullName}</Typography>
           <Typography variant='body2' color={isContactActive ? 'inherit' : 'text.secondary'} className='truncate'>
-            {lastMessage || 'No messages yet'}
+            {lastMessage || navigation.noMessagesYet}
           </Typography>
         </div>
         <div className='flex flex-col items-end justify-start'>
@@ -202,9 +182,11 @@ const SidebarLeft = (props: Props) => {
   const { data: session } = useSession()
   const { socket } = useSocket(session?.user?.id || null)
   const { unreadByContact } = useUnreadByContact()
+  const { navigation } = useTranslation()
 
   // Make session available in renderContacts function
   const currentSession = session
+  const currentNavigation = navigation
 
   // States
   const [userSidebar, setUserSidebar] = useState(false)
@@ -248,18 +230,10 @@ const SidebarLeft = (props: Props) => {
       >
         <div className='flex plb-[18px] pli-5 gap-4 border-be'>
           <AvatarWithBadge
-            alt={chatStore.profileUser.fullName}
-            src={chatStore.profileUser.avatar}
-            badgeColor={statusObj[chatStore.profileUser.status]}
-            onClick={() => {
-              setUserSidebar(true)
-            }}
+            alt={session?.user?.name || ''}
+            src={session?.user?.image || ''}
+            badgeColor={statusObj.online}
           />
-          {unreadCount > 0 && (
-            <div className='flex items-center justify-center bg-error text-white rounded-full min-w-5 h-5 px-1 text-xs font-medium'>
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </div>
-          )}
           <div className='flex is-full items-center flex-auto sm:gap-x-3'>
             <Autocomplete
               fullWidth
@@ -273,7 +247,7 @@ const SidebarLeft = (props: Props) => {
                   {...params}
                   variant='outlined'
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: '999px !important' } }}
-                  placeholder='Search Contacts'
+                  placeholder={navigation.searchContacts}
                   slotProps={{
                     input: {
                       ...params.InputProps,
@@ -341,7 +315,8 @@ const SidebarLeft = (props: Props) => {
               setBackdropOpen,
               session: currentSession,
               socket,
-              unreadByContact
+              unreadByContact,
+              navigation: currentNavigation
             })}
           </ul>
         </ScrollWrapper>

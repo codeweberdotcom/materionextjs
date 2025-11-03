@@ -22,6 +22,7 @@ import type { ContactType } from '@/types/apps/chatTypes'
 // Component Imports
 import { statusObj } from './SidebarLeft'
 import AvatarWithBadge from './AvatarWithBadge'
+import { useTranslation } from '@/contexts/TranslationContext'
 
 type Props = {
   open: boolean
@@ -55,6 +56,9 @@ const UserProfileRight = (props: Props) => {
   // Props
   const { open, handleClose, activeUser, isBelowLgScreen, isBelowSmScreen } = props
 
+  // Hooks
+  const { navigation } = useTranslation()
+
   return activeUser ? (
     <Drawer
       open={open}
@@ -87,83 +91,35 @@ const UserProfileRight = (props: Props) => {
       <ScrollWrapper isBelowLgScreen={isBelowLgScreen} className='flex flex-col gap-6 p-5'>
         <div className='flex flex-col gap-1'>
           <Typography className='uppercase' color='text.disabled'>
-            About
+            {navigation.about}
           </Typography>
           <Typography>{activeUser.about}</Typography>
         </div>
         <div className='flex flex-col gap-1'>
           <Typography className='uppercase' color='text.disabled'>
-            Personal Information
+            {navigation.personalInformation}
           </Typography>
           <List>
             <ListItem className='p-2 gap-2'>
               <ListItemIcon>
                 <i className='ri-mail-line' />
               </ListItemIcon>
-              <ListItemText primary={`${activeUser.fullName.toLowerCase().replace(/\s/g, '_')}@email.com`} />
+              <ListItemText primary={activeUser.about} />
             </ListItem>
             <ListItem className='p-2 gap-2'>
               <ListItemIcon>
-                <i className='ri-phone-line' />
+                <i className='ri-global-line' />
               </ListItemIcon>
-              <ListItemText primary='+1(123) 456 - 7890' />
+              <ListItemText primary='Россия' />
             </ListItem>
             <ListItem className='p-2 gap-2'>
               <ListItemIcon>
-                <i className='ri-time-line' />
+                <i className='ri-chat-voice-line' />
               </ListItemIcon>
-              <ListItemText primary='Mon - Fri 10AM - 8PM' />
+              <ListItemText primary='Русский' />
             </ListItem>
           </List>
         </div>
-        <div className='flex flex-col gap-1'>
-          <Typography className='uppercase' color='text.disabled'>
-            Options
-          </Typography>
-          <List>
-            <ListItem disablePadding>
-              <ListItemButton className='p-2 gap-2'>
-                <ListItemIcon>
-                  <i className='ri-bookmark-line' />
-                </ListItemIcon>
-                <ListItemText primary='Add Tag' />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton className='p-2 gap-2'>
-                <ListItemIcon>
-                  <i className='ri-user-star-line' />
-                </ListItemIcon>
-                <ListItemText primary='Important Contact' />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton className='p-2 gap-2'>
-                <ListItemIcon>
-                  <i className='ri-image-2-line' />
-                </ListItemIcon>
-                <ListItemText primary='Shared Image' />
-              </ListItemButton>
-            </ListItem>
-            <ListItem disablePadding>
-              <ListItemButton className='p-2 gap-2'>
-                <ListItemIcon>
-                  <i className='ri-forbid-2-line' />
-                </ListItemIcon>
-                <ListItemText primary='Block Contact' />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </div>
-        <Button
-          variant='contained'
-          color='error'
-          fullWidth
-          className='mbs-auto'
-          endIcon={<i className='ri-delete-bin-7-line' />}
-        >
-          Delete Contact
-        </Button>
       </ScrollWrapper>
     </Drawer>
   ) : null

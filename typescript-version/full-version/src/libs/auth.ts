@@ -37,6 +37,7 @@ const deleteCache = async (key: string) => {
 // Extend NextAuth types
 declare module 'next-auth' {
   interface User {
+    id: string
     role?: {
       id: string
       name: string
@@ -47,6 +48,7 @@ declare module 'next-auth' {
 
   interface Session {
     user: User & {
+      id: string
       role?: {
         id: string
         name: string
@@ -201,8 +203,6 @@ export const authOptions: NextAuthOptions = {
 return token
     },
     async session({ session, token }) {
-      console.log('🔍 [SESSION CHECK] Checking session for user:', token.id)
-
       if (token.id && session.user) {
         // Check cache first (30 seconds TTL)
         const cacheKey = `user_status_${token.id}`
@@ -210,11 +210,9 @@ return token
 
         let user
         if (cachedData) {
-          console.log('📋 [SESSION CHECK] Using cached user data for:', cachedData.name)
           user = cachedData
         } else {
           // Fetch from database if not cached
-          console.log('🗄️ [SESSION CHECK] Fetching user from database')
           user = await prisma.user.findUnique({
             where: { id: token.id as string },
             include: { role: true }
@@ -223,31 +221,23 @@ return token
           if (user) {
             // Cache user data for 30 seconds
             await setCache(cacheKey, user, 30)
-            console.log('💾 [SESSION CHECK] User data cached for 30 seconds:', user.name)
           }
         }
 
         if (user) {
-          console.log(' [SESSION CHECK] User found:', user.name, '- Active status:', user.isActive)
-
           // Check if user is still active during session validation
           if (!user.isActive) {
-            console.log('🚫 [SESSION CHECK] User is INACTIVE - throwing error for:', user.name)
             // Clear cache for inactive user
             await deleteCache(cacheKey)
             // Return null to invalidate the session
             throw new Error('User account is suspended')
           }
 
-          console.log('✅ [SESSION CHECK] User is ACTIVE - session valid for:', user.name)
-
           session.user.id = user.id
           session.user.name = user.name
           session.user.email = user.email
           session.user.image = user.image
           session.user.role = { id: user.role.id, name: user.role.name, description: user.role.description, permissions: user.role.permissions }
-        } else {
-          console.log('❌ [SESSION CHECK] User not found in database')
         }
       }
 

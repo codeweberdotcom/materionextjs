@@ -2,6 +2,9 @@
 import { useEffect, useState } from 'react'
 import type { RefObject } from 'react'
 
+// Next Imports
+import { useRouter, useParams } from 'next/navigation'
+
 // MUI Imports
 import Button from '@mui/material/Button'
 import Typography from '@mui/material/Typography'
@@ -13,13 +16,14 @@ import type { AppDispatch } from '@/redux-store'
 import type { ChatDataType, ContactType } from '@/types/apps/chatTypes'
 
 // Component Imports
-import OptionMenu from '@core/components/option-menu'
 import AvatarWithBadge from './AvatarWithBadge'
 import { statusObj } from './SidebarLeft'
 import ChatLog from './ChatLog'
 import SendMsgForm from './SendMsgForm'
 import UserProfileRight from './UserProfileRight'
 import CustomAvatar from '@core/components/mui/Avatar'
+import { toggleMute } from '@/redux-store/slices/chat'
+import { useTranslation } from '@/contexts/TranslationContext'
 
 type Props = {
   chatStore: ChatDataType
@@ -79,6 +83,11 @@ const ChatContent = (props: Props) => {
 
   const { activeUser } = chatStore
 
+  // Hooks
+  const router = useRouter()
+  const { lang } = useParams()
+  const { navigation } = useTranslation()
+
   // States
   const [userProfileRightOpen, setUserProfileRightOpen] = useState(false)
 
@@ -95,7 +104,7 @@ const ChatContent = (props: Props) => {
       <CustomAvatar variant='circular' size={98} color='primary' skin='light'>
         <i className='ri-wechat-line text-[50px]' />
       </CustomAvatar>
-      <Typography className='text-center'>Select a contact to start a conversation.</Typography>
+      <Typography className='text-center'>{navigation.selectContact}</Typography>
       {isBelowMdScreen && (
         <Button
           variant='contained'
@@ -105,7 +114,7 @@ const ChatContent = (props: Props) => {
             isBelowSmScreen ? setBackdropOpen(false) : setBackdropOpen(true)
           }}
         >
-          Select Contact
+          {navigation.selectContact}
         </Button>
       )}
     </CardContent>
@@ -138,54 +147,11 @@ const ChatContent = (props: Props) => {
                 setUserProfileLeftOpen={setUserProfileRightOpen}
               />
             )}
-            {isBelowMdScreen ? (
-              <OptionMenu
-                iconClassName='text-textSecondary'
-                options={[
-                  {
-                    text: 'View Contact',
-                    menuItemProps: {
-                      onClick: () => {
-                        setUserProfileRightOpen(true)
-                        setBackdropOpen(true)
-                      }
-                    }
-                  },
-                  'Mute Notifications',
-                  'Block Contact',
-                  'Clear Chat',
-                  'Block'
-                ]}
-              />
-            ) : (
+            {isBelowMdScreen ? null : (
               <div className='flex items-center gap-1'>
-                <IconButton size='small'>
-                  <i className='ri-phone-line text-textSecondary' />
-                </IconButton>
-                <IconButton size='small'>
-                  <i className='ri-video-add-line text-textSecondary' />
-                </IconButton>
                 <IconButton size='small'>
                   <i className='ri-search-line text-textSecondary' />
                 </IconButton>
-                <OptionMenu
-                  iconClassName='text-textSecondary'
-                  options={[
-                    {
-                      text: 'View Contact',
-                      menuItemProps: {
-                        onClick: () => {
-                          setUserProfileRightOpen(true)
-                          setBackdropOpen(true)
-                        }
-                      }
-                    },
-                    'Mute Notifications',
-                    'Block Contact',
-                    'Clear Chat',
-                    'Block'
-                  ]}
-                />
               </div>
             )}
           </div>

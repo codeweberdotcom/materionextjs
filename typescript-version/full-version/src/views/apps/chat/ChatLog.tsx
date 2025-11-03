@@ -1,11 +1,16 @@
 // React Imports
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import type { MutableRefObject, ReactNode } from 'react'
+
+// Next Imports
+import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Typography from '@mui/material/Typography'
 import Avatar from '@mui/material/Avatar'
 import CardContent from '@mui/material/CardContent'
+import Backdrop from '@mui/material/Backdrop'
+import CircularProgress from '@mui/material/CircularProgress'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -110,10 +115,13 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
 
   // Hooks
   const { data: session } = useSession()
-  const { messages: socketMessages, markMessagesAsRead, room } = useChat(chatStore.activeUser?.id?.toString())
+  const { lang: locale } = useParams()
+  const { messages: socketMessages, markMessagesAsRead, room, isRoomLoading } = useChat(chatStore.activeUser?.id?.toString())
+
 
   // Refs
   const scrollRef = useRef(null)
+  const lastProcessedMessageId = useRef<string | null>(null)
 
   // Function to scroll to bottom when new message is sent
   const scrollToBottom = () => {
@@ -125,6 +133,17 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
         // @ts-ignore
         scrollRef.current._container.scrollTop = scrollRef.current._container.scrollHeight
       }
+    }
+  }
+
+  // Function to play notification sound
+  const playNotificationSound = () => {
+    try {
+      const audio = new Audio(`/${locale}/new_message_codeweber.wav`)
+      audio.volume = 0.2
+      audio.play().catch(() => {})
+    } catch (err) {
+      // Error handling
     }
   }
 
@@ -140,31 +159,23 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
   useEffect(() => {
     if (socketMessages && socketMessages.length) {
       scrollToBottom()
+
+      // Play notification sound for new messages (only for messages not sent by current user)
+      const latestMessage = socketMessages[socketMessages.length - 1]
+      if (latestMessage && latestMessage.senderId !== session?.user?.id && latestMessage.id !== lastProcessedMessageId.current) {
+        lastProcessedMessageId.current = latestMessage.id
+        playNotificationSound()
+      }
     }
-  }, [socketMessages])
+  }, [socketMessages, session?.user?.id])
 
   // Mark messages as read when chat is opened
   useEffect(() => {
-    console.log('🔍 [DEBUG] useEffect для markMessagesAsRead:', {
-      activeUserId: chatStore.activeUser?.id,
-      sessionUserId: session?.user?.id,
-      markMessagesAsReadExists: !!markMessagesAsRead,
-      socketMessagesLength: socketMessages?.length || 0,
-      roomId: room?.id
-    })
-
     if (chatStore.activeUser?.id && session?.user?.id && markMessagesAsRead && room?.id) {
-      console.log('👁️ Чат открыт, помечаем сообщения как прочитанные')
       markMessagesAsRead()
-    } else {
-      console.log('⚠️ Условия для markMessagesAsRead не выполнены:', {
-        hasActiveUser: !!chatStore.activeUser?.id,
-        hasSessionUser: !!session?.user?.id,
-        hasMarkMessagesAsRead: !!markMessagesAsRead,
-        hasRoom: !!room?.id
-      })
     }
   }, [chatStore.activeUser?.id, session?.user?.id, room?.id])
+
 
   return (
     <ScrollWrapper
@@ -173,9 +184,17 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
       className='bg-[var(--mui-palette-customColors-chatBg)]'
     >
       <CardContent className='p-0'>
-        {/* Render Socket.IO messages if available, otherwise fallback to Redux */}
-        {socketMessages && socketMessages.length > 0 ? (
-          socketMessages.map((message, index) => {
+        {/* Show loading state while room is loading */}
+        {isRoomLoading ? (
+          <div className='flex items-center justify-center gap-2 absolute inset-0 z-10 bg-[var(--mui-palette-customColors-chatBg)]'>
+            <CircularProgress />
+            <Typography>{navigation.loadingMessages}</Typography>
+          </div>
+        ) : (
+          <>
+            {/* Render Socket.IO messages if available, otherwise fallback to Redux */}
+            {socketMessages && socketMessages.filter(message => message.content && message.content.trim() !== '').length > 0 ? (
+           socketMessages.filter(message => message.content && message.content.trim() !== '').map((message, index) => {
             const isSender = message.senderId === session?.user?.id;
 
             return (
@@ -196,10 +215,10 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                       {getInitials(contacts.find(contact => contact.id === message.senderId)?.fullName as string)}
                     </CustomAvatar>
                   )
-                ) : profileUser.avatar ? (
-                  <Avatar alt={profileUser.fullName} src={profileUser.avatar} className='is-8 bs-8' />
+                ) : session?.user?.image ? (
+                  <Avatar alt={session?.user?.name || ''} src={session?.user?.image} className='is-8 bs-8' />
                 ) : (
-                  <CustomAvatar alt={profileUser.fullName} src={profileUser.avatar} size={32} />
+                  <CustomAvatar alt={session?.user?.name || ''} src={session?.user?.image || undefined} size={32} />
                 )}
                 <div
                   className={classnames('flex flex-col gap-2', {
@@ -209,15 +228,27 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                     'max-is-[calc(100%-5.75rem)]': isBelowSmScreen
                   })}
                 >
-                  <Typography
-                    className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
-                      'bg-backgroundPaper rounded-e rounded-b': !isSender,
-                      'bg-primary text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
-                    })}
-                    style={{ wordBreak: 'break-word' }}
-                  >
-                    {message.content}
-                  </Typography>
+                  {message.content && message.content.trim() !== '' ? (
+                    <Typography
+                      className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
+                        'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                        'bg-primary text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                      })}
+                      style={{ wordBreak: 'break-word' }}
+                    >
+                      {message.content}
+                    </Typography>
+                  ) : (
+                    <Typography
+                      className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
+                        'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                        'bg-primary text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                      })}
+                      style={{ wordBreak: 'break-word' }}
+                    >
+                      Вы можете написать мне личное сообщение
+                    </Typography>
+                  )}
                   <div className='flex items-center gap-2'>
                     {isSender && (
                       <>
@@ -232,7 +263,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
                       {new Date(message.createdAt).toLocaleString('en-US', {
                         hour: 'numeric',
                         minute: 'numeric',
-                        hour12: true
+                        hour12: false
                       })}
                     </Typography>
                   </div>
@@ -240,98 +271,113 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
               </div>
             );
           })
-        ) : (
-          activeUserChat &&
-          formatedChatData(activeUserChat.chat, profileUser).map((msgGroup, index) => {
-            const isSender = msgGroup.senderId === profileUser.id
+            ) : (
+              activeUserChat &&
+              formatedChatData(activeUserChat.chat, profileUser).map((msgGroup, index) => {
+                const isSender = msgGroup.senderId === profileUser.id
 
-            return (
-              <div key={index} className={classnames('flex gap-4 p-5', { 'flex-row-reverse': isSender })}>
-                {!isSender ? (
-                  contacts.find(contact => contact.id === activeUserChat?.userId)?.avatar ? (
-                    <Avatar
-                      alt={contacts.find(contact => contact.id === activeUserChat?.userId)?.fullName}
-                      src={contacts.find(contact => contact.id === activeUserChat?.userId)?.avatar}
-                      className='is-8 bs-8'
-                    />
-                  ) : (
-                    <CustomAvatar
-                      color={contacts.find(contact => contact.id === activeUserChat?.userId)?.avatarColor}
-                      skin='light'
-                      size={32}
-                    >
-                      {getInitials(contacts.find(contact => contact.id === activeUserChat?.userId)?.fullName as string)}
-                    </CustomAvatar>
-                  )
-                ) : profileUser.avatar ? (
-                  <Avatar alt={profileUser.fullName} src={profileUser.avatar} className='is-8 bs-8' />
-                ) : (
-                  <CustomAvatar alt={profileUser.fullName} src={profileUser.avatar} size={32} />
-                )}
-                <div
-                  className={classnames('flex flex-col gap-2', {
-                    'items-end': isSender,
-                    'max-is-[65%]': !isBelowMdScreen,
-                    'max-is-[75%]': isBelowMdScreen && !isBelowSmScreen,
-                    'max-is-[calc(100%-5.75rem)]': isBelowSmScreen
-                  })}
-                >
-                  {msgGroup.messages.map((msg, index) => (
-                    <Typography
-                      key={index}
-                      className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
-                        'bg-backgroundPaper rounded-e rounded-b': !isSender,
-                        'bg-primary text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                return (
+                  <div key={index} className={classnames('flex gap-4 p-5', { 'flex-row-reverse': isSender })}>
+                    {!isSender ? (
+                      contacts.find(contact => contact.id === activeUserChat?.userId)?.avatar ? (
+                        <Avatar
+                          alt={contacts.find(contact => contact.id === activeUserChat?.userId)?.fullName}
+                          src={contacts.find(contact => contact.id === activeUserChat?.userId)?.avatar}
+                          className='is-8 bs-8'
+                        />
+                      ) : (
+                        <CustomAvatar
+                          color={contacts.find(contact => contact.id === activeUserChat?.userId)?.avatarColor}
+                          skin='light'
+                          size={32}
+                        >
+                          {getInitials(contacts.find(contact => contact.id === activeUserChat?.userId)?.fullName as string)}
+                        </CustomAvatar>
+                      )
+                    ) : session?.user?.image ? (
+                      <Avatar alt={session?.user?.name || ''} src={session?.user?.image} className='is-8 bs-8' />
+                    ) : (
+                      <CustomAvatar alt={session?.user?.name || ''} src={session?.user?.image || undefined} size={32} />
+                    )}
+                    <div
+                      className={classnames('flex flex-col gap-2', {
+                        'items-end': isSender,
+                        'max-is-[65%]': !isBelowMdScreen,
+                        'max-is-[75%]': isBelowMdScreen && !isBelowSmScreen,
+                        'max-is-[calc(100%-5.75rem)]': isBelowSmScreen
                       })}
-                      style={{ wordBreak: 'break-word' }}
                     >
-                      {msg.message}
-                    </Typography>
-                  ))}
-                  {msgGroup.messages.map(
-                    (msg, index) =>
-                      index === msgGroup.messages.length - 1 &&
-                      (isSender ? (
-                        <div key={index} className='flex items-center gap-2'>
-                          {msg.msgStatus?.isSeen ? (
-                            <i className='ri-check-double-line text-success text-base' />
-                          ) : msg.msgStatus?.isDelivered ? (
-                            <i className='ri-check-double-line text-base' />
-                          ) : (
-                            msg.msgStatus?.isSent && <i className='ri-check-line text-base' />
-                          )}
-                          {index === activeUserChat.chat.length - 1 ? (
-                            <Typography variant='caption'>
-                              {new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
+                      {msgGroup.messages.map((msg, index) => (
+                        msg.message && msg.message.trim() !== '' ? (
+                          <Typography
+                            key={index}
+                            className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
+                              'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                              'bg-primary text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                            })}
+                            style={{ wordBreak: 'break-word' }}
+                          >
+                            {msg.message}
+                          </Typography>
+                        ) : (
+                          <Typography
+                            key={index}
+                            className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
+                              'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                              'bg-primary text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                            })}
+                            style={{ wordBreak: 'break-word' }}
+                          >
+                            Вы можете написать мне личное сообщение
+                          </Typography>
+                        )
+                      ))}
+                      {msgGroup.messages.map(
+                        (msg, index) =>
+                          index === msgGroup.messages.length - 1 &&
+                          (isSender ? (
+                            <div key={index} className='flex items-center gap-2'>
+                              {msg.msgStatus?.isSeen ? (
+                                <i className='ri-check-double-line text-success text-base' />
+                              ) : msg.msgStatus?.isDelivered ? (
+                                <i className='ri-check-double-line text-base' />
+                              ) : (
+                                msg.msgStatus?.isSent && <i className='ri-check-line text-base' />
+                              )}
+                              {index === activeUserChat.chat.length - 1 ? (
+                                <Typography variant='caption'>
+                                  {new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: false })}
+                                </Typography>
+                              ) : msg.time ? (
+                                <Typography variant='caption'>
+                                  {new Date(msg.time).toLocaleString('en-US', {
+                                    hour: 'numeric',
+                                    minute: 'numeric',
+                                    hour12: false
+                                  })}
+                                </Typography>
+                              ) : null}
+                            </div>
+                          ) : index === activeUserChat.chat.length - 1 ? (
+                            <Typography key={index} variant='caption'>
+                              {new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: false })}
                             </Typography>
                           ) : msg.time ? (
-                            <Typography variant='caption'>
+                            <Typography key={index} variant='caption'>
                               {new Date(msg.time).toLocaleString('en-US', {
                                 hour: 'numeric',
                                 minute: 'numeric',
-                                hour12: true
+                                hour12: false
                               })}
                             </Typography>
-                          ) : null}
-                        </div>
-                      ) : index === activeUserChat.chat.length - 1 ? (
-                        <Typography key={index} variant='caption'>
-                          {new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
-                        </Typography>
-                      ) : msg.time ? (
-                        <Typography key={index} variant='caption'>
-                          {new Date(msg.time).toLocaleString('en-US', {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true
-                          })}
-                        </Typography>
-                      ) : null)
-                  )}
-                </div>
-              </div>
-            )
-          })
+                          ) : null)
+                      )}
+                    </div>
+                  </div>
+                )
+              })
+            )}
+          </>
         )}
       </CardContent>
     </ScrollWrapper>

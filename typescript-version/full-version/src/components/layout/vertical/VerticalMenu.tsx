@@ -18,6 +18,12 @@ import { Menu, SubMenu, MenuItem, MenuSection } from '@menu/vertical-menu'
 // Hook Imports
 import useVerticalNav from '@menu/hooks/useVerticalNav'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useUnreadMessages } from '@/hooks/useUnreadMessages'
+import { useNotifications } from '@/hooks/useNotifications'
+
+// Redux Imports
+import { useSelector } from 'react-redux'
+import type { RootState } from '@/redux-store'
 
 // Styled Component Imports
 import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNavExpandIcon'
@@ -48,6 +54,12 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   const verticalNavOptions = useVerticalNav()
   const params = useParams()
   const { checkPermission } = usePermissions()
+  const { unreadCount } = useUnreadMessages()
+  const { unreadCount: notificationsUnreadCount } = useNotifications()
+
+  // Redux
+  const notifications = useSelector((state: RootState) => state.notificationsReducer.notifications)
+  const notificationsUnreadCountFromRedux = notifications.filter(notification => notification.status === 'unread').length
 
   // Vars
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
@@ -170,7 +182,14 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
       </MenuItem>
     )
     appsPagesChildren.push(
-      <MenuItem key="chat" href={`/${locale}/apps/chat`} icon={<i className='ri-wechat-line' />}>
+      <MenuItem
+        key="chat"
+        href={`/${locale}/apps/chat`}
+        icon={<i className='ri-wechat-line' />}
+        suffix={unreadCount > 0 ? (
+          <Chip label={unreadCount > 99 ? '99+' : unreadCount} size='small' color='error' />
+        ) : undefined}
+      >
         {dictionary['navigation'].chat}
       </MenuItem>
     )
@@ -182,6 +201,18 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
     appsPagesChildren.push(
       <MenuItem key="kanban" href={`/${locale}/apps/kanban`} icon={<i className='ri-drag-drop-line' />}>
         {dictionary['navigation'].kanban}
+      </MenuItem>
+    )
+    appsPagesChildren.push(
+      <MenuItem
+        key="notifications"
+        href={`/${locale}/apps/notifications`}
+        icon={<i className='ri-notification-2-line' />}
+        suffix={notificationsUnreadCountFromRedux > 0 ? (
+          <Chip label={notificationsUnreadCountFromRedux > 99 ? '99+' : notificationsUnreadCountFromRedux} size='small' color='error' />
+        ) : undefined}
+      >
+        {dictionary['navigation'].notifications || 'Notifications'}
       </MenuItem>
     )
 
@@ -315,6 +346,15 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
       adminSettingsChildren.push(
         <MenuItem key="translations" href={`/${locale}/apps/references/translations`} icon={<i className='ri-global-line' />}>
           {dictionary['navigation'].translations}
+        </MenuItem>
+      )
+    }
+
+    // Rate Limiting
+    if (checkPermission('rateLimitManagement', 'read')) {
+      adminSettingsChildren.push(
+        <MenuItem key="rateLimiting" href={`/${locale}/admin/rate-limiting`} icon={<i className='ri-shield-line' />}>
+          {dictionary['navigation'].rateLimitManagement || 'Rate Limiting'}
         </MenuItem>
       )
     }

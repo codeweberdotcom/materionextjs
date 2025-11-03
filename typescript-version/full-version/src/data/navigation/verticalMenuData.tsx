@@ -307,7 +307,7 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         label: dictionary['navigation'].emailTemplates,
         icon: 'ri-file-text-line',
         href: '/apps/settings/email-templates'
-      }
+      },
     ]
   },
       {

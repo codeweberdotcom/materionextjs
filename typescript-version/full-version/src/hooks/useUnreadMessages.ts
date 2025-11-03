@@ -20,7 +20,7 @@ export const useUnreadMessages = () => {
         setUnreadCount(data.count || 0)
       }
     } catch (error) {
-      console.error('Error fetching unread messages count:', error)
+      // Error handling
     } finally {
       setIsLoading(false)
     }
@@ -38,12 +38,10 @@ export const useUnreadMessages = () => {
     if (!socket) return
 
     const handleNewMessage = () => {
-      console.log('📨 [UNREAD] New message received, updating count')
       fetchUnreadCount()
     }
 
     const handleMessagesRead = () => {
-      console.log('📖 [UNREAD] Messages marked as read, updating count')
       fetchUnreadCount()
     }
 

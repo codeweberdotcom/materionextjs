@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+уimport { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
 
 import { prisma } from '../libs/prisma'
@@ -552,6 +552,243 @@ async function main() {
       `
     }
   })
+
+  // Create sample notifications for superadmin user
+  const sampleNotifications = [
+    {
+      title: 'Добро пожаловать в систему! 🎉',
+      message: 'Ваш аккаунт суперадминистратора успешно настроен. У вас есть полный доступ ко всем функциям.',
+      type: 'system',
+      avatarIcon: 'ri-user-star-line',
+      avatarColor: 'success',
+      status: 'unread',
+    },
+    {
+      title: 'Система готова к работе',
+      message: 'Все компоненты системы успешно инициализированы и готовы к использованию.',
+      type: 'system',
+      avatarIcon: 'ri-check-double-line',
+      avatarColor: 'info',
+      status: 'unread',
+    },
+    {
+      title: 'Проверьте настройки безопасности',
+      message: 'Рекомендуется обновить пароль и настроить двухфакторную аутентификацию.',
+      type: 'security',
+      avatarIcon: 'ri-shield-check-line',
+      avatarColor: 'warning',
+      status: 'unread',
+    },
+    {
+      title: 'Новые возможности чата',
+      message: 'Теперь доступна система уведомлений о новых сообщениях в реальном времени.',
+      type: 'feature',
+      avatarIcon: 'ri-chat-1-line',
+      avatarColor: 'primary',
+      status: 'unread',
+    },
+    {
+      title: 'Бэкап завершен',
+      message: 'Автоматический бэкап базы данных выполнен успешно.',
+      type: 'system',
+      avatarIcon: 'ri-database-2-line',
+      avatarColor: 'secondary',
+      status: 'read',
+    },
+    {
+      title: 'Обновление системы',
+      message: 'Доступно новое обновление системы. Рекомендуется установить обновления для улучшения безопасности.',
+      type: 'update',
+      avatarIcon: 'ri-refresh-line',
+      avatarColor: 'info',
+      status: 'unread',
+    },
+    {
+      title: 'Новый пользователь зарегистрирован',
+      message: 'Пользователь john.doe@example.com успешно зарегистрировался в системе.',
+      type: 'user',
+      avatarIcon: 'ri-user-add-line',
+      avatarColor: 'success',
+      status: 'unread',
+    },
+    {
+      title: 'Ошибка сервера',
+      message: 'Обнаружена временная ошибка сервера. Команда разработчиков уже работает над исправлением.',
+      type: 'error',
+      avatarIcon: 'ri-error-warning-line',
+      avatarColor: 'error',
+      status: 'unread',
+    },
+    {
+      title: 'Тестовое уведомление 1',
+      message: 'Это тестовое уведомление для проверки системы статусов.',
+      type: 'system',
+      avatarIcon: 'ri-information-line',
+      avatarColor: 'primary',
+      status: 'unread',
+    },
+    {
+      title: 'Тестовое уведомление 2',
+      message: 'Еще одно тестовое уведомление с разным статусом.',
+      type: 'system',
+      avatarIcon: 'ri-notification-2-line',
+      avatarColor: 'info',
+      status: 'read',
+    },
+    {
+      title: 'Тестовое уведомление 3',
+      message: 'Третье тестовое уведомление для демонстрации архивных уведомлений.',
+      type: 'system',
+      avatarIcon: 'ri-archive-line',
+      avatarColor: 'secondary',
+      status: 'archived',
+    },
+    {
+      title: 'Важное обновление',
+      message: 'Критическое обновление безопасности доступно. Рекомендуется установить немедленно.',
+      type: 'security',
+      avatarIcon: 'ri-alert-line',
+      avatarColor: 'error',
+      status: 'unread',
+    }
+  ]
+
+  for (const notificationData of sampleNotifications) {
+    await prisma.notification.create({
+      data: {
+        userId: superadminUser.id,
+        title: notificationData.title,
+        message: notificationData.message,
+        type: notificationData.type,
+        status: notificationData.status || 'unread',
+        avatarIcon: notificationData.avatarIcon,
+        avatarColor: notificationData.avatarColor,
+      },
+    })
+  }
+
+  console.log(`✅ Created ${sampleNotifications.length} sample notifications for superadmin user`)
+
+  // Create rate limit configurations
+  const rateLimitConfigs = [
+    {
+      module: 'chat',
+      maxRequests: 10,
+      windowMs: 60000, // 1 minute
+      blockMs: 900000, // 15 minutes
+      isActive: true
+    },
+    {
+      module: 'ads',
+      maxRequests: 5,
+      windowMs: 3600000, // 1 hour
+      blockMs: 3600000, // 1 hour
+      isActive: true
+    },
+    {
+      module: 'upload',
+      maxRequests: 20,
+      windowMs: 3600000, // 1 hour
+      blockMs: 1800000, // 30 minutes
+      isActive: true
+    },
+    {
+      module: 'auth',
+      maxRequests: 5,
+      windowMs: 900000, // 15 minutes
+      blockMs: 3600000, // 1 hour
+      isActive: true
+    },
+    {
+      module: 'email',
+      maxRequests: 50,
+      windowMs: 3600000, // 1 hour
+      blockMs: 3600000, // 1 hour
+      isActive: true
+    }
+  ]
+  
+  // Создаем тестовые блокировки для демонстрации системы
+  const userBlocks = [
+    {
+      userId: user.id, // Блокируем обычного админа для тестирования
+      reason: 'rate_limit_violation',
+      module: 'chat',
+      blockedBy: 'system',
+      blockedAt: new Date(Date.now() - 30 * 60 * 1000), // Заблокирован 30 минут назад
+      unblockedAt: new Date(Date.now() + 10 * 60 * 1000), // Разблокируется через 10 минут
+      isActive: true,
+      notes: 'Exceeded 10 messages per hour limit - automatic block'
+    },
+    {
+      userId: superadminUser.id, // Блокируем суперадмина для тестирования
+      reason: 'spam',
+      module: 'ads',
+      blockedBy: superadminRole.id, // Заблокирован другим админом
+      blockedAt: new Date(Date.now() - 60 * 60 * 1000), // Заблокирован час назад
+      unblockedAt: null, // Permanent block
+      isActive: true,
+      notes: 'Manual block for excessive ad posting'
+    }
+  ]
+
+  const ipBlocks = [
+    {
+      ipAddress: '192.168.1.100',
+      reason: 'abuse',
+      blockedBy: superadminRole.id,
+      blockedAt: new Date(Date.now() - 24 * 60 * 60 * 1000), // Заблокирован сутки назад
+      unblockedAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Разблокируется через сутки
+      isActive: true,
+      notes: 'Multiple failed login attempts - brute force protection'
+    },
+    {
+      ipAddress: '10.0.0.50',
+      reason: 'rate_limit_violation',
+      blockedBy: 'system',
+      blockedAt: new Date(Date.now() - 15 * 60 * 1000), // Заблокирован 15 минут назад
+      unblockedAt: new Date(Date.now() + 45 * 60 * 1000), // Разблокируется через 45 минут
+      isActive: true,
+      notes: 'Excessive API calls - automatic IP block'
+    }
+  ]
+
+  for (const config of rateLimitConfigs) {
+    await prisma.rateLimitConfig.upsert({
+      where: { module: config.module },
+      update: {
+        maxRequests: config.maxRequests,
+        windowMs: config.windowMs,
+        blockMs: config.blockMs,
+        isActive: config.isActive
+      },
+      create: {
+        module: config.module,
+        maxRequests: config.maxRequests,
+        windowMs: config.windowMs,
+        blockMs: config.blockMs,
+        isActive: config.isActive
+      }
+    })
+  }
+
+  // Создаем блокировки пользователей
+  for (const block of userBlocks) {
+    await prisma.userBlock.create({
+      data: block
+    })
+  }
+
+  console.log(`✅ Created ${userBlocks.length} user blocks for testing`)
+
+  // Создаем блокировки IP
+  for (const block of ipBlocks) {
+    await prisma.iPBlock.create({
+      data: block
+    })
+  }
+
+  console.log(`✅ Created ${ipBlocks.length} IP blocks for testing`)
 
   console.log('Email templates created successfully!')
   console.log('Database seeded successfully!')

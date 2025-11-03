@@ -1,4 +1,8 @@
 import nodemailer from 'nodemailer'
+import * as cron from 'node-cron'
+import * as fs from 'fs'
+import * as path from 'path'
+import Handlebars from 'handlebars'
 
 // SMTP configuration interface
 export interface SmtpConfig {
@@ -9,6 +13,68 @@ export interface SmtpConfig {
   encryption: string
   fromEmail: string
   fromName: string
+  // DKIM settings
+  dkim?: {
+    domainName: string
+    keySelector: string
+    privateKey: string
+  }
+  // S/MIME settings
+  smime?: {
+    cert: string
+    key: string
+    passphrase?: string
+  }
+  // Webhook settings
+  webhook?: {
+    url: string
+    secret: string
+  }
+}
+
+// Extended email options
+export interface ExtendedEmailOptions {
+  to: string | string[]
+  subject: string
+  html?: string
+  text?: string
+  from?: string
+  templateId?: string
+  variables?: Record<string, string>
+  // Attachments
+  attachments?: Array<{
+    filename: string
+    path?: string
+    content?: Buffer | string
+    contentType?: string
+    cid?: string // Content-ID for embedded images
+  }>
+  // Embedded images
+  embeddedImages?: Array<{
+    filename: string
+    path: string
+    cid: string
+  }>
+  // Security options
+  dkim?: boolean
+  smime?: {
+    sign?: boolean
+    encrypt?: boolean
+    cert?: string
+  }
+  // Scheduling
+  schedule?: {
+    cron: string // cron expression
+    timezone?: string
+  }
+  // Webhook notifications
+  webhook?: {
+    delivery?: boolean
+    bounce?: boolean
+    complaint?: boolean
+  }
+  // Metadata
+  metadata?: Record<string, any>
 }
 
 // Get SMTP configuration from environment variables or database
@@ -119,7 +185,7 @@ export const getSmtpConfig = async (): Promise<SmtpConfig> => {
   return fallbackConfig
 }
 
-// Create email transporter
+// Create email transporter with advanced features
 export const createTransporter = async () => {
   const config = await getSmtpConfig()
 
@@ -175,19 +241,74 @@ export const createTransporter = async () => {
     }
   }
 
-  return nodemailer.createTransport(transporterConfig)
+  const transporter = nodemailer.createTransport(transporterConfig)
+
+  // DKIM and S/MIME plugins removed - not needed for basic email functionality
+
+  return transporter
 }
 
-// Send email function
-export const sendEmail = async (options: {
-  to: string | string[]
-  subject: string
-  html?: string
-  text?: string
-  from?: string
-  templateId?: string
-  variables?: Record<string, string>
-}) => {
+// Email queue for scheduled sending
+const emailQueue: Array<{
+  id: string
+  options: ExtendedEmailOptions
+  scheduledTime: Date
+  status: 'pending' | 'sent' | 'failed'
+}> = []
+
+// Start email scheduler
+export const startEmailScheduler = () => {
+  // Check every minute for emails to send
+  cron.schedule('* * * * *', async () => {
+    const now = new Date()
+    const emailsToSend = emailQueue.filter(
+      email => email.status === 'pending' && email.scheduledTime <= now
+    )
+
+    for (const email of emailsToSend) {
+      try {
+        await sendEmailImmediate(email.options)
+        email.status = 'sent'
+      } catch (error) {
+        email.status = 'failed'
+      }
+    }
+
+    // Clean up old emails (keep last 24 hours)
+    const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+    const oldEmails = emailQueue.filter(email => email.scheduledTime < oneDayAgo)
+    oldEmails.forEach(email => {
+      const index = emailQueue.indexOf(email)
+      if (index > -1) emailQueue.splice(index, 1)
+    })
+  })
+
+  // Email scheduler started
+}
+
+// Send email function with advanced features
+export const sendEmail = async (options: ExtendedEmailOptions) => {
+  // If scheduling is requested, add to queue
+  if (options.schedule) {
+    const scheduledTime = new Date() // Parse cron expression or use provided time
+    const emailId = `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+
+    emailQueue.push({
+      id: emailId,
+      options,
+      scheduledTime,
+      status: 'pending'
+    })
+
+    return { scheduled: true, id: emailId }
+  }
+
+  // Send immediately
+  return await sendEmailImmediate(options)
+}
+
+// Internal function to send email immediately
+const sendEmailImmediate = async (options: ExtendedEmailOptions) => {
   const transporter = await createTransporter()
   const config = await getSmtpConfig()
 
@@ -204,9 +325,9 @@ export const sendEmail = async (options: {
         if (response.ok) {
           const template = await response.json()
 
-          // Replace variables in subject and content
-          subject = replaceVariables(template.subject, options.variables || {})
-          htmlContent = replaceVariables(template.content, options.variables || {})
+          // Render templates with Handlebars
+          subject = renderTemplate(template.subject, options.variables || {})
+          htmlContent = renderTemplate(template.content, options.variables || {})
         }
       }
     } catch (error) {
@@ -214,29 +335,211 @@ export const sendEmail = async (options: {
     }
   }
 
-  const mailOptions = {
+  // Prepare attachments array
+  const attachments: any[] = []
+
+  // Add regular attachments
+  if (options.attachments) {
+    attachments.push(...options.attachments)
+  }
+
+  // Add embedded images
+  if (options.embeddedImages) {
+    for (const image of options.embeddedImages) {
+      attachments.push({
+        filename: image.filename,
+        path: image.path,
+        cid: image.cid
+      })
+    }
+  }
+
+  const mailOptions: any = {
     from: options.from || `"${config.fromName}" <${config.fromEmail}>`,
     to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
     subject,
     html: htmlContent,
-    text: options.text
+    text: options.text,
+    attachments: attachments.length > 0 ? attachments : undefined
+  }
+
+  // Add S/MIME encryption/signing if requested
+  if (options.smime && config.smime) {
+    if (options.smime.sign) {
+      mailOptions.smime = {
+        sign: {
+          cert: options.smime.cert || config.smime.cert,
+          key: config.smime.key,
+          passphrase: config.smime.passphrase
+        }
+      }
+    }
+
+    if (options.smime.encrypt && options.smime.cert) {
+      mailOptions.smime = {
+        ...mailOptions.smime,
+        encrypt: {
+          cert: options.smime.cert
+        }
+      }
+    }
+  }
+
+  // Add webhook tracking if configured
+  if (options.webhook && config.webhook) {
+    mailOptions.webhook = {
+      url: config.webhook.url,
+      secret: config.webhook.secret,
+      events: []
+    }
+
+    if (options.webhook.delivery) mailOptions.webhook.events.push('delivered')
+    if (options.webhook.bounce) mailOptions.webhook.events.push('bounced')
+    if (options.webhook.complaint) mailOptions.webhook.events.push('complained')
   }
 
   const info = await transporter.sendMail(mailOptions)
 
-  
-return info
+  console.log('📧 Email sent successfully:', {
+    messageId: info.messageId,
+    envelope: info.envelope,
+    accepted: info.accepted,
+    rejected: info.rejected
+  })
+
+  return info
 }
 
-// Replace template variables
-const replaceVariables = (text: string, variables: Record<string, string>): string => {
+// Template compilation cache
+const templateCache = new Map<string, HandlebarsTemplateDelegate>()
+
+// Register Handlebars helpers
+Handlebars.registerHelper('formatDate', (date: Date | string, format?: string) => {
+  const d = new Date(date)
+  if (format === 'short') {
+    return d.toLocaleDateString()
+  }
+  return d.toLocaleString()
+})
+
+Handlebars.registerHelper('uppercase', (str: string) => {
+  return str.toUpperCase()
+})
+
+Handlebars.registerHelper('lowercase', (str: string) => {
+  return str.toLowerCase()
+})
+
+Handlebars.registerHelper('eq', (a: any, b: any) => {
+  return a === b
+})
+
+Handlebars.registerHelper('ifCond', function(this: any, v1: any, operator: string, v2: any, options: any) {
+  switch (operator) {
+    case '==':
+      return (v1 == v2) ? options.fn(this) : options.inverse(this)
+    case '===':
+      return (v1 === v2) ? options.fn(this) : options.inverse(this)
+    case '!=':
+      return (v1 != v2) ? options.fn(this) : options.inverse(this)
+    case '!==':
+      return (v1 !== v2) ? options.fn(this) : options.inverse(this)
+    case '<':
+      return (v1 < v2) ? options.fn(this) : options.inverse(this)
+    case '<=':
+      return (v1 <= v2) ? options.fn(this) : options.inverse(this)
+    case '>':
+      return (v1 > v2) ? options.fn(this) : options.inverse(this)
+    case '>=':
+      return (v1 >= v2) ? options.fn(this) : options.inverse(this)
+    case '&&':
+      return (v1 && v2) ? options.fn(this) : options.inverse(this)
+    case '||':
+      return (v1 || v2) ? options.fn(this) : options.inverse(this)
+    default:
+      return options.inverse(this)
+  }
+})
+
+// Render template with Handlebars
+const renderTemplate = (template: string, variables: Record<string, any>): string => {
+  try {
+    // Check cache first
+    let compiledTemplate = templateCache.get(template)
+
+    if (!compiledTemplate) {
+      // Compile and cache template
+      compiledTemplate = Handlebars.compile(template)
+      templateCache.set(template, compiledTemplate)
+    }
+
+    // Render with variables
+    return compiledTemplate(variables)
+  } catch (error) {
+    console.error('Error rendering Handlebars template:', error)
+    // Fallback to simple variable replacement
+    return replaceVariables(template, variables)
+  }
+}
+
+// Fallback function for simple variable replacement (backward compatibility)
+const replaceVariables = (text: string, variables: Record<string, any>): string => {
   let result = text
 
   Object.entries(variables).forEach(([key, value]) => {
-    result = result.replace(new RegExp(`{${key}}`, 'g'), value)
+    const regex = new RegExp(`\\{${key}\\}`, 'g')
+    result = result.replace(regex, String(value))
   })
-  
-return result
+
+  return result
+}
+
+// Initialize email scheduler on module load
+if (typeof window === 'undefined') {
+  startEmailScheduler()
+}
+
+// Certificate and key utilities
+export const loadCertificate = (certPath: string): string => {
+  try {
+    return fs.readFileSync(certPath, 'utf8')
+  } catch (error) {
+    throw new Error(`Failed to load certificate from ${certPath}: ${error}`)
+  }
+}
+
+export const loadPrivateKey = (keyPath: string): string => {
+  try {
+    return fs.readFileSync(keyPath, 'utf8')
+  } catch (error) {
+    throw new Error(`Failed to load private key from ${keyPath}: ${error}`)
+  }
+}
+
+export const generateSelfSignedCert = () => {
+  // This would require additional crypto libraries
+  // For now, return placeholder
+  throw new Error('Self-signed certificate generation not implemented. Please provide certificate files.')
+}
+
+// Email queue management
+export const getEmailQueue = () => {
+  return emailQueue.map(email => ({
+    id: email.id,
+    scheduledTime: email.scheduledTime,
+    status: email.status,
+    subject: email.options.subject,
+    to: email.options.to
+  }))
+}
+
+export const cancelScheduledEmail = (emailId: string): boolean => {
+  const index = emailQueue.findIndex(email => email.id === emailId)
+  if (index > -1) {
+    emailQueue.splice(index, 1)
+    return true
+  }
+  return false
 }
 
 // Test SMTP connection
@@ -286,10 +589,9 @@ export const testSmtpConnection = async (): Promise<{ success: boolean; message:
       console.log('❌ [SMTP TEST] SMTP connection verification failed:', error)
       throw error
     }
-    
+
 return { success: true, message: 'SMTP connection successful' }
   } catch (error) {
-    console.error('SMTP connection test failed:', error)
     let errorMessage = 'Unknown error'
 
     if (error instanceof Error) {

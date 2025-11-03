@@ -4,6 +4,9 @@
 import { useRef, useState, useEffect } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
 
+// Next Imports
+import { useRouter } from 'next/navigation'
+
 // MUI Imports
 import IconButton from '@mui/material/IconButton'
 import Badge from '@mui/material/Badge'
@@ -36,6 +39,8 @@ import themeConfig from '@configs/themeConfig'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
+import { useNotifications } from '@/hooks/useNotifications'
+import { useTranslation } from '@/contexts/TranslationContext'
 
 // Util Imports
 import { getInitials } from '@/utils/getInitials'
@@ -103,14 +108,21 @@ const getAvatar = (
   }
 }
 
-const NotificationDropdown = ({ notifications }: { notifications: NotificationsType[] }) => {
+const NotificationDropdown = ({ notifications: staticNotifications }: { notifications: NotificationsType[] }) => {
+  // Hooks
+  const { notifications, loading, unreadCount, markAsRead, removeNotification, clearAllNotifications, setNotifications } = useNotifications()
+  const router = useRouter()
+  const dictionary = useTranslation()
+
   // States
   const [open, setOpen] = useState(false)
-  const [notificationsState, setNotificationsState] = useState(notifications)
+
+  // Use dynamic notifications if available, fallback to static
+  const notificationsState = notifications.length > 0 ? notifications : staticNotifications
 
   // Vars
-  const notificationCount = notificationsState.filter(notification => !notification.read).length
-  const readAll = notificationsState.every(notification => notification.read)
+  const notificationCount = unreadCount || notificationsState.filter(notification => (notification as any).status !== 'read' && (notification as any).status !== 'archived' && (notification as any).status !== 'trash').length
+  const readAll = notificationsState.every(notification => (notification as any).status === 'read' || (notification as any).status === 'archived')
 
   // Refs
   const anchorRef = useRef<HTMLButtonElement>(null)
@@ -130,31 +142,58 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
   }
 
   // Read notification when notification is clicked
-  const handleReadNotification = (event: MouseEvent<HTMLElement>, value: boolean, index: number) => {
+  const handleReadNotification = async (event: MouseEvent<HTMLElement>, value: boolean, index: number) => {
     event.stopPropagation()
-    const newNotifications = [...notificationsState]
+    const notification = notificationsState[index]
 
-    newNotifications[index].read = value
-    setNotificationsState(newNotifications)
+    // Skip virtual chat notifications - they can't be marked as read through API
+    if (notification && (notification as any).id && !(notification as any).id.startsWith('virtual-')) {
+      await markAsRead((notification as any).id, value)
+    }
   }
 
-  // Remove notification when close icon is clicked
-  const handleRemoveNotification = (event: MouseEvent<HTMLElement>, index: number) => {
+  // Archive notification when close icon is clicked
+  const handleArchiveNotification = async (event: MouseEvent<HTMLElement>, index: number) => {
     event.stopPropagation()
-    const newNotifications = [...notificationsState]
+    const notification = notificationsState[index]
 
-    newNotifications.splice(index, 1)
-    setNotificationsState(newNotifications)
+    // Skip virtual chat notifications - they can't be archived through API
+    if (notification && (notification as any).id && !(notification as any).id.startsWith('virtual-')) {
+      try {
+        const response = await fetch(`/api/notifications/${(notification as any).id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: 'archived' }),
+        })
+
+        if (response.ok) {
+          // Remove from local state using the hook's remove function
+          await removeNotification((notification as any).id)
+        }
+      } catch (error) {
+        console.error('Error archiving notification:', error)
+      }
+    }
   }
 
-  // Read or unread all notifications when read all icon is clicked
-  const readAllNotifications = () => {
-    const newNotifications = [...notificationsState]
+  // Archive notification when close icon is clicked
+  const handleRemoveNotification = async (event: MouseEvent<HTMLElement>, index: number) => {
+    event.stopPropagation()
+    const notification = notificationsState[index]
 
-    newNotifications.forEach(notification => {
-      notification.read = !readAll
-    })
-    setNotificationsState(newNotifications)
+    // Skip virtual chat notifications - they can't be archived through API
+    if (notification && (notification as any).id && !(notification as any).id.startsWith('virtual-')) {
+      await handleArchiveNotification(event, index)
+    }
+  }
+
+  // Clear all notifications when read all icon is clicked (only for dropdown)
+  const readAllNotifications = async () => {
+    console.log('Clearing all notifications from dropdown')
+    // Use the hook's clearAllNotifications function to properly manage cleared state
+    await clearAllNotifications()
   }
 
   useEffect(() => {
@@ -212,33 +251,31 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
                 <div className='bs-full flex flex-col'>
                   <div className='flex items-center justify-between plb-2 pli-4 is-full gap-4'>
                     <Typography variant='h5' className='flex-auto'>
-                      Notifications
+                      {dictionary.navigation.notifications}
                     </Typography>
                     {notificationCount > 0 && (
                       <Chip size='small' variant='tonal' color='primary' label={`${notificationCount} New`} />
                     )}
-                    <Tooltip
-                      title={readAll ? 'Mark all as unread' : 'Mark all as read'}
-                      placement={placement === 'bottom-end' ? 'left' : 'right'}
-                      slotProps={{
-                        popper: {
-                          sx: {
-                            '& .MuiTooltip-tooltip': {
-                              transformOrigin:
-                                placement === 'bottom-end' ? 'right center !important' : 'right center !important'
+                    {notificationsState.length > 0 && (
+                      <Tooltip
+                        title={dictionary.navigation.clearAllNotifications || 'Clear all notifications'}
+                        placement={placement === 'bottom-end' ? 'left' : 'right'}
+                        slotProps={{
+                          popper: {
+                            sx: {
+                              '& .MuiTooltip-tooltip': {
+                                transformOrigin:
+                                  placement === 'bottom-end' ? 'right center !important' : 'right center !important'
+                              }
                             }
                           }
-                        }
-                      }}
-                    >
-                      {notificationsState.length > 0 ? (
+                        }}
+                      >
                         <IconButton size='small' onClick={() => readAllNotifications()} className='text-textPrimary'>
-                          <i className={readAll ? 'ri-mail-line' : 'ri-mail-open-line'} />
+                          <i className='ri-delete-bin-7-line' />
                         </IconButton>
-                      ) : (
-                        <></>
-                      )}
-                    </Tooltip>
+                      </Tooltip>
+                    )}
                   </div>
                   <Divider />
                   <ScrollWrapper hidden={hidden}>
@@ -261,7 +298,18 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
                           className={classnames('flex plb-3 pli-4 gap-3 cursor-pointer hover:bg-actionHover group', {
                             'border-be': index !== notificationsState.length - 1
                           })}
-                          onClick={e => handleReadNotification(e, true, index)}
+                          onMouseEnter={() => {
+                            // Removed auto-mark as read on hover functionality
+                          }}
+                          onClick={e => {
+                            // Handle virtual chat notification click
+                            if ((notification as any).id?.startsWith('virtual-')) {
+                              router.push('/en/apps/chat')
+                              setOpen(false)
+                            } else {
+                              handleReadNotification(e, true, index)
+                            }
+                          }}
                         >
                           {getAvatar({ avatarImage, avatarIcon, title, avatarText, avatarColor, avatarSkin })}
                           <div className='flex flex-col flex-auto'>
@@ -276,16 +324,26 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
                           <div className='flex flex-col items-end gap-2.5'>
                             <Badge
                               variant='dot'
-                              color={read ? 'secondary' : 'primary'}
-                              onClick={e => handleReadNotification(e, !read, index)}
+                              color={
+                                (notification as any).id?.startsWith('virtual-')
+                                  ? 'error' // Красная точка для виртуальных уведомлений чата
+                                  : (notification as any).status === 'read'
+                                  ? 'secondary' // Серая точка для прочитанных уведомлений из БД
+                                  : 'primary' // Фиолетовая точка для непрочитанных уведомлений из БД
+                              }
                               className={classnames('mbs-1 mie-1', {
-                                'invisible group-hover:visible': read
+                                'invisible group-hover:visible': (notification as any).status === 'read' && !(notification as any).id?.startsWith('virtual-')
                               })}
                             />
-                            <i
-                              className='ri-close-line text-xl invisible group-hover:visible text-textSecondary'
-                              onClick={e => handleRemoveNotification(e, index)}
-                            />
+                            {!(notification as any).id?.startsWith('virtual-') && (
+                              <IconButton
+                                size='small'
+                                className='invisible group-hover:visible p-0'
+                                onClick={e => handleRemoveNotification(e, index)}
+                              >
+                                <i className='ri-close-line text-xl text-textSecondary' />
+                              </IconButton>
+                            )}
                           </div>
                         </div>
                       )
@@ -293,8 +351,16 @@ const NotificationDropdown = ({ notifications }: { notifications: NotificationsT
                   </ScrollWrapper>
                   <Divider />
                   <div className='p-4'>
-                    <Button fullWidth variant='contained' size='small'>
-                      View All Notifications
+                    <Button
+                      fullWidth
+                      variant='contained'
+                      size='small'
+                      onClick={() => {
+                        router.push('/en/apps/notifications')
+                        setOpen(false)
+                      }}
+                    >
+                      {dictionary.navigation.viewAllNotifications || 'View All Notifications'}
                     </Button>
                   </div>
                 </div>

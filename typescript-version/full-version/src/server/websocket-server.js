@@ -3,6 +3,7 @@ const { parse } = require('url');
 const next = require('next');
 const { Server } = require('socket.io');
 const { PrismaClient } = require('@prisma/client');
+const { RateLimiterMemory } = require('rate-limiter-flexible');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -27,7 +28,7 @@ app.prepare().then(() => {
   });
 
 io.on('connection', (socket) => {
-  console.log('User connected:', socket.id);
+  // User connected
 
   // User joins
   socket.on('join', async (userId) => {
@@ -52,7 +53,7 @@ io.on('connection', (socket) => {
         socket.join(`room_${room.id}`);
       });
 
-      console.log(`User ${userId} joined with rooms:`, userRooms.map(r => r.id));
+      // User joined with rooms
     } catch (error) {
       console.error('Error joining user:', error);
     }
@@ -62,6 +63,43 @@ io.on('connection', (socket) => {
   socket.on('sendMessage', async (data) => {
     try {
       const { roomId, message, senderId } = data;
+
+      console.log('📨 [SOCKET] sendMessage received:', { roomId, senderId, messageLength: message.length });
+
+      // Check rate limit using rate-limiter-flexible
+      try {
+        console.log('🔍 [SOCKET] Checking rate limit for user:', senderId);
+
+        // Create rate limiter instance for chat messages
+        const chatLimiter = new RateLimiterMemory({
+          keyPrefix: 'chat',
+          points: 10, // Number of messages
+          duration: 60 * 60, // Per hour (in seconds)
+        });
+
+        // Consume a point for this message
+        const rateLimitResult = await chatLimiter.consume(senderId);
+
+        console.log('✅ [SOCKET] Rate limit check passed for user:', senderId, {
+          remainingPoints: rateLimitResult.remainingPoints,
+          msBeforeNext: rateLimitResult.msBeforeNext
+        });
+      } catch (rejRes) {
+        if (rejRes instanceof Error) {
+          console.log('❌ [SOCKET] Rate limit check error:', rejRes.message);
+        } else {
+          console.log('❌ [SOCKET] Rate limit exceeded for user:', senderId, {
+            msBeforeNext: rejRes.msBeforeNext
+          });
+
+          socket.emit('rateLimitExceeded', {
+            error: 'Rate limit exceeded',
+            retryAfter: Math.ceil(rejRes.msBeforeNext / 1000),
+            blockedUntil: new Date(Date.now() + rejRes.msBeforeNext).toISOString()
+          });
+          return;
+        }
+      }
 
       // Save message to database
       const newMessage = await prisma.message.create({
@@ -86,12 +124,12 @@ io.on('connection', (socket) => {
         createdAt: newMessage.createdAt
       });
 
-      console.log(`Message sent in room ${roomId} by user ${senderId}`);
+      // Message sent
 
       // Update unread message count for recipient
       try {
         // For now, just log that we would update the count
-        console.log(`🔄 Обновление счетчика для получателя - функция отключена`);
+        // Counter update disabled
       } catch (error) {
         console.error(`❌ Ошибка обновления счетчика:`, error);
       }
@@ -103,10 +141,10 @@ io.on('connection', (socket) => {
   // Create or get room between two users
   socket.on('getOrCreateRoom', async (data) => {
     try {
-      console.log('🔍 getOrCreateRoom called with:', data);
+      // getOrCreateRoom called
       const { user1Id, user2Id } = data;
 
-      console.log('🔎 Searching for existing room...');
+      // Searching for existing room
       let room = await prisma.chatRoom.findFirst({
         where: {
           OR: [
@@ -117,14 +155,14 @@ io.on('connection', (socket) => {
       });
 
       if (!room) {
-        console.log('🏗️ Room not found, creating new room...');
+        // Room not found, creating new room
         room = await prisma.chatRoom.create({
           data: {
             user1Id: user1Id,
             user2Id: user2Id
           }
         });
-        console.log('✅ New room created:', room.id);
+        // New room created
 
         // Join both users to the new room
         const socket1 = activeUsers.get(user1Id);
@@ -132,27 +170,27 @@ io.on('connection', (socket) => {
 
         if (socket1) {
           io.sockets.sockets.get(socket1)?.join(`room_${room.id}`);
-          console.log(`👥 User ${user1Id} joined room_${room.id}`);
+          // User joined room
         }
         if (socket2) {
           io.sockets.sockets.get(socket2)?.join(`room_${room.id}`);
-          console.log(`👥 User ${user2Id} joined room_${room.id}`);
+          // User joined room
         }
       } else {
-        console.log('📁 Existing room found:', room.id);
+        // Existing room found
       }
 
       // Get messages for the room
-      console.log('💬 Fetching messages for room:', room.id);
+      // Fetching messages for room
       const messages = await prisma.message.findMany({
         where: { roomId: room.id },
         include: { sender: true },
         orderBy: { createdAt: 'asc' }
       });
-      console.log(`📨 Found ${messages.length} messages in room`);
+      // Messages found
 
       const responseData = { room, messages };
-      console.log('📤 Sending roomData:', { roomId: room.id, messageCount: messages.length });
+      // Sending roomData
       socket.emit('roomData', responseData);
     } catch (error) {
       console.error('❌ Error getting/creating room:', error);
@@ -164,7 +202,7 @@ io.on('connection', (socket) => {
     try {
       const { roomId, userId } = data;
 
-      console.log(`📖 [START] Marking messages as read in room ${roomId} for user ${userId}`);
+      // Marking messages as read
 
       // First, get ALL messages in the room to debug
       const allMessages = await prisma.message.findMany({
@@ -173,7 +211,8 @@ io.on('connection', (socket) => {
         take: 10
       });
 
-      console.log(`📖 [DEBUG] ALL messages in room (last 10):`, allMessages.map(m => ({
+      // Messages in room
+      console.log(allMessages.map(m => ({
         id: m.id,
         senderId: m.senderId,
         readAt: m.readAt,
@@ -198,7 +237,8 @@ io.on('connection', (socket) => {
         orderBy: { createdAt: 'desc' }
       });
 
-      console.log(`📖 [BEFORE] Messages to update (${messagesToUpdateBefore.length}):`, messagesToUpdateBefore.map(m => ({
+      // Messages to update
+      console.log(messagesToUpdateBefore.map(m => ({
         id: m.id,
         senderId: m.senderId,
         readAt: m.readAt,
@@ -206,7 +246,7 @@ io.on('connection', (socket) => {
       })));
 
       if (messagesToUpdateBefore.length === 0) {
-        console.log(`📖 [SKIP] No messages to update - all messages are already read or sent by user`);
+        // No messages to update
         socket.to(`room_${roomId}`).emit('messagesRead', {
           roomId: roomId,
           readerId: userId,
@@ -232,8 +272,8 @@ io.on('connection', (socket) => {
         }
       });
 
-      console.log(`📖 [RESULT] Update result:`, result);
-      console.log(`📖 [RESULT] Marked ${result.count} messages as read`);
+      // Update result
+      // Messages marked as read
 
       // Verify the update worked
       if (result.count > 0) {
@@ -251,7 +291,8 @@ io.on('connection', (socket) => {
           }
         });
 
-        console.log(`📖 [VERIFICATION] Updated messages:`, updatedMessages.map(m => ({
+        // Updated messages
+        console.log(updatedMessages.map(m => ({
           id: m.id,
           senderId: m.senderId,
           readAt: m.readAt,
@@ -260,7 +301,7 @@ io.on('connection', (socket) => {
 
         // Check if all messages now have readAt set
         const allUpdated = updatedMessages.every(m => m.readAt !== null);
-        console.log(`📖 [VERIFICATION] All messages updated successfully: ${allUpdated}`);
+        // All messages updated
       }
 
       // Notify other users in the room that messages were read
@@ -270,7 +311,7 @@ io.on('connection', (socket) => {
         count: result.count
       });
 
-      console.log(`📖 [END] markMessagesRead completed successfully`);
+      // markMessagesRead completed
 
     } catch (error) {
       console.error('❌ Error marking messages as read:', error);
@@ -280,7 +321,7 @@ io.on('connection', (socket) => {
 
   // Test ping event
   socket.on('ping', (data, callback) => {
-    console.log('🏓 Ping received:', data);
+    // Ping received
     if (callback) {
       callback({ pong: true, timestamp: Date.now() });
     }
@@ -290,7 +331,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     if (socket.userId) {
       activeUsers.delete(socket.userId);
-      console.log('User disconnected:', socket.userId);
+      // User disconnected
     }
   });
 });
@@ -298,23 +339,23 @@ io.on('connection', (socket) => {
   const PORT = process.env.PORT || 3000;
 
   server.listen(PORT, () => {
-    console.log(`Next.js + Socket.IO server running on port ${PORT}`);
+    // Server running
   });
 
   // Graceful shutdown
   process.on('SIGTERM', async () => {
-    console.log('SIGTERM received, shutting down gracefully');
+    // SIGTERM received
     await prisma.$disconnect();
     server.close(() => {
-      console.log('Process terminated');
+      // Process terminated
     });
   });
 
   process.on('SIGINT', async () => {
-    console.log('SIGINT received, shutting down gracefully');
+    // SIGINT received
     await prisma.$disconnect();
     server.close(() => {
-      console.log('Process terminated');
+      // Process terminated
     });
   });
 });

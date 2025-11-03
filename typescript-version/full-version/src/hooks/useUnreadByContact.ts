@@ -1,12 +1,25 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useSocket } from './useSocket'
+import { useParams } from 'next/navigation'
 
 export const useUnreadByContact = () => {
   const { data: session } = useSession()
   const { socket } = useSocket(session?.user?.id || null)
+  const { lang: locale } = useParams()
   const [unreadByContact, setUnreadByContact] = useState<{ [contactId: string]: number }>({})
   const [isLoading, setIsLoading] = useState(false)
+
+  // Function to play notification sound
+  const playNotificationSound = useCallback(() => {
+    try {
+      const audio = new Audio(`/${locale}/new_message_codeweber.wav`)
+      audio.volume = 0.2
+      audio.play().catch(() => {})
+    } catch (err) {
+      // Error handling
+    }
+  }, [locale])
 
   // Function to fetch unread messages count by contact from API
   const fetchUnreadByContact = useCallback(async () => {
@@ -18,10 +31,9 @@ export const useUnreadByContact = () => {
       if (response.ok) {
         const data = await response.json()
         setUnreadByContact(data)
-        console.log('📊 [UNREAD BY CONTACT] Updated unread counts:', data)
       }
     } catch (error) {
-      console.error('Error fetching unread messages by contact:', error)
+      // Error handling
     } finally {
       setIsLoading(false)
     }
@@ -39,12 +51,11 @@ export const useUnreadByContact = () => {
     if (!socket) return
 
     const handleNewMessage = () => {
-      console.log('📨 [UNREAD BY CONTACT] New message received, updating counts')
       fetchUnreadByContact()
+      playNotificationSound()
     }
 
     const handleMessagesRead = () => {
-      console.log('📖 [UNREAD BY CONTACT] Messages marked as read, updating counts')
       fetchUnreadByContact()
     }
 
@@ -55,7 +66,7 @@ export const useUnreadByContact = () => {
       socket.off('receiveMessage', handleNewMessage)
       socket.off('messagesRead', handleMessagesRead)
     }
-  }, [socket, fetchUnreadByContact])
+  }, [socket, fetchUnreadByContact, playNotificationSound])
 
   // Periodic refresh every 60 seconds as fallback
   useEffect(() => {

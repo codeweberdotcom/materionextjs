@@ -1,0 +1,32 @@
+.activeSidebarListItem {
+  color: var(--mui-palette-primary-main);
+  border-inline-start: 3px solid var(--mui-palette-primary-main);
+  padding-inline-start: 1.0625rem !important;
+}
+
+.notificationList {
+  transition:
+    border-block-end 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+  border-block-end: 1px solid var(--mui-palette-divider);
+
+  &:hover {
+    box-shadow: var(--mui-customShadows-sm);
+    border-color: transparent;
+    .notificationActions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+}
+
+.notificationActions {
+  display: none;
+}
+
+.notificationInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

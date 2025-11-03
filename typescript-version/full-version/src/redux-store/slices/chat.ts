@@ -35,7 +35,6 @@ export const fetchUsers = createAsyncThunk('chat/fetchUsers', async () => {
 
     return contacts
   } catch (error) {
-    console.error('Error fetching users:', error)
     // Return empty array if API fails - no fake data fallback
     return []
   }
@@ -89,16 +88,11 @@ export const chatSlice = createSlice({
     sendMsg: (state, action: PayloadAction<{ message: string; senderId: string; receiverId: string }>) => {
       const { message, senderId, receiverId } = action.payload
 
-      console.log('📨 sendMsg вызван с:', { message, senderId, receiverId })
-
       // The chat ID should be the other user in the conversation (not the current user)
       const currentUserId = state.profileUser.id.toString()
       const chatId = senderId === currentUserId ? receiverId : senderId
 
-      console.log('🔄 ID чата (получатель):', chatId)
-
       let chat = state.chats.find(c => c.id === chatId)
-      console.log('🔍 Найден существующий чат:', chat ? { id: chat.id, lastMessage: chat.lastMessage } : 'не найден')
 
       if (!chat) {
         chat = {
@@ -109,7 +103,6 @@ export const chatSlice = createSlice({
           lastMessage: undefined
         }
         state.chats.push(chat)
-        console.log('🆕 Создан новый чат:', chat.id)
       }
 
       chat.chat.push({
@@ -118,9 +111,6 @@ export const chatSlice = createSlice({
         senderId
       })
       chat.lastMessage = message
-
-      console.log('✅ Сообщение добавлено в чат:', chat.id, 'lastMessage:', chat.lastMessage)
-      console.log('📊 Все чаты после обновления:', state.chats.map(c => ({ id: c.id, lastMessage: c.lastMessage, chatLength: c.chat.length })))
     }
   },
   extraReducers: (builder) => {
