@@ -26,6 +26,7 @@ import { getInitials } from '@/utils/getInitials'
 
 // Hook Imports
 import { useTranslation } from '@/contexts/TranslationContext'
+import { usePermissions } from '@/hooks/usePermissions'
 
 // Styles Imports
 import styles from './styles.module.css'
@@ -76,6 +77,7 @@ const NotificationsList = (props: Props) => {
 
   // Hooks
   const dictionary = useTranslation()
+  const { checkPermission } = usePermissions()
 
   // Filter notifications based on search term (status and type filtering is done in Redux)
   const searchFilteredNotifications = notifications.filter(notification =>
@@ -152,11 +154,13 @@ const NotificationsList = (props: Props) => {
               >
                 <div className='flex items-center justify-between gap-2'>
                   <div className='flex items-center gap-2 overflow-hidden'>
-                    <Checkbox
-                      checked={isSelected}
-                      onChange={(e) => handleSelectNotification(notification.id, e.target.checked)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
+                    {checkPermission('notifications', 'delete') && (
+                      <Checkbox
+                        checked={isSelected}
+                        onChange={(e) => handleSelectNotification(notification.id, e.target.checked)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
                     {getAvatar(notification)}
                     <div className='flex gap-4 justify-between items-center overflow-hidden'>
                       <Typography color='text.primary' className='font-medium whitespace-nowrap'>

@@ -5,6 +5,8 @@ import IconButton from '@mui/material/IconButton'
 
 // Hook Imports
 import { useNotifications } from '@/hooks/useNotifications'
+import { useTranslation } from '@/contexts/TranslationContext'
+import { usePermissions } from '@/hooks/usePermissions'
 
 // Type Imports
 import type { AppDispatch } from '@/redux-store'
@@ -29,6 +31,8 @@ const NotificationsActions = (props: Props) => {
 
   // Hooks
   const { refresh } = useNotifications()
+  const dictionary = useTranslation()
+  const { checkPermission } = usePermissions()
 
   // Vars
   const areAllSelected = selectedNotifications.size > 0 && selectedNotifications.size === notifications.length
@@ -62,25 +66,27 @@ const NotificationsActions = (props: Props) => {
 
   return (
     <div className='flex items-center justify-between gap-4 max-sm:gap-0.5 is-full pli-4 plb-2 border-be'>
-      <div className='flex items-center gap-1 max-sm:gap-0.5'>
-        <Checkbox
-          indeterminate={isIndeterminate}
-          checked={areAllSelected}
-          onChange={handleSelectAllCheckboxes}
-          disabled={areFilteredNotificationsNone}
-        />
-        {(isIndeterminate || areAllSelected) && (
-          <>
-            <Tooltip title='Trash' placement='top'>
-              <IconButton onClick={handleArchive}>
-                <i className='ri-delete-bin-line text-textSecondary' />
-              </IconButton>
-            </Tooltip>
-          </>
-        )}
-      </div>
+      {checkPermission('notifications', 'delete') && (
+        <div className='flex items-center gap-1 max-sm:gap-0.5'>
+          <Checkbox
+            indeterminate={isIndeterminate}
+            checked={areAllSelected}
+            onChange={handleSelectAllCheckboxes}
+            disabled={areFilteredNotificationsNone}
+          />
+          {(isIndeterminate || areAllSelected) && (
+            <>
+              <Tooltip title={dictionary.navigation.trash} placement='top'>
+                <IconButton onClick={handleArchive}>
+                  <i className='ri-delete-bin-line text-textSecondary' />
+                </IconButton>
+              </Tooltip>
+            </>
+          )}
+        </div>
+      )}
       <div className='flex gap-1 max-sm:gap-0.5'>
-        <Tooltip title='Refresh' placement='top'>
+        <Tooltip title={dictionary.navigation.refresh} placement='top'>
           <IconButton onClick={() => {
             setReload(true)
             refresh().finally(() => {

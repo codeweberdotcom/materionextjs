@@ -182,18 +182,6 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
       </MenuItem>
     )
     appsPagesChildren.push(
-      <MenuItem
-        key="chat"
-        href={`/${locale}/apps/chat`}
-        icon={<i className='ri-wechat-line' />}
-        suffix={unreadCount > 0 ? (
-          <Chip label={unreadCount > 99 ? '99+' : unreadCount} size='small' color='error' />
-        ) : undefined}
-      >
-        {dictionary['navigation'].chat}
-      </MenuItem>
-    )
-    appsPagesChildren.push(
       <MenuItem key="calendar" href={`/${locale}/apps/calendar`} icon={<i className='ri-calendar-line' />}>
         {dictionary['navigation'].calendar}
       </MenuItem>
@@ -201,18 +189,6 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
     appsPagesChildren.push(
       <MenuItem key="kanban" href={`/${locale}/apps/kanban`} icon={<i className='ri-drag-drop-line' />}>
         {dictionary['navigation'].kanban}
-      </MenuItem>
-    )
-    appsPagesChildren.push(
-      <MenuItem
-        key="notifications"
-        href={`/${locale}/apps/notifications`}
-        icon={<i className='ri-notification-2-line' />}
-        suffix={notificationsUnreadCountFromRedux > 0 ? (
-          <Chip label={notificationsUnreadCountFromRedux > 99 ? '99+' : notificationsUnreadCountFromRedux} size='small' color='error' />
-        ) : undefined}
-      >
-        {dictionary['navigation'].notifications || 'Notifications'}
       </MenuItem>
     )
 
@@ -359,11 +335,48 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
       )
     }
 
-    menuItems.push(
-      <MenuSection key="appsPages" label={dictionary['navigation'].appsPages}>
-        {appsPagesChildren}
-      </MenuSection>
-    )
+    // Communications section (only show if user has at least one communication permission)
+    const communicationsChildren = []
+
+    // Only show chat if user has read permission
+    if (checkPermission('chat', 'read')) {
+      communicationsChildren.push(
+        <MenuItem
+          key="chat"
+          href={`/${locale}/apps/chat`}
+          icon={<i className='ri-wechat-line' />}
+          suffix={unreadCount > 0 ? (
+            <Chip label={unreadCount > 99 ? '99+' : unreadCount} size='small' color='error' />
+          ) : undefined}
+        >
+          {dictionary['navigation'].chat}
+        </MenuItem>
+      )
+    }
+
+    // Only show notifications if user has read permission
+    if (checkPermission('notifications', 'read')) {
+      communicationsChildren.push(
+        <MenuItem
+          key="notifications"
+          href={`/${locale}/apps/notifications`}
+          icon={<i className='ri-notification-2-line' />}
+          suffix={notificationsUnreadCountFromRedux > 0 ? (
+            <Chip label={notificationsUnreadCountFromRedux > 99 ? '99+' : notificationsUnreadCountFromRedux} size='small' color='error' />
+          ) : undefined}
+        >
+          {dictionary['navigation'].notifications || 'Notifications'}
+        </MenuItem>
+      )
+    }
+
+    if (communicationsChildren.length > 0) {
+      menuItems.push(
+        <MenuSection key="communications" label={dictionary['navigation'].communications}>
+          {communicationsChildren}
+        </MenuSection>
+      )
+    }
 
     if (adminSettingsChildren.length > 0) {
       menuItems.push(
@@ -372,6 +385,12 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         </MenuSection>
       )
     }
+
+    menuItems.push(
+      <MenuSection key="appsPages" label={dictionary['navigation'].appsPages}>
+        {appsPagesChildren}
+      </MenuSection>
+    )
 
     // Forms & Tables section
     const formsTablesChildren = []

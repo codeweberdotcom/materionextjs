@@ -3,6 +3,9 @@
 // React Imports
 import { useEffect, useRef, useState } from 'react'
 
+// Hook Imports
+import { usePermissions } from '@/hooks/usePermissions'
+
 // MUI Imports
 import Backdrop from '@mui/material/Backdrop'
 import useMediaQuery from '@mui/material/useMediaQuery'
@@ -32,13 +35,6 @@ import { useUnreadMessages } from '@/hooks/useUnreadMessages'
 import { commonLayoutClasses } from '@layouts/utils/layoutClasses'
 
 const ChatWrapper = () => {
-  // States
-  const [backdropOpen, setBackdropOpen] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  // Refs
-  const messageInputRef = useRef<HTMLDivElement>(null)
-
   // Hooks
   const { settings } = useSettings()
   const dispatch = useDispatch()
@@ -46,9 +42,17 @@ const ChatWrapper = () => {
   const { data: session } = useSession()
   const { socket, isConnected } = useSocket(session?.user?.id || null)
   const { unreadCount } = useUnreadMessages()
+  const { checkPermission } = usePermissions()
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
   const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))
+
+  // States
+  const [backdropOpen, setBackdropOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Refs
+  const messageInputRef = useRef<HTMLDivElement>(null)
 
   // Get active user’s data
   const activeUser = (id: string) => {

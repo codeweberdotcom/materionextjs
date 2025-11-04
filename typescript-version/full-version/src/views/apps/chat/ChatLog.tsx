@@ -188,7 +188,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
         {isRoomLoading ? (
           <div className='flex items-center justify-center gap-2 absolute inset-0 z-10 bg-[var(--mui-palette-customColors-chatBg)]'>
             <CircularProgress />
-            <Typography>{navigation.loadingMessages}</Typography>
+            <Typography>Загрузка сообщений...</Typography>
           </div>
         ) : (
           <>

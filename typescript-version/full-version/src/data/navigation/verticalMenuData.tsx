@@ -186,11 +186,6 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         activeUrl: '/apps/email'
       },
       {
-        label: dictionary['navigation'].chat,
-        icon: 'ri-wechat-line',
-        href: '/apps/chat'
-      },
-      {
         label: dictionary['navigation'].calendar,
         icon: 'ri-calendar-line',
         href: '/apps/calendar'
@@ -226,6 +221,22 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
           }
         ]
       },
+  {
+    label: dictionary['navigation'].communications,
+    isSection: true,
+    children: [
+      {
+        label: dictionary['navigation'].chat,
+        icon: 'ri-wechat-line',
+        href: '/apps/chat'
+      },
+      {
+        label: dictionary['navigation'].notifications,
+        icon: 'ri-notification-2-line',
+        href: '/apps/notifications'
+      }
+    ]
+  },
   {
     label: dictionary['navigation'].adminAndSettings,
     isSection: true,

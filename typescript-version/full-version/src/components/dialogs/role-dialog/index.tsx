@@ -55,7 +55,9 @@ const defaultData: string[] = [
   'translationManagement',
   'emailTemplatesManagement',
   'smtpManagement',
-  'rateLimitManagement'
+  'rateLimitManagement',
+  'notifications',
+  'chat'
 ]
 
 const permissionIds = {
@@ -70,7 +72,9 @@ const permissionIds = {
   translationManagement: 'translationManagement',
   emailTemplatesManagement: 'emailTemplatesManagement',
   smtpManagement: 'smtpManagement',
-  rateLimitManagement: 'rateLimitManagement'
+  rateLimitManagement: 'rateLimitManagement',
+  notifications: 'notifications',
+  chat: 'chat'
 }
 
 const allPermissions = defaultData.flatMap(item => {

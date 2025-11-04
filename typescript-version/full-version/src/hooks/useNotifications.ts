@@ -214,14 +214,14 @@ export const useNotifications = () => {
   // Create virtual chat notification - only show if there are unread messages
   const chatNotification: NotificationsType & { id: string; message?: string; type?: string; status?: string; createdAt?: string; updatedAt?: string; userId?: string } | null = chatUnreadCount > 0 ? {
     id: 'virtual-chat-unread',
-    title: dictionary.navigation.unreadChatTitle,
-    message: dictionary.navigation.unreadChatMessages.replace('${count}', chatUnreadCount.toString()),
+    title: dictionary?.navigation?.unreadChatTitle || 'Unread Chat Messages',
+    message: dictionary?.navigation?.unreadChatMessages ? dictionary.navigation.unreadChatMessages.replace('${count}', chatUnreadCount.toString()) : `You have ${chatUnreadCount} unread chat messages`,
     type: 'chat',
     status: 'unread',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     userId: session?.user?.id,
-    subtitle: dictionary.navigation.unreadChatMessages.replace('${count}', chatUnreadCount.toString()),
+    subtitle: dictionary?.navigation?.unreadChatMessages ? dictionary.navigation.unreadChatMessages.replace('${count}', chatUnreadCount.toString()) : `You have ${chatUnreadCount} unread chat messages`,
     time: 'только что',
     read: false,
     avatarIcon: 'ri-wechat-line',
