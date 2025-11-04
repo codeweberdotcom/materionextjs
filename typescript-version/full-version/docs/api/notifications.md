@@ -63,6 +63,12 @@ Get all notifications for current authenticated user.
 }
 ```
 
+**AI Agent Usage:**
+- Fetch all user notifications on app initialization
+- Includes virtual chat notifications if unread messages exist
+- Filters out locally cleared notifications per user session
+- Use for populating notification dropdown
+
 ### POST `/api/notifications`
 Create a new notification.
 
@@ -100,6 +106,11 @@ Create a new notification.
 }
 ```
 
+**AI Agent Usage:**
+- Create system notifications (welcome, updates, alerts)
+- Trigger real-time notification via WebSocket after creation
+- Use appropriate avatar icons and colors for different notification types
+
 ### PATCH `/api/notifications/{id}`
 Update notification status.
 
@@ -119,6 +130,11 @@ Update notification status.
 }
 ```
 
+**AI Agent Usage:**
+- Mark notifications as read when user interacts with them
+- Update status to 'trash' for soft deletion
+- Emit WebSocket event for real-time status updates
+
 ### DELETE `/api/notifications/{id}`
 Delete notification permanently.
 
@@ -131,6 +147,10 @@ Delete notification permanently.
 }
 ```
 
+**AI Agent Usage:**
+- Permanently remove notifications from database
+- Use for cleanup or when user explicitly deletes notifications
+
 ### DELETE `/api/notifications/clear-all`
 Clear all notifications from dropdown (marks as hidden for current session).
 
@@ -142,6 +162,11 @@ Clear all notifications from dropdown (marks as hidden for current session).
   "success": true
 }
 ```
+
+**AI Agent Usage:**
+- Hide all notifications from UI for current session
+- Stores cleared IDs in localStorage per user
+- Keeps virtual chat notifications visible if applicable
 
 ### PATCH `/api/notifications/mark-all`
 Mark all notifications as archived (hide from dropdown).
@@ -161,6 +186,11 @@ Mark all notifications as archived (hide from dropdown).
   "success": true
 }
 ```
+
+**AI Agent Usage:**
+- Bulk mark all notifications as read
+- Useful for "mark all as read" functionality
+- Updates all notification statuses in database
 
 ## 🎯 Core Features
 
@@ -221,17 +251,17 @@ model Notification {
 ## 🔧 Redux State Management
 
 ### Notification Slice Actions
-- `setNotifications` - Set all notifications
-- `filterNotifications` - Filter by status and type
-- `updateNotificationStatus` - Update single notification status
-- `deleteNotification` - Remove notification
-- `markAllAsRead` - Mark all as read
-- `addNotification` - Add new notification
-- `updateNotification` - Update existing notification
+- `setNotifications` - Set all notifications from API
+- `filterNotifications` - Filter by status and type (similar to email filtering)
+- `updateNotificationStatus` - Update single notification status (read/unread/trash)
+- `deleteNotification` - Remove notification from state
+- `markAllAsRead` - Mark all notifications as read in bulk
+- `addNotification` - Add new notification (for real-time updates)
+- `updateNotification` - Update existing notification properties
 - `setCurrentNotification` - Set active notification for details view
-- `navigateNotifications` - Navigate between notifications
-- `addClearedNotifications` - Add to cleared set
-- `clearClearedNotifications` - Clear all cleared notifications
+- `navigateNotifications` - Navigate between notifications (next/prev)
+- `addClearedNotifications` - Add notification IDs to cleared set (localStorage)
+- `clearClearedNotifications` - Clear all cleared notifications (new session)
 
 ### State Structure
 ```typescript
@@ -242,6 +272,13 @@ interface NotificationState {
   clearedNotifications: Set<string>
 }
 ```
+
+**AI Agent Usage:**
+- Use `setNotifications` to initialize state from API
+- Use `addNotification` for WebSocket real-time updates
+- Use `filterNotifications` to show filtered views
+- Use `addClearedNotifications` to track locally cleared notifications
+- Redux state syncs with localStorage for session persistence
 
 ## 🛡️ Security Features
 
@@ -301,6 +338,94 @@ await markAsRead(notificationId, true)
 await clearAllNotifications()
 ```
 
+## 🤖 AI Agent Integration Guide
+
+### Core Workflow for AI Agents
+
+1. **Initialization**
+   ```typescript
+   // Load notifications on app start
+   const { notifications, unreadCount } = useNotifications()
+
+   // Includes virtual chat notifications automatically
+   // Filters out locally cleared notifications
+   ```
+
+2. **Real-time Updates**
+   ```typescript
+   // WebSocket events are handled automatically
+   socket.on('new-notification', (notification) => {
+     // Notification added to state automatically
+   })
+
+   socket.on('notification-update', (data) => {
+     // Status updates handled automatically
+   })
+   ```
+
+3. **Creating Notifications**
+   ```typescript
+   // System notifications
+   await fetch('/api/notifications', {
+     method: 'POST',
+     body: JSON.stringify({
+       title: 'Security Alert',
+       message: 'New login detected',
+       type: 'security',
+       avatarIcon: 'ri-shield-line',
+       avatarColor: 'error'
+     })
+   })
+
+   // User notifications
+   await fetch('/api/notifications', {
+     method: 'POST',
+     body: JSON.stringify({
+       title: 'Message Received',
+       message: 'You have a new message',
+       type: 'user',
+       avatarIcon: 'ri-message-line',
+       avatarColor: 'primary'
+     })
+   })
+   ```
+
+4. **Managing Notification State**
+   ```typescript
+   // Mark single notification as read
+   await markAsRead(notificationId, true)
+
+   // Mark all as read
+   await fetch('/api/notifications/mark-all', {
+     method: 'PATCH',
+     body: JSON.stringify({ read: true })
+   })
+
+   // Clear all (hide from UI)
+   await clearAllNotifications()
+   ```
+
+### Virtual Chat Notifications
+
+- **Automatic Generation**: Created client-side when `chatUnreadCount > 0`
+- **Dynamic Content**: Updates based on unread message count
+- **Translation Support**: Uses dictionary for localized text
+- **Not Persisted**: Exists only in client state, not in database
+
+### Error Handling for AI Agents
+
+- **WebSocket Disconnection**: Notifications load from API as fallback
+- **API Failures**: Graceful degradation, show cached notifications
+- **localStorage Errors**: Continue without session persistence
+- **Authentication Errors**: Redirect to login or refresh session
+
+### Performance Optimization
+
+- **Lazy Loading**: Notifications loaded on demand
+- **WebSocket Priority**: Real-time updates over polling
+- **localStorage Caching**: Session-based cleared notification tracking
+- **Memory Management**: Automatic cleanup on logout
+
 ## 🔍 Troubleshooting
 
 ### Common Issues
@@ -341,6 +466,49 @@ console.log('Socket connected:', socket?.connected)
 - Redux manages UI state synchronization
 - TypeScript provides type safety throughout
 - Backward compatibility maintained with legacy fields
+
+## 📋 Quick Reference for AI Agents
+
+### Essential Endpoints Summary
+- `GET /api/notifications` - Fetch all user notifications
+- `POST /api/notifications` - Create new notification
+- `PATCH /api/notifications/{id}` - Update notification status
+- `DELETE /api/notifications/{id}` - Delete notification
+- `DELETE /api/notifications/clear-all` - Hide all notifications (session)
+- `PATCH /api/notifications/mark-all` - Mark all as read
+
+### Key Data Types
+```typescript
+interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'system' | 'user' | 'security' | 'marketing' | 'info' | 'chat'
+  status: 'unread' | 'read' | 'trash' | 'archived'
+  avatarIcon?: string
+  avatarColor?: string
+  createdAt: string
+  userId?: string
+}
+```
+
+### Notification Types
+- **system**: Platform announcements, welcome messages
+- **user**: User-generated notifications, messages
+- **security**: Login alerts, password changes
+- **marketing**: Promotions, newsletters
+- **info**: General information
+- **chat**: Virtual chat unread notifications (client-side only)
+
+### WebSocket Events
+- `new-notification` - New notification created
+- `notification-update` - Status changed (read/unread)
+
+### Virtual Notifications
+- Generated client-side for chat unread messages
+- Not stored in database
+- Auto-updates with chat state
+- Uses translation dictionary for localization
 
 ---
 

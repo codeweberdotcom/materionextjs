@@ -52,6 +52,11 @@ Get last messages for current authenticated user.
 ]
 ```
 
+**AI Agent Usage:**
+- Use this endpoint to fetch the latest messages for the current user
+- Returns array of message objects with sender/receiver info
+- Useful for initializing chat state or checking recent conversations
+
 ### GET `/api/chat/unread`
 Get total count of unread messages for current user.
 
@@ -63,6 +68,10 @@ Get total count of unread messages for current user.
   "count": 5
 }
 ```
+
+**AI Agent Usage:**
+- Quick check for total unread message count
+- Useful for notification badges or status indicators
 
 ### GET `/api/chat/unread-by-contact`
 Get unread message counts grouped by contact.
@@ -76,6 +85,11 @@ Get unread message counts grouped by contact.
   "contact-id-2": 1
 }
 ```
+
+**AI Agent Usage:**
+- Get unread counts per contact for UI display
+- Keys are contact IDs, values are unread message counts
+- Returns empty object if no unread messages
 
 ### POST `/api/chat/messages/read`
 Mark messages as read in a specific room.
@@ -96,6 +110,74 @@ Mark messages as read in a specific room.
   "updatedCount": 3
 }
 ```
+
+**AI Agent Usage:**
+- Mark all unread messages in a room as read
+- Returns count of messages that were marked as read
+- Use after user opens a chat room to clear unread indicators
+
+### POST `/api/chat/messages/check-rate-limit`
+Check if user can send messages (rate limit validation).
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "userId": "user-id"
+}
+```
+
+**Response (Success):**
+```json
+{
+  "allowed": true,
+  "remaining": 4,
+  "resetTime": "2024-01-01T10:05:00Z"
+}
+```
+
+**Response (Rate Limited):**
+```json
+{
+  "error": "Rate limit exceeded",
+  "retryAfter": 30,
+  "blockedUntil": "2024-01-01T10:05:00Z"
+}
+```
+
+**AI Agent Usage:**
+- Check rate limit before sending messages
+- Returns remaining messages allowed in current window
+- Use retryAfter for client-side retry logic
+
+### POST `/api/chat/messages`
+Send a new message (rate-limited endpoint).
+
+**Authentication:** Required
+
+**Request Body:**
+```json
+{
+  "content": "Hello, how are you?",
+  "receiverId": "receiver-user-id",
+  "roomId": "chat-room-id"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "messageId": "new-message-id",
+  "roomId": "chat-room-id"
+}
+```
+
+**AI Agent Usage:**
+- Send messages with automatic rate limiting
+- Requires content, receiverId, and roomId
+- Check rate limit first using `/api/chat/messages/check-rate-limit`
 
 ## 🎯 Core Features
 
@@ -191,10 +273,12 @@ type ContactType = {
 ## 🔧 Redux State Management
 
 ### Chat Slice Actions
-- `fetchUsers` - Load user contacts
-- `getActiveUserData` - Set active chat user
-- `sendMsg` - Add message to store
-- `toggleMute` - Toggle contact mute status
+- `fetchUsers` - Load user contacts from API
+- `getActiveUserData` - Set active chat user and mark messages as read
+- `sendMsg` - Add message to Redux store (optimistic update)
+- `addNewChat` - Create new chat entry for user
+- `setUserStatus` - Update current user status
+- `toggleMute` - Toggle contact mute status (not implemented in current code)
 
 ### State Structure
 ```typescript
@@ -205,6 +289,12 @@ type ChatState = {
   activeUser?: ContactType
 }
 ```
+
+**AI Agent Usage:**
+- Use `fetchUsers` to load contacts on app initialization
+- Use `sendMsg` for optimistic UI updates before API confirmation
+- Use `getActiveUserData` when user opens a chat to clear unread badges
+- Redux state syncs with real-time WebSocket updates
 
 ## 🛡️ Security Features
 
@@ -245,6 +335,88 @@ markMessagesAsRead()
 dispatch(toggleMute(contactId))
 ```
 
+## 🤖 AI Agent Integration Guide
+
+### Core Workflow for AI Agents
+
+1. **Authentication Check**
+   - Ensure user is authenticated via NextAuth session
+   - All chat endpoints require valid session
+
+2. **Rate Limit Management**
+   ```typescript
+   // Always check rate limit before sending messages
+   const rateLimit = await fetch('/api/chat/messages/check-rate-limit', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({ userId: currentUserId })
+   })
+
+   if (rateLimit.allowed) {
+     // Proceed with sending message
+   } else {
+     // Handle rate limit exceeded
+     console.log('Retry after:', rateLimit.retryAfter)
+   }
+   ```
+
+3. **Real-time Message Handling**
+   ```typescript
+   // Use useUnreadByContact hook for real-time updates
+   const { unreadByContact, refetch } = useUnreadByContact()
+
+   // Listen for WebSocket events
+   socket.on('receiveMessage', () => {
+     refetch() // Update unread counts
+   })
+   ```
+
+4. **Message Sending Flow**
+   ```typescript
+   // 1. Check rate limit
+   // 2. Send message via API
+   const response = await fetch('/api/chat/messages', {
+     method: 'POST',
+     headers: { 'Content-Type': 'application/json' },
+     body: JSON.stringify({
+       content: messageText,
+       receiverId: targetUserId,
+       roomId: chatRoomId
+     })
+   })
+
+   // 3. Update Redux store optimistically
+   dispatch(sendMsg({
+     message: messageText,
+     senderId: currentUserId,
+     receiverId: targetUserId
+   }))
+   ```
+
+5. **Contact Management**
+   ```typescript
+   // Load contacts on app start
+   dispatch(fetchUsers())
+
+   // Get unread counts by contact
+   const unreadData = await fetch('/api/chat/unread-by-contact')
+   // Returns: { "contact-id-1": 3, "contact-id-2": 1 }
+   ```
+
+### Error Handling for AI Agents
+
+- **Rate Limit Exceeded**: Wait for retryAfter seconds, then retry
+- **Unauthorized**: Redirect to login or refresh session
+- **WebSocket Disconnected**: Implement reconnection logic
+- **API Errors**: Log errors and provide user feedback
+
+### Performance Optimization
+
+- Use Redux for local state management
+- Implement optimistic updates for better UX
+- Cache contact data to reduce API calls
+- Use WebSocket for real-time updates instead of polling
+
 ## 🔍 Troubleshooting
 
 ### Common Issues
@@ -284,6 +456,47 @@ curl -H "Authorization: Bearer <token>" /api/chat/unread
 - Components auto-update on state changes
 - Error handling includes user feedback
 - TypeScript provides type safety throughout
+
+## 📋 Quick Reference for AI Agents
+
+### Essential Endpoints Summary
+- `GET /api/chat/last-messages` - Get recent conversations
+- `GET /api/chat/unread-by-contact` - Get unread counts by contact
+- `POST /api/chat/messages/check-rate-limit` - Check if can send message
+- `POST /api/chat/messages` - Send new message
+- `POST /api/chat/messages/read` - Mark messages as read
+
+### Key Data Types
+```typescript
+interface Message {
+  id: string
+  content: string
+  senderId: string
+  receiverId: string
+  roomId: string
+  createdAt: string
+}
+
+interface Contact {
+  id: string
+  fullName: string
+  role: string
+  about: string
+  avatar?: string
+  status: 'online' | 'offline' | 'busy' | 'away'
+}
+```
+
+### Rate Limiting Rules
+- Max 5 messages per 30 seconds
+- Progressive blocking: 1min → 2min → 4min
+- Always check limits before sending
+
+### WebSocket Events
+- `receiveMessage` - New message received
+- `messagesRead` - Messages marked as read
+- `getOrCreateRoom` - Create/join chat room
+- `sendMessage` - Send message via socket
 
 ---
 
