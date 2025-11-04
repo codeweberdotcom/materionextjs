@@ -33,6 +33,8 @@ import { useTranslation } from '@/contexts/TranslationContext'
 import { usePermissions } from '@/hooks/usePermissions'
 
 // Third-party Imports
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
@@ -104,6 +106,7 @@ const RoleCards = () => {
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [roleUsers, setRoleUsers] = useState<User[]>([])
   const [isDeleting, setIsDeleting] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   // Fetch roles, users, and current user role
   useEffect(() => {
@@ -132,6 +135,8 @@ const RoleCards = () => {
         // Current user role no longer needed for restrictions
       } catch (error) {
         console.error('Error fetching data:', error)
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -316,88 +321,121 @@ const RoleCards = () => {
           </Button>
         </Alert>
       )}
-      <Grid container spacing={6} alignItems="stretch">
-        {roles.map((role, index) => {
-          const roleUsers = users.filter(user => user.role === role.name)
-
-          
-return (
-            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={role.id}>
+      {loading ? (
+        <Grid container spacing={6} alignItems="stretch">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={`skeleton-${index}`}>
               <Card>
                 <CardContent className='flex flex-col gap-4'>
                   <div className='flex items-center justify-between'>
-                    <Typography className='flex-grow'>{t.navigation.totalUsersCount.replace('${count}', roleUsers.length.toString())}</Typography>
-                    <AvatarGroup total={Math.max(roleUsers.length, 1)}>
-                      {roleUsers.slice(0, 3).map((user, userIndex) => (
-                        <Avatar key={user.id} alt={user.fullName} src={user.avatar || undefined} />
+                    <Skeleton width={100} height={20} />
+                    <div className='flex -space-x-2'>
+                      {Array.from({ length: 3 }).map((_, avatarIndex) => (
+                        <Skeleton key={avatarIndex} circle width={32} height={32} className='border-2 border-white' />
                       ))}
-                      {roleUsers.length === 0 && (
-                        <Avatar>
-                          <i className='ri-user-line' />
-                        </Avatar>
-                      )}
-                    </AvatarGroup>
+                    </div>
                   </div>
                   <div className='flex justify-between items-center'>
                     <div className='flex flex-col items-start gap-1'>
-                      {(() => {
-                        const roleInfo = userRoleObj[role.name.toLowerCase()] || userRoleObj.subscriber
-
-                        
-return (
-                          <div className='flex items-center gap-2'>
-                            <Icon className={roleInfo.icon} sx={{ color: role.name.toLowerCase() === 'superadmin' ? '#FFD700' : `var(--mui-palette-${roleInfo.color}-main)`, fontSize: '1.375rem' }} />
-                            <Typography variant='h5'>{role.name}</Typography>
-                          </div>
-                        )
-                      })()}
-                      <Typography variant='body2' color='text.secondary'>
-                        {role.description || 'No description'}
-                      </Typography>
+                      <div className='flex items-center gap-2'>
+                        <Skeleton width={20} height={20} />
+                        <Skeleton width={80} height={24} />
+                      </div>
+                      <Skeleton width={120} height={16} />
                     </div>
                     <div className='flex gap-2'>
-                      {(isSuperadmin || checkPermission('roleManagement', 'read')) && (
-                        <OpenDialogOnElementClick
-                          element={IconButton}
-                          elementProps={{
-                            children: <i className='ri-eye-line text-secondary mui-1vkcxi3' />
-                          }}
-                          dialog={RoleDialog}
-                          dialogProps={{ title: role.name, roleId: role.id, onSuccess: handleRoleSuccess, readOnly: true }}
-                        />
-                      )}
-                      {(isSuperadmin || checkPermission('roleManagement', 'update')) && (
-                        <OpenDialogOnElementClick
-                          element={IconButton}
-                          elementProps={{
-                            children: <i className='ri-edit-box-line text-secondary mui-1vkcxi3' />
-                          }}
-                          dialog={RoleDialog}
-                          dialogProps={{ title: role.name, roleId: role.id, onSuccess: handleRoleSuccess }}
-                        />
-                      )}
-                      {(isSuperadmin || checkPermission('roleManagement', 'delete')) && !['superadmin', 'subscriber', 'admin', 'user', 'moderator', 'seo', 'editor', 'marketolog', 'support', 'manager'].includes(role.name.toLowerCase()) && (
-                        <IconButton
-                          onClick={() => {
-                            setRoleToDelete(role)
-                            setDeleteDialogOpen(true)
-                          }}
-                          disabled={isDeleting}
-                        >
-                          <i className='ri-delete-bin-line text-secondary' />
-                        </IconButton>
-                      )}
+                      <Skeleton width={32} height={32} />
+                      <Skeleton width={32} height={32} />
+                      <Skeleton width={32} height={32} />
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </Grid>
-          )
-        })}
-        <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
-          <OpenDialogOnElementClick element={Card} elementProps={CardProps} dialog={RoleDialog} dialogProps={{ onSuccess: handleRoleSuccess }} />
+          ))}
         </Grid>
-      </Grid>
+      ) : (
+        <Grid container spacing={6} alignItems="stretch">
+          {roles.map((role, index) => {
+            const roleUsers = users.filter(user => user.role === role.name)
+
+            return (
+              <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={role.id}>
+                <Card>
+                  <CardContent className='flex flex-col gap-4'>
+                    <div className='flex items-center justify-between'>
+                      <Typography className='flex-grow'>{t.navigation.totalUsersCount.replace('${count}', roleUsers.length.toString())}</Typography>
+                      <AvatarGroup total={Math.max(roleUsers.length, 1)}>
+                        {roleUsers.slice(0, 3).map((user, userIndex) => (
+                          <Avatar key={user.id} alt={user.fullName} src={user.avatar || undefined} />
+                        ))}
+                        {roleUsers.length === 0 && (
+                          <Avatar>
+                            <i className='ri-user-line' />
+                          </Avatar>
+                        )}
+                      </AvatarGroup>
+                    </div>
+                    <div className='flex justify-between items-center'>
+                      <div className='flex flex-col items-start gap-1'>
+                        {(() => {
+                          const roleInfo = userRoleObj[role.name.toLowerCase()] || userRoleObj.subscriber
+
+                          return (
+                            <div className='flex items-center gap-2'>
+                              <Icon className={roleInfo.icon} sx={{ color: role.name.toLowerCase() === 'superadmin' ? '#FFD700' : `var(--mui-palette-${roleInfo.color}-main)`, fontSize: '1.375rem' }} />
+                              <Typography variant='h5'>{role.name}</Typography>
+                            </div>
+                          )
+                        })()}
+                        <Typography variant='body2' color='text.secondary'>
+                          {role.description || 'No description'}
+                        </Typography>
+                      </div>
+                      <div className='flex gap-2'>
+                        {(isSuperadmin || checkPermission('roleManagement', 'read')) && (
+                          <OpenDialogOnElementClick
+                            element={IconButton}
+                            elementProps={{
+                              children: <i className='ri-eye-line text-secondary mui-1vkcxi3' />
+                            }}
+                            dialog={RoleDialog}
+                            dialogProps={{ title: role.name, roleId: role.id, onSuccess: handleRoleSuccess, readOnly: true }}
+                          />
+                        )}
+                        {(isSuperadmin || checkPermission('roleManagement', 'update')) && (
+                          <OpenDialogOnElementClick
+                            element={IconButton}
+                            elementProps={{
+                              children: <i className='ri-edit-box-line text-secondary mui-1vkcxi3' />
+                            }}
+                            dialog={RoleDialog}
+                            dialogProps={{ title: role.name, roleId: role.id, onSuccess: handleRoleSuccess }}
+                          />
+                        )}
+                        {(isSuperadmin || checkPermission('roleManagement', 'delete')) && !['superadmin', 'subscriber', 'admin', 'user', 'moderator', 'seo', 'editor', 'marketolog', 'support', 'manager'].includes(role.name.toLowerCase()) && (
+                          <IconButton
+                            onClick={() => {
+                              setRoleToDelete(role)
+                              setDeleteDialogOpen(true)
+                            }}
+                            disabled={isDeleting}
+                          >
+                            <i className='ri-delete-bin-line text-secondary' />
+                          </IconButton>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )
+          })}
+          <Grid size={{ xs: 12, sm: 6, lg: 4 }}>
+            <OpenDialogOnElementClick element={Card} elementProps={CardProps} dialog={RoleDialog} dialogProps={{ onSuccess: handleRoleSuccess }} />
+          </Grid>
+        </Grid>
+      )}
       <ConfirmationDialog
         open={deleteDialogOpen}
         setOpen={setDeleteDialogOpen}

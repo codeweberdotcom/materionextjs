@@ -16,6 +16,8 @@ import CircularProgress from '@mui/material/CircularProgress'
 import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { useSession } from 'next-auth/react'
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 
 // Type Imports
 import type { ChatType, ChatDataType, UserChatType, ProfileUserType } from '@/types/apps/chatTypes'
@@ -186,9 +188,17 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
       <CardContent className='p-0'>
         {/* Show loading state while room is loading */}
         {isRoomLoading ? (
-          <div className='flex items-center justify-center gap-2 absolute inset-0 z-10 bg-[var(--mui-palette-customColors-chatBg)]'>
-            <CircularProgress />
-            <Typography>Загрузка сообщений...</Typography>
+          <div className='flex flex-col gap-4 p-5 absolute inset-0 z-10 bg-[var(--mui-palette-customColors-chatBg)]'>
+            {/* Skeleton for messages */}
+            {Array.from({ length: 5 }).map((_, index) => (
+              <div key={index} className={classnames('flex gap-4', { 'flex-row-reverse': index % 2 === 1 })}>
+                <Skeleton circle width={32} height={32} />
+                <div className='flex flex-col gap-2'>
+                  <Skeleton width={200} height={20} />
+                  <Skeleton width={150} height={16} />
+                </div>
+              </div>
+            ))}
           </div>
         ) : (
           <>

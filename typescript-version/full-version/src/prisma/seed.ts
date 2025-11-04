@@ -1,4 +1,4 @@
-уimport { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcrypt'
 
 import { prisma } from '../libs/prisma'
@@ -781,14 +781,24 @@ async function main() {
 
   console.log(`✅ Created ${userBlocks.length} user blocks for testing`)
 
-  // Создаем блокировки IP
+  // IP блокировки теперь создаются через UserBlock с ipAddress полем
+  // Создаем блокировки IP через UserBlock
   for (const block of ipBlocks) {
-    await prisma.iPBlock.create({
-      data: block
+    await prisma.userBlock.create({
+      data: {
+        ipAddress: block.ipAddress,
+        reason: block.reason,
+        blockedBy: block.blockedBy,
+        blockedAt: block.blockedAt,
+        unblockedAt: block.unblockedAt,
+        isActive: block.isActive,
+        notes: block.notes,
+        module: 'general' // Общий модуль для IP блокировок
+      }
     })
   }
 
-  console.log(`✅ Created ${ipBlocks.length} IP blocks for testing`)
+  console.log(`✅ Created ${ipBlocks.length} IP blocks via UserBlock for testing`)
 
   console.log('Email templates created successfully!')
   console.log('Database seeded successfully!')

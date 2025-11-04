@@ -28,6 +28,8 @@ import type { TextFieldProps } from '@mui/material/TextField'
 // Third-party Imports
 import classnames from 'classnames'
 import { rankItem } from '@tanstack/match-sorter-utils'
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 import {
   createColumnHelper,
   flexRender,
@@ -175,9 +177,17 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [deleteUserName, setDeleteUserName] = useState<string>('')
   const [editUser, setEditUser] = useState<UsersType | null>(null)
   const [addUserOpen, setAddUserOpen] = useState(false)
+  const [loading, setLoading] = useState(!tableData || tableData.length === 0)
 
   // Hooks
   const { lang: locale } = useParams()
+
+  // Set loading to false when data is available
+  useEffect(() => {
+    if (tableData && tableData.length > 0) {
+      setLoading(false)
+    }
+  }, [tableData])
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
@@ -453,6 +463,71 @@ return (
       console.error('Error toggling user status:', error)
       toast.error('Failed to toggle user status')
     }
+  }
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className='flex justify-between flex-col gap-4 items-start sm:flex-row sm:items-center'>
+          <Skeleton width={100} height={36} />
+          <div className='flex gap-4 flex-col !items-start max-sm:is-full sm:flex-row sm:items-center'>
+            <Skeleton width={220} height={40} />
+            <Skeleton width={150} height={40} />
+          </div>
+        </CardContent>
+        <div className='overflow-x-auto'>
+          <table className={tableStyles.table}>
+            <thead>
+              <tr>
+                <th><Skeleton width={20} height={20} /></th>
+                <th><Skeleton width={120} height={20} /></th>
+                <th><Skeleton width={150} height={20} /></th>
+                <th><Skeleton width={80} height={20} /></th>
+                <th><Skeleton width={80} height={20} /></th>
+                <th><Skeleton width={60} height={20} /></th>
+                <th><Skeleton width={100} height={20} /></th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 10 }).map((_, index) => (
+                <tr key={index}>
+                  <td><Skeleton width={20} height={20} /></td>
+                  <td>
+                    <div className='flex items-center gap-4'>
+                      <Skeleton circle width={34} height={34} />
+                      <div className='flex flex-col gap-1'>
+                        <Skeleton width={100} height={16} />
+                        <Skeleton width={80} height={14} />
+                      </div>
+                    </div>
+                  </td>
+                  <td><Skeleton width={150} height={16} /></td>
+                  <td>
+                    <div className='flex items-center gap-2'>
+                      <Skeleton width={20} height={20} />
+                      <Skeleton width={60} height={16} />
+                    </div>
+                  </td>
+                  <td><Skeleton width={80} height={16} /></td>
+                  <td><Skeleton width={60} height={24} /></td>
+                  <td>
+                    <div className='flex items-center gap-2'>
+                      <Skeleton width={24} height={24} />
+                      <Skeleton width={24} height={24} />
+                      <Skeleton width={40} height={20} />
+                      <Skeleton width={24} height={24} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className='border-bs p-4'>
+          <Skeleton width={200} height={24} />
+        </div>
+      </Card>
+    )
   }
 
   return (

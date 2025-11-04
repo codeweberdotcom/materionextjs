@@ -24,9 +24,45 @@ const protectedRoutes = {
 }
 
 export async function middleware(request: NextRequest) {
-  // Disable middleware for now - let AuthGuard handle all authentication
-  // This prevents redirect loops when session callback throws errors
-  return NextResponse.next()
+  const { pathname } = request.nextUrl
+
+  // Skip middleware for API routes, static files, and public routes
+  if (
+    pathname.startsWith('/api') ||
+    pathname.startsWith('/_next') ||
+    pathname.includes('favicon.ico') ||
+    pathname === '/' ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/register') ||
+    pathname.startsWith('/forgot-password')
+  ) {
+    return NextResponse.next()
+  }
+
+  try {
+    // Get session
+    const session = await getServerSession(authOptions)
+
+    // If no session, redirect to login
+    if (!session) {
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('callbackUrl', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    // Check permissions for protected routes
+    const routeConfig = protectedRoutes[pathname as keyof typeof protectedRoutes]
+    if (routeConfig) {
+      // For now, allow access - permissions will be checked at component level
+      // TODO: Implement proper permission checking in middleware
+    }
+
+    return NextResponse.next()
+  } catch (error) {
+    console.error('Middleware error:', error)
+    // On error, allow access to prevent blocking
+    return NextResponse.next()
+  }
 }
 
 export const config = {

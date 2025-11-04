@@ -13,6 +13,8 @@ import Chip from '@mui/material/Chip'
 // Third-party Imports
 import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 
 // Type Imports
 import type { AppDispatch } from '@/redux-store'
@@ -128,12 +130,43 @@ const NotificationsList = (props: Props) => {
     }
   }
 
-  if (searchFilteredNotifications.length === 0) {
+  if (searchFilteredNotifications.length === 0 && !isInitialMount) {
     return (
       <div className='relative flex justify-center gap-2 grow is-full'>
         <Typography color='text.primary' className='m-3'>
           {dictionary.navigation.noNotificationsFound}
         </Typography>
+      </div>
+    )
+  }
+
+  // Show skeleton loading during initial mount
+  if (isInitialMount) {
+    return (
+      <div className='relative overflow-hidden grow is-full'>
+        <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
+          <div className='flex flex-col'>
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div key={`skeleton-${index}`} className='p-4'>
+                <div className='flex items-center justify-between gap-2'>
+                  <div className='flex items-center gap-2 overflow-hidden'>
+                    <Skeleton circle width={40} height={40} />
+                    <div className='flex gap-4 justify-between items-center overflow-hidden'>
+                      <Skeleton width={150} height={20} />
+                    </div>
+                  </div>
+                  {!isBelowSmScreen && (
+                    <div className='flex items-center gap-2'>
+                      <Skeleton width={100} height={16} />
+                      <Skeleton width={60} height={24} />
+                      <Skeleton width={20} height={20} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollWrapper>
       </div>
     )
   }

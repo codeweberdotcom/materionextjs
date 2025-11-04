@@ -16,6 +16,8 @@ import IconButton from '@mui/material/IconButton'
 import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { useSession } from 'next-auth/react'
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
@@ -306,18 +308,34 @@ const SidebarLeft = (props: Props) => {
         </div>
         <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
           <ul className='p-3 pbs-4'>
-            {renderContacts({
-              chatStore,
-              getActiveUserData,
-              backdropOpen,
-              setSidebarOpen,
-              isBelowMdScreen,
-              setBackdropOpen,
-              session: currentSession,
-              socket,
-              unreadByContact,
-              navigation: currentNavigation
-            })}
+            {chatStore.contacts.length === 0 ? (
+              // Show skeleton loading for contacts
+              Array.from({ length: 8 }).map((_, index) => (
+                <li key={`skeleton-${index}`} className='flex items-start gap-4 pli-3 plb-2 mbe-1'>
+                  <Skeleton circle width={40} height={40} />
+                  <div className='min-is-0 flex-auto'>
+                    <Skeleton width={120} height={16} />
+                    <Skeleton width={80} height={14} />
+                  </div>
+                  <div className='flex flex-col items-end justify-start'>
+                    <Skeleton width={40} height={20} />
+                  </div>
+                </li>
+              ))
+            ) : (
+              renderContacts({
+                chatStore,
+                getActiveUserData,
+                backdropOpen,
+                setSidebarOpen,
+                isBelowMdScreen,
+                setBackdropOpen,
+                session: currentSession,
+                socket,
+                unreadByContact,
+                navigation: currentNavigation
+              })
+            )}
           </ul>
         </ScrollWrapper>
       </Drawer>
