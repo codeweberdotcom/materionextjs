@@ -21,6 +21,10 @@ import { useTranslation } from '@/contexts/TranslationContext'
 import { usePermissions } from '@/hooks/usePermissions'
 import { toast } from 'react-toastify'
 
+// Third-party Imports
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
+
 type SmtpPreset = {
   host: string
   port: string
@@ -253,8 +257,31 @@ const SmtpSettings = () => {
   if (fetchLoading) {
     return (
       <Card>
+        <CardHeader>
+          <Skeleton width={200} height={28} />
+        </CardHeader>
         <CardContent>
-          <Typography>{dictionary?.navigation?.loadingSmtpSettings || 'Loading SMTP settings...'}</Typography>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '32px' }}>
+            {Array.from({ length: 8 }).map((_, index) => (
+              <Skeleton key={index} width={100} height={36} />
+            ))}
+          </div>
+          <div style={{ marginBottom: '32px' }}>
+            <Skeleton width={150} height={24} />
+          </div>
+          <Grid container spacing={4}>
+            {Array.from({ length: 7 }).map((_, index) => (
+              <Grid item xs={12} sm={6} key={index}>
+                <Skeleton height={56} />
+              </Grid>
+            ))}
+            <Grid item xs={12}>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <Skeleton width={120} height={36} />
+                <Skeleton width={120} height={36} />
+              </div>
+            </Grid>
+          </Grid>
         </CardContent>
       </Card>
     )

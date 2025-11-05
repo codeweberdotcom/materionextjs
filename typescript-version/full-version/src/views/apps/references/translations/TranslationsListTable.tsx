@@ -24,6 +24,8 @@ import type { TextFieldProps } from '@mui/material/TextField'
 // Third-party Imports
 import classnames from 'classnames'
 import { rankItem } from '@tanstack/match-sorter-utils'
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 import {
   createColumnHelper,
   flexRender,
@@ -432,7 +434,61 @@ const TranslationsListTable = () => {
   }
 
   if (loading) {
-    return <Typography>{dictionary.navigation.loadingTranslations}</Typography>
+    return (
+      <Card>
+        <CardHeader>
+          <Skeleton width={200} height={28} />
+        </CardHeader>
+        <Divider />
+        <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
+          <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
+            <Skeleton width={300} height={40} />
+          </div>
+          <div className='flex gap-2'>
+            <Skeleton width={120} height={36} />
+            <Skeleton width={120} height={36} />
+            <Skeleton width={150} height={36} />
+          </div>
+        </div>
+        <div className='overflow-x-auto'>
+          <table className={tableStyles.table}>
+            <thead>
+              <tr>
+                <th><Skeleton width={20} height={20} /></th>
+                <th><Skeleton width={100} height={20} /></th>
+                <th><Skeleton width={80} height={20} /></th>
+                <th><Skeleton width={70} height={20} /></th>
+                <th><Skeleton width={120} height={20} /></th>
+                <th><Skeleton width={60} height={20} /></th>
+                <th><Skeleton width={100} height={20} /></th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 10 }).map((_, index) => (
+                <tr key={index}>
+                  <td><Skeleton width={20} height={20} /></td>
+                  <td><Skeleton width={100} height={16} /></td>
+                  <td><Skeleton width={80} height={16} /></td>
+                  <td><Skeleton width={50} height={24} /></td>
+                  <td><Skeleton width={150} height={16} /></td>
+                  <td><Skeleton width={60} height={24} /></td>
+                  <td>
+                    <div className='flex items-center gap-2'>
+                      <Skeleton width={24} height={24} />
+                      <Skeleton width={40} height={20} />
+                      <Skeleton width={24} height={24} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className='border-bs p-4'>
+          <Skeleton width={200} height={24} />
+        </div>
+      </Card>
+    )
   }
 
   return (

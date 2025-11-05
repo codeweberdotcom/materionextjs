@@ -278,16 +278,3 @@ model UserBlock {
   @@index([unblockedAt])
 }
 
-model IPBlock {
-  id          String   @id @default(cuid())
-  ipAddress   String   @unique
-  reason      String
-  blockedBy   String
-  blockedAt   DateTime @default(now())
-  unblockedAt DateTime?
-  isActive    Boolean  @default(true)
-  notes       String?
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}

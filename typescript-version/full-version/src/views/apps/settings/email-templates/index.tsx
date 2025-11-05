@@ -30,6 +30,10 @@ import Box from '@mui/material/Box'
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
 
+// Third-party Imports
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
+
 interface EmailTemplate {
   id: string
   name: string
@@ -197,8 +201,47 @@ return result
   if (loading) {
     return (
       <Card>
+        <CardHeader>
+          <Skeleton width={200} height={28} />
+          <Skeleton width={150} height={36} />
+        </CardHeader>
         <CardContent>
-          <Typography>Загрузка шаблонов...</Typography>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell><Skeleton width={120} height={20} /></TableCell>
+                  <TableCell><Skeleton width={100} height={20} /></TableCell>
+                  <TableCell><Skeleton width={150} height={20} /></TableCell>
+                  <TableCell><Skeleton width={100} height={20} /></TableCell>
+                  <TableCell><Skeleton width={80} height={20} /></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index}>
+                    <TableCell><Skeleton width={100} height={16} /></TableCell>
+                    <TableCell><Skeleton width={150} height={16} /></TableCell>
+                    <TableCell><Skeleton width={200} height={16} /></TableCell>
+                    <TableCell>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {Array.from({ length: 4 }).map((_, chipIndex) => (
+                          <Skeleton key={chipIndex} width={50} height={24} />
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <Skeleton width={24} height={24} />
+                        <Skeleton width={24} height={24} />
+                        <Skeleton width={24} height={24} />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </CardContent>
       </Card>
     )

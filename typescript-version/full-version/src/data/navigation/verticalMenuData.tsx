@@ -319,6 +319,11 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         icon: 'ri-file-text-line',
         href: '/apps/settings/email-templates'
       },
+      {
+        label: 'Metrics',
+        icon: 'ri-bar-chart-line',
+        href: '/apps/metrics'
+      },
     ]
   },
       {
