@@ -130,25 +130,5 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Middleware to track API requests
-export async function middleware(request: NextRequest) {
-  const start = Date.now()
-  const method = request.method
-  const url = new URL(request.url)
-  const endpoint = url.pathname
 
-  try {
-    // Track the request
-    apiRequests.inc({ method, endpoint, status: '200' })
 
-    // Measure response time
-    const responseTimeValue = (Date.now() - start) / 1000
-    responseTime.observe({ method, endpoint }, responseTimeValue)
-
-    return NextResponse.next()
-  } catch (error) {
-    // Track failed requests
-    apiRequests.inc({ method, endpoint, status: '500' })
-    throw error
-  }
-}

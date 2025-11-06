@@ -136,6 +136,10 @@
     "deleteAccount": "Delete Account",
     "deleteCity": "Delete City",
     "deleteCityConfirm": "Are you sure you want to delete city \"${name}\"?",
+    "deleteCountryConfirm": "Are you sure you want to delete country \"${name}\"?",
+    "deleteCountryMessage": "You won't be able to revert country!",
+    "deleteCurrencyConfirm": "Are you sure you want to delete currency \"${name}\"?",
+    "deleteCurrencyMessage": "You won't be able to revert currency!",
     "deleteDistrict": "Delete District",
     "deleteDistrictConfirm": "Are you sure you want to delete district \"${name}\"?",
     "deleteRole": "Delete Role",
@@ -468,6 +472,8 @@
     "wizardExamples": "Wizard Examples",
     "write": "Write",
     "yesActivateUser": "Yes, Activate User!",
+    "yesDeleteCountry": "Yes, Delete Country!",
+    "yesDeleteCurrency": "Yes, Delete Currency!",
     "yesDeleteRole": "Yes, Delete Role!",
     "yesSuspendUser": "Yes, Suspend User!"
   }

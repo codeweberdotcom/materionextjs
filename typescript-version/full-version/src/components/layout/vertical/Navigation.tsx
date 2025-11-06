@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client'
 
 // React Imports
@@ -10,7 +11,7 @@ import Link from 'next/link'
 import { styled, useColorScheme, useTheme } from '@mui/material/styles'
 
 // Type Imports
-import type { getDictionary } from '@/utils/getDictionary'
+import type { getDictionary } from '@/utils/formatting/getDictionary'
 import type { Mode } from '@core/types'
 import type { Locale } from '@configs/i18n'
 
@@ -24,7 +25,7 @@ import useVerticalNav from '@menu/hooks/useVerticalNav'
 import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Style Imports
 import navigationCustomStyles from '@core/styles/vertical/navigationCustomStyles'

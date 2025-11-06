@@ -26,7 +26,7 @@ import type { ChatType, ChatDataType, UserChatType, ProfileUserType } from '@/ty
 import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
-import { getInitials } from '@/utils/getInitials'
+import { getInitials } from '@/utils/formatting/getInitials'
 
 // Custom Hooks
 import { useChat } from '@/hooks/useChat'

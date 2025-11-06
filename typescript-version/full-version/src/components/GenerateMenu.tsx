@@ -24,7 +24,7 @@ import { SubMenu as HorizontalSubMenu, MenuItem as HorizontalMenuItem } from '@m
 import { SubMenu as VerticalSubMenu, MenuItem as VerticalMenuItem, MenuSection } from '@menu/vertical-menu'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Generate a menu from the menu data array
 export const GenerateVerticalMenu = ({ menuData, locale }: { menuData: VerticalMenuDataType[]; locale: string }) => {

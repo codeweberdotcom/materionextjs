@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { lucia } from '@/libs/lucia'
-import { checkPermission, isSuperadmin, getUserPermissions } from '@/utils/permissions'
+import { checkPermission, isSuperadmin, getUserPermissions } from '@/utils/permissions/permissions'
 
 // Define protected routes and required permissions
 const protectedRoutes = {

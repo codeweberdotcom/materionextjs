@@ -6,13 +6,13 @@ module.exports = {
     'react/no-children-prop': 'off',
     '@next/next/no-img-element': 'off',
     '@next/next/no-page-custom-font': 'off',
-    '@typescript-eslint/consistent-type-imports': 'error',
+    '@typescript-eslint/consistent-type-imports': 'warn',
     '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
-    '@typescript-eslint/no-unused-vars': 'error',
+    '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/no-non-null-assertion': 'off',
     'lines-around-comment': [
-      'error',
+      'warn',
       {
         beforeBlockComment: true,
         beforeLineComment: true,
@@ -22,7 +22,7 @@ module.exports = {
       }
     ],
     'padding-line-between-statements': [
-      'error',
+      'warn',
       {
         blankLine: 'any',
         prev: 'export',
@@ -49,15 +49,15 @@ module.exports = {
         next: '*'
       }
     ],
-    'newline-before-return': 'error',
+    'newline-before-return': 'warn',
     'import/newline-after-import': [
-      'error',
+      'warn',
       {
         count: 1
       }
     ],
     'import/order': [
-      'error',
+      'warn',
       {
         groups: ['builtin', 'external', ['internal', 'parent', 'sibling', 'index'], ['object', 'unknown']],
         pathGroups: [

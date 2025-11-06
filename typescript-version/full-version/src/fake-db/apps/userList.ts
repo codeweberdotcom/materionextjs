@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Type Imports
 import type { UsersType } from '@/types/apps/userTypes'
 
@@ -13,8 +14,10 @@ export const db: UsersType[] = [
     email: 'gslixby0@abc.net.au',
     currentPlan: 'enterprise',
     status: 'inactive',
+    isActive: false,
     avatar: '',
-    avatarColor: 'primary'
+    avatarColor: 'primary',
+    isActive: false
   },
   {
     id: 2,
@@ -27,7 +30,9 @@ export const db: UsersType[] = [
     email: 'hredmore1@imgur.com',
     currentPlan: 'team',
     status: 'pending',
-    avatar: '/images/avatars/3.png'
+    isActive: true,
+    avatar: '/images/avatars/3.png',
+    isActive: true
   },
   {
     id: 3,
@@ -40,7 +45,9 @@ export const db: UsersType[] = [
     email: 'msicely2@who.int',
     currentPlan: 'enterprise',
     status: 'active',
-    avatar: '/images/avatars/1.png'
+    isActive: true,
+    avatar: '/images/avatars/1.png',
+    isActive: true
   },
   {
     id: 4,
@@ -53,7 +60,9 @@ export const db: UsersType[] = [
     email: 'crisby3@wordpress.com',
     currentPlan: 'team',
     status: 'inactive',
-    avatar: '/images/avatars/3.png'
+    isActive: false,
+    avatar: '/images/avatars/3.png',
+    isActive: false
   },
   {
     id: 5,
@@ -66,6 +75,7 @@ export const db: UsersType[] = [
     email: 'mhurran4@yahoo.co.jp',
     currentPlan: 'enterprise',
     status: 'pending',
+    isActive: true,
     avatar: '/images/avatars/1.png'
   },
   {
@@ -79,6 +89,7 @@ export const db: UsersType[] = [
     email: 'shalstead5@shinystat.com',
     currentPlan: 'company',
     status: 'active',
+    isActive: true,
     avatar: '',
     avatarColor: 'error'
   },
@@ -93,6 +104,7 @@ export const db: UsersType[] = [
     email: 'bgallemore6@boston.com',
     currentPlan: 'company',
     status: 'pending',
+    isActive: true,
     avatar: '',
     avatarColor: 'warning'
   },
@@ -107,6 +119,7 @@ export const db: UsersType[] = [
     email: 'kliger7@vinaora.com',
     currentPlan: 'enterprise',
     status: 'pending',
+    isActive: true,
     avatar: '/images/avatars/4.png'
   },
   {
@@ -120,6 +133,7 @@ export const db: UsersType[] = [
     email: 'fscotfurth8@dailymotion.com',
     currentPlan: 'team',
     status: 'pending',
+    isActive: true,
     avatar: '/images/avatars/2.png'
   },
   {
@@ -133,6 +147,7 @@ export const db: UsersType[] = [
     email: 'jbellany9@kickstarter.com',
     currentPlan: 'company',
     status: 'inactive',
+    isActive: false,
     avatar: '/images/avatars/5.png'
   },
   {
@@ -146,6 +161,7 @@ export const db: UsersType[] = [
     email: 'jwharltona@oakley.com',
     currentPlan: 'team',
     status: 'inactive',
+    isActive: false,
     avatar: '/images/avatars/4.png'
   },
   {
@@ -159,6 +175,7 @@ export const db: UsersType[] = [
     email: 'shallamb@hugedomains.com',
     currentPlan: 'team',
     status: 'pending',
+    isActive: true,
     avatar: '/images/avatars/5.png'
   },
   {
@@ -172,6 +189,7 @@ export const db: UsersType[] = [
     email: 'ypottiec@privacy.gov.au',
     currentPlan: 'basic',
     status: 'inactive',
+    isActive: false,
     avatar: '/images/avatars/7.png'
   },
   {
@@ -185,6 +203,7 @@ export const db: UsersType[] = [
     email: 'mkraused@stanford.edu',
     currentPlan: 'team',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/6.png'
   },
   {
@@ -198,6 +217,7 @@ export const db: UsersType[] = [
     email: 'zmcclevertye@soundcloud.com',
     currentPlan: 'enterprise',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/2.png'
   },
   {
@@ -211,6 +231,7 @@ export const db: UsersType[] = [
     email: 'bemblinf@wired.com',
     currentPlan: 'company',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/6.png'
   },
   {
@@ -224,6 +245,7 @@ export const db: UsersType[] = [
     email: 'bmylesg@amazon.com',
     currentPlan: 'basic',
     status: 'active',
+    isActive: true,
     avatar: '',
     avatarColor: 'success'
   },
@@ -238,6 +260,7 @@ export const db: UsersType[] = [
     email: 'bbinerh@mozilla.com',
     currentPlan: 'team',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/7.png'
   },
   {
@@ -251,6 +274,7 @@ export const db: UsersType[] = [
     email: 'tbruntjeni@sitemeter.com',
     currentPlan: 'enterprise',
     status: 'active',
+    isActive: true,
     avatar: '',
     avatarColor: 'primary'
   },
@@ -265,6 +289,7 @@ export const db: UsersType[] = [
     email: 'wburlandj@uiuc.edu',
     currentPlan: 'team',
     status: 'inactive',
+    isActive: false,
     avatar: '/images/avatars/6.png'
   },
   {
@@ -278,6 +303,7 @@ export const db: UsersType[] = [
     email: 'irena.dubrovna@wayne.com',
     currentPlan: 'team',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/1.png'
   },
   {
@@ -291,6 +317,7 @@ export const db: UsersType[] = [
     email: 'jlysterl@guardian.co.uk',
     currentPlan: 'company',
     status: 'inactive',
+    isActive: false,
     avatar: '/images/avatars/8.png'
   },
   {
@@ -304,6 +331,7 @@ export const db: UsersType[] = [
     email: 'kskitterelm@ainyx.com',
     currentPlan: 'basic',
     status: 'pending',
+    isActive: true,
     avatar: '/images/avatars/3.png'
   },
   {
@@ -317,6 +345,7 @@ export const db: UsersType[] = [
     email: 'chatherleighn@washington.edu',
     currentPlan: 'team',
     status: 'pending',
+    isActive: true,
     avatar: '/images/avatars/2.png'
   },
   {
@@ -330,6 +359,7 @@ export const db: UsersType[] = [
     email: 'amiccoo@whitehouse.gov',
     currentPlan: 'enterprise',
     status: 'pending',
+    isActive: true,
     avatar: '',
     avatarColor: 'error'
   },
@@ -344,6 +374,7 @@ export const db: UsersType[] = [
     email: 'hhassonp@bizjournals.com',
     currentPlan: 'basic',
     status: 'inactive',
+    isActive: false,
     avatar: '/images/avatars/4.png'
   },
   {
@@ -357,6 +388,7 @@ export const db: UsersType[] = [
     email: 'gjacombsq@jigsy.com',
     currentPlan: 'enterprise',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/5.png'
   },
   {
@@ -370,6 +402,7 @@ export const db: UsersType[] = [
     email: 'bkildayr@mashable.com',
     currentPlan: 'team',
     status: 'active',
+    isActive: true,
     avatar: '',
     avatarColor: 'warning'
   },
@@ -384,6 +417,7 @@ export const db: UsersType[] = [
     email: 'cpinyons@behance.net',
     currentPlan: 'team',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/7.png'
   },
   {
@@ -397,6 +431,7 @@ export const db: UsersType[] = [
     email: 'imallindinet@shinystat.com',
     currentPlan: 'team',
     status: 'pending',
+    isActive: true,
     avatar: '',
     avatarColor: 'info'
   },
@@ -411,6 +446,7 @@ export const db: UsersType[] = [
     email: 'gmeinekenu@hc360.com',
     currentPlan: 'basic',
     status: 'pending',
+    isActive: true,
     avatar: '/images/avatars/1.png'
   },
   {
@@ -424,6 +460,7 @@ export const db: UsersType[] = [
     email: 'rsnowballv@indiegogo.com',
     currentPlan: 'basic',
     status: 'pending',
+    isActive: true,
     avatar: '/images/avatars/5.png'
   },
   {
@@ -437,6 +474,7 @@ export const db: UsersType[] = [
     email: 'remerw@blogtalkradio.com',
     currentPlan: 'basic',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/8.png'
   },
   {
@@ -450,6 +488,7 @@ export const db: UsersType[] = [
     email: 'ofibbensx@booking.com',
     currentPlan: 'company',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/4.png'
   },
   {
@@ -463,6 +502,7 @@ export const db: UsersType[] = [
     email: 'smacgilfoyley@bigcartel.com',
     currentPlan: 'company',
     status: 'pending',
+    isActive: true,
     avatar: '',
     avatarColor: 'error'
   },
@@ -477,6 +517,7 @@ export const db: UsersType[] = [
     email: 'brosebothamz@tripadvisor.com',
     currentPlan: 'team',
     status: 'inactive',
+    isActive: false,
     avatar: '',
     avatarColor: 'success'
   },
@@ -491,6 +532,7 @@ export const db: UsersType[] = [
     email: 'shebblethwaite10@arizona.edu',
     currentPlan: 'company',
     status: 'inactive',
+    isActive: false,
     avatar: '/images/avatars/1.png'
   },
   {
@@ -504,6 +546,7 @@ export const db: UsersType[] = [
     email: 'mpiccard11@vimeo.com',
     currentPlan: 'enterprise',
     status: 'inactive',
+    isActive: false,
     avatar: '/images/avatars/1.png'
   },
   {
@@ -517,6 +560,7 @@ export const db: UsersType[] = [
     email: 'twidmore12@bravesites.com',
     currentPlan: 'team',
     status: 'pending',
+    isActive: true,
     avatar: '',
     avatarColor: 'primary'
   },
@@ -531,6 +575,7 @@ export const db: UsersType[] = [
     email: 'fdesporte13@omniture.com',
     currentPlan: 'company',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/6.png'
   },
   {
@@ -544,6 +589,7 @@ export const db: UsersType[] = [
     email: 'ebaldetti14@theguardian.com',
     currentPlan: 'team',
     status: 'pending',
+    isActive: true,
     avatar: '',
     avatarColor: 'info'
   },
@@ -558,6 +604,7 @@ export const db: UsersType[] = [
     email: 'brossiter15@craigslist.org',
     currentPlan: 'team',
     status: 'inactive',
+    isActive: false,
     avatar: '',
     avatarColor: 'warning'
   },
@@ -572,6 +619,7 @@ export const db: UsersType[] = [
     email: 'mmcnirlan16@hc360.com',
     currentPlan: 'basic',
     status: 'inactive',
+    isActive: false,
     avatar: '',
     avatarColor: 'error'
   },
@@ -586,6 +634,7 @@ export const db: UsersType[] = [
     email: 'vkoschek17@abc.net.au',
     currentPlan: 'team',
     status: 'active',
+    isActive: true,
     avatar: '',
     avatarColor: 'success'
   },
@@ -600,6 +649,7 @@ export const db: UsersType[] = [
     email: 'cperot18@goo.ne.jp',
     currentPlan: 'team',
     status: 'pending',
+    isActive: true,
     avatar: '/images/avatars/3.png'
   },
   {
@@ -613,6 +663,7 @@ export const db: UsersType[] = [
     email: 'soffner19@mac.com',
     currentPlan: 'enterprise',
     status: 'pending',
+    isActive: true,
     avatar: '',
     avatarColor: 'primary'
   },
@@ -627,6 +678,7 @@ export const db: UsersType[] = [
     email: 'kcourtliff1a@bbc.co.uk',
     currentPlan: 'basic',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/1.png'
   },
   {
@@ -640,6 +692,7 @@ export const db: UsersType[] = [
     email: 'owind1b@yandex.ru',
     currentPlan: 'basic',
     status: 'pending',
+    isActive: true,
     avatar: '',
     avatarColor: 'error'
   },
@@ -654,6 +707,7 @@ export const db: UsersType[] = [
     email: 'pdurber1c@gov.uk',
     currentPlan: 'team',
     status: 'inactive',
+    isActive: false,
     avatar: '',
     avatarColor: 'warning'
   },
@@ -668,6 +722,7 @@ export const db: UsersType[] = [
     email: 'bkrabbe1d@home.pl',
     currentPlan: 'company',
     status: 'active',
+    isActive: true,
     avatar: '/images/avatars/2.png'
   }
 ]

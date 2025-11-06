@@ -25,7 +25,7 @@ import useHorizontalNav from '@menu/hooks/useHorizontalNav'
 
 // Util Imports
 import { mapHorizontalToVerticalMenu } from '@menu/utils/menuUtils'
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 const StyledBoxForShadow = styled('div')(({ theme }) => ({
   top: 60,

@@ -25,7 +25,7 @@ import useHorizontalNav from '@menu/hooks/useHorizontalNav'
 
 // Util Imports
 import { horizontalLayoutClasses } from '@layouts/utils/layoutClasses'
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Vars
 const shortcuts: ShortcutsType[] = [

@@ -43,7 +43,7 @@ import { useNotifications } from '@/hooks/useNotifications'
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Util Imports
-import { getInitials } from '@/utils/getInitials'
+import { getInitials } from '@/utils/formatting/getInitials'
 
 export type NotificationsType = {
   title: string

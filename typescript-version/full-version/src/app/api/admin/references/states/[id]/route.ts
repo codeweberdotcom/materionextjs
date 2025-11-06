@@ -1,7 +1,7 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 
 
@@ -13,12 +13,12 @@ const prisma = new PrismaClient()
 // GET - Get a single state (admin only)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -67,12 +67,12 @@ return NextResponse.json(
 // PATCH - Toggle state status (admin only)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -128,12 +128,12 @@ return NextResponse.json(
 // PUT - Update state (admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -228,12 +228,12 @@ return NextResponse.json(
 // DELETE - Delete state (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }

@@ -34,7 +34,7 @@ import AvatarWithBadge from './AvatarWithBadge'
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Util Imports
-import { getInitials } from '@/utils/getInitials'
+import { getInitials } from '@/utils/formatting/getInitials'
 import { formatDateToMonthShort } from './utils'
 
 // Custom Hooks

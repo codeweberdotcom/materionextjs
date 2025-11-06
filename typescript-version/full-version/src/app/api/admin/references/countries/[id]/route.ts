@@ -1,10 +1,11 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
+import logger from '@/lib/logger'
 
-import { requireAuth } from '@/utils/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 
-import { checkPermission } from '@/utils/permissions'
+import { checkPermission } from '@/utils/permissions/permissions'
 
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
@@ -14,7 +15,7 @@ const prisma = new PrismaClient()
 // PUT - Update country (admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id: countryId } = await params
@@ -35,12 +36,12 @@ return NextResponse.json(
 
     const { name, code, states, isActive } = body
 
-    console.log('Received update data:', { name, code, states, isActive })
+    logger.info('Received update data:', { name, code, states, isActive })
 
     // Check authentication after reading the body
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -48,7 +49,7 @@ return NextResponse.json(
     }
 
     // Check permission for updating countries
-    if (!checkPermission(user as any, 'countryManagement', 'update')) {
+    if (!checkPermission(user as UserWithRole, 'countryManagement', 'update')) {
       return NextResponse.json(
         { message: 'Insufficient permissions' },
         { status: 403 }
@@ -137,12 +138,12 @@ return NextResponse.json(
 // PATCH - Toggle country status (admin only)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -150,7 +151,7 @@ export async function PATCH(
     }
 
     // Check permission for updating countries (status toggle)
-    if (!checkPermission(user as any, 'countryManagement', 'update')) {
+    if (!checkPermission(user as UserWithRole, 'countryManagement', 'update')) {
       return NextResponse.json(
         { message: 'Insufficient permissions' },
         { status: 403 }
@@ -193,12 +194,12 @@ return NextResponse.json(
 // DELETE - Delete country (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -206,7 +207,7 @@ export async function DELETE(
     }
 
     // Check permission for deleting countries
-    if (!checkPermission(user as any, 'countryManagement', 'delete')) {
+    if (!checkPermission(user as UserWithRole, 'countryManagement', 'delete')) {
       return NextResponse.json(
         { message: 'Insufficient permissions' },
         { status: 403 }

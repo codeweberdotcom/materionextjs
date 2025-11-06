@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { prisma } from '@/libs/prisma'
 
@@ -115,3 +116,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

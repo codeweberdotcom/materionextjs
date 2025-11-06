@@ -1,5 +1,6 @@
 'use client'
 
+import logger from '@/lib/logger'
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { lucia } from '@/libs/lucia'
 
@@ -36,17 +37,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      console.log('🔍 [AUTH] Checking authentication...')
+      logger.info('🔍 [AUTH] Checking authentication...')
       const response = await fetch('/api/auth/session')
-      console.log('🔍 [AUTH] Session response status:', response.status)
+      logger.info('🔍 [AUTH] Session response status:', response.status)
 
       if (response.ok) {
         const data = await response.json()
-        console.log('✅ [AUTH] User authenticated:', data.user?.email)
+        logger.info('✅ [AUTH] User authenticated:', data.user?.email)
         setUser(data.user)
         setSession(data.session)
       } else {
-        console.log('❌ [AUTH] User not authenticated')
+        logger.info('❌ [AUTH] User not authenticated')
         setUser(null)
         setSession(null)
       }
@@ -60,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const login = async (email: string, password: string) => {
-    console.log('🔐 [AUTH] Attempting login for:', email)
+    logger.info('🔐 [AUTH] Attempting login for:', email)
 
     const response = await fetch('/api/auth/login', {
       method: 'POST',
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ email, password })
     })
 
-    console.log('🔐 [AUTH] Login response status:', response.status)
+    logger.info('🔐 [AUTH] Login response status:', response.status)
 
     if (!response.ok) {
       const error = await response.json()
@@ -77,23 +78,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const data = await response.json()
-    console.log('✅ [AUTH] Login successful for:', data.user?.email)
+    logger.info('✅ [AUTH] Login successful for:', data.user?.email)
 
     setUser(data.user)
     setSession(data.session)
   }
 
   const logout = async () => {
-    console.log('🚪 [AUTH] Starting logout...')
+    logger.info('🚪 [AUTH] Starting logout...')
     try {
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include' // Важно для отправки cookies
       })
-      console.log('🚪 [AUTH] Logout response status:', response.status)
+      logger.info('🚪 [AUTH] Logout response status:', response.status)
 
       if (response.ok) {
-        console.log('✅ [AUTH] Logout successful')
+        logger.info('✅ [AUTH] Logout successful')
       } else {
         console.error('❌ [AUTH] Logout failed with status:', response.status)
       }
@@ -104,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Всегда очищаем локальное состояние, независимо от ответа сервера
     setUser(null)
     setSession(null)
-    console.log('🧹 [AUTH] Local state cleared')
+    logger.info('🧹 [AUTH] Local state cleared')
   }
 
   return (

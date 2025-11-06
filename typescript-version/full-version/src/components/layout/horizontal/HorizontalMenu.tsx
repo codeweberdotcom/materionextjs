@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import Chip from '@mui/material/Chip'
 
 // Type Imports
-import type { getDictionary } from '@/utils/getDictionary'
+import type { getDictionary } from '@/utils/formatting/getDictionary'
 import type { VerticalMenuContextProps } from '@menu/components/vertical-menu/Menu'
 
 // Component Imports
@@ -31,7 +31,7 @@ import verticalMenuItemStyles from '@core/styles/vertical/menuItemStyles'
 import verticalMenuSectionStyles from '@core/styles/vertical/menuSectionStyles'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Menu Data Imports
 // import menuData from '@/data/navigation/horizontalMenuData'

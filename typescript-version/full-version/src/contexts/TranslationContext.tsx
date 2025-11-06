@@ -7,7 +7,7 @@ import { createContext, useContext } from 'react'
 // Type Imports
 import type { Locale } from '@configs/i18n'
 
-type Dictionary = Awaited<ReturnType<typeof import('@/utils/getDictionary').getDictionary>>
+type Dictionary = Awaited<ReturnType<typeof import('@/utils/formatting/getDictionary').getDictionary>>
 
 const TranslationContext = createContext<Dictionary | null>(null)
 

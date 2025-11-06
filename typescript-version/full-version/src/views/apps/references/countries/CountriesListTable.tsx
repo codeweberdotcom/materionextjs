@@ -48,6 +48,7 @@ import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import AddCountryDialog from './AddCountryDialog'
+import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
@@ -56,12 +57,12 @@ import { useTranslation } from '@/contexts/TranslationContext'
 import { usePermissions } from '@/hooks/usePermissions'
 
 // Util Imports
-import { checkPermission } from '@/utils/permissions'
+import { checkPermission } from '@/utils/permissions/permissions'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
-declare module '@tanstack/table-core' {
+declare module '@tanstack/react-table' {
   interface FilterFns {
     fuzzy: FilterFn<unknown>
   }
@@ -136,6 +137,8 @@ const CountriesListTable = () => {
   const [loading, setLoading] = useState(true)
   const [addCountryOpen, setAddCountryOpen] = useState(false)
   const [editCountry, setEditCountry] = useState<Country | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [countryToDelete, setCountryToDelete] = useState<{ id: string; name: string } | null>(null)
 
   const { lang: locale } = useParams()
 
@@ -288,18 +291,25 @@ const CountriesListTable = () => {
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
-  const handleDeleteCountry = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete country "${name}"?`)) {
+  const handleDeleteCountry = (id: string, name: string) => {
+    setCountryToDelete({ id, name })
+    setDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = async (confirmed: boolean) => {
+    if (!confirmed || !countryToDelete) {
+      setDeleteDialogOpen(false)
+      setCountryToDelete(null)
       return
     }
 
     try {
-      const response = await fetch(`/api/admin/references/countries/${id}`, {
+      const response = await fetch(`/api/admin/references/countries/${countryToDelete.id}`, {
         method: 'DELETE'
       })
 
       if (response.ok) {
-        const updatedData = data.filter(country => country.id !== id)
+        const updatedData = data.filter(country => country.id !== countryToDelete.id)
 
         setData(updatedData)
         setFilteredData(updatedData)
@@ -312,6 +322,9 @@ const CountriesListTable = () => {
     } catch (error) {
       console.error('Error deleting country:', error)
       toast.error('Failed to delete country')
+    } finally {
+      setDeleteDialogOpen(false)
+      setCountryToDelete(null)
     }
   }
 
@@ -555,6 +568,13 @@ const CountriesListTable = () => {
         onSubmit={handleAddCountry}
         editCountry={editCountry}
         onUpdate={handleUpdateCountry}
+      />
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        setOpen={setDeleteDialogOpen}
+        type='delete-country'
+        onConfirm={handleConfirmDelete}
+        name={countryToDelete?.name}
       />
     </>
   )

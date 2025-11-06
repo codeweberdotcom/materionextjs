@@ -16,7 +16,7 @@ import classnames from 'classnames'
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
 
-type ConfirmationType = 'delete-account' | 'unsubscribe' | 'suspend-account' | 'delete-order' | 'delete-customer' | 'delete-user' | 'delete-role'
+type ConfirmationType = 'delete-account' | 'unsubscribe' | 'suspend-account' | 'delete-order' | 'delete-customer' | 'delete-user' | 'delete-role' | 'delete-currency' | 'delete-country'
 
 type ConfirmationDialogProps = {
   open: boolean
@@ -72,6 +72,8 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
               {type === 'delete-customer' && 'Are you sure?'}
               {type === 'delete-user' && dictionary.navigation.deleteUserConfirm.replace('${name}', name || '')}
               {type === 'delete-role' && dictionary.navigation.deleteRoleConfirm.replace('${name}', name || '')}
+              {type === 'delete-currency' && dictionary.navigation.deleteCurrencyConfirm.replace('${name}', name || '')}
+              {type === 'delete-country' && dictionary.navigation.deleteCountryConfirm.replace('${name}', name || '')}
             </Typography>
             {type === 'suspend-account' && (
               <Typography color='text.primary'>{isActive ? dictionary.navigation.suspendConfirmMessage : dictionary.navigation.activateConfirmMessage}</Typography>
@@ -81,6 +83,12 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
             )}
             {type === 'delete-customer' && (
               <Typography color='text.primary'>You won&#39;t be able to revert customer!</Typography>
+            )}
+            {type === 'delete-currency' && (
+              <Typography color='text.primary'>{dictionary.navigation.deleteCurrencyMessage}</Typography>
+            )}
+            {type === 'delete-country' && (
+              <Typography color='text.primary'>{dictionary.navigation.deleteCountryMessage}</Typography>
             )}
           </Wrapper>
         </DialogContent>
@@ -95,8 +103,12 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
                   : type === 'delete-user'
                     ? dictionary.navigation.deleteUser
                     : type === 'delete-role'
-                      ? dictionary.navigation.yesDeleteRole
-                      : 'Yes'}
+                          ? dictionary.navigation.yesDeleteRole
+                          : type === 'delete-currency'
+                            ? dictionary.navigation.yesDeleteCurrency
+                            : type === 'delete-country'
+                              ? dictionary.navigation.yesDeleteCountry
+                              : 'Yes'}
           </Button>
           <Button
             variant='outlined'
@@ -123,7 +135,7 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
           />
           <Typography variant='h4' className='mbe-2'>
             {userInput
-              ? `${type === 'delete-account' ? 'Deactivated' : type === 'unsubscribe' ? 'Unsubscribed' : type === 'delete-order' || 'delete-customer' ? 'Deleted' : type === 'suspend-account' ? (isActive ? 'Suspended!' : 'Activated!') : 'Suspended!'}`
+              ? `${type === 'delete-account' ? 'Deactivated' : type === 'unsubscribe' ? 'Unsubscribed' : type === 'delete-order' || 'delete-customer' || 'delete-currency' || 'delete-country' ? 'Deleted' : type === 'suspend-account' ? (isActive ? 'Suspended!' : 'Activated!') : 'Suspended!'}`
               : 'Cancelled'}
           </Typography>
           <Typography color='text.primary'>
@@ -134,6 +146,8 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
                 {type === 'suspend-account' && (isActive ? dictionary.navigation.user + ' ' + dictionary.navigation.suspended : dictionary.navigation.user + ' ' + dictionary.navigation.activated)}
                 {type === 'delete-order' && 'Your order deleted successfully.'}
                 {type === 'delete-customer' && 'Your customer removed successfully.'}
+                {type === 'delete-currency' && 'Your currency deleted successfully.'}
+                {type === 'delete-country' && 'Your country deleted successfully.'}
                 {type === 'delete-user' && dictionary.navigation.user + ' ' + dictionary.navigation.deleteUser.toLowerCase() + ' ' + dictionary.navigation.successfully}
                 {type === 'delete-role' && dictionary.navigation.deleteRole + ' ' + dictionary.navigation.successfully}
               </>
@@ -144,6 +158,8 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
                 {type === 'suspend-account' && (isActive ? dictionary.navigation.cancelledSuspension : dictionary.navigation.cancelledActivation)}
                 {type === 'delete-order' && 'Order Deletion Cancelled'}
                 {type === 'delete-customer' && 'Customer Deletion Cancelled'}
+                {type === 'delete-currency' && 'Currency Deletion Cancelled'}
+                {type === 'delete-country' && 'Country Deletion Cancelled'}
                 {type === 'delete-user' && dictionary.navigation.cancelled}
                 {type === 'delete-role' && dictionary.navigation.cancelled}
               </>

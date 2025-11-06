@@ -1,42 +1,44 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
-import { requireAuth } from '@/utils/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 
-import { checkPermission, isSuperadmin, getUserPermissions } from '@/utils/permissions'
+import { checkPermission, isSuperadmin, getUserPermissions } from '@/utils/permissions/permissions'
 import menuData from '@/data/navigation/verticalMenuData'
-import { getDictionary } from '@/utils/getDictionary'
+import { getDictionary } from '@/utils/formatting/getDictionary'
 
 // Helper function to filter menu recursively
+import logger from '@/lib/logger'
+
 function filterMenuRecursively(items: any[], user: any, dictionary: any): any[] {
-  return items.map((item) => {
+  return items.map((item: any) => {
     // If item has children, filter them recursively
     if (item.children && Array.isArray(item.children)) {
       const filteredChildren = filterMenuRecursively(item.children, user, dictionary)
 
       // Apply permission filtering to specific menu items
       if (item.label === dictionary['navigation'].userSettings) {
-        console.log('API MENU: Processing userSettings, children count:', item.children?.length)
+        logger.info('API MENU: Processing userSettings, children count:', item.children?.length)
         const filteredSubChildren = item.children?.filter((subChild: any) => {
-          console.log('API MENU: Processing subChild:', subChild.label)
+          logger.info('API MENU: Processing subChild:', subChild.label)
           if (subChild.label === dictionary['navigation'].userList) {
-            const hasPermission = checkPermission(user || null, 'userManagement', 'read')
-            console.log('API MENU: userList permission:', hasPermission)
+            const hasPermission = checkPermission(user as UserWithRole || null, 'userManagement', 'read')
+            logger.info('API MENU: userList permission:', hasPermission)
             return hasPermission
           }
           if (subChild.label === dictionary['navigation'].roles) {
-            const hasPermission = checkPermission(user || null, 'roleManagement', 'read')
-            console.log('API MENU: roles permission:', hasPermission)
+            const hasPermission = checkPermission(user as UserWithRole || null, 'roleManagement', 'read')
+            logger.info('API MENU: roles permission:', hasPermission)
             return hasPermission
           }
           if (subChild.label === dictionary['navigation'].permissions) {
-            const hasPermission = checkPermission(user || null, 'permissionsManagement', 'read')
-            console.log('API MENU: permissions permission:', hasPermission)
+            const hasPermission = checkPermission(user as UserWithRole || null, 'permissionsManagement', 'read')
+            logger.info('API MENU: permissions permission:', hasPermission)
             return hasPermission
           }
           return true
         })
-        console.log('API MENU: filteredSubChildren length:', filteredSubChildren?.length)
+        logger.info('API MENU: filteredSubChildren length:', filteredSubChildren?.length)
         if (filteredSubChildren && filteredSubChildren.length > 0) {
           return { ...item, children: filteredSubChildren }
         }
@@ -45,24 +47,24 @@ function filterMenuRecursively(items: any[], user: any, dictionary: any): any[] 
 
       // For admin section, filter its children based on permissions
       if (item.label === dictionary['navigation'].adminAndSettings) {
-        console.log('API MENU: Processing admin section, children count:', filteredChildren?.length)
+        logger.info('API MENU: Processing admin section, children count:', filteredChildren?.length)
         const permissionFilteredChildren = filteredChildren.filter((child: any) => {
-          console.log('API MENU: Processing child:', child.label)
+          logger.info('API MENU: Processing child:', child.label)
           if (child.label === dictionary['navigation'].smtpSettings) {
-            const hasPermission = checkPermission(user || null, 'smtpManagement', 'read')
-            console.log('API MENU: smtpSettings permission:', hasPermission)
+            const hasPermission = checkPermission(user as UserWithRole || null, 'smtpManagement', 'read')
+            logger.info('API MENU: smtpSettings permission:', hasPermission)
             return hasPermission
           }
           if (child.label === dictionary['navigation'].emailTemplates) {
-            const hasPermission = checkPermission(user || null, 'emailTemplatesManagement', 'read')
-            console.log('API MENU: emailTemplates permission:', hasPermission)
+            const hasPermission = checkPermission(user as UserWithRole || null, 'emailTemplatesManagement', 'read')
+            logger.info('API MENU: emailTemplates permission:', hasPermission)
             return hasPermission
           }
           // Keep other children (like userSettings, references) if they have content
           return true
-        }).filter(Boolean)
+        }).filter((item: any) => Boolean)
 
-        console.log('API MENU: permissionFilteredChildren length:', permissionFilteredChildren?.length)
+        logger.info('API MENU: permissionFilteredChildren length:', permissionFilteredChildren?.length)
         if (permissionFilteredChildren && permissionFilteredChildren.length > 0) {
           return { ...item, children: permissionFilteredChildren }
         }
@@ -78,7 +80,7 @@ function filterMenuRecursively(items: any[], user: any, dictionary: any): any[] 
 
     // For items without children, keep them
     return item
-  }).filter(Boolean)
+  }).filter((item: any) => Boolean)
 }
 
 // Helper function to serialize menu data (remove JSX elements)
@@ -97,18 +99,18 @@ function serializeMenuItem(item: any): any {
 
   // Recursively serialize children
   if (serialized.children && Array.isArray(serialized.children)) {
-    serialized.children = serialized.children.map(serializeMenuItem).filter(Boolean)
+    serialized.children = serialized.children.map(serializeMenuItem).filter((item: any) => Boolean)
   }
 
   return serialized
 }
 
 export async function GET(request: NextRequest) {
-  console.log('=== API MENU GET REQUEST STARTED ===')
+  logger.info('=== API MENU GET REQUEST STARTED ===')
   try {
     const { user, session } = await requireAuth(request)
 
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -119,27 +121,27 @@ export async function GET(request: NextRequest) {
     // Get dictionary for the locale
     const dictionary = await getDictionary(locale as any)
 
-    console.log('API MENU: User permissions:', getUserPermissions(user))
-    console.log('API MENU: isSuperadmin:', isSuperadmin(user))
-    console.log('API MENU: dictionary adminAndSettings:', dictionary['navigation'].adminAndSettings)
+    logger.info('API MENU: User permissions:', getUserPermissions(user as UserWithRole))
+    logger.info('API MENU: isSuperadmin:', isSuperadmin(user as UserWithRole))
+    logger.info('API MENU: dictionary adminAndSettings:', dictionary['navigation'].adminAndSettings)
 
     // Filter menu data based on permissions (skip for superadmin)
     const rawMenuData = menuData(dictionary)
-    console.log('API MENU: Raw menu data length:', rawMenuData.length)
+    logger.info('API MENU: Raw menu data length:', rawMenuData.length)
 
-    const filteredMenuData = isSuperadmin(user || null) ? rawMenuData : filterMenuRecursively(rawMenuData, user, dictionary)
+    const filteredMenuData = isSuperadmin(user as UserWithRole || null) ? rawMenuData : filterMenuRecursively(rawMenuData, user as UserWithRole, dictionary)
 
-    console.log('API MENU: Final filtered menu length:', filteredMenuData.length)
-    console.log('API MENU: Final filtered menu:', JSON.stringify(filteredMenuData, null, 2))
+    logger.info('API MENU: Final filtered menu length:', filteredMenuData.length)
+    logger.info('API MENU: Final filtered menu:', JSON.stringify(filteredMenuData, null, 2))
 
     // Debug: Check if references section exists
-    const adminSection = filteredMenuData.find(item => item.label === dictionary['navigation'].adminAndSettings)
-    console.log('API MENU: Admin section found:', !!adminSection)
+    const adminSection = filteredMenuData.find((item: any) => item.label === dictionary['navigation'].adminAndSettings)
+    logger.info('API MENU: Admin section found:', !!adminSection)
     if (adminSection && adminSection.children) {
-      const referencesSection = adminSection.children.find(child => child.label === dictionary['navigation'].references)
-      console.log('API MENU: References section found:', !!referencesSection)
+      const referencesSection = adminSection.children.find((child: any) => child.label === dictionary['navigation'].references)
+      logger.info('API MENU: References section found:', !!referencesSection)
       if (referencesSection && referencesSection.children) {
-        console.log('API MENU: References children:', referencesSection.children.map(child => child.label))
+        logger.info('API MENU: References children:', referencesSection.children.map((child: any) => child.label))
       }
     }
 
@@ -152,3 +154,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

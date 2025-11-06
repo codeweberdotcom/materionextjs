@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
@@ -39,7 +40,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(unreadByContact)
   } catch (error) {
-    console.error('❌ [API] Ошибка получения непрочитанных сообщений по контактам:', error)
+    console.error('вќЊ [API] РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РЅРµРїСЂРѕС‡РёС‚Р°РЅРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№ РїРѕ РєРѕРЅС‚Р°РєС‚Р°Рј:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

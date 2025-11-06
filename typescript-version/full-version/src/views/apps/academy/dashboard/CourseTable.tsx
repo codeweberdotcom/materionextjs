@@ -43,12 +43,12 @@ import type { Locale } from '@configs/i18n'
 import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
-declare module '@tanstack/table-core' {
+declare module '@tanstack/react-table' {
   interface FilterFns {
     fuzzy: FilterFn<unknown>
   }

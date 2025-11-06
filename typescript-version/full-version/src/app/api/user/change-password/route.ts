@@ -1,7 +1,7 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
@@ -90,3 +90,5 @@ return NextResponse.json(
     )
   }
 }
+
+

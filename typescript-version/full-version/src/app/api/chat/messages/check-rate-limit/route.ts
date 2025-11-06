@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { rateLimitService } from '@/lib/rate-limit'
+import logger from '@/lib/logger'
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +16,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { userId } = body
 
-    console.log('🔍 [API DEBUG] Check rate limit request:', { userId })
+    logger.info('рџ”Ќ [API DEBUG] Check rate limit request:', { userId })
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 })
@@ -22,7 +25,7 @@ export async function POST(request: NextRequest) {
     // Check rate limit for chat messages
     const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat')
 
-    console.log('📊 [API DEBUG] Rate limit result:', {
+    logger.info('рџ“Љ [API DEBUG] Rate limit result:', {
       allowed: rateLimitResult.allowed,
       remaining: rateLimitResult.remaining,
       resetTime: rateLimitResult.resetTime,
@@ -33,7 +36,7 @@ export async function POST(request: NextRequest) {
       const retryAfter = Math.ceil((rateLimitResult.resetTime.getTime() - Date.now()) / 1000)
       const blockedUntil = rateLimitResult.blockedUntil ? rateLimitResult.blockedUntil : new Date(Date.now() + (retryAfter * 1000))
 
-      console.log('🚫 [API DEBUG] Rate limit exceeded:', {
+      logger.info('рџљ« [API DEBUG] Rate limit exceeded:', {
         retryAfter,
         blockedUntil: blockedUntil.toISOString()
       })
@@ -52,7 +55,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    console.log('✅ [API DEBUG] Rate limit check passed')
+    logger.info('вњ… [API DEBUG] Rate limit check passed')
 
     return NextResponse.json({
       allowed: true,
@@ -60,7 +63,9 @@ export async function POST(request: NextRequest) {
       resetTime: rateLimitResult.resetTime.toISOString()
     })
   } catch (error) {
-    console.error('❌ [API DEBUG] Error in rate limit check:', error)
+    console.error('вќЊ [API DEBUG] Error in rate limit check:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

@@ -25,7 +25,7 @@ import type { Locale } from '@configs/i18n'
 import SendInvoiceDrawer from '@views/apps/invoice/shared/SendInvoiceDrawer'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 const AddActions = () => {
   // States

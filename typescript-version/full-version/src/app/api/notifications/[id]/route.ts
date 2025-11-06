@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { prisma } from '@/libs/prisma'
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const { user } = await requireAuth(request)
 
     if (!user.id) {
@@ -18,7 +20,7 @@ export async function PATCH(
 
     const notification = await prisma.notification.updateMany({
       where: {
-        id: params.id,
+        id: id,
         userId: user.id, // Ensure user can only update their own notifications
       },
       data: {
@@ -39,9 +41,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const { user } = await requireAuth(request)
 
     if (!user.id) {
@@ -50,7 +53,7 @@ export async function DELETE(
 
     const notification = await prisma.notification.deleteMany({
       where: {
-        id: params.id,
+        id: id,
         userId: user.id, // Ensure user can only delete their own notifications
       },
     })

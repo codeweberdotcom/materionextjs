@@ -1,7 +1,7 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 
 
@@ -13,12 +13,12 @@ const prisma = new PrismaClient()
 // PATCH - Toggle city status (admin only)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -31,7 +31,7 @@ export async function PATCH(
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }
@@ -74,12 +74,12 @@ return NextResponse.json(
 // PUT - Update city (admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -92,7 +92,7 @@ export async function PUT(
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }
@@ -149,12 +149,12 @@ return NextResponse.json(
 // DELETE - Delete city (admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -167,7 +167,7 @@ export async function DELETE(
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }

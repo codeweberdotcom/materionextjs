@@ -56,12 +56,12 @@ import { useTranslation } from '@/contexts/TranslationContext'
 import { usePermissions } from '@/hooks/usePermissions'
 
 // Util Imports
-import { checkPermission } from '@/utils/permissions'
+import { checkPermission } from '@/utils/permissions/permissions'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
-declare module '@tanstack/table-core' {
+declare module '@tanstack/react-table' {
   interface FilterFns {
     fuzzy: FilterFn<unknown>
   }

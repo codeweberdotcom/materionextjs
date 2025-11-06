@@ -2,10 +2,10 @@
 import NotificationsWrapper from '@/views/apps/notifications'
 
 type PageProps = {
-  params: {
+  params: Promise< {
     type: string
     status?: string
-  }
+  }>
 }
 
 const NotificationsTypePage = async ({ params }: PageProps) => {

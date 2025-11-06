@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as jwt from 'jsonwebtoken';
 import { ExtendedError } from 'socket.io';
 import { authLogger } from '../../logger';

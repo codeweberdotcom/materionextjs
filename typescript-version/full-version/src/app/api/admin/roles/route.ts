@@ -1,51 +1,51 @@
-import { NextResponse } from 'next/server'
-import { NextRequest } from 'next/server'
 
-import { requireAuth } from '@/utils/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { PrismaClient } from '@prisma/client'
 
 
-import { checkPermission, isSuperadmin } from '@/utils/permissions'
+import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
 
 const prisma = new PrismaClient()
 
-// Кеш для парсированных ролей (простая in-memory кеш)
+// РљРµС€ РґР»СЏ РїР°СЂСЃРёСЂРѕРІР°РЅРЅС‹С… СЂРѕР»РµР№ (РїСЂРѕСЃС‚Р°СЏ in-memory РєРµС€)
 let rolesCache: any[] | null = null
 let cacheTimestamp: number = 0
-const CACHE_DURATION = 30 * 1000 // 30 секунд для тестирования
+const CACHE_DURATION = 30 * 1000 // 30 СЃРµРєСѓРЅРґ РґР»СЏ С‚РµСЃС‚РёСЂРѕРІР°РЅРёСЏ
 
-// Функция для парсинга разрешений роли
+// Р¤СѓРЅРєС†РёСЏ РґР»СЏ РїР°СЂСЃРёРЅРіР° СЂР°Р·СЂРµС€РµРЅРёР№ СЂРѕР»Рё
 function parseRolePermissions(role: any) {
   if (!role.permissions) return { ...role, permissions: {} }
 
-  // Если уже распарсено, возвращаем как есть
+  // Р•СЃР»Рё СѓР¶Рµ СЂР°СЃРїР°СЂСЃРµРЅРѕ, РІРѕР·РІСЂР°С‰Р°РµРј РєР°Рє РµСЃС‚СЊ
   if (typeof role.permissions === 'object') {
     return role
   }
 
   try {
-    // Пытаемся распарсить JSON
+    // РџС‹С‚Р°РµРјСЃСЏ СЂР°СЃРїР°СЂСЃРёС‚СЊ JSON
     const parsed = JSON.parse(role.permissions)
 
-    // Если это строка "all", возвращаем как есть
+    // Р•СЃР»Рё СЌС‚Рѕ СЃС‚СЂРѕРєР° "all", РІРѕР·РІСЂР°С‰Р°РµРј РєР°Рє РµСЃС‚СЊ
     if (role.permissions === '"all"' || parsed === 'all') {
       return { ...role, permissions: 'all' }
     }
 
-    // Если это объект, возвращаем распарсенный
+    // Р•СЃР»Рё СЌС‚Рѕ РѕР±СЉРµРєС‚, РІРѕР·РІСЂР°С‰Р°РµРј СЂР°СЃРїР°СЂСЃРµРЅРЅС‹Р№
     if (typeof parsed === 'object' && parsed !== null) {
       return { ...role, permissions: parsed }
     }
 
-    // Если это строка, возвращаем как есть
+    // Р•СЃР»Рё СЌС‚Рѕ СЃС‚СЂРѕРєР°, РІРѕР·РІСЂР°С‰Р°РµРј РєР°Рє РµСЃС‚СЊ
     if (typeof parsed === 'string') {
       return { ...role, permissions: parsed }
     }
 
     return { ...role, permissions: {} }
   } catch {
-    // Если не удалось распарсить, возвращаем пустой объект
+    // Р•СЃР»Рё РЅРµ СѓРґР°Р»РѕСЃСЊ СЂР°СЃРїР°СЂСЃРёС‚СЊ, РІРѕР·РІСЂР°С‰Р°РµРј РїСѓСЃС‚РѕР№ РѕР±СЉРµРєС‚
     return { ...role, permissions: {} }
   }
 }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Очищаем кеш после создания новой роли
+    // РћС‡РёС‰Р°РµРј РєРµС€ РїРѕСЃР»Рµ СЃРѕР·РґР°РЅРёСЏ РЅРѕРІРѕР№ СЂРѕР»Рё
     rolesCache = null
     cacheTimestamp = 0
 
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const clearCache = url.searchParams.get('clearCache')
 
-    // Если запрос на очистку кеша
+    // Р•СЃР»Рё Р·Р°РїСЂРѕСЃ РЅР° РѕС‡РёСЃС‚РєСѓ РєРµС€Р°
     if (clearCache === 'true') {
       rolesCache = null
       cacheTimestamp = 0
@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Проверяем кеш
+    // РџСЂРѕРІРµСЂСЏРµРј РєРµС€
     const now = Date.now()
     if (rolesCache && (now - cacheTimestamp) < CACHE_DURATION) {
       return NextResponse.json(rolesCache)
@@ -208,7 +208,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    // Сохраняем в кеш
+    // РЎРѕС…СЂР°РЅСЏРµРј РІ РєРµС€
     rolesCache = rolesWithParsedPermissions
     cacheTimestamp = now
     return NextResponse.json(rolesWithParsedPermissions)
@@ -221,3 +221,5 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+

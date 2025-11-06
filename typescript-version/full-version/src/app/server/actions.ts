@@ -6,7 +6,7 @@
 'use server'
 
 // Data Imports
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
 
 import { db as eCommerceData } from '@/fake-db/apps/ecommerce'
 import { db as academyData } from '@/fake-db/apps/academy'

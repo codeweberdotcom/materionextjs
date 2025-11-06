@@ -1,11 +1,9 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
-
-import { checkPermission } from '@/utils/permissions'
-
+import { checkPermission } from '@/utils/permissions/permissions'
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
 
@@ -56,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check permission for creating countries
-    if (!checkPermission(user as any, 'countryManagement', 'create')) {
+    if (!checkPermission(user as UserWithRole, 'countryManagement', 'create')) {
       return NextResponse.json(
         { message: 'Insufficient permissions' },
         { status: 403 }
@@ -106,3 +104,5 @@ return NextResponse.json(
     )
   }
 }
+
+

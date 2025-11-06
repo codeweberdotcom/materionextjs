@@ -1,5 +1,8 @@
 'use client'
 
+// Winston logger import
+import logger from '@/lib/logger'
+
 // React Imports
 import { useState, useEffect } from 'react'
 
@@ -37,8 +40,8 @@ import Skeleton from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
-import { getUserPermissions, isAdmin } from '@/utils/permissions'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
+import { getUserPermissions, isAdmin } from '@/utils/permissions/permissions'
 
 // Component Imports
 import RoleDialog from '@components/dialogs/role-dialog'
@@ -110,7 +113,7 @@ const RoleCards = () => {
 
   // Fetch roles, users, and current user role
   useEffect(() => {
-    console.log('🔄 useEffect triggered - fetching data')
+    logger.info('🔄 useEffect triggered - fetching data')
 
     const fetchData = async () => {
       try {
@@ -134,7 +137,7 @@ const RoleCards = () => {
 
         // Current user role no longer needed for restrictions
       } catch (error) {
-        console.error('Error fetching data:', error)
+        logger.error('Error fetching data:', error)
       } finally {
         setLoading(false)
       }
@@ -143,107 +146,106 @@ const RoleCards = () => {
     fetchData()
 
     // Log isSuperadmin and user role for debugging
-     console.log('=== DEBUG INFO ===')
-     console.log('Current user:', user)
-     console.log('Current user role:', user?.role)
-     console.log('Current user permissions (raw):', user?.role?.permissions)
-     console.log('Parsed user permissions:', getUserPermissions(user || null))
-     console.log('isSuperadmin:', isSuperadmin)
-     console.log('isAdmin:', isAdmin(user || null))
-     console.log('Current page permissions - module: roleManagement, action: read')
-     console.log('Has permission for current page:', checkPermission('roleManagement', 'read'))
-     console.log('=== END DEBUG ===')
+     // Debug logging removed'Current user:', user)
+     logger.info('Current user role:', user?.role)
+     logger.info('Current user permissions (raw):', user?.role?.permissions)
+     logger.info('Parsed user permissions:', getUserPermissions(user || null))
+     logger.info('isSuperadmin:', isSuperadmin)
+     logger.info('isAdmin:', isAdmin(user || null))
+     logger.info('Current page permissions - module: roleManagement, action: read')
+     logger.info('Has permission for current page:', checkPermission('roleManagement', 'read'))
+     // Debug logging removed
   }, [])
 
   const handleRoleSuccess = () => {
-    console.log('🔄 [ROLE SUCCESS] handleRoleSuccess called - refetching data in background')
+    logger.info('🔄 [ROLE SUCCESS] handleRoleSuccess called - refetching data in background')
 
     // Refetch roles and users only (remove profile fetch to reduce API calls)
     const fetchData = async () => {
-      console.log('🔄 [ROLE SUCCESS] Starting background fetch')
+      logger.info('🔄 [ROLE SUCCESS] Starting background fetch')
       try {
         const [rolesResponse, usersResponse] = await Promise.all([
           fetch('/api/admin/roles'),
           fetch('/api/admin/users')
         ])
 
-        console.log('🔄 [ROLE SUCCESS] API responses received - roles:', rolesResponse.status, 'users:', usersResponse.status)
+        logger.info('🔄 [ROLE SUCCESS] API responses received - roles:', rolesResponse.status, 'users:', usersResponse.status)
 
         if (rolesResponse.ok) {
           const rolesData = await rolesResponse.json()
-          console.log('🔄 [ROLE SUCCESS] Roles data fetched:', rolesData.length, 'roles')
+          logger.info('🔄 [ROLE SUCCESS] Roles data fetched:', rolesData.length, 'roles')
           setRoles(rolesData)
-          console.log('🔄 [ROLE SUCCESS] Roles state updated')
+          logger.info('🔄 [ROLE SUCCESS] Roles state updated')
         } else {
-          console.error('🔄 [ROLE SUCCESS] Failed to fetch roles:', rolesResponse.status)
+          logger.error('🔄 [ROLE SUCCESS] Failed to fetch roles:', rolesResponse.status)
         }
 
         if (usersResponse.ok) {
           const usersData = await usersResponse.json()
-          console.log('🔄 [ROLE SUCCESS] Users data fetched:', usersData.length, 'users')
+          logger.info('🔄 [ROLE SUCCESS] Users data fetched:', usersData.length, 'users')
           setUsers(usersData)
-          console.log('🔄 [ROLE SUCCESS] Users state updated')
+          logger.info('🔄 [ROLE SUCCESS] Users state updated')
         } else {
-          console.error('🔄 [ROLE SUCCESS] Failed to fetch users:', usersResponse.status)
+          logger.error('🔄 [ROLE SUCCESS] Failed to fetch users:', usersResponse.status)
         }
       } catch (error) {
-        console.error('🔄 [ROLE SUCCESS] Error fetching data:', error)
+        logger.error('🔄 [ROLE SUCCESS] Error fetching data:', error)
       }
-      console.log('🔄 [ROLE SUCCESS] Background fetch completed')
+      logger.info('🔄 [ROLE SUCCESS] Background fetch completed')
     }
 
     fetchData()
   }
 
   const handleDeleteRole = async (role: Role) => {
-    console.log('🗑️ [DELETE START] handleDeleteRole called for role:', role.name, role.id)
-    console.log('🗑️ [DELETE STATE] Current roles before delete:', roles.map(r => ({ id: r.id, name: r.name })))
+    logger.info('🗑️ [DELETE START] handleDeleteRole called for role:', role.name, role.id)
+    logger.info('🗑️ [DELETE STATE] Current roles before delete:', roles.map(r => ({ id: r.id, name: r.name })))
 
     if (isDeleting) {
-      console.log('🗑️ [DELETE SKIP] Delete already in progress, skipping')
+      logger.info('🗑️ [DELETE SKIP] Delete already in progress, skipping')
       return
     }
 
     setIsDeleting(true)
-    console.log('🗑️ [DELETE PROGRESS] Set isDeleting to true')
+    logger.info('🗑️ [DELETE PROGRESS] Set isDeleting to true')
 
     try {
-      console.log('🗑️ [DELETE API] Making DELETE request to:', `/api/admin/roles/${role.id}`)
+      logger.info('🗑️ [DELETE API] Making DELETE request to:', `/api/admin/roles/${role.id}`)
       const response = await fetch(`/api/admin/roles/${role.id}`, {
         method: 'DELETE'
       })
 
-      console.log('🗑️ [DELETE RESPONSE] Response status:', response.status)
+      logger.info('🗑️ [DELETE RESPONSE] Response status:', response.status)
 
       if (response.ok) {
-        console.log('🗑️ [DELETE SUCCESS] Role deleted successfully from API')
+        logger.info('🗑️ [DELETE SUCCESS] Role deleted successfully from API')
 
         // Immediately update local state for better UX (like in UserListTable)
-        console.log('🗑️ [DELETE LOCAL] Updating local state - filtering out role:', role.id)
+        logger.info('🗑️ [DELETE LOCAL] Updating local state - filtering out role:', role.id)
         const previousRoles = roles
         setRoles(prevRoles => {
           const filteredRoles = prevRoles.filter(r => r.id !== role.id)
-          console.log('🗑️ [DELETE LOCAL] Local state updated. Previous count:', previousRoles.length, 'New count:', filteredRoles.length)
-          console.log('🗑️ [DELETE LOCAL] Removed role:', role.name, 'Remaining roles:', filteredRoles.map(r => r.name))
+          logger.info('🗑️ [DELETE LOCAL] Local state updated. Previous count:', previousRoles.length, 'New count:', filteredRoles.length)
+          logger.info('🗑️ [DELETE LOCAL] Removed role:', role.name, 'Remaining roles:', filteredRoles.map(r => r.name))
           return filteredRoles
         })
 
         // Close dialog immediately
         setDeleteDialogOpen(false)
         setRoleToDelete(null)
-        console.log('🗑️ [DELETE DIALOG] Dialog closed')
+        logger.info('🗑️ [DELETE DIALOG] Dialog closed')
 
         // Show success notification
         toast.success(t.navigation.roleDeletedSuccessfully.replace('${roleName}', role.name))
-        console.log('🗑️ [DELETE TOAST] Success toast shown')
+        logger.info('🗑️ [DELETE TOAST] Success toast shown')
       } else if (response.status === 400) {
         const data = await response.json()
-        console.log('🗑️ [DELETE ERROR 400] Delete failed with 400, data:', data)
+        logger.info('🗑️ [DELETE ERROR 400] Delete failed with 400, data:', data)
 
         if (data.users) {
           setErrorMessage(t.navigation.roleDeleteError.replace('${roleName}', role.name))
           setRoleUsers(data.users)
-          console.log('🗑️ [DELETE ERROR 400] Error message set with users:', data.users.length)
+          logger.info('🗑️ [DELETE ERROR 400] Error message set with users:', data.users.length)
         }
 
         setDeleteDialogOpen(false)
@@ -251,18 +253,18 @@ const RoleCards = () => {
 
         toast.error(t.navigation.roleDeleteError.replace('${roleName}', role.name))
       } else {
-        console.error('🗑️ [DELETE ERROR] Error deleting role - unexpected status')
+        logger.error('🗑️ [DELETE ERROR] Error deleting role - unexpected status')
 
         toast.error(t.navigation.roleDeleteFailed)
       }
     } catch (error) {
-      console.error('🗑️ [DELETE ERROR] Error deleting role:', error)
+      logger.error('🗑️ [DELETE ERROR] Error deleting role:', error)
 
       // Show error notification
       toast.error(t.navigation.roleDeleteFailed)
     } finally {
       setIsDeleting(false)
-      console.log('🗑️ [DELETE FINISH] Set isDeleting to false')
+      logger.info('🗑️ [DELETE FINISH] Set isDeleting to false')
     }
   }
 
@@ -357,7 +359,7 @@ const RoleCards = () => {
       ) : (
         <Grid container spacing={6} alignItems="stretch">
           {roles.map((role, index) => {
-            const roleUsers = users.filter(user => user.role === role.name)
+            const roleUsers = users.filter(user => user && user.role === role.name)
 
             return (
               <Grid size={{ xs: 12, sm: 6, lg: 4 }} key={role.id}>

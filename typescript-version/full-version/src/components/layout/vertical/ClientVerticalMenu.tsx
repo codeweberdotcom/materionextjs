@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material/styles'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 
 // Type Imports
-import type { getDictionary } from '@/utils/getDictionary'
+import type { getDictionary } from '@/utils/formatting/getDictionary'
 import type { VerticalMenuContextProps } from '@menu/components/vertical-menu/Menu'
 import type { VerticalMenuDataType } from '@/types/menuTypes'
 import type { Locale } from '@configs/i18n'
@@ -51,12 +51,12 @@ const ClientVerticalMenu = ({ menuData, dictionary, scrollMenu, locale }: Props)
   if (menuData && Array.isArray(menuData)) {
     const adminSection = menuData.find(item => item.label === 'Admin & Settings')
     console.log('CLIENT MENU: Admin section found:', !!adminSection)
-    if (adminSection && adminSection.children) {
-      const referencesSection = adminSection.children.find(child => child.label === 'References')
+    if (adminSection && (adminSection as any)?.children) {
+      const referencesSection = (adminSection as any)?.children?.find((child: any) => child.label === 'References')
       console.log('CLIENT MENU: References section found:', !!referencesSection)
       if (referencesSection && referencesSection.children) {
         console.log('CLIENT MENU: References children count:', referencesSection.children.length)
-        console.log('CLIENT MENU: References children:', referencesSection.children.map(child => child.label))
+        console.log('CLIENT MENU: References children:', referencesSection.children.map((child: any) => child.label))
       }
     }
   }

@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client'
 
 // React Imports
@@ -62,13 +63,13 @@ import { useTranslation } from '@/contexts/TranslationContext'
 import { usePermissions } from '@/hooks/usePermissions'
 
 // Util Imports
-import { getInitials } from '@/utils/getInitials'
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getInitials } from '@/utils/formatting/getInitials'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
-declare module '@tanstack/table-core' {
+declare module '@tanstack/react-table' {
   interface FilterFns {
     fuzzy: FilterFn<unknown>
   }

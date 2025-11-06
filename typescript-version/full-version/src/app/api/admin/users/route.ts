@@ -1,17 +1,17 @@
 import { writeFile } from 'fs/promises'
 
+import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { PrismaClient } from '@prisma/client'
 
 
 
-import { checkPermission } from '@/utils/permissions'
+import { checkPermission } from '@/utils/permissions/permissions'
 
 const prisma = new PrismaClient()
 
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       include: { role: true }
     })
 
-    if (!currentUser || !checkPermission(currentUser, 'Users', 'Create')) {
+    if (!currentUser || !checkPermission(currentUser as UserWithRole, 'Users', 'Create')) {
       return NextResponse.json(
         { message: 'Permission denied: Create Users required' },
         { status: 403 }
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
       include: { role: true }
     })
 
-    if (!currentUser || !checkPermission(currentUser, 'userManagement', 'read')) {
+    if (!currentUser || !checkPermission(currentUser as UserWithRole, 'userManagement', 'read')) {
       return NextResponse.json(
         { message: 'Permission denied: Read Users required' },
         { status: 403 }
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Transform the data to match the expected UsersType format
-    const transformedUsers = users.map((user) => {
+    const transformedUsers = users.map((user: any) => {
       return {
         id: user.id,
         fullName: user.name || 'Unknown User',
@@ -224,3 +224,5 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+

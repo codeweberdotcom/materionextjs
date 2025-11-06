@@ -1,13 +1,14 @@
-import { checkPermission, isSuperadmin } from '@/utils/permissions'
+import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
 import menuData from '@/data/navigation/verticalMenuData'
-import type { getDictionary } from '@/utils/getDictionary'
+import type { getDictionary } from '@/utils/formatting/getDictionary'
 import type { VerticalMenuDataType } from '@/types/menuTypes'
-import type { UserWithRole } from '@/utils/permissions'
+import type { UserWithRole } from '@/utils/permissions/permissions'
+import logger from '@/lib/logger'
+
 
 export function getFilteredMenuDataClient(dictionary: Awaited<ReturnType<typeof getDictionary>>, user: UserWithRole | null): VerticalMenuDataType[] {
   // Debug logging
-  console.log('=== MENU FILTER DEBUG ===')
-  console.log('User:', user)
+  // Debug logging removed'User:', user)
   console.log('User role:', user?.role)
   console.log('User permissions:', user?.role?.permissions)
   console.log('isSuperadmin:', isSuperadmin(user))
@@ -40,17 +41,17 @@ export function getFilteredMenuDataClient(dictionary: Awaited<ReturnType<typeof 
 
                 if (subChild.label === dictionary['navigation'].userList) {
                   const hasPermission = checkPermission(user, 'userManagement', 'read')
-                  console.log('userList permission check:', hasPermission)
+                  // Permission check logging removed
                   return hasPermission
                 }
                 if (subChild.label === dictionary['navigation'].roles) {
                   const hasPermission = checkPermission(user, 'roleManagement', 'read')
-                  console.log('roles permission check:', hasPermission)
+                  // Permission check logging removed
                   return hasPermission
                 }
                 if (subChild.label === dictionary['navigation'].permissions) {
                   const hasPermission = checkPermission(user, 'permissionsManagement', 'read')
-                  console.log('permissions permission check:', hasPermission)
+                  // Permission check logging removed
                   return hasPermission
                 }
                 console.log('subChild allowed by default:', subChild.label)
@@ -68,12 +69,12 @@ export function getFilteredMenuDataClient(dictionary: Awaited<ReturnType<typeof 
 
             if (adminChild.label === dictionary['navigation'].smtpSettings) {
               const hasPermission = checkPermission(user, 'smtpManagement', 'read')
-              console.log('smtpSettings permission check:', hasPermission)
+              // Permission check logging removed
               return hasPermission
             }
             if (adminChild.label === dictionary['navigation'].emailTemplates) {
               const hasPermission = checkPermission(user, 'emailTemplatesManagement', 'read')
-              console.log('emailTemplates permission check:', hasPermission)
+              // Permission check logging removed
               return hasPermission
             }
 
@@ -123,7 +124,6 @@ export function getFilteredMenuDataClient(dictionary: Awaited<ReturnType<typeof 
   }
 
   console.log('Final filtered menu data:', filteredMenuData)
-  console.log('=== END MENU FILTER DEBUG ===')
-
+  // Debug logging removed
   return filteredMenuData
 }

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-import { requireAuth } from '@/utils/auth'
-
-
-const prisma = new PrismaClient()
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
+import { userService } from '@/services/business/userService'
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,17 +9,13 @@ export async function GET(request: NextRequest) {
     const { user } = await requireAuth(request)
 
     // Get current user
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      select: { id: true }
-    })
-
+    const currentUser = await userService.getUserByEmail(user.email)
     if (!currentUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
     // Get all users except current user
-    const users = await prisma.user.findMany({
+    const users = await userService.getUsers({
       where: {
         id: {
           not: currentUser.id
@@ -42,6 +36,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(users)
   } catch (error) {
+    console.error('Error fetching users:', error)
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
   }
 }

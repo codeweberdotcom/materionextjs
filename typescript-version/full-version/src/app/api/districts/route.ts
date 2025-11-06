@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server'
 
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/libs/prisma'
 
 // GET - Get all active districts (public access)
@@ -19,3 +19,5 @@ return NextResponse.json(
     )
   }
 }
+
+

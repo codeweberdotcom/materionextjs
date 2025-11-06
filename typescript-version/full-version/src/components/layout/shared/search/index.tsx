@@ -32,7 +32,7 @@ import { useSettings } from '@core/hooks/useSettings'
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Style Imports
 import './styles.css'

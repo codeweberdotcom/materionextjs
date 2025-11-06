@@ -3,7 +3,7 @@ import styled from '@emotion/styled'
 import classnames from 'classnames'
 
 // Type Imports
-import type { getDictionary } from '@/utils/getDictionary'
+import type { getDictionary } from '@/utils/formatting/getDictionary'
 
 // Component Imports
 import HorizontalMenu from './HorizontalMenu'

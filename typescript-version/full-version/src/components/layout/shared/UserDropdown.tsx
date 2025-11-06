@@ -31,7 +31,7 @@ import type { Locale } from '@configs/i18n'
 import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'

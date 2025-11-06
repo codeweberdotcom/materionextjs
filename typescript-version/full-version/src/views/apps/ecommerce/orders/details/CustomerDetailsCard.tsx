@@ -15,7 +15,7 @@ import EditUserInfo from '@components/dialogs/edit-user-info'
 import OpenDialogOnElementClick from '@components/dialogs/OpenDialogOnElementClick'
 
 // Util Imports
-import { getInitials } from '@/utils/getInitials'
+import { getInitials } from '@/utils/formatting/getInitials'
 
 const getAvatar = (params: Pick<OrderType, 'avatar' | 'customer'>) => {
   const { avatar, customer } = params

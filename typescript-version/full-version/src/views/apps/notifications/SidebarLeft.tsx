@@ -25,7 +25,7 @@ import { useSelector } from 'react-redux'
 import type { RootState } from '@/redux-store'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Styles Imports
 import styles from './styles.module.css'

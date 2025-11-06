@@ -24,7 +24,7 @@ import type { Notification } from '@/types/apps/notificationTypes'
 import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
-import { getInitials } from '@/utils/getInitials'
+import { getInitials } from '@/utils/formatting/getInitials'
 
 // Hook Imports
 import { useTranslation } from '@/contexts/TranslationContext'

@@ -81,7 +81,7 @@ export const useNotifications = () => {
         // Filter out notifications that were cleared for this user
         const userId = user?.id
         const clearedNotifications = userId ? getClearedNotifications(userId) : new Set<string>()
-        const filteredNotifications = mappedNotifications.filter(notification =>
+        const filteredNotifications = mappedNotifications.filter((notification: any) =>
           !clearedNotifications.has((notification as any).id)
         )
         setNotifications(filteredNotifications)

@@ -1,85 +1,125 @@
-/**
- * Простой логгер для Socket.IO
- * В продакшене можно заменить на Winston или другой продвинутый логгер
- */
+// TypeScript logger implementation with conditional client/server support
+import winston from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-
-interface LogEntry {
-  level: LogLevel;
-  message: string;
-  data?: any;
-  timestamp: string;
-  userId?: string;
-  socketId?: string;
+// Types for logger methods
+interface LoggerData {
+  [key: string]: any;
 }
 
-class Logger {
-  private isDevelopment = process.env.NODE_ENV !== 'production';
-
-  private formatMessage(level: LogLevel, message: string, data?: any): string {
-    const timestamp = new Date().toISOString();
-    const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
-
-    if (data) {
-      return `${prefix} ${message} ${JSON.stringify(data)}`;
-    }
-
-    return `${prefix} ${message}`;
-  }
-
-  debug(message: string, data?: any): void {
-    if (this.isDevelopment) {
-      console.debug(this.formatMessage('debug', message, data));
-    }
-  }
-
-  info(message: string, data?: any): void {
-    console.info(this.formatMessage('info', message, data));
-  }
-
-  warn(message: string, data?: any): void {
-    console.warn(this.formatMessage('warn', message, data));
-  }
-
-  error(message: string, data?: any): void {
-    console.error(this.formatMessage('error', message, data));
-  }
-
-  // Специальный метод для логирования Socket.IO событий
-  socketEvent(event: string, socketId: string, userId?: string, data?: any): void {
-    this.debug(`Socket event: ${event}`, {
-      socketId,
-      userId,
-      ...data
-    });
-  }
-
-  // Логирование подключений/отключений
-  connection(action: 'connect' | 'disconnect', socketId: string, userId?: string, reason?: string): void {
-    const message = `Socket ${action}: ${socketId}${userId ? ` (user: ${userId})` : ''}${reason ? ` (${reason})` : ''}`;
-    this.info(message);
-  }
-
-  // Логирование ошибок аутентификации
-  authError(socketId: string, error: string, ip?: string): void {
-    this.warn('Authentication failed', {
-      socketId,
-      error,
-      ip
-    });
-  }
-
-  // Логирование rate limiting
-  rateLimit(userId: string, action: string, blocked: boolean): void {
-    if (blocked) {
-      this.warn('Rate limit exceeded', { userId, action });
-    } else {
-      this.debug('Rate limit check passed', { userId, action });
-    }
-  }
+interface SocketLoggerMethods {
+  connection(socketId: string, userId: string | null, ip: string, userAgent: string): void;
+  disconnection(socketId: string, userId: string | null): void;
+  joinRoom(socketId: string, userId: string | null, room: string): void;
+  message(socketId: string, userId: string | null, roomId: string, messageLength: number): void;
+  error(message: string, meta?: LoggerData): void;
+  debug(message: string, meta?: LoggerData): void;
 }
 
-const logger = new Logger();
+interface RateLimitLoggerMethods {
+  limitApplied(userId: string, ip: string, remainingPoints: number, resetTime: Date): void;
+  limitExceeded(userId: string, ip: string, socketId: string, msBeforeNext: number): void;
+  error(message: string, meta?: LoggerData): void;
+}
+
+interface DatabaseLoggerMethods {
+  queryExecuted(query: string, duration: number, userId: string | null): void;
+  error(message: string, meta?: LoggerData): void;
+}
+
+interface AuthLoggerMethods {
+  info(message: string, meta?: LoggerData): void;
+  warn(message: string, meta?: LoggerData): void;
+  error(message: string, meta?: LoggerData): void;
+  debug(message: string, meta?: LoggerData): void;
+}
+
+// Check if running on client side
+const isClient = typeof window !== 'undefined';
+
+// Configure Winston logger (server-side only)
+let logger: winston.Logger;
+
+if (!isClient) {
+  logger = winston.createLogger({
+    level: process.env.LOG_LEVEL || 'info',
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.errors({ stack: true }),
+      winston.format.json()
+    ),
+    defaultMeta: { service: 'materio-nextjs' },
+    transports: [
+      // Console transport for development
+      new winston.transports.Console({
+        format: winston.format.combine(
+          winston.format.colorize(),
+          winston.format.simple()
+        )
+      }),
+
+      // Daily rotate file for all logs
+      new DailyRotateFile({
+        filename: 'logs/application-%DATE%.log',
+        datePattern: 'YYYY-MM-DD',
+        maxSize: '20m',
+        maxFiles: '14d'
+      }),
+
+      // Separate error log
+      new DailyRotateFile({
+        filename: 'logs/error-%DATE%.log',
+        datePattern: 'YYYY-MM-DD',
+        level: 'error',
+        maxSize: '20m',
+        maxFiles: '30d'
+      })
+    ]
+  });
+} else {
+  // Client-side logger using console
+  logger = {
+    info: (message: string, meta?: LoggerData) => console.log(`[INFO] ${message}`, meta),
+    warn: (message: string, meta?: LoggerData) => console.warn(`[WARN] ${message}`, meta),
+    error: (message: string, meta?: LoggerData) => console.error(`[ERROR] ${message}`, meta),
+    debug: (message: string, meta?: LoggerData) => console.debug(`[DEBUG] ${message}`, meta),
+  } as any;
+}
+
+// Socket-specific logger methods
+export const socketLogger: SocketLoggerMethods = {
+  connection: (socketId: string, userId: string | null, ip: string, userAgent: string) =>
+    logger.info('Socket connection established', { socketId, userId, ip, userAgent }),
+  disconnection: (socketId: string, userId: string | null) =>
+    logger.info('Socket disconnection', { socketId, userId }),
+  joinRoom: (socketId: string, userId: string | null, room: string) =>
+    logger.info('User joined room', { socketId, userId, room }),
+  message: (socketId: string, userId: string | null, roomId: string, messageLength: number) =>
+    logger.info('Message sent', { socketId, userId, roomId, messageLength }),
+  error: (message: string, meta?: LoggerData) => logger.error(message, meta),
+  debug: (message: string, meta?: LoggerData) => logger.debug(message, meta),
+};
+
+export const rateLimitLogger: RateLimitLoggerMethods = {
+  limitApplied: (userId: string, ip: string, remainingPoints: number, resetTime: Date) =>
+    logger.info('Rate limit applied', { userId, ip, remainingPoints, resetTime }),
+  limitExceeded: (userId: string, ip: string, socketId: string, msBeforeNext: number) =>
+    logger.warn('Rate limit exceeded', { userId, ip, socketId, msBeforeNext }),
+  error: (message: string, meta?: LoggerData) => logger.error(message, meta),
+};
+
+export const databaseLogger: DatabaseLoggerMethods = {
+  queryExecuted: (query: string, duration: number, userId: string | null) =>
+    logger.info('Database query executed', { query, duration, userId }),
+  error: (message: string, meta?: LoggerData) => logger.error(message, meta),
+};
+
+// Auth logger methods
+export const authLogger: AuthLoggerMethods = {
+  info: (message: string, meta?: LoggerData) => logger.info(message, meta),
+  warn: (message: string, meta?: LoggerData) => logger.warn(message, meta),
+  error: (message: string, meta?: LoggerData) => logger.error(message, meta),
+  debug: (message: string, meta?: LoggerData) => logger.debug(message, meta),
+};
 
 export default logger;

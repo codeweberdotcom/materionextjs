@@ -25,6 +25,8 @@ Welcome to the Materio MUI Next.js Admin Template documentation! This comprehens
 
 ### 💾 Data & Database
 - **[Database](database/)** - Database setup, migrations, and real API integration
+- **[SQLite MCP Setup](sqlite-mcp-setup.md)** - Model Context Protocol server for SQLite
+- **[Database for AI Agents](database-ai-agents.md)** - Working with database using AI tools
 
 ### 🔐 Permissions
 - **[Permissions](permissions/)** - Role-based access control and permission management

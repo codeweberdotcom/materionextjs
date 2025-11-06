@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 
 // Type Imports
-import type { getDictionary } from '@/utils/getDictionary'
+import type { getDictionary } from '@/utils/formatting/getDictionary'
 import type { VerticalMenuDataType } from '@/types/menuTypes'
 import type { Locale } from '@configs/i18n'
 

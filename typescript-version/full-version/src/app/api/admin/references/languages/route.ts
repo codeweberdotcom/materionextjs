@@ -1,17 +1,17 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 
 import { prisma } from '@/libs/prisma'
 
 // GET - Get all languages (admin only)
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -24,7 +24,7 @@ export async function GET() {
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       include: { role: true }
     })
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
+    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
       return NextResponse.json(
         { message: 'Admin access required' },
         { status: 403 }
@@ -102,3 +102,5 @@ return NextResponse.json(
     )
   }
 }
+
+

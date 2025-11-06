@@ -32,7 +32,7 @@ import Logo from '@components/layout/shared/Logo'
 import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Vars
 const steps = [

@@ -25,7 +25,7 @@ import { useImageVariant } from '@core/hooks/useImageVariant'
 import { useSettings } from '@core/hooks/useSettings'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 const ForgotPasswordV2 = ({ mode }: { mode: Mode }) => {
   // Vars

@@ -1,11 +1,11 @@
 import fs from 'fs'
 
+import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 
 import { prisma } from '@/libs/prisma'
@@ -160,3 +160,5 @@ return NextResponse.json(
     )
   }
 }
+
+

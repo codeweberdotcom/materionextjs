@@ -12,7 +12,7 @@ import Typography from '@mui/material/Typography'
 import type { Locale } from '@configs/i18n'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Type Imports
 import type { Mode } from '@core/types'

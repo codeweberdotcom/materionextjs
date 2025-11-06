@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { lucia } from '@/libs/lucia'
 
 export async function GET(request: NextRequest) {

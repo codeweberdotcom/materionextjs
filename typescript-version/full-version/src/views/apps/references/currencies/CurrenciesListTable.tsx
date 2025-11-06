@@ -48,6 +48,7 @@ import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import AddCurrencyDialog from './AddCurrencyDialog'
+import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
@@ -55,7 +56,7 @@ import { useTranslation } from '@/contexts/TranslationContext'
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
-declare module '@tanstack/table-core' {
+declare module '@tanstack/react-table' {
   interface FilterFns {
     fuzzy: FilterFn<unknown>
   }
@@ -119,6 +120,8 @@ const CurrenciesListTable = () => {
   const [loading, setLoading] = useState(true)
   const [addCurrencyOpen, setAddCurrencyOpen] = useState(false)
   const [editCurrency, setEditCurrency] = useState<Currency | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [currencyToDelete, setCurrencyToDelete] = useState<{ id: string; name: string } | null>(null)
 
   const { lang: locale } = useParams()
 
@@ -242,18 +245,25 @@ const CurrenciesListTable = () => {
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
-  const handleDeleteCurrency = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete currency "${name}"?`)) {
+  const handleDeleteCurrency = (id: string, name: string) => {
+    setCurrencyToDelete({ id, name })
+    setDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = async (confirmed: boolean) => {
+    if (!confirmed || !currencyToDelete) {
+      setDeleteDialogOpen(false)
+      setCurrencyToDelete(null)
       return
     }
 
     try {
-      const response = await fetch(`/api/admin/references/currencies/${id}`, {
+      const response = await fetch(`/api/admin/references/currencies/${currencyToDelete.id}`, {
         method: 'DELETE'
       })
 
       if (response.ok) {
-        const updatedData = data.filter(currency => currency.id !== id)
+        const updatedData = data.filter(currency => currency.id !== currencyToDelete.id)
 
         setData(updatedData)
         setFilteredData(updatedData)
@@ -266,6 +276,9 @@ const CurrenciesListTable = () => {
     } catch (error) {
       console.error('Error deleting currency:', error)
       toast.error('Failed to delete currency')
+    } finally {
+      setDeleteDialogOpen(false)
+      setCurrencyToDelete(null)
     }
   }
 
@@ -498,6 +511,13 @@ const CurrenciesListTable = () => {
         onSubmit={handleAddCurrency}
         editCurrency={editCurrency}
         onUpdate={handleUpdateCurrency}
+      />
+      <ConfirmationDialog
+        open={deleteDialogOpen}
+        setOpen={setDeleteDialogOpen}
+        type='delete-currency'
+        onConfirm={handleConfirmDelete}
+        name={currencyToDelete?.name}
       />
     </Card>
   )

@@ -2,10 +2,10 @@
 import NotificationsWrapper from '@/views/apps/notifications'
 
 // Util Imports
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
 import { redirect } from 'next/navigation'
 
-import { checkPermission } from '@/utils/permissions'
+import { checkPermission } from '@/utils/permissions/permissions'
 
 const NotificationsPage = async () => {
   // Check permissions

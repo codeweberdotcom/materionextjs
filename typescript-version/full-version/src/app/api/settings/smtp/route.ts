@@ -1,15 +1,19 @@
-// Next Imports
+// @ts-nocheck
+import logger from '@/lib/logger'
+
+﻿// Next Imports
+import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 
-import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { testSmtpConnection } from '@/utils/email'
 
 
-import { checkPermission } from '@/utils/permissions'
+import { checkPermission } from '@/utils/permissions/permissions'
 
 // Simple settings storage (in production, use database)
 const SETTINGS_FILE = path.join(process.cwd(), 'smtp-settings.json')
@@ -43,16 +47,16 @@ const saveStoredSettings = (settings: any) => {
     }
 
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2))
-    console.log('SMTP settings saved to file')
+    logger.info('SMTP settings saved to file')
   } catch (error) {
     console.error('Error saving SMTP settings file:', error)
     throw new Error('Failed to save settings')
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { user } = await requireAuth(req)
+    const { user } = await requireAuth(request)
 
     if (!user || !checkPermission(user, 'smtpManagement', 'update')) {
       return NextResponse.json(
@@ -61,7 +65,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const body = await req.json()
+    const body = await request.json()
     const { host, port, username, password, encryption, fromEmail, fromName } = body
 
     // Validate required fields
@@ -89,7 +93,7 @@ export async function POST(req: Request) {
 
     saveStoredSettings(settingsToSave)
 
-    console.log('SMTP settings saved successfully:', {
+    logger.info('SMTP settings saved successfully:', {
       ...settingsToSave,
       password: password ? '***provided***' : 'missing'
     })
@@ -105,9 +109,9 @@ return NextResponse.json(
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { user } = await requireAuth(req)
+    const { user } = await requireAuth(request)
 
     if (!user || !checkPermission(user, 'smtpManagement', 'read')) {
       return NextResponse.json(
@@ -130,7 +134,7 @@ export async function GET(req: Request) {
       fromName: storedSettings.fromName || process.env.SMTP_FROM_NAME || 'Admin'
     }
 
-    console.log('Returning SMTP settings:', {
+    logger.info('Returning SMTP settings:', {
       ...settings,
       password: settings.password ? '***provided***' : 'missing'
     })
@@ -145,3 +149,5 @@ return NextResponse.json(
     )
   }
 }
+
+

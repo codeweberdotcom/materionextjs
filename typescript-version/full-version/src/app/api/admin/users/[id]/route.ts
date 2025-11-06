@@ -1,13 +1,13 @@
-import { writeFile, mkdir } from 'fs/promises'
+﻿import { writeFile, mkdir } from 'fs/promises'
 
+import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 
 import { existsSync } from 'fs'
 
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { PrismaClient } from '@prisma/client'
 

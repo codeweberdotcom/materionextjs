@@ -1,14 +1,14 @@
 // Next Imports
-import { NextResponse } from 'next/server'
 
+import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 
 import { prisma } from '@/libs/prisma'
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
     // Check if request body exists
-    if (!req.body) {
+    if (!request.body) {
       return NextResponse.json(
         { message: ['Request body is required'] },
         { status: 400, statusText: 'Bad Request' }
@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     let body
 
     try {
-      body = await req.json()
+      body = await request.json()
     } catch (parseError) {
       console.error('Login JSON parse error:', parseError)
       
@@ -97,3 +97,5 @@ return NextResponse.json(
     )
   }
 }
+
+

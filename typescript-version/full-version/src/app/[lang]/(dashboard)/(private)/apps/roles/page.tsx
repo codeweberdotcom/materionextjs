@@ -1,5 +1,5 @@
 // Next Imports
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
 import { redirect } from 'next/navigation'
 
 // Component Imports
@@ -12,7 +12,7 @@ import { getUserData } from '@/app/server/actions'
 
 
 // Util Imports
-import { checkPermission, isSuperadmin } from '@/utils/permissions'
+import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
 
 /**
  * ! If you need data using an API call, uncomment the below API code, update the `process.env.API_URL` variable in the

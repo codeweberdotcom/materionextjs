@@ -1,29 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
-import { isSuperadmin, isAdmin } from '@/utils/permissions'
+import { isSuperadmin, isAdmin } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 
-export async function GET(req: Request) {
+export async function GET(request: NextRequest) {
   try {
-    const { user } = await requireAuth(req)
+    const { user } = await requireAuth(request)
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(user as any) || isAdmin(user as any)
+    const hasPermission = isSuperadmin(user as UserWithRole) || isAdmin(user as UserWithRole)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const configs = await rateLimitService.getAllConfigs()
     const stats = await Promise.all(
-      ['chat', 'ads', 'upload', 'auth'].map(module => rateLimitService.getStats(module))
+      ['chat', 'ads', 'upload', 'auth'].map((module: any) => rateLimitService.getStats(module))
     )
 
     return NextResponse.json({
       configs,
-      stats: stats.filter(Boolean)
+      stats: stats.filter((item: any) => Boolean)
     })
   } catch (error) {
     console.error('Error fetching rate limits:', error)
@@ -38,7 +39,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(user as any) || isAdmin(user as any)
+    const hasPermission = isSuperadmin(user as UserWithRole) || isAdmin(user as UserWithRole)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -74,16 +75,16 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(user as any) || isAdmin(user as any)
+    const hasPermission = isSuperadmin(user as UserWithRole) || isAdmin(user as UserWithRole)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const { searchParams } = new URL(request.url)
     const key = searchParams.get('key')
-    const module = searchParams.get('module')
+    const moduleName = searchParams.get('module')
 
-    const success = await rateLimitService.resetLimits(key || undefined, module || undefined)
+    const success = await rateLimitService.resetLimits(key || undefined, moduleName || undefined)
 
     if (!success) {
       return NextResponse.json({ error: 'Failed to reset limits' }, { status: 500 })
@@ -95,3 +96,5 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

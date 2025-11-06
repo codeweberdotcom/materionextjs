@@ -1,23 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { lucia } from '@/libs/lucia'
+import logger from '@/lib/logger'
+
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🚪 [LOGOUT] Starting logout process...')
+    logger.info('рџљЄ [LOGOUT] Starting logout process...')
 
     const sessionId = lucia.readSessionCookie(request.headers.get('cookie') ?? '')
-    console.log('🚪 [LOGOUT] Session ID from cookie:', sessionId ? 'present' : 'null')
+    logger.info('рџљЄ [LOGOUT] Session ID from cookie:', sessionId ? 'present' : 'null')
 
     if (sessionId) {
-      console.log('🚪 [LOGOUT] Invalidating session...')
+      logger.info('рџљЄ [LOGOUT] Invalidating ({} as any)...')
       await lucia.invalidateSession(sessionId)
-      console.log('✅ [LOGOUT] Session invalidated')
+      logger.info('вњ… [LOGOUT] Session invalidated')
     } else {
-      console.log('🚪 [LOGOUT] No session ID found, skipping invalidation')
+      logger.info('рџљЄ [LOGOUT] No session ID found, skipping invalidation')
     }
 
     const sessionCookie = lucia.createBlankSessionCookie()
-    console.log('🚪 [LOGOUT] Creating blank session cookie')
+    logger.info('рџљЄ [LOGOUT] Creating blank session cookie')
 
     const response = NextResponse.json({ success: true })
 
@@ -27,10 +29,12 @@ export async function POST(request: NextRequest) {
       sessionCookie.attributes
     )
 
-    console.log('✅ [LOGOUT] Logout completed successfully')
+    logger.info('вњ… [LOGOUT] Logout completed successfully')
     return response
   } catch (error) {
-    console.error('❌ [LOGOUT] Logout error:', error)
+    console.error('вќЊ [LOGOUT] Logout error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

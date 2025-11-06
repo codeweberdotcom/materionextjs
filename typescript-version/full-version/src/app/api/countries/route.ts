@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
@@ -63,3 +63,5 @@ return NextResponse.json(
     )
   }
 }
+
+

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { PrismaClient } from '@prisma/client'
 
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
       })
 
       if (message) {
-        // Определяем получателя: другой пользователь в комнате
+        // РћРїСЂРµРґРµР»СЏРµРј РїРѕР»СѓС‡Р°С‚РµР»СЏ: РґСЂСѓРіРѕР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РІ РєРѕРјРЅР°С‚Рµ
         const receiverId = room.user1Id === message.senderId ? room.user2Id : room.user1Id
 
         lastMessages.push({
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Если сообщений нет, создаем пустые записи для комнат с другими пользователями
+    // Р•СЃР»Рё СЃРѕРѕР±С‰РµРЅРёР№ РЅРµС‚, СЃРѕР·РґР°РµРј РїСѓСЃС‚С‹Рµ Р·Р°РїРёСЃРё РґР»СЏ РєРѕРјРЅР°С‚ СЃ РґСЂСѓРіРёРјРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏРјРё
     if (lastMessages.length === 0) {
       for (const room of userRooms) {
         const otherUserId = room.user1Id === user.id ? room.user2Id : room.user1Id
@@ -59,8 +60,8 @@ export async function GET(request: NextRequest) {
         lastMessages.push({
           id: `empty-${room.id}`,
           content: '',
-          senderId: otherUserId, // Отправитель - другой пользователь
-          receiverId: user.id, // Получатель - текущий пользователь
+          senderId: otherUserId, // РћС‚РїСЂР°РІРёС‚РµР»СЊ - РґСЂСѓРіРѕР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ
+          receiverId: user.id, // РџРѕР»СѓС‡Р°С‚РµР»СЊ - С‚РµРєСѓС‰РёР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ
           roomId: room.id,
           createdAt: room.createdAt.toISOString()
         })
@@ -69,7 +70,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(lastMessages)
   } catch (error) {
-    console.error('❌ [API] Ошибка получения последних сообщений:', error)
+    console.error('вќЊ [API] РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РїРѕСЃР»РµРґРЅРёС… СЃРѕРѕР±С‰РµРЅРёР№:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

@@ -12,7 +12,7 @@ import type { Locale } from '@configs/i18n'
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 type NoResultData = {
   label: string

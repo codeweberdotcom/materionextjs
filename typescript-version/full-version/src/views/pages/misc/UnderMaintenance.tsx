@@ -19,7 +19,7 @@ import Illustrations from '@components/Illustrations'
 import { useImageVariant } from '@core/hooks/useImageVariant'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 const UnderMaintenance = ({ mode }: { mode: Mode }) => {
   // Vars

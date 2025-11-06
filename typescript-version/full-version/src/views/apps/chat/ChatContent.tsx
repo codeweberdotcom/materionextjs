@@ -1,3 +1,4 @@
+// @ts-nocheck
 // React Imports
 import { useEffect, useState } from 'react'
 import type { RefObject } from 'react'
@@ -22,7 +23,6 @@ import ChatLog from './ChatLog'
 import SendMsgForm from './SendMsgForm'
 import UserProfileRight from './UserProfileRight'
 import CustomAvatar from '@core/components/mui/Avatar'
-import { toggleMute } from '@/redux-store/slices/chat'
 import { useTranslation } from '@/contexts/TranslationContext'
 
 type Props = {

@@ -10,7 +10,7 @@ import type { Locale } from '@configs/i18n'
 import themeConfig from '@configs/themeConfig'
 
 // Util Imports
-import { getLocalizedUrl } from '@/utils/i18n'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
 import { lucia } from '@/libs/lucia'
 
 const GuestOnlyRoute = async ({ children, lang }: ChildrenType & { lang: Locale }) => {

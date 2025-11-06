@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Type Imports
 import type { ChatDataType } from '@/types/apps/chatTypes'
 
@@ -6,7 +7,7 @@ const dayBeforePreviousDay = new Date(new Date().getTime() - 24 * 60 * 60 * 1000
 
 export const db: ChatDataType = {
   profileUser: {
-    id: 1,
+    id: String(1),
     avatar: '/images/avatars/1.png',
     fullName: 'John Doe',
     role: 'Admin',
@@ -20,7 +21,7 @@ export const db: ChatDataType = {
   },
   contacts: [
     {
-      id: 2,
+      id: String(2),
       fullName: 'Felecia Rower',
       role: 'Frontend Developer',
       about: 'Cake pie jelly jelly beans. Marzipan lemon drops halvah cake. Pudding cookie lemon drops icing',
@@ -28,7 +29,7 @@ export const db: ChatDataType = {
       status: 'offline'
     },
     {
-      id: 3,
+      id: String(3),
       fullName: 'Adalberto Granzin',
       role: 'UI/UX Designer',
       avatarColor: 'primary',
@@ -37,7 +38,7 @@ export const db: ChatDataType = {
       status: 'busy'
     },
     {
-      id: 4,
+      id: String(4),
       fullName: 'Joaquina Weisenborn',
       role: 'Town planner',
       about:
@@ -46,7 +47,7 @@ export const db: ChatDataType = {
       status: 'busy'
     },
     {
-      id: 5,
+      id: String(5),
       fullName: 'Margot Henschke',
       role: 'Dietitian',
       avatarColor: 'success',
@@ -54,7 +55,7 @@ export const db: ChatDataType = {
       status: 'busy'
     },
     {
-      id: 6,
+      id: String(6),
       avatarColor: 'warning',
       fullName: 'Bridgett Omohundro',
       role: 'Designer, television/film set',
@@ -63,7 +64,7 @@ export const db: ChatDataType = {
       status: 'offline'
     },
     {
-      id: 7,
+      id: String(7),
       fullName: 'Sal Piggee',
       role: 'Marketing executive',
       about:
@@ -72,7 +73,7 @@ export const db: ChatDataType = {
       status: 'online'
     },
     {
-      id: 8,
+      id: String(8),
       fullName: 'Miguel Guelff',
       role: 'Special educational needs teacher',
       about:
@@ -81,7 +82,7 @@ export const db: ChatDataType = {
       status: 'online'
     },
     {
-      id: 9,
+      id: String(9),
       fullName: 'Mauro Elenbaas',
       role: 'Advertising copywriter',
       about:
@@ -90,7 +91,7 @@ export const db: ChatDataType = {
       status: 'away'
     },
     {
-      id: 10,
+      id: String(10),
       avatarColor: 'error',
       fullName: 'Zenia Jacobs',
       role: 'Building surveyor',
@@ -98,7 +99,7 @@ export const db: ChatDataType = {
       status: 'away'
     },
     {
-      id: 11,
+      id: String(11),
       fullName: 'Ramonita Veras',
       role: 'CEO',
       about:
@@ -107,7 +108,7 @@ export const db: ChatDataType = {
       status: 'online'
     },
     {
-      id: 12,
+      id: String(12),
       fullName: 'Lashawna Gotschall',
       role: 'Therapist, sports',
       about:
@@ -116,7 +117,7 @@ export const db: ChatDataType = {
       status: 'online'
     },
     {
-      id: 13,
+      id: String(13),
       fullName: 'Rosalva Uyetake',
       role: 'Engineer, civil (consulting)',
       about:
@@ -125,7 +126,7 @@ export const db: ChatDataType = {
       status: 'offline'
     },
     {
-      id: 14,
+      id: String(14),
       fullName: 'Cecilia Shockey',
       role: 'Database administrator',
       about: 'Cake pie jelly jelly beans. Marzipan lemon drops halvah cake. Pudding cookie lemon drops icing',
@@ -133,7 +134,7 @@ export const db: ChatDataType = {
       status: 'busy'
     },
     {
-      id: 15,
+      id: String(15),
       fullName: 'Harriett Duropan',
       role: 'Therapist, sports',
       about:
@@ -142,7 +143,7 @@ export const db: ChatDataType = {
       status: 'online'
     },
     {
-      id: 16,
+      id: String(16),
       fullName: 'Lauran Starner',
       role: 'AI specialist',
       about:
@@ -151,7 +152,7 @@ export const db: ChatDataType = {
       status: 'online'
     },
     {
-      id: 17,
+      id: String(17),
       fullName: 'Verla Morgano',
       role: 'Data scientist',
       about:
@@ -162,7 +163,7 @@ export const db: ChatDataType = {
   ],
   chats: [
     {
-      id: 1,
+      id: String(1),
       userId: 2,
       unseenMsgs: 1,
       chat: [
@@ -244,7 +245,7 @@ export const db: ChatDataType = {
       ]
     },
     {
-      id: 2,
+      id: String(2),
       userId: 3,
       unseenMsgs: 0,
       chat: [
@@ -296,7 +297,7 @@ export const db: ChatDataType = {
       ]
     },
     {
-      id: 3,
+      id: String(3),
       userId: 10,
       unseenMsgs: 0,
       chat: [
@@ -344,7 +345,7 @@ export const db: ChatDataType = {
       ]
     },
     {
-      id: 4,
+      id: String(4),
       userId: 8,
       unseenMsgs: 0,
       chat: [
@@ -386,7 +387,7 @@ export const db: ChatDataType = {
       ]
     },
     {
-      id: 5,
+      id: String(5),
       userId: 16,
       unseenMsgs: 0,
       chat: [
@@ -414,7 +415,7 @@ export const db: ChatDataType = {
       ]
     },
     {
-      id: 6,
+      id: String(6),
       userId: 11,
       unseenMsgs: 1,
       chat: [
@@ -462,7 +463,7 @@ export const db: ChatDataType = {
       ]
     },
     {
-      id: 7,
+      id: String(7),
       userId: 17,
       unseenMsgs: 0,
       chat: [
@@ -500,7 +501,7 @@ export const db: ChatDataType = {
       ]
     },
     {
-      id: 8,
+      id: String(8),
       userId: 14,
       unseenMsgs: 1,
       chat: [

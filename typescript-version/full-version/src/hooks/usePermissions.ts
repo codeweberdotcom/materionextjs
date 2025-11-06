@@ -10,7 +10,7 @@ import {
   getUserPermissions,
   type UserWithRole,
   type Permissions
-} from '@/utils/permissions'
+} from '@/utils/permissions/permissions'
 
 export function usePermissions() {
   const { user, session, isLoading } = useAuth()

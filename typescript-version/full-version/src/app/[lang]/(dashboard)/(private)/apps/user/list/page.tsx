@@ -5,10 +5,10 @@ import UserList from '@views/apps/user/list'
 import { getUserData } from '@/app/server/actions'
 
 // Util Imports
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
 import { redirect } from 'next/navigation'
 
-import { checkPermission } from '@/utils/permissions'
+import { checkPermission } from '@/utils/permissions/permissions'
 
 /**
  * ! If you need data using an API call, uncomment the below API code, update the `process.env.API_URL` variable in the

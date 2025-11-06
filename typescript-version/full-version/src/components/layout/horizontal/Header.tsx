@@ -1,7 +1,7 @@
 'use client'
 
 // Type Imports
-import type { getDictionary } from '@/utils/getDictionary'
+import type { getDictionary } from '@/utils/formatting/getDictionary'
 
 // Component Imports
 import Navigation from './Navigation'

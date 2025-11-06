@@ -1,11 +1,11 @@
 // Next Imports
-import { NextResponse } from 'next/server'
 
+import { NextRequest, NextResponse } from 'next/server'
 import { sendEmail } from '@/utils/email'
 
-export async function POST(req: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const { to, subject, html, text, from, templateId, variables } = await req.json()
+    const { to, subject, html, text, from, templateId, variables } = await request.json()
 
     // Validate required fields
     if (!to) {
@@ -36,12 +36,20 @@ export async function POST(req: Request) {
       variables
     })
 
-    return NextResponse.json({
-      message: 'Email sent successfully',
-      messageId: info.messageId,
-      accepted: info.accepted,
-      rejected: info.rejected
-    })
+    // Handle different response types from nodemailer
+    const response: any = {
+      message: 'Email sent successfully'
+    }
+
+    if ('messageId' in info) {
+      response.messageId = info.messageId
+      response.accepted = info.accepted
+      response.rejected = info.rejected
+    } else if ('id' in info) {
+      response.messageId = info.id
+    }
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error('Email sending error:', error)
     
@@ -53,3 +61,5 @@ return NextResponse.json(
     )
   }
 }
+
+

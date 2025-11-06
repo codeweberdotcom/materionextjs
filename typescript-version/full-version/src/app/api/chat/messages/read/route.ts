@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { prisma } from '@/libs/prisma'
+import logger from '@/lib/logger'
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,7 +34,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    console.log(`📖 Marked ${result.count} messages as read in room ${roomId}`)
+    logger.info(`рџ“– Marked ${result.count} messages as read in room ${roomId}`)
 
     return NextResponse.json({
       success: true,
@@ -43,3 +46,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

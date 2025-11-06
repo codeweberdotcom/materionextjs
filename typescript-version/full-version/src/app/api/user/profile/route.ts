@@ -1,7 +1,7 @@
-import type { NextRequest} from 'next/server';
-import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { PrismaClient } from '@prisma/client'
 
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     // Map database roles to expected UI roles
     let uiRole = 'subscriber'
 
-    switch (userProfile.role?.name) {
+    switch (userProfile?.role?.name) {
       case 'admin':
         uiRole = 'admin'
         break
@@ -53,19 +53,19 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      id: userProfile.id,
-      fullName: userProfile.name || 'Unknown User',
-      email: userProfile.email,
+      id: userProfile?.id,
+      fullName: userProfile?.name || 'Unknown User',
+      email: userProfile?.email,
       role: uiRole,
       company: 'N/A',
       contact: 'N/A',
-      username: userProfile.email.split('@')[0],
-      country: userProfile.country || 'russia',
-      language: userProfile.language || 'ru',
-      currency: userProfile.currency || 'RUB',
+      username: userProfile?.email.split('@')[0],
+      country: userProfile?.country || 'russia',
+      language: userProfile?.language || 'ru',
+      currency: userProfile?.currency || 'RUB',
       currentPlan: 'basic',
       status: 'active',
-      avatar: userProfile.image || '',
+      avatar: userProfile?.image || '',
       avatarColor: 'primary'
     })
   } catch (error) {
@@ -162,3 +162,5 @@ return NextResponse.json(
     )
   }
 }
+
+

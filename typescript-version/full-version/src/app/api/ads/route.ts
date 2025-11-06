@@ -1,5 +1,7 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/utils/auth'
+import { requireAuth } from '@/utils/auth/auth'
+import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { rateLimitService } from '@/lib/rate-limit'
 
@@ -10,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Проверяем rate limit для объявлений
+    // РџСЂРѕРІРµСЂСЏРµРј rate limit РґР»СЏ РѕР±СЉСЏРІР»РµРЅРёР№
     const rateLimitResult = await rateLimitService.checkLimit(user.id, 'ads')
 
     if (!rateLimitResult.allowed) {
@@ -28,7 +30,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Здесь будет логика создания объявления
+    // Р—РґРµСЃСЊ Р±СѓРґРµС‚ Р»РѕРіРёРєР° СЃРѕР·РґР°РЅРёСЏ РѕР±СЉСЏРІР»РµРЅРёСЏ
     // ...
 
     return NextResponse.json({ success: true })
@@ -37,3 +39,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
+
+

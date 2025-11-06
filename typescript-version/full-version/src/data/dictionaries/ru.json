@@ -145,6 +145,9 @@
     "deleteAccount": "Удалить аккаунт",
     "deleteCity": "Удалить город",
     "deleteCityConfirm": "Вы уверены, что хотите удалить город \"${name}\"?",
+    "deleteCountryConfirm": "Вы уверены, что хотите удалить страну \"${name}\"?",
+    "deleteCurrencyConfirm": "Вы уверены, что хотите удалить валюту \"${name}\"?",
+    "deleteCurrencyMessage": "Вы не сможете отменить удаление валюты!",
     "deleteDistrict": "Удалить район",
     "deleteDistrictConfirm": "Вы уверены, что хотите удалить район \"${name}\"?",
     "deleteRole": "Удалить роль",
@@ -486,6 +489,8 @@
     "wizardExamples": "Примеры мастеров",
     "write": "Запись",
     "yesActivateUser": "Да, активировать пользователя!",
+    "yesDeleteCountry": "Да, удалить страну!",
+    "yesDeleteCurrency": "Да, удалить валюту!",
     "yesDeleteRole": "Да, удалить роль!",
     "yesSuspendUser": "Да, приостановить пользователя!"
   }
