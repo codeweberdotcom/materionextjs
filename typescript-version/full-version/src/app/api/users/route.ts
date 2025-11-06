@@ -1,22 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+import { requireAuth } from '@/utils/auth'
+
 
 const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
     // Get current user session
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { user } = await requireAuth(request)
 
     // Get current user
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       select: { id: true }
     })
 

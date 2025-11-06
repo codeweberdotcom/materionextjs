@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthProvider'
 import { useSocket } from './useSocket'
 import { useParams } from 'next/navigation'
 
 export const useUnreadByContact = () => {
-  const { data: session } = useSession()
-  const { socket } = useSocket(session?.user?.id || null)
+  const { user, session } = useAuth()
+  const { socket } = useSocket(user?.id || null)
   const { lang: locale } = useParams()
   const [unreadByContact, setUnreadByContact] = useState<{ [contactId: string]: number }>({})
   const [isLoading, setIsLoading] = useState(false)
@@ -23,7 +23,7 @@ export const useUnreadByContact = () => {
 
   // Function to fetch unread messages count by contact from API
   const fetchUnreadByContact = useCallback(async () => {
-    if (!session?.user?.id) return
+    if (!user?.id) return
 
     try {
       setIsLoading(true)
@@ -37,14 +37,14 @@ export const useUnreadByContact = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [session?.user?.id])
+  }, [user?.id])
 
   // Fetch unread count on mount and when session changes
   useEffect(() => {
-    if (session?.user?.id) {
+    if (user?.id) {
       fetchUnreadByContact()
     }
-  }, [session?.user?.id, fetchUnreadByContact])
+  }, [user?.id, fetchUnreadByContact])
 
   // Listen for real-time updates via Socket.IO
   useEffect(() => {
@@ -71,37 +71,37 @@ export const useUnreadByContact = () => {
   // Periodic refresh every 60 seconds as fallback
   useEffect(() => {
     const interval = setInterval(() => {
-      if (session?.user?.id && !isLoading) {
+      if (user?.id && !isLoading) {
         fetchUnreadByContact()
       }
     }, 60000) // 60 seconds
 
     return () => clearInterval(interval)
-  }, [session?.user?.id, isLoading, fetchUnreadByContact])
+  }, [user?.id, isLoading, fetchUnreadByContact])
 
   // Update when window gets focus
   useEffect(() => {
     const handleFocus = () => {
-      if (session?.user?.id) {
+      if (user?.id) {
         fetchUnreadByContact()
       }
     }
 
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
-  }, [session?.user?.id, fetchUnreadByContact])
+  }, [user?.id, fetchUnreadByContact])
 
   // Update when page becomes visible (user returns from another tab)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && session?.user?.id) {
+      if (!document.hidden && user?.id) {
         fetchUnreadByContact()
       }
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [session?.user?.id, fetchUnreadByContact])
+  }, [user?.id, fetchUnreadByContact])
 
   return {
     unreadByContact,

@@ -14,7 +14,7 @@ import type { Theme } from '@mui/material/styles'
 // Third-party Imports
 import classNames from 'classnames'
 import { useDispatch, useSelector } from 'react-redux'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthProvider'
 
 // Type Imports
 import type { RootState } from '@/redux-store'
@@ -39,8 +39,8 @@ const ChatWrapper = () => {
   const { settings } = useSettings()
   const dispatch = useDispatch()
   const chatStore = useSelector((state: RootState) => state.chatReducer)
-  const { data: session } = useSession()
-  const { socket, isConnected } = useSocket(session?.user?.id || null)
+  const { user, session } = useAuth()
+  const { socket, isConnected } = useSocket(user?.id || null)
   const { unreadCount } = useUnreadMessages()
   const { checkPermission } = usePermissions()
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
@@ -79,7 +79,7 @@ const ChatWrapper = () => {
       const markAsRead = async () => {
         try {
           // Find the room for current user and active user
-          const currentUserId = session?.user?.id
+          const currentUserId = user?.id
           const activeUserId = chatStore.activeUser!.id
 
           if (currentUserId && activeUserId) {
@@ -93,27 +93,27 @@ const ChatWrapper = () => {
 
       // markAsRead() // Temporarily disabled
     }
-  }, [chatStore.activeUser?.id, session?.user?.id])
+  }, [chatStore.activeUser?.id, user?.id])
 
   // Load existing chat messages for all contacts on component mount
   useEffect(() => {
-    if (chatStore.contacts.length > 0 && session?.user?.id && isConnected) {
+    if (chatStore.contacts.length > 0 && user?.id && isConnected) {
       // Load messages immediately without delay
       chatStore.contacts.forEach((contact) => {
-        if (contact.id !== session.user.id) {
+        if (contact.id !== user?.id) {
           socket?.emit('getOrCreateRoom', {
-            user1Id: session.user.id,
+            user1Id: user?.id,
             user2Id: contact.id
           })
         }
       })
     }
-  }, [chatStore.contacts.length, session?.user?.id, socket, isConnected])
+  }, [chatStore.contacts.length, user?.id, socket, isConnected])
 
   // Load last messages from database directly
   useEffect(() => {
     const loadLastMessages = async () => {
-      if (chatStore.contacts.length > 0 && session?.user?.id) {
+      if (chatStore.contacts.length > 0 && user?.id) {
         try {
           const response = await fetch('/api/chat/last-messages', {
             method: 'GET',
@@ -141,7 +141,7 @@ const ChatWrapper = () => {
     }
 
     loadLastMessages()
-  }, [chatStore.contacts.length, session?.user?.id, dispatch])
+  }, [chatStore.contacts.length, user?.id, dispatch])
 
   // Close backdrop when sidebar is open on below md screen
   useEffect(() => {

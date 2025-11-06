@@ -1,5 +1,10 @@
+'use client'
+
 import classnames from 'classnames'
+import { useState, useEffect } from 'react'
 // Third-party Imports
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 
 // Type Imports
 import type { ShortcutsType } from '@components/layout/shared/ShortcutsDropdown'
@@ -105,6 +110,17 @@ const notifications: NotificationsType[] = [
 ]
 
 const NavbarContent = () => {
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false)
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [])
+
   return (
     <div className={classnames(verticalLayoutClasses.navbarContent, 'flex items-center justify-between gap-4 is-full')}>
       <div className='flex items-center gap-[7px]'>
@@ -112,11 +128,23 @@ const NavbarContent = () => {
         <NavSearch />
       </div>
       <div className='flex items-center'>
-        <LanguageDropdown />
-        <ModeDropdown />
-        <ShortcutsDropdown shortcuts={shortcuts} />
-        <NotificationsDropdown notifications={[]} />
-        <UserDropdown />
+        {isLoading ? (
+          <>
+            <Skeleton width={40} height={40} circle />
+            <Skeleton width={40} height={40} circle />
+            <Skeleton width={40} height={40} circle />
+            <Skeleton width={40} height={40} circle />
+            <Skeleton width={40} height={40} circle />
+          </>
+        ) : (
+          <>
+            <LanguageDropdown />
+            <ModeDropdown />
+            <ShortcutsDropdown shortcuts={shortcuts} />
+            <NotificationsDropdown notifications={[]} />
+            <UserDropdown />
+          </>
+        )}
       </div>
     </div>
   )

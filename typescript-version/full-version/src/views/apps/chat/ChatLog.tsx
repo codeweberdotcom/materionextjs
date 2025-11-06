@@ -15,7 +15,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 // Third-party Imports
 import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthProvider'
 import Skeleton from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
 
@@ -116,7 +116,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
   const activeUserChat = chatStore.chats.find((chat: ChatType) => chat.userId === chatStore.activeUser?.id)
 
   // Hooks
-  const { data: session } = useSession()
+  const { user, session } = useAuth()
   const { lang: locale } = useParams()
   const { messages: socketMessages, markMessagesAsRead, room, isRoomLoading } = useChat(chatStore.activeUser?.id?.toString())
 
@@ -164,19 +164,19 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
 
       // Play notification sound for new messages (only for messages not sent by current user)
       const latestMessage = socketMessages[socketMessages.length - 1]
-      if (latestMessage && latestMessage.senderId !== session?.user?.id && latestMessage.id !== lastProcessedMessageId.current) {
+      if (latestMessage && latestMessage.senderId !== user?.id && latestMessage.id !== lastProcessedMessageId.current) {
         lastProcessedMessageId.current = latestMessage.id
         playNotificationSound()
       }
     }
-  }, [socketMessages, session?.user?.id])
+  }, [socketMessages, user?.id])
 
   // Mark messages as read when chat is opened
   useEffect(() => {
-    if (chatStore.activeUser?.id && session?.user?.id && markMessagesAsRead && room?.id) {
+    if (chatStore.activeUser?.id && user?.id && markMessagesAsRead && room?.id) {
       markMessagesAsRead()
     }
-  }, [chatStore.activeUser?.id, session?.user?.id, room?.id])
+  }, [chatStore.activeUser?.id, user?.id, room?.id])
 
 
   return (
@@ -205,7 +205,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
             {/* Render Socket.IO messages if available, otherwise fallback to Redux */}
             {socketMessages && socketMessages.filter(message => message.content && message.content.trim() !== '').length > 0 ? (
            socketMessages.filter(message => message.content && message.content.trim() !== '').map((message, index) => {
-            const isSender = message.senderId === session?.user?.id;
+            const isSender = message.senderId === user?.id;
 
             return (
               <div key={message.id} className={classnames('flex gap-4 p-5', { 'flex-row-reverse': isSender })}>

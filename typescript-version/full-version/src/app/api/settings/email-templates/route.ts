@@ -1,9 +1,9 @@
 // Next Imports
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
-import { authOptions } from '@/libs/auth'
+
 import { checkPermission } from '@/utils/permissions'
 
 // In-memory storage for demo purposes
@@ -165,22 +165,22 @@ const emailTemplates: any[] = [
   }
 ]
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user, session } = await requireAuth(request)
 
-    if (!session || !checkPermission(session.user, 'Email Templates', 'Read')) {
+    if (!session || !checkPermission(user, 'Email Templates', 'Read')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    
+
 return NextResponse.json(emailTemplates)
   } catch (error) {
     console.error('Error fetching email templates:', error)
-    
+
 return NextResponse.json(
       { message: 'Failed to fetch email templates' },
       { status: 500 }
@@ -188,11 +188,11 @@ return NextResponse.json(
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user, session } = await requireAuth(req)
 
-    if (!session || !checkPermission(session.user, 'Email Templates', 'Write')) {
+    if (!session || !checkPermission(user, 'Email Templates', 'Write')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -223,7 +223,7 @@ export async function POST(req: Request) {
     return NextResponse.json(newTemplate)
   } catch (error) {
     console.error('Error creating email template:', error)
-    
+
 return NextResponse.json(
       { message: 'Failed to create email template' },
       { status: 500 }

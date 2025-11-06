@@ -65,7 +65,7 @@ src/lib/sockets/
 
 ## Аутентификация
 
-Используется JWT токены из NextAuth. Токен передается при подключении:
+Используется JWT токены из Lucia Auth. Токен передается при подключении:
 
 ```javascript
 const socket = io('http://localhost:3000', {

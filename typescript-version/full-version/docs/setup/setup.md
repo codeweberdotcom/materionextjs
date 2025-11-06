@@ -74,7 +74,7 @@ openssl rand -base64 32
 Use your preferred package manager:
 
 ```bash
-# pnpm (Highly Recommended)
+# pnpm (Highly Recommended - Primary Choice)
 pnpm install
 
 # yarn
@@ -102,11 +102,27 @@ npm run seed
 Launch the development servers:
 
 ```bash
-# Terminal 1: Next.js application (port 3000)
-pnpm dev --port 3000
+# Terminal 1: Next.js application with Socket.IO (port 3000)
+pnpm run dev:with-socket
 
+# Alternative: Run servers separately
+# Terminal 1: Next.js application (port 3000)
+# pnpm dev --port 3000
+#
 # Terminal 2: Socket.IO server (port 3003)
-pnpm run socket
+# pnpm run socket
+```
+
+Alternative commands if pnpm is not available:
+
+```bash
+# npm
+npm run dev -- --port 3000
+npm run socket
+
+# yarn
+yarn dev --port 3000
+yarn socket
 ```
 
 Visit `http://localhost:3000` to see the application.
@@ -135,11 +151,7 @@ Environment variables are key-value pairs that configure your application outsid
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `NEXTAUTH_BASEPATH` | NextAuth base path | `/api/auth` |
-| `NEXTAUTH_URL` | NextAuth callback URL | `http://localhost:3000/api/auth` |
-| `NEXTAUTH_SECRET` | JWT encryption secret | `your-generated-secret` |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID | `xxx.apps.googleusercontent.com` |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | `xxx` |
+| `DATABASE_URL` | Database connection string | `file:./src/prisma/dev.db` |
 
 #### Database Variables
 
@@ -224,30 +236,25 @@ datasource db {
 
 ### Authentication Setup
 
-#### NextAuth.js Configuration
+#### Lucia Auth Configuration
 
-1. Generate a secure secret:
+Lucia Auth uses secure session-based authentication with Prisma database adapter.
 
-```bash
-openssl rand -base64 32
-```
+**Key Features:**
+- Session-based authentication
+- Secure cookie management
+- Password hashing with bcrypt
+- Role-based access control
 
-2. Add to `.env`:
+#### Database Setup for Authentication
 
-```env
-NEXTAUTH_SECRET="your-generated-secret"
-```
+1. **Prisma Schema**: Authentication tables are automatically created
+2. **User Model**: Includes email, password, role, and permissions
+3. **Session Model**: Manages user sessions securely
 
-#### Google OAuth (Optional)
+#### Password Security
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials
-5. Add authorized redirect URIs:
-   - `http://localhost:3000/api/auth/callback/google` (development)
-   - `https://yourdomain.com/api/auth/callback/google` (production)
-6. Add credentials to `.env`
+Passwords are hashed using bcrypt with salt rounds for maximum security.
 
 ### Email Configuration (Optional)
 
@@ -295,14 +302,31 @@ npm run start
 ### Production Build
 
 ```bash
+# Stop any running Node.js processes (recommended before build)
+pkill -f node || taskkill /f /im node.exe
+
 # Build Next.js application
-npm run build
+pnpm build
 
 # Start Next.js production server
-npm run start
+pnpm start
 
 # In separate terminal: Start Socket.IO server
+pnpm run socket
+```
+
+Alternative commands if pnpm is not available:
+
+```bash
+# npm
+npm run build
+npm run start
 npm run socket
+
+# yarn
+yarn build
+yarn start
+yarn socket
 ```
 
 ### Environment-Specific Builds
@@ -348,8 +372,6 @@ services:
       - "3000:3000"
     environment:
       - DATABASE_URL=postgresql://user:pass@db:5432/app
-      - NEXTAUTH_URL=https://yourdomain.com
-      - NEXTAUTH_SECRET=your-secret
     depends_on:
       - db
 
@@ -376,8 +398,6 @@ volumes:
 
 **Required Environment Variables:**
 - `DATABASE_URL`
-- `NEXTAUTH_URL`
-- `NEXTAUTH_SECRET`
 
 ### Netlify
 
@@ -446,12 +466,13 @@ volumes:
 
 #### Authentication Issues
 
-**Error:** `NEXTAUTH_SECRET is required`
+**Error:** `Lucia session validation failed`
 
 **Solutions:**
-1. Add NEXTAUTH_SECRET to environment variables
-2. Generate a secure random string
-3. Restart the application
+1. Check DATABASE_URL configuration
+2. Ensure Prisma migrations are run
+3. Verify session cookie settings
+4. Check Lucia configuration in `src/libs/lucia.ts`
 
 #### Permission Errors
 
@@ -511,7 +532,7 @@ export async function GET() {
 ### Pre-deployment
 
 - [ ] Change default admin password
-- [ ] Use strong NEXTAUTH_SECRET
+- [ ] Ensure secure DATABASE_URL configuration
 - [ ] Configure HTTPS in production
 - [ ] Set secure cookie settings
 - [ ] Validate all environment variables
@@ -549,28 +570,33 @@ After successful setup:
 
 ## 🔌 Socket.IO Configuration
 
-The application uses a separate Socket.IO server for real-time chat functionality:
+The application uses an integrated Socket.IO server for real-time chat functionality:
 
-- **Socket.IO Server**: `src/server/websocket-server.js`
-- **Default Port**: 3003
-- **CORS Origins**: `http://localhost:3000`, `http://localhost:3002`
+- **Socket.IO Server**: Integrated with Next.js development server
+- **Default Port**: 3000 (same as Next.js)
+- **CORS Origins**: `http://localhost:3000`
 
-### Running Both Servers
+### Running the Server
 
-For full functionality, run both servers simultaneously:
+For full functionality, run the integrated server:
 
 ```bash
-# Terminal 1: Next.js app
-pnpm dev --port 3000
+# Next.js application with Socket.IO (port 3000)
+pnpm run dev:with-socket
+```
 
-# Terminal 2: Socket.IO server
-pnpm run socket
+Alternative commands if pnpm is not available:
+
+```bash
+# npm
+npm run dev:with-socket
+
+# yarn
+yarn run dev:with-socket
 ```
 
 ### Production Deployment
 
-Ensure both servers are running in production:
-- Next.js application (port 3000)
-- Socket.IO server (port 3003)
+In production, the Socket.IO server runs integrated with the Next.js application on the same port.
 
 This setup guide provides everything needed to get the application running. For advanced configurations, refer to the specific documentation sections.

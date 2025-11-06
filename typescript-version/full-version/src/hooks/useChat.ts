@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSocket } from './useSocket';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthProvider';
 import { useDispatch } from 'react-redux';
 import { sendMsg } from '@/redux-store/slices/chat';
 
@@ -25,8 +25,8 @@ interface ChatRoom {
 }
 
 export const useChat = (otherUserId?: string) => {
-  const { data: session } = useSession();
-  const { socket, isConnected } = useSocket(session?.user?.id || null);
+  const { user, session } = useAuth();
+  const { socket, isConnected } = useSocket(user?.id || null);
   const dispatch = useDispatch();
   const [messages, setMessages] = useState<Message[]>([]);
   const [room, setRoom] = useState<ChatRoom | null>(null);
@@ -37,14 +37,14 @@ export const useChat = (otherUserId?: string) => {
 
   // Initialize room when otherUserId is provided
   useEffect(() => {
-    if (socket && isConnected && otherUserId && session?.user?.id) {
+    if (socket && isConnected && otherUserId && user?.id) {
       setIsRoomLoading(true);
       socket.emit('getOrCreateRoom', {
-        user1Id: session.user.id,
+        user1Id: user?.id,
         user2Id: otherUserId
       });
     }
-  }, [socket, isConnected, otherUserId, session?.user?.id]);
+  }, [socket, isConnected, otherUserId, user?.id]);
 
   // Listen for room data
   useEffect(() => {
@@ -79,10 +79,10 @@ export const useChat = (otherUserId?: string) => {
       setIsRoomLoading(false);
 
       // Update Redux store with messages from database
-      if (session?.user?.id && data.messages.length > 0) {
+      if (user?.id && data.messages.length > 0) {
         data.messages.forEach((message) => {
-          const receiverId = session.user.id === message.senderId
-            ? (data.room.user1Id === session.user.id ? data.room.user2Id : data.room.user1Id)
+          const receiverId = user?.id === message.senderId
+            ? (data.room.user1Id === user?.id ? data.room.user2Id : data.room.user1Id)
             : message.senderId;
 
           dispatch(sendMsg({
@@ -99,11 +99,11 @@ export const useChat = (otherUserId?: string) => {
       setMessages(prev => [...prev, message]);
 
       // Update Redux store for sidebar display
-      if (session?.user?.id) {
+      if (user?.id) {
         dispatch(sendMsg({
           message: message.content,
           senderId: message.senderId,
-          receiverId: session.user.id
+          receiverId: user?.id
         }));
       }
     };
@@ -139,13 +139,13 @@ export const useChat = (otherUserId?: string) => {
 
   // Auto-mark messages as read when room is loaded
   useEffect(() => {
-    if (room?.id && session?.user?.id && messages.length > 0) {
+    if (room?.id && user?.id && messages.length > 0) {
       markMessagesAsRead();
     }
-  }, [room?.id, session?.user?.id, messages.length]);
+  }, [room?.id, user?.id, messages.length]);
 
   const sendMessage = async (content: string) => {
-    if (!socket || !room || !session?.user?.id) return;
+    if (!socket || !room || !user?.id) return;
 
     try {
       // Check rate limit before sending
@@ -155,7 +155,7 @@ export const useChat = (otherUserId?: string) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: session.user.id,
+          userId: user?.id,
           module: 'chat'
         }),
       });
@@ -179,13 +179,13 @@ export const useChat = (otherUserId?: string) => {
       socket.emit('sendMessage', {
         roomId: room.id,
         message: content,
-        senderId: session.user.id
+        senderId: user?.id
       });
 
       // Update Redux store for sidebar display
       dispatch(sendMsg({
         message: content,
-        senderId: session.user.id,
+        senderId: user?.id,
         receiverId: otherUserId || ''
       }));
     } catch (error) {
@@ -198,14 +198,14 @@ export const useChat = (otherUserId?: string) => {
       return;
     }
 
-    if (!room?.id || !session?.user?.id) {
+    if (!room?.id || !user?.id) {
       return;
     }
 
     // Immediately update local messages as read
     setMessages(prev => {
       const updated = prev.map(msg => {
-        const shouldUpdate = msg.roomId === room.id && msg.senderId !== session.user.id && !msg.readAt;
+        const shouldUpdate = msg.roomId === room.id && msg.senderId !== user?.id && !msg.readAt;
         return shouldUpdate
           ? { ...msg, readAt: new Date().toISOString() }
           : msg;
@@ -215,7 +215,7 @@ export const useChat = (otherUserId?: string) => {
 
     const emitData = {
       roomId: room.id,
-      userId: session.user.id
+      userId: user?.id
     };
 
     try {

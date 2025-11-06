@@ -5,11 +5,11 @@ import path from 'path'
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
 import { PrismaClient } from '@prisma/client'
 
-import { authOptions } from '@/libs/auth'
+
 
 import { checkPermission } from '@/utils/permissions'
 
@@ -23,9 +23,9 @@ const USERS_CACHE_DURATION = 30 * 1000 // 30 секунд для тестиро�
 // POST - Create new user (admin only)
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     // Check permission for creating users
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 
@@ -133,7 +133,7 @@ return NextResponse.json(
 }
 
 // GET - Get all users (admin only)
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const clearCache = url.searchParams.get('clearCache')
@@ -145,9 +145,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: 'Cache cleared' })
     }
 
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -156,7 +156,7 @@ export async function GET(request: Request) {
 
     // Check permission for reading users
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 

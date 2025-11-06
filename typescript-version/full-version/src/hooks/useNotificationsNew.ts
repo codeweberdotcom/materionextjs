@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthProvider';
 import { useSocketNew } from './useSocketNew';
 import type { Notification } from '../lib/sockets/types/notifications';
 
 export const useNotificationsNew = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const { data: session } = useSession();
+  const { user, session } = useAuth();
   const { notificationSocket } = useSocketNew();
 
   // Загрузка уведомлений из API
   const loadNotifications = async () => {
-    if (!session?.user?.id) return;
+    if (!user?.id) return;
 
     try {
       const response = await fetch('/api/notifications');
@@ -40,12 +40,12 @@ export const useNotificationsNew = () => {
 
   // Отметка уведомления как прочитанное
   const markAsRead = async (notificationId: string) => {
-    if (!notificationSocket || !session?.user?.id) return;
+    if (!notificationSocket || !user?.id) return;
 
     try {
       notificationSocket.emit('markAsRead', {
         notificationId,
-        userId: session.user.id
+        userId: user?.id
       });
     } catch (error) {
       console.error('Error marking notification as read:', error);
@@ -54,10 +54,10 @@ export const useNotificationsNew = () => {
 
   // Отметка всех уведомлений как прочитанные
   const markAllAsRead = async () => {
-    if (!notificationSocket || !session?.user?.id) return;
+    if (!notificationSocket || !user?.id) return;
 
     try {
-      notificationSocket.emit('markAllAsRead', session.user.id);
+      notificationSocket.emit('markAllAsRead', user?.id);
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
@@ -65,12 +65,12 @@ export const useNotificationsNew = () => {
 
   // Удаление уведомления
   const removeNotification = async (notificationId: string) => {
-    if (!notificationSocket || !session?.user?.id) return;
+    if (!notificationSocket || !user?.id) return;
 
     try {
       notificationSocket.emit('deleteNotification', {
         notificationId,
-        userId: session.user.id
+        userId: user?.id
       });
     } catch (error) {
       console.error('Error removing notification:', error);
@@ -106,7 +106,7 @@ export const useNotificationsNew = () => {
 
     // Все уведомления отмечены как прочитанные
     const handleNotificationsRead = (data: { userId: string; count: number }) => {
-      if (data.userId === session?.user?.id) {
+      if (data.userId === user?.id) {
         setNotifications(prev =>
           prev.map(notification => ({
             ...notification,
@@ -129,12 +129,12 @@ export const useNotificationsNew = () => {
       notificationSocket.off('notificationDeleted', handleNotificationDeleted);
       notificationSocket.off('notificationsRead', handleNotificationsRead);
     };
-  }, [notificationSocket, session?.user?.id]);
+  }, [notificationSocket, user?.id]);
 
   // Загрузка уведомлений при монтировании
   useEffect(() => {
     loadNotifications();
-  }, [session?.user?.id]);
+  }, [user?.id]);
 
   const unreadCount = notifications.filter(notification => notification.status === 'unread').length;
 

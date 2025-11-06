@@ -53,9 +53,13 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   const theme = useTheme()
   const verticalNavOptions = useVerticalNav()
   const params = useParams()
-  const { checkPermission } = usePermissions()
+  const { checkPermission, isAuthenticated, user } = usePermissions()
   const { unreadCount } = useUnreadMessages()
   const { unreadCount: notificationsUnreadCount } = useNotifications()
+
+  console.log('🔍 [MENU] User authenticated:', isAuthenticated)
+  console.log('🔍 [MENU] User role:', user?.role?.name)
+  console.log('🔍 [MENU] User role permissions:', user?.role?.permissions)
 
   // Redux
   const notifications = useSelector((state: RootState) => state.notificationsReducer.notifications)
@@ -326,14 +330,6 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
       )
     }
 
-    // Rate Limiting
-    if (checkPermission('rateLimitManagement', 'read')) {
-      adminSettingsChildren.push(
-        <MenuItem key="rateLimiting" href={`/${locale}/admin/rate-limiting`} icon={<i className='ri-shield-line' />}>
-          {dictionary['navigation'].rateLimitManagement || 'Rate Limiting'}
-        </MenuItem>
-      )
-    }
 
     // Communications section (only show if user has at least one communication permission)
     const communicationsChildren = []

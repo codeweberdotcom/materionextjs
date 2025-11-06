@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+import { lucia } from '@/libs/lucia'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const sessionId = lucia.readSessionCookie(request.headers.get('cookie') ?? '')
+    const { session, user } = await lucia.validateSession(sessionId || '')
 
-    if (!session?.user?.id) {
+    if (!session || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const userId = session.user.id
+    const userId = user.id
 
     // Count unread messages for the current user
     const unreadCount = await prisma.message.count({

@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+import { requireAuth } from '@/utils/auth'
+
 import { rateLimitService } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Проверяем rate limit для чата
-    const rateLimitResult = await rateLimitService.checkLimit(session.user.id, 'chat')
+    const rateLimitResult = await rateLimitService.checkLimit(user.id, 'chat')
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json({

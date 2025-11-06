@@ -16,7 +16,7 @@ import MenuItem from '@mui/material/MenuItem'
 // Third-party Imports
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthProvider'
 
 // Type Imports
 import type { ContactType } from '@/types/apps/chatTypes'
@@ -101,7 +101,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
   const anchorRef = useRef<HTMLButtonElement>(null)
 
   // Hooks
-  const { data: session } = useSession()
+  const { user, session } = useAuth()
   const { sendMessage, rateLimitData, setRateLimitData, isConnected, isRoomLoading, room } = useChat(activeUser?.id?.toString())
   const { navigation } = useTranslation()
 
@@ -132,12 +132,12 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
    useEffect(() => {
      const checkExistingBlocks = async () => {
        console.log('🔍 [DEBUG] Checking existing blocks:', {
-         userId: session?.user?.id,
+         userId: user?.id,
          rateLimitData: rateLimitData,
          isRateLimited: isRateLimited
        })
 
-       if (session?.user?.id && !rateLimitData) {
+       if (user?.id && !rateLimitData) {
          try {
            console.log('📡 [DEBUG] Making API call to check rate limit')
            const response = await fetch('/api/chat/messages/check-rate-limit', {
@@ -146,7 +146,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
                'Content-Type': 'application/json',
              },
              body: JSON.stringify({
-               userId: session.user.id,
+               userId: user?.id,
                messageLength: 0
              })
            })
@@ -176,7 +176,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
      }
 
      checkExistingBlocks()
-   }, [session?.user?.id, setRateLimitData])
+   }, [user?.id, setRateLimitData])
 
   const open = Boolean(anchorEl)
 
@@ -201,7 +201,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
 
     if (msg.trim() !== '') {
       // Send via Socket.IO if connected, otherwise fallback to Redux
-      if (session?.user?.id && sendMessage) {
+      if (user?.id && sendMessage) {
         sendMessage(msg).then(() => {
           setMsg('')
         }).catch((error) => {
@@ -213,7 +213,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
           // Handle other errors if needed
         })
       } else {
-        dispatch(sendMsg({ message: msg, senderId: session?.user?.id || '', receiverId: activeUser?.id || '' }))
+        dispatch(sendMsg({ message: msg, senderId: user?.id || '', receiverId: activeUser?.id || '' }))
         setMsg('')
       }
     }

@@ -12,7 +12,7 @@ http://localhost:3000/api
 ```
 
 ### Authentication
-Most endpoints require a valid NextAuth session. Include the session cookie or Authorization header.
+Most endpoints require a valid Lucia session. Include the session cookie in requests.
 
 ### Response Format
 ```json
@@ -33,18 +33,48 @@ Most endpoints require a valid NextAuth session. Include the session cookie or A
 
 ## 🔐 Authentication Endpoints
 
-### POST `/api/auth/[...nextauth]`
-NextAuth.js authentication handler.
+### POST `/api/auth/login`
+Lucia authentication login endpoint.
 
 **Supported Methods:**
-- GET, POST (NextAuth.js handles routing)
+- POST
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "user": {
+    "id": "user_id",
+    "email": "user@example.com",
+    "name": "User Name",
+    "role": "admin"
+  }
+}
+```
 
 **Providers:**
 - Credentials (email/password)
 - Google OAuth
 
-### POST `/api/login`
-Custom login endpoint (alternative to NextAuth).
+### POST `/api/auth/logout`
+Lucia authentication logout endpoint.
+
+**Supported Methods:**
+- POST
+
+**Response:**
+```json
+{
+  "success": true
+}
+```
 
 **Request Body:**
 ```json

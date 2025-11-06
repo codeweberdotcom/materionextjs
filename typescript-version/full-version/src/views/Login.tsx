@@ -19,13 +19,15 @@ import Divider from '@mui/material/Divider'
 import Alert from '@mui/material/Alert'
 
 // Third-party Imports
-import { signIn } from 'next-auth/react'
 import { Controller, useForm } from 'react-hook-form'
 import { valibotResolver } from '@hookform/resolvers/valibot'
 import { object, minLength, string, email, pipe, nonEmpty } from 'valibot'
 import classnames from 'classnames'
 import type { SubmitHandler } from 'react-hook-form'
 import type { InferInput } from 'valibot'
+
+// Context Imports
+import { useAuth } from '@/contexts/AuthProvider'
 
 // Type Imports
 import type { Mode } from '@core/types'
@@ -71,6 +73,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const searchParams = useSearchParams()
   const { lang: locale } = useParams()
   const { settings } = useSettings()
+  const { login } = useAuth()
 
   // Dictionary
   const [dictionary, setDictionary] = useState<any>(null)
@@ -118,25 +121,15 @@ const Login = ({ mode }: { mode: Mode }) => {
     setLoading(true)
 
     try {
-      const res = await signIn('credentials', {
-        email: data.email,
-        password: data.password,
-        locale: locale,
-        redirect: false
-      })
+      await login(data.email, data.password)
 
-      if (res && res.ok && res.error === null) {
-        // Vars
-        const redirectURL = searchParams.get('redirectTo') ?? '/en/apps/references/countries'
+      // Vars
+      const redirectURL = searchParams.get('redirectTo') ?? '/en/apps/references/countries'
 
-        router.replace(getLocalizedUrl(redirectURL, locale as Locale))
-      } else {
-        if (res?.error) {
-          setErrorState({ message: [res.error] })
-        }
-      }
-    } finally {
-      setLoading(false)
+      router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+    } catch (error: any) {
+      setErrorState({ message: [error.message || 'Login failed'] })
+      setLoading(false) // Не разблокировать поля при ошибке
     }
   }
 
@@ -196,6 +189,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                   autoFocus
                   type='email'
                   label={dictionary?.navigation?.emailLabel || 'Email'}
+                  disabled={loading}
                   onChange={e => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)
@@ -219,6 +213,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                   id='login-password'
                   type={isPasswordShown ? 'text' : 'password'}
                   autoComplete='current-password'
+                  disabled={loading}
                   onChange={e => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)
@@ -233,6 +228,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                             onClick={handleClickShowPassword}
                             onMouseDown={e => e.preventDefault()}
                             aria-label='toggle password visibility'
+                            disabled={loading}
                           >
                             <i className={isPasswordShown ? 'ri-eye-off-line' : 'ri-eye-line'} />
                           </IconButton>
@@ -266,7 +262,10 @@ const Login = ({ mode }: { mode: Mode }) => {
             className='self-center text-textPrimary'
             startIcon={<img src='/images/logos/google.png' alt='Google' width={22} />}
             sx={{ '& .MuiButton-startIcon': { marginInlineEnd: 3 } }}
-            onClick={() => signIn('google')}
+            onClick={() => {
+              // TODO: Implement Google OAuth with Lucia
+              alert('Google OAuth will be implemented with Lucia')
+            }}
           >
             {dictionary?.navigation?.signInWithGoogle || 'Sign in with Google'}
           </Button>

@@ -31,7 +31,7 @@ The notifications system provides real-time notification management with databas
 ### GET `/api/notifications`
 Get all notifications for current authenticated user.
 
-**Authentication:** Required (NextAuth session)
+**Authentication:** Required (Lucia session)
 
 **Query Parameters:**
 - None (returns all non-archived notifications)
@@ -283,7 +283,7 @@ interface NotificationState {
 ## 🛡️ Security Features
 
 ### Authentication
-- NextAuth.js session validation
+- Lucia Auth session validation
 - User ownership verification for all operations
 - Secure API endpoints with proper authorization
 

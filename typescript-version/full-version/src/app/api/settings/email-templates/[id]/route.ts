@@ -1,9 +1,9 @@
 // Next Imports
 import { NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
-import { authOptions } from '@/libs/auth'
+
 import { checkPermission } from '@/utils/permissions'
 
 // In-memory storage (same as in the main route)
@@ -169,9 +169,9 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session || !checkPermission(session.user, 'Email Templates', 'Write')) {
+    if (!session || !checkPermission(user, 'Email Templates', 'Write')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -224,9 +224,9 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session || !checkPermission(session.user, 'Email Templates', 'Write')) {
+    if (!session || !checkPermission(user, 'Email Templates', 'Write')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }

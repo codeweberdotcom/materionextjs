@@ -5,16 +5,16 @@ import path from 'path'
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
-import { authOptions } from '@/libs/auth'
+
 import { prisma } from '@/libs/prisma'
 
 
 // POST - Export translations to JSON files (admin only)
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user is admin
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 

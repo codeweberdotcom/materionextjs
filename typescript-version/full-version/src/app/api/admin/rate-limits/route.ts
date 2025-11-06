@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+import { requireAuth } from '@/utils/auth'
+
 import { isSuperadmin, isAdmin } from '@/utils/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
+    const { user } = await requireAuth(req)
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(session.user as any) || isAdmin(session.user as any)
+    const hasPermission = isSuperadmin(user as any) || isAdmin(user as any)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -33,12 +33,12 @@ export async function GET() {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
+    const { user } = await requireAuth(request)
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(session.user as any) || isAdmin(session.user as any)
+    const hasPermission = isSuperadmin(user as any) || isAdmin(user as any)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -69,12 +69,12 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
+    const { user } = await requireAuth(request)
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(session.user as any) || isAdmin(session.user as any)
+    const hasPermission = isSuperadmin(user as any) || isAdmin(user as any)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

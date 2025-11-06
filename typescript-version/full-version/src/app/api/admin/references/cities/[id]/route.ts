@@ -1,9 +1,9 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
-import { authOptions } from '@/libs/auth'
+
 
 // Create Prisma client instance
 const { PrismaClient } = require('@prisma/client')
@@ -16,7 +16,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -27,7 +27,7 @@ export async function PATCH(
 
     // Check if user is admin
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 
@@ -77,7 +77,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -88,7 +88,7 @@ export async function PUT(
 
     // Check if user is admin
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 
@@ -152,7 +152,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -163,7 +163,7 @@ export async function DELETE(
 
     // Check if user is admin
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 

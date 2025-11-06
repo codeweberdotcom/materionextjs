@@ -1,5 +1,5 @@
 // Third-party Imports
-import { getServerSession } from 'next-auth'
+import { cookies } from 'next/headers'
 
 // Type Imports
 import type { Locale } from '@configs/i18n'
@@ -10,10 +10,11 @@ import AuthRedirect from '@/components/AuthRedirect'
 import NotFound from '@/views/NotFound'
 
 // Config Imports
-import { authOptions } from '@/libs/auth'
+import { lucia } from '@/libs/lucia'
 
 export default async function AuthGuard({ children, locale }: ChildrenType & { locale: Locale }) {
-  const session = await getServerSession(authOptions)
+  const sessionId = (await cookies()).get(lucia.sessionCookieName)?.value
+  const { session } = await lucia.validateSession(sessionId || '')
 
   if (!session) {
     return <AuthRedirect lang={locale} />

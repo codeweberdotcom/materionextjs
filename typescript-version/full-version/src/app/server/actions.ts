@@ -6,7 +6,7 @@
 'use server'
 
 // Data Imports
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
 import { db as eCommerceData } from '@/fake-db/apps/ecommerce'
 import { db as academyData } from '@/fake-db/apps/academy'
@@ -20,7 +20,7 @@ import { db as pricingData } from '@/fake-db/pages/pricing'
 import { db as statisticsData } from '@/fake-db/pages/widgetExamples'
 
 // Database Imports
-import { authOptions } from '@/libs/auth'
+
 
 // Type Imports
 import type { UsersType } from '@/types/apps/userTypes'
@@ -158,26 +158,20 @@ export const getPermissionsData = async () => {
 
 export const getProfileData = async () => {
   try {
-    // Get current session to identify the logged-in user
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user?.email) {
-      // Return fake data for unauthenticated users - this is normal behavior
-      return profileData // Return fake data as fallback
-    }
+    // Get current user from Lucia session
+    const { user } = await requireAuth()
 
     // Find the current user in the database
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: {
         role: true
       }
     })
 
     if (!currentUser) {
-      console.error('User not found in database:', session.user.email)
-      
-return profileData // Return fake data as fallback
+      console.error('User not found in database:', user.email)
+      return profileData // Return fake data as fallback
     }
 
     // Use database role name directly
@@ -233,8 +227,7 @@ return profileData // Return fake data as fallback
     }
   } catch (error) {
     console.error('Error fetching profile data:', error instanceof Error ? error.message : String(error))
-    
-return profileData // Return fake data as fallback
+    return profileData // Return fake data as fallback
   }
 }
 

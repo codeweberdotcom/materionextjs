@@ -7,11 +7,11 @@ import { existsSync } from 'fs'
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
 import { PrismaClient } from '@prisma/client'
 
-import { authOptions } from '@/libs/auth'
+
 
 const prisma = new PrismaClient()
 
@@ -21,9 +21,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -32,7 +32,7 @@ export async function PUT(
 
     // Check if user is admin or if they're editing their own data
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 
@@ -237,9 +237,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -250,7 +250,7 @@ export async function PATCH(
 
     // Check if user is admin
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 
@@ -346,9 +346,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -359,7 +359,7 @@ export async function DELETE(
 
     // Check if user is admin
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 

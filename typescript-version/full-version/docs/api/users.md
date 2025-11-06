@@ -9,7 +9,7 @@ The user management system provides comprehensive user administration with role-
 ### Components
 - **Admin API**: `/api/admin/users` for administrative user management
 - **User API**: `/api/user/*` for self-service profile operations
-- **Authentication**: NextAuth.js session management
+- **Authentication**: Lucia Auth v3.x session management
 - **Permissions**: Role-based access control system
 - **Caching**: In-memory user cache with TTL
 - **File Upload**: Avatar image handling

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthProvider';
 
 export const useNotificationsSocket = (userId: string | null) => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const socketRef = useRef<Socket | null>(null);
-  const { data: session } = useSession();
+  const { user, session } = useAuth();
 
   useEffect(() => {
     if (!userId || !session) return;

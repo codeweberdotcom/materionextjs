@@ -2,402 +2,272 @@
 
 ## Overview
 
-Welcome to modern authentication with NextAuth.js! This guide introduces password-less authentication and how NextAuth.js helps achieve authentication goals.
+Welcome to modern authentication with Lucia Auth v3.x! This guide introduces secure session-based authentication and how Lucia helps achieve authentication goals.
 
-### Why NextAuth.js?
+### Why Lucia Auth?
 
-Our authentication philosophy centers on password-less authentication for enhanced security and user experience. NextAuth.js provides the robust features and flexibility needed for this vision.
+Our authentication philosophy centers on secure, lightweight session management with minimal dependencies. Lucia Auth provides robust security features, flexibility, and excellent performance for modern web applications.
 
 ### Getting Started
 
-Authentication is implemented using NextAuth.js for secure user authentication.
+Authentication is implemented using Lucia Auth v3.x for secure user authentication with session-based approach.
 
 **Demonstrated Methods:**
 
-- **Credentials Provider**: Traditional username/password authentication
-- **Google Provider + Prisma Adapter**: Google account sign-in with Prisma data management
+- **Credentials Provider**: Traditional username/password authentication with bcrypt hashing
+- **Session Management**: Secure cookie-based sessions with automatic expiration
+- **Role-Based Access Control**: Integrated permission system with user roles
 
 ### What's Next?
 
-Explore comprehensive guides for setting up both authentication methods. Whether you prefer Credentials Provider or Google Provider with Prisma Adapter, detailed instructions are available.
+Explore comprehensive guides for setting up authentication with Lucia. Whether you need basic login/logout or complex role-based permissions, detailed instructions are available.
 
 Adapt these methods to your application's authentication needs.
 
 **Happy authenticating!** 🛡️🔐
 
-### Auth Other than NextAuth.js
+### Auth Other than Lucia
 
-If you don't want to use NextAuth.js:
+If you don't want to use Lucia:
 
 - Start with the starter-kit
 - Follow the [Remove Authentication from full-version](docs/setup.md) guide
 - Implement custom authentication logic
 - Consider alternatives like Auth0, Firebase, Amazon Cognito, Supabase
 
-## Credentials Provider Using NextAuth.js
+## Credentials Provider Using Lucia Auth
 
 ### Overview
 
-Welcome to seamless authentication with NextAuth.js Credentials Provider! This guide walks through implementation step-by-step.
+Welcome to seamless authentication with Lucia Auth Credentials Provider! This guide walks through implementation step-by-step.
 
 ### Prerequisites
 
-Basic understanding of NextAuth.js required. Refer to [NextAuth.js documentation](https://next-auth.js.org/) for refresher.
+Basic understanding of Lucia Auth required. Refer to [Lucia Auth documentation](https://lucia-auth.com/) for refresher.
 
-### Initialize NextAuth.js
+### Initialize Lucia Auth
 
-Next.js 13.2+ uses Route Handlers for REST-like requests in App Router.
+Lucia Auth uses Prisma Adapter for database integration and provides secure session management.
 
-**Route Handler** (`src/app/api/auth/[...nextauth]/route.ts`):
+**Configuration** (`src/libs/lucia.ts`):
 
 ```typescript
-// Third-party Imports
-import NextAuth from 'next-auth'
+import { Lucia } from 'lucia';
+import { PrismaAdapter } from '@lucia-auth/adapter-prisma';
+import { prisma } from './prisma';
 
-// Lib Imports
-import { authOptions } from '@/libs/auth'
+export const lucia = new Lucia(new PrismaAdapter(prisma.session, prisma.user), {
+  sessionCookie: {
+    expires: false,
+    attributes: {
+      secure: process.env.NODE_ENV === 'production',
+    },
+  },
+  getUserAttributes: (attributes) => {
+    return {
+      id: attributes.id,
+      email: attributes.email,
+      name: attributes.name,
+      roleId: attributes.roleId,
+      permissions: attributes.permissions,
+    };
+  },
+});
 
-const handler = NextAuth(authOptions)
-
-export { handler as GET, handler as POST }
+declare module 'lucia' {
+  interface Register {
+    Lucia: typeof lucia;
+    DatabaseUserAttributes: {
+      id: string;
+      email: string;
+      name: string;
+      roleId: string;
+      permissions: string;
+    };
+  }
+}
 ```
 
-NextAuth.js detects Route Handler initialization and returns appropriate handlers.
+### Authentication Utilities
 
-### auth.ts file
+Authentication utilities implemented in `src/utils/auth.ts`. Customize according to project needs.
 
-Authentication logic implemented in `src/libs/auth.ts`. Customize according to project needs.
+**Key Functions:**
 
-**Note:** All options explained below. Refer to [NextAuth documentation](https://next-auth.js/configuration/options) for complete list.
+- **`requireAuth(request?)`**: Validates user session and returns user data
+- **`getLuciaSession(request?)`**: Gets session data from cookies
+- **`validateSession(sessionId)`**: Validates session ID
 
-### Providers
+### Login API
 
-Using `CredentialsProvider` for username/password authentication. Multiple providers can be configured.
+Create login API for credential authentication with bcrypt password hashing.
 
-**Options:**
+**Route Handler** (`src/app/api/auth/login/route.ts`):
 
-- **`name`**: Display name on sign-in form ('Sign in with...')
-- **`type`**: Provider type ('credentials')
-- **`credentials`**: Define required credentials (username/password)
-- **`authorize`**: Callback for credential validation. Return user object or null/false.
+```typescript
+export async function POST(request: NextRequest) {
+  const { email, password } = await request.json()
 
-**Caution:** Make API call to login endpoint. Remove sensitive data from responses.
+  // Find user
+  const user = await prisma.user.findUnique({
+    where: { email },
+    include: { role: true }
+  })
 
-Refer to [NextAuth providers documentation](https://next-auth.js.org/configuration/providers) for more options.
+  // Validate password with bcrypt
+  const isValidPassword = await bcrypt.compare(password, user.password)
 
-### secret
+  // Create session
+  const session = await lucia.createSession(user.id, {})
 
-Random string for hashing tokens and generating keys. Set via `NEXTAUTH_SECRET` environment variable.
+  // Set session cookie
+  const sessionCookie = lucia.createSessionCookie(session.id)
 
-Generate secret at [NextAuth documentation](https://next-auth.js/configuration/options#secret).
+  return NextResponse.json({ user, session }, {
+    headers: {
+      'Set-Cookie': sessionCookie.serialize()
+    }
+  })
+}
+```
 
-### session
+### Session Management
 
-- **`strategy`**: Session storage method ('jwt' or 'database')
-- **`maxAge`**: Session idle timeout in seconds
+Lucia handles session creation, validation, and cookie management automatically.
 
-Refer to [NextAuth session documentation](https://next-auth.js/configuration/options#session).
+**Session Configuration:**
 
-### pages
+- **Cookie Security**: HTTPS-only in production
+- **Expiration**: Sessions don't expire by default
+- **Attributes**: Customizable cookie attributes
 
-Custom URLs for sign-in, sign-out, and error pages.
+### Logout API
 
-Refer to [NextAuth pages documentation](https://next-auth.js/configuration/options#pages).
+**Route Handler** (`src/app/api/auth/logout/route.ts`):
 
-### callbacks
+```typescript
+export async function POST(request: NextRequest) {
+  const { session } = await requireAuth(request)
 
-Asynchronous functions controlling authentication actions.
+  // Invalidate session
+  await lucia.invalidateSession(session.id)
 
-#### jwt()
+  // Clear session cookie
+  const blankCookie = lucia.createBlankSessionCookie()
 
-Called when JWT created/updated. Add custom parameters here for session access.
-
-#### session()
-
-Called when session checked. Forward token data to client.
-
-Refer to [NextAuth callbacks documentation](https://next-auth.js.org/configuration/options#callbacks).
+  return NextResponse.json({ success: true }, {
+    headers: {
+      'Set-Cookie': blankCookie.serialize()
+    }
+  })
+}
+```
 
 ### Login Form & API
 
 #### Login Form
 
-Use `signIn` function from `next-auth/client`. Calls login API and returns user data.
+Use fetch API to call login endpoint and handle authentication.
 
 Refer to `src/views/Login.tsx` for implementation.
 
 #### Login API
 
-Create login API for credential authentication.
+Create login API for credential authentication with Lucia session management.
 
-Refer to `src/app/api/login/route.ts` for implementation.
+Refer to `src/app/api/auth/login/route.ts` for implementation.
 
-### Extending NextAuth Types for Custom User Fields
+### Extending Lucia Types for Custom User Fields
 
-For custom user fields like `role`, extend NextAuth types.
+For custom user fields like `role`, extend Lucia types.
 
-**Create `next-auth.d.ts`**:
+**Update `src/libs/lucia.ts`**:
 
 ```typescript
-import 'next-auth/jwt'
-import { DefaultSession } from 'next-auth'
-
-declare module 'next-auth/jwt' {
-  type JWT = {
-    role: string
-  }
-}
-
-declare module 'next-auth' {
-  type Session = {
-    user: {
-      role: string
-    } & DefaultSession['user']
-  }
-
-  type User = {
-    role: string
+declare module 'lucia' {
+  interface Register {
+    Lucia: typeof lucia;
+    DatabaseUserAttributes: {
+      id: string;
+      email: string;
+      name: string;
+      roleId: string;
+      permissions: string;
+    };
   }
 }
 ```
 
-**Update `src/libs/auth.ts` callbacks**:
+### Session Validation
+
+Use `requireAuth()` utility for protected routes:
 
 ```typescript
-callbacks: {
-  async jwt({ token, user }) {
-    if (user) {
-      token.name = user.name
-      token.role = user.role
-    }
-    return token
-  },
-  async session({ session, token }) {
-    if (session.user) {
-      session.user.name = token.name
-      session.user.role = token.role
-    }
-    return session
-  }
+import { requireAuth } from '@/utils/auth'
+
+export async function GET(request: NextRequest) {
+  const { user, session } = await requireAuth(request)
+
+  // User is authenticated
+  return NextResponse.json({ user })
 }
 ```
 
-**Usage**:
+### Client-Side Authentication
+
+Use custom hooks for client-side authentication state:
 
 ```typescript
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthProvider'
 
-const { data: session } = useSession()
-const userRole = session?.user?.role || 'defaultRole'
+const { user, isLoading } = useAuth()
+
+if (isLoading) return <div>Loading...</div>
+if (!user) return <div>Please login</div>
+
+return <div>Welcome {user.name}!</div>
 ```
 
-**Info:** NextAuth customization (session strategy, expiration, pages, callbacks) varies by implementation and is not covered by support.
+**Info:** Lucia customization (session configuration, cookie settings, user attributes) varies by implementation.
 
-## NextAuth with Google Provider and Prisma Adapter
+## Lucia Auth with OAuth Providers (Future Enhancement)
 
 ### Overview
 
-Welcome to seamless authentication with NextAuth.js Google Provider and Prisma Adapter! This guide provides step-by-step implementation.
+Lucia Auth supports OAuth providers through custom implementation. This section describes how to add OAuth providers like Google in the future.
 
 ### Prerequisites
 
-Basic understanding of NextAuth.js, Google Cloud, and Prisma required. Refer to documentation: [NextAuth.js](https://next-auth.js.org/), [Google Cloud](https://cloud.google.com/), [Prisma](https://www.prisma.io/).
+Basic understanding of Lucia Auth, OAuth flows, and Prisma required. Refer to documentation: [Lucia Auth](https://lucia-auth.com/), [OAuth 2.0](https://oauth.net/2/).
 
-### Google Cloud Setup
+### OAuth Setup (Conceptual)
 
-1. Open [Google Cloud Console](https://console.cloud.google.com/)
-2. Select/create project
-3. Create OAuth 2.0 credentials
-4. Set authorized redirect URIs:
-   - Production: `https://{YOUR_DOMAIN}/api/auth/callback/google`
-   - Development: `http://localhost:3000/api/auth/callback/google`
-5. Save `CLIENT_ID` and `CLIENT_SECRET` in `.env`:
+1. **Provider Configuration**: Set up OAuth app in provider console (Google, GitHub, etc.)
+2. **Redirect URIs**: Configure callback URLs for your application
+3. **Credentials**: Store client ID and secret securely
 
-```env
-GOOGLE_CLIENT_ID=YOUR_CLIENT_ID_GOES_HERE
-GOOGLE_CLIENT_SECRET=YOUR_CLIENT_SECRET_GOES_HERE
-```
+### Implementation Steps
 
-### Prisma Adapter Setup
-
-**Caution:** Remove `@db.Text` from `prisma/schema.prisma` if using SQLite.
-
-Follow [NextAuth PrismaAdapter documentation](https://next-auth.js.org/adapters/prisma).
-
-**package.json configuration:**
-```json
-"prisma": {
-  "schema": "./src/prisma/schema.prisma"
-}
-```
-
-**Schema configuration** (`src/prisma/schema.prisma`):
-```prisma
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-```
-
-**Environment** (`.env`):
-```env
-DATABASE_URL=file:./dev.db
-```
-
-Modify schema as needed, then run:
-
+1. **Install OAuth library** (if needed):
 ```bash
-npx prisma generate
-pnpm migrate
+pnpm install @lucia-auth/oauth
 ```
 
-View database with:
-```bash
-npx prisma studio
-```
+2. **Configure OAuth provider** in Lucia setup
 
-### Initialize NextAuth.js
+3. **Create OAuth callback handler**
 
-Using Route Handlers in Next.js 13.2+ App Router.
+4. **Update login form** with OAuth buttons
 
-**Route Handler** (`src/app/api/auth/[...nextauth]/route.ts`):
+### Current Status
 
-```typescript
-// Third-party Imports
-import NextAuth from 'next-auth'
-
-// Lib Imports
-import { authOptions } from '@/libs/auth'
-
-const handler = NextAuth(authOptions)
-
-export { handler as GET, handler as POST }
-```
-
-### auth.ts file
-
-Authentication logic in `src/libs/auth.ts`. Customize per project needs.
-
-### providers
-
-Using `GoogleProvider` for Google sign-in. Multiple providers supported.
-
-**Options:**
-- `clientId`: Google Cloud project client ID
-- `clientSecret`: Google Cloud project client secret
-
-Refer to [NextAuth providers documentation](https://next-auth.js.org/configuration/providers).
-
-### secret
-
-Random string for tokens/keys. Set via `NEXTAUTH_SECRET` environment variable.
-
-### session
-
-- **`strategy`**: Session storage ('jwt' or 'database')
-- **`maxAge`**: Idle timeout in seconds
-
-### pages
-
-Custom authentication page URLs.
-
-### callbacks
-
-Control authentication actions.
-
-#### jwt()
-
-Called on JWT creation/update. Add custom parameters.
-
-#### session()
-
-Called on session check. Forward token data to client.
-
-### Login Form
-
-Use `signIn` from `next-auth/react`:
-
-```typescript
-'use client'
-
-// Third-party Imports
-import { signIn } from 'next-auth/react'
-
-const Login = () => {
-  return (
-    <button onClick={() => signIn('google')}>Login with Google</button>
-  )
-}
-
-export default Login
-```
-
-### Extending NextAuth Types for Custom User Fields
-
-For custom fields like `role`, extend NextAuth types.
-
-**Create `next-auth.d.ts`**:
-
-```typescript
-import 'next-auth/jwt'
-import { DefaultSession } from 'next-auth'
-
-declare module 'next-auth/jwt' {
-  type JWT = {
-    role: string
-  }
-}
-
-declare module 'next-auth' {
-  type Session = {
-    user: {
-      role: string
-    } & DefaultSession['user']
-  }
-
-  type User = {
-    role: string
-  }
-}
-```
-
-**Update `src/libs/auth.ts` callbacks**:
-
-```typescript
-callbacks: {
-  async jwt({ token, user }) {
-    if (user) {
-      token.name = user.name
-      token.role = user.role
-    }
-    return token
-  },
-  async session({ session, token }) {
-    if (session.user) {
-      session.user.name = token.name
-      session.user.role = token.role
-    }
-    return session
-  }
-}
-```
-
-**Usage**:
-
-```typescript
-import { useSession } from 'next-auth/react'
-
-const { data: session } = useSession()
-const userRole = session?.user?.role || 'defaultRole'
-```
-
-**Info:** NextAuth customization varies by implementation.
+The current implementation focuses on credentials-based authentication. OAuth providers can be added as future enhancements following Lucia Auth documentation.
 
 ### Useful Links
 
-- [Prisma (SQLite) with Next.js video](https://www.youtube.com/watch?v=KoDtEc8c-iA)
-- [NextAuth with PrismaAdapter (Planetscale) video](https://www.youtube.com/watch?v=7Za4DtcSgOA)
-- [NextAuth with CredentialProvider article](https://next-auth.js.org/configuration/providers/credentials)
+- [Lucia Auth OAuth documentation](https://lucia-auth.com/oauth)
+- [OAuth 2.0 specification](https://oauth.net/2/)
+- [Prisma with Lucia Auth](https://lucia-auth.com/database-adapters/prisma)
 
 ## Securing Page
 
@@ -461,8 +331,8 @@ This guide walks through removing authentication partly or completely from the f
 
 ### Remove Credentials Provider from the full-version
 
-1. **Remove CredentialProvider** from `src/libs/auth.ts`
-2. **Remove** `src/app/api/login` folder
+1. **Remove Lucia configuration** from `src/libs/lucia.ts`
+2. **Remove** `src/app/api/auth` folder
 3. **Update** `handleSubmit` in `src/views/Login.tsx`:
 
 ```typescript
@@ -473,67 +343,23 @@ const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
 
 4. **Remove** unused hooks and imports from `src/views/Login.tsx`
 
-### Remove Google Provider from the full-version
-
-1. **Remove GoogleProvider** and PrismaAdapter from `src/libs/auth.ts`:
-
-```typescript
-// Remove these imports
-- import { PrismaAdapter } from '@auth/prisma-adapter'
-- import { PrismaClient } from '@prisma/client'
-- import type { Adapter } from 'next-auth/adapters'
-
-// Remove these lines
-- const prisma = new PrismaClient()
-- adapter: PrismaAdapter(prisma) as Adapter,
-```
-
-2. **Remove** `src/prisma` folder
-3. **Remove** Google sign-in button from `src/views/Login.tsx`:
-
-```typescript
-// Remove this button
-<button className='block' onClick={() => signIn('google')}>
-  Login with google
-</button>
-```
-
-4. **Remove** environment variables from `.env`:
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
-   - `DATABASE_URL`
-
-5. **Update** `package.json` scripts:
-
-```json
-"scripts": {
-  "postinstall": "npm run build:icons"
-},
-// Remove prisma config
-```
-
-6. **Remove dependencies**:
-```bash
-pnpm remove @auth/prisma-adapter @prisma/client prisma dotenv-cli
-```
-
 ### Remove Authentication completely from the full-version
 
 1. **Remove** files & folders:
-   - `src/app/api/auth`
-   - `src/app/api/login`
-   - `src/libs/auth.ts`
-   - `src/contexts/nextAuthProvider.tsx`
-   - `src/prisma`
-   - `src/hocs/AuthGuard.tsx`
-   - `src/hocs/GuestOnlyRoute.tsx`
-   - `src/components/AuthRedirect.tsx`
+    - `src/app/api/auth`
+    - `src/libs/lucia.ts`
+    - `src/utils/auth.ts`
+    - `src/contexts/AuthProvider.tsx`
+    - `src/prisma`
+    - `src/hocs/AuthGuard.tsx`
+    - `src/hocs/GuestOnlyRoute.tsx`
+    - `src/components/AuthRedirect.tsx`
 
-2. **Remove** signOut & useSession from `src/components/layout/shared/UserDropdown.tsx`
+2. **Remove** authentication logic from `src/components/layout/shared/UserDropdown.tsx`
 
-3. **Remove** signIn from `src/views/Login.tsx`
+3. **Remove** authentication from `src/views/Login.tsx`
 
-4. **Remove** NextAuthProvider from `src/components/Providers.tsx`
+4. **Remove** AuthProvider from `src/components/Providers.tsx`
 
 5. **Remove** `src/app/[lang]/(blank-layout-pages)/(guest-only)/layout.tsx`
 
@@ -542,12 +368,7 @@ pnpm remove @auth/prisma-adapter @prisma/client prisma dotenv-cli
 7. **Move** files from `(private)` to `(dashboard)` and remove empty directory
 
 8. **Remove** environment variables:
-   - `NEXTAUTH_BASEPATH`
-   - `NEXTAUTH_URL`
-   - `NEXTAUTH_SECRET`
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
-   - `DATABASE_URL`
+    - `DATABASE_URL`
 
 9. **Update** `package.json`:
 
@@ -560,7 +381,7 @@ pnpm remove @auth/prisma-adapter @prisma/client prisma dotenv-cli
 
 10. **Remove dependencies**:
 ```bash
-pnpm remove @auth/prisma-adapter @prisma/client next-auth prisma dotenv-cli
+pnpm remove lucia @lucia-auth/adapter-prisma @prisma/client prisma bcryptjs
 ```
 
 ## Add Authentication to Starter-kit
@@ -569,30 +390,26 @@ pnpm remove @auth/prisma-adapter @prisma/client next-auth prisma dotenv-cli
 
 ### Overview
 
-This guide walks through adding authentication partly or completely to your starter-kit using NextAuth.js.
+This guide walks through adding authentication partly or completely to your starter-kit using Lucia Auth.
 
-### With NextAuth
+### With Lucia Auth
 
 #### Prerequisites
 
-1. **Add dependency**:
+1. **Add dependencies**:
 ```bash
-pnpm install next-auth
+pnpm install lucia @lucia-auth/adapter-prisma @prisma/client prisma bcryptjs
 ```
 
-2. **Add environment variables** from full-version's `.env`:
-   - `BASEPATH`
-   - `NEXTAUTH_BASEPATH`
-   - `NEXTAUTH_URL`
-   - `NEXTAUTH_SECRET`
-   - `API_URL`
-   - `NEXT_PUBLIC_API_URL`
+2. **Add environment variables**:
+    - `DATABASE_URL`
 
 3. **Copy files** from full-version:
-   - `src/app/api/auth/[...nextauth]/route.ts`
-   - `src/contexts/nextAuthProvider.tsx`
+    - `src/libs/lucia.ts`
+    - `src/utils/auth.ts`
+    - `src/contexts/AuthProvider.tsx`
 
-4. **Add NextAuthProvider** to `src/components/Providers.tsx` (from full-version)
+4. **Add AuthProvider** to `src/components/Providers.tsx` (from full-version)
 
 #### Folder Structure Changes
 
@@ -627,22 +444,11 @@ Refer to [Securing Page guide](#securing-page) for route details.
 
 For email/password authentication:
 
-1. **Copy** `src/app/api/login` folder from full-version
-2. **Copy** `src/libs/auth.ts` (remove GoogleProvider code if not needed)
-3. **Copy** `src/views/Login.tsx` (remove Google sign-in code if not needed)
+1. **Copy** `src/app/api/auth` folder from full-version
+2. **Copy** `src/prisma/schema.prisma`
+3. **Copy** `src/views/Login.tsx`
 
-**Note:** Remove i18n code from `Login.tsx` if not using internationalization
-
-### Add Google Provider with Prisma Adapter
-
-For Google authentication:
-
-1. **Add dependencies**:
-```bash
-pnpm install @auth/prisma-adapter @prisma/client prisma dotenv-cli
-```
-
-2. **Update package.json**:
+4. **Update package.json**:
 ```json
 "scripts": {
   "migrate": "dotenv -e .env -- npx prisma migrate dev",
@@ -653,34 +459,26 @@ pnpm install @auth/prisma-adapter @prisma/client prisma dotenv-cli
 }
 ```
 
-3. **Add environment variables**:
-   - `GOOGLE_CLIENT_ID`
-   - `GOOGLE_CLIENT_SECRET`
-   - `DATABASE_URL`
-
-4. **Copy files**:
-   - `src/libs/auth.ts` (remove CredentialsProvider if not needed)
-   - `src/views/Login.tsx` (remove email/password code if not needed)
-   - `src/prisma/schema.prisma`
-
 5. **Run commands**:
 ```bash
 pnpm migrate
 npx prisma generate
 ```
 
-**Note:** Remove i18n/validation code from `Login.tsx` if not needed
+**Note:** Remove i18n code from `Login.tsx` if not using internationalization
 
-### Signing Out
+### Database Setup
 
-Copy `signOut` import and usage from full-version's `src/components/layout/shared/UserDropdown.tsx`
+1. **Configure Prisma** with your database
+2. **Run migrations** to create auth tables
+3. **Seed initial data** if needed
 
-### Adding User's Name and Email to User Dropdown
+### Session Management
 
-Copy `useSession` import and usage from full-version's `src/components/layout/shared/UserDropdown.tsx`
+Lucia handles session creation, validation, and cookie management automatically.
 
-### Without NextAuth
+### Without Lucia
 
 Alternative authentication approaches:
-- [Custom Auth Video](https://www.youtube.com/watch?v=DJvM2lSPn6w)
+- [Custom Auth with Next.js](https://nextjs.org/docs/authentication)
 - [Next.js Auth Guide](https://nextjs.org/learn/dashboard-app/adding-authentication)

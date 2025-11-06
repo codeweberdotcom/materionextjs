@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
 import { PrismaClient } from '@prisma/client'
 
-import { authOptions } from '@/libs/auth'
+
 import { checkPermission, isSuperadmin } from '@/utils/permissions'
 
 const prisma = new PrismaClient()
@@ -50,9 +51,9 @@ function parseRolePermissions(role: any) {
 }
 
 // POST - Create a new role (admin only)
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
 
     // Check permission for creating roles (skip for superadmin)
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 
@@ -118,7 +119,7 @@ return NextResponse.json(
 }
 
 // GET - Get all roles (admin only)
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const clearCache = url.searchParams.get('clearCache')
@@ -130,9 +131,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: 'Cache cleared' })
     }
 
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.email) {
+    if (!user?.email) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -141,7 +142,7 @@ export async function GET(request: Request) {
 
     // Check permission for reading roles (skip for superadmin)
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 

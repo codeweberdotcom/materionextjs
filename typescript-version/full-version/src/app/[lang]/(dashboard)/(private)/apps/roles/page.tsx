@@ -1,5 +1,5 @@
 // Next Imports
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 import { redirect } from 'next/navigation'
 
 // Component Imports
@@ -9,7 +9,7 @@ import Roles from '@views/apps/roles'
 import { getUserData } from '@/app/server/actions'
 
 // Config Imports
-import { authOptions } from '@/libs/auth'
+
 
 // Util Imports
 import { checkPermission, isSuperadmin } from '@/utils/permissions'
@@ -34,14 +34,14 @@ import { checkPermission, isSuperadmin } from '@/utils/permissions'
 
 const RolesApp = async () => {
   // Check permissions on server side
-  const session = await getServerSession(authOptions)
+  const { user } = await requireAuth()
 
-  if (!session?.user) {
+  if (!user) {
     redirect('/login')
   }
 
   // If user is superadmin, allow access
-  if (!isSuperadmin(session.user as any) && !checkPermission(session.user as any, 'roleManagement', 'read')) {
+  if (!isSuperadmin(user as any) && !checkPermission(user as any, 'roleManagement', 'read')) {
     redirect('/not-authorized')
   }
 

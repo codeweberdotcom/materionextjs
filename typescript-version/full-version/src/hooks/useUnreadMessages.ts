@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthProvider'
 import { useSocket } from './useSocket'
 
 export const useUnreadMessages = () => {
-  const { data: session } = useSession()
-  const { socket } = useSocket(session?.user?.id || null)
+  const { user, session } = useAuth()
+  const { socket } = useSocket(user?.id || null)
   const [unreadCount, setUnreadCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
 
   // Function to fetch unread messages count from API
   const fetchUnreadCount = useCallback(async () => {
-    if (!session?.user?.id) return
+    if (!user?.id) return
 
     try {
       setIsLoading(true)
@@ -24,14 +24,14 @@ export const useUnreadMessages = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [session?.user?.id])
+  }, [user?.id])
 
   // Fetch unread count on mount and when session changes
   useEffect(() => {
-    if (session?.user?.id) {
+    if (user?.id) {
       fetchUnreadCount()
     }
-  }, [session?.user?.id, fetchUnreadCount])
+  }, [user?.id, fetchUnreadCount])
 
   // Listen for real-time updates via Socket.IO
   useEffect(() => {
@@ -57,37 +57,37 @@ export const useUnreadMessages = () => {
   // Periodic refresh every 60 seconds as fallback
   useEffect(() => {
     const interval = setInterval(() => {
-      if (session?.user?.id && !isLoading) {
+      if (user?.id && !isLoading) {
         fetchUnreadCount()
       }
     }, 60000) // 60 seconds
 
     return () => clearInterval(interval)
-  }, [session?.user?.id, isLoading, fetchUnreadCount])
+  }, [user?.id, isLoading, fetchUnreadCount])
 
   // Update when window gets focus
   useEffect(() => {
     const handleFocus = () => {
-      if (session?.user?.id) {
+      if (user?.id) {
         fetchUnreadCount()
       }
     }
 
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
-  }, [session?.user?.id, fetchUnreadCount])
+  }, [user?.id, fetchUnreadCount])
 
   // Update when page becomes visible (user returns from another tab)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && session?.user?.id) {
+      if (!document.hidden && user?.id) {
         fetchUnreadCount()
       }
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [session?.user?.id, fetchUnreadCount])
+  }, [user?.id, fetchUnreadCount])
 
   return {
     unreadCount,

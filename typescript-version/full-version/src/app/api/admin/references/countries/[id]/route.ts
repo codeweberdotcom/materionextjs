@@ -1,9 +1,9 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
-import { authOptions } from '@/libs/auth'
+
 import { checkPermission } from '@/utils/permissions'
 
 // Create Prisma client instance
@@ -38,7 +38,7 @@ return NextResponse.json(
     console.log('Received update data:', { name, code, states, isActive })
 
     // Check authentication after reading the body
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -48,7 +48,7 @@ return NextResponse.json(
     }
 
     // Check permission for updating countries
-    if (!checkPermission(session.user as any, 'countryManagement', 'update')) {
+    if (!checkPermission(user as any, 'countryManagement', 'update')) {
       return NextResponse.json(
         { message: 'Insufficient permissions' },
         { status: 403 }
@@ -140,7 +140,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -150,7 +150,7 @@ export async function PATCH(
     }
 
     // Check permission for updating countries (status toggle)
-    if (!checkPermission(session.user as any, 'countryManagement', 'update')) {
+    if (!checkPermission(user as any, 'countryManagement', 'update')) {
       return NextResponse.json(
         { message: 'Insufficient permissions' },
         { status: 403 }
@@ -196,7 +196,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
     if (!session?.user?.email) {
       return NextResponse.json(
@@ -206,7 +206,7 @@ export async function DELETE(
     }
 
     // Check permission for deleting countries
-    if (!checkPermission(session.user as any, 'countryManagement', 'delete')) {
+    if (!checkPermission(user as any, 'countryManagement', 'delete')) {
       return NextResponse.json(
         { message: 'Insufficient permissions' },
         { status: 403 }

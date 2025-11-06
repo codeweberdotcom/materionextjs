@@ -36,7 +36,7 @@ The chat system is a real-time messaging platform built with Next.js, WebSocket 
 ### GET `/api/chat/last-messages`
 Get last messages for current authenticated user.
 
-**Authentication:** Required (NextAuth session)
+**Authentication:** Required (Lucia session)
 
 **Response:**
 ```json
@@ -299,7 +299,7 @@ type ChatState = {
 ## 🛡️ Security Features
 
 ### Authentication
-- NextAuth.js session validation
+- Lucia Auth session validation
 - User ID verification on all endpoints
 - Room access control (only participants)
 
@@ -340,7 +340,7 @@ dispatch(toggleMute(contactId))
 ### Core Workflow for AI Agents
 
 1. **Authentication Check**
-   - Ensure user is authenticated via NextAuth session
+   - Ensure user is authenticated via Lucia session
    - All chat endpoints require valid session
 
 2. **Rate Limit Management**

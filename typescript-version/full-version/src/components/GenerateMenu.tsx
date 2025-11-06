@@ -37,8 +37,7 @@ export const GenerateVerticalMenu = ({ menuData, locale }: { menuData: VerticalM
       return null
     }
 
-    console.log('GenerateVerticalMenu: rendering menu items, count:', data.length)
-    console.log('GenerateVerticalMenu: menu data:', JSON.stringify(data, null, 2))
+    console.log('🔍 [MENU] Rendering menu items, count:', data.length)
 
     return data.map((item: VerticalMenuDataType, index: number) => {
       const menuSectionItem = item as VerticalSectionDataType

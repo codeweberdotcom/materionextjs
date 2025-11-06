@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthProvider';
 
 export const useSocketNew = () => {
   const [chatSocket, setChatSocket] = useState<Socket | null>(null);
   const [notificationSocket, setNotificationSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
-  const { data: session } = useSession();
+  const { user, session } = useAuth();
 
-  const userId = session?.user?.id;
+  const userId = user?.id;
 
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!user?.id) return;
 
     // Получаем JWT токен из session
     const token = (session as any)?.accessToken || '';
@@ -71,7 +71,7 @@ export const useSocketNew = () => {
       setNotificationSocket(null);
       setIsConnected(false);
     };
-  }, [session?.user?.id]);
+  }, [user?.id]);
 
   return {
     chatSocket,

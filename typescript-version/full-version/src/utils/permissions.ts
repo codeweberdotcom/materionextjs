@@ -1,4 +1,4 @@
-import type { User } from 'next-auth'
+import type { User } from '@/libs/auth'
 
 export interface Role {
   id: string
@@ -62,21 +62,30 @@ export function getUserPermissions(user: UserWithRole | null): Permissions {
  * Check if a user has a specific permission for a module
  */
 export function checkPermission(user: UserWithRole | null, module: string, action: string): boolean {
+  console.log('🔍 [PERMISSIONS] Checking permission:', { module, action, role: user?.role?.name })
+
   if (!user?.role) {
+    console.log('❌ [PERMISSIONS] No user or role found')
     return false
   }
 
   // If permissions are 'all', allow everything
   if (user.role.permissions === 'all' || getUserPermissions(user) === 'all') {
+    console.log('✅ [PERMISSIONS] All permissions granted')
     return true
   }
 
   const permissions = getUserPermissions(user)
+  console.log('🔍 [PERMISSIONS] Parsed permissions:', permissions)
 
   if (typeof permissions === 'object' && permissions !== null && typeof permissions === 'object') {
-    return permissions[module]?.includes(action) || false
+    const hasPermission = permissions[module]?.includes(action) || false
+    console.log('🔍 [PERMISSIONS] Module permissions:', permissions[module])
+    console.log('🔍 [PERMISSIONS] Has permission:', hasPermission)
+    return hasPermission
   }
 
+  console.log('❌ [PERMISSIONS] Invalid permissions format')
   return false
 }
 

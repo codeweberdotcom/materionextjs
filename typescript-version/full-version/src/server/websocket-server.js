@@ -4,6 +4,7 @@ const next = require('next');
 const { Server } = require('socket.io');
 const { PrismaClient } = require('@prisma/client');
 const { RateLimiterMemory } = require('rate-limiter-flexible');
+const { socketLogger, rateLimitLogger, databaseLogger } = require('../lib/logger');
 
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
@@ -28,7 +29,7 @@ app.prepare().then(() => {
   });
 
 io.on('connection', (socket) => {
-  // User connected
+  socketLogger.connection(socket.id, socket.userId, socket.handshake.address, socket.handshake.headers['user-agent']);
 
   // User joins
   socket.on('join', async (userId) => {
@@ -53,9 +54,9 @@ io.on('connection', (socket) => {
         socket.join(`room_${room.id}`);
       });
 
-      // User joined with rooms
+      socketLogger.joinRoom(socket.id, userId, `user_${userId}`);
     } catch (error) {
-      console.error('Error joining user:', error);
+      socketLogger.error('Error joining user', { userId, socketId: socket.id, error: error.message });
     }
   });
 
@@ -64,11 +65,11 @@ io.on('connection', (socket) => {
     try {
       const { roomId, message, senderId } = data;
 
-      console.log('📨 [SOCKET] sendMessage received:', { roomId, senderId, messageLength: message.length });
+      socketLogger.message(socket.id, senderId, roomId, message.length);
 
       // Check rate limit using rate-limiter-flexible
       try {
-        console.log('🔍 [SOCKET] Checking rate limit for user:', senderId);
+        socketLogger.debug('Checking rate limit for user', { userId: senderId, socketId: socket.id });
 
         // Create rate limiter instance for chat messages
         const chatLimiter = new RateLimiterMemory({
@@ -80,17 +81,12 @@ io.on('connection', (socket) => {
         // Consume a point for this message
         const rateLimitResult = await chatLimiter.consume(senderId);
 
-        console.log('✅ [SOCKET] Rate limit check passed for user:', senderId, {
-          remainingPoints: rateLimitResult.remainingPoints,
-          msBeforeNext: rateLimitResult.msBeforeNext
-        });
+        rateLimitLogger.limitApplied(senderId, socket.handshake.address, rateLimitResult.remainingPoints, new Date(Date.now() + rateLimitResult.msBeforeNext));
       } catch (rejRes) {
         if (rejRes instanceof Error) {
-          console.log('❌ [SOCKET] Rate limit check error:', rejRes.message);
+          rateLimitLogger.error('Rate limit check error', { userId: senderId, error: rejRes.message });
         } else {
-          console.log('❌ [SOCKET] Rate limit exceeded for user:', senderId, {
-            msBeforeNext: rejRes.msBeforeNext
-          });
+          rateLimitLogger.limitExceeded(senderId, socket.handshake.address, socket.id, rejRes.msBeforeNext);
 
           socket.emit('rateLimitExceeded', {
             error: 'Rate limit exceeded',
@@ -124,17 +120,9 @@ io.on('connection', (socket) => {
         createdAt: newMessage.createdAt
       });
 
-      // Message sent
-
-      // Update unread message count for recipient
-      try {
-        // For now, just log that we would update the count
-        // Counter update disabled
-      } catch (error) {
-        console.error(`❌ Ошибка обновления счетчика:`, error);
-      }
+      databaseLogger.queryExecuted('INSERT INTO Message', Date.now() - startTime, senderId);
     } catch (error) {
-      console.error('Error sending message:', error);
+      socketLogger.error('Error sending message', { socketId: socket.id, userId: senderId, roomId, error: error.message });
     }
   });
 
@@ -170,11 +158,11 @@ io.on('connection', (socket) => {
 
         if (socket1) {
           io.sockets.sockets.get(socket1)?.join(`room_${room.id}`);
-          // User joined room
+          socketLogger.joinRoom(socket1, user1Id, `room_${room.id}`);
         }
         if (socket2) {
           io.sockets.sockets.get(socket2)?.join(`room_${room.id}`);
-          // User joined room
+          socketLogger.joinRoom(socket2, user2Id, `room_${room.id}`);
         }
       } else {
         // Existing room found
@@ -331,7 +319,7 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     if (socket.userId) {
       activeUsers.delete(socket.userId);
-      // User disconnected
+      socketLogger.disconnection(socket.id, socket.userId);
     }
   });
 });

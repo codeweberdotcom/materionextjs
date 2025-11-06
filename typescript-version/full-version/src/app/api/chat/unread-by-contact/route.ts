@@ -1,23 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+import { requireAuth } from '@/utils/auth'
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const { user } = await requireAuth(request)
 
     // Get user's chat rooms
     const userRooms = await (prisma as any).chatRoom.findMany({
       where: {
         OR: [
-          { user1Id: session.user.id },
-          { user2Id: session.user.id }
+          { user1Id: user.id },
+          { user2Id: user.id }
         ]
       }
     })
@@ -26,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     // For each room, count unread messages from the other user
     for (const room of userRooms) {
-      const otherUserId = room.user1Id === session.user.id ? room.user2Id : room.user1Id
+      const otherUserId = room.user1Id === user.id ? room.user2Id : room.user1Id
 
       const unreadCount = await (prisma as any).message.count({
         where: {

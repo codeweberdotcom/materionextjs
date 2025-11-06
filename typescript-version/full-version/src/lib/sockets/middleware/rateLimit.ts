@@ -1,6 +1,6 @@
 import { RateLimiterMemory } from 'rate-limiter-flexible';
 import { ExtendedError } from 'socket.io';
-import logger from '../../logger';
+import { rateLimitLogger } from '../../logger';
 import { TypedSocket, RateLimitConfig } from '../types/common';
 
 // Глобальный rate limiter для чата
@@ -31,12 +31,7 @@ export const rateLimitChat = async (
 
     const rateLimitResult = await chatRateLimiter.consume(userId);
 
-    logger.debug('Chat rate limit check', {
-      userId,
-      socketId: socket.id,
-      remainingPoints: rateLimitResult.remainingPoints,
-      msBeforeNext: rateLimitResult.msBeforeNext
-    });
+    rateLimitLogger.limitApplied(userId, socket.handshake.address, rateLimitResult.remainingPoints, new Date(Date.now() + rateLimitResult.msBeforeNext));
 
     next();
   } catch (rejRes) {

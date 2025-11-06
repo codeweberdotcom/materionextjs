@@ -5,9 +5,9 @@ import path from 'path'
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
-import { authOptions } from '@/libs/auth'
+
 import { prisma } from '@/libs/prisma'
 
 
@@ -40,20 +40,13 @@ async function exportTranslationsToJSON() {
 }
 
 // GET - Get all translations (admin only)
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    const { user, session } = await requireAuth(request)
 
     // Check if user is admin
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 
@@ -87,18 +80,11 @@ return NextResponse.json(
 // POST - Create new translation (admin only)
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    const { user, session } = await requireAuth(request)
 
     // Check if user is admin
     const currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { email: user.email },
       include: { role: true }
     })
 

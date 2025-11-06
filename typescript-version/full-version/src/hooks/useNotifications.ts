@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthProvider'
 import { useSocket } from './useSocket'
 import { useUnreadMessages } from './useUnreadMessages'
 import { useDispatch, useSelector } from 'react-redux'
@@ -12,8 +12,8 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<NotificationsType[]>([])
   const [loading, setLoading] = useState(true)
   const [previousUserId, setPreviousUserId] = useState<string | null>(null)
-  const { data: session } = useSession()
-  const { socket, isConnected } = useSocket(session?.user?.id || null)
+  const { user, session } = useAuth()
+  const { socket, isConnected } = useSocket(user?.id || null)
   const { unreadCount: chatUnreadCount } = useUnreadMessages()
   const dictionary = useTranslation()
 
@@ -53,7 +53,7 @@ export const useNotifications = () => {
 
   // Load notifications from API
   const loadNotifications = async () => {
-    if (!session?.user?.id) return
+    if (!user?.id) return
 
     try {
       const response = await fetch('/api/notifications')
@@ -79,7 +79,7 @@ export const useNotifications = () => {
           avatarSkin: notification.avatarSkin,
         }))
         // Filter out notifications that were cleared for this user
-        const userId = session?.user?.id
+        const userId = user?.id
         const clearedNotifications = userId ? getClearedNotifications(userId) : new Set<string>()
         const filteredNotifications = mappedNotifications.filter(notification =>
           !clearedNotifications.has((notification as any).id)
@@ -150,10 +150,10 @@ export const useNotifications = () => {
           .filter(notification => !(notification as any).id?.startsWith('virtual-'))
           .map(notification => (notification as any).id)
 
-        if (session?.user?.id) {
-          const currentCleared = getClearedNotifications(session.user.id)
+        if (user?.id) {
+          const currentCleared = getClearedNotifications(user?.id)
           const newCleared = new Set([...currentCleared, ...currentNotificationIds])
-          setClearedNotifications(session.user.id, newCleared)
+          setClearedNotifications(user?.id, newCleared)
         }
 
         // Remove cleared notifications from current state (keep virtual chat notification)
@@ -196,11 +196,11 @@ export const useNotifications = () => {
   // Load notifications on mount and when user changes
   useEffect(() => {
     loadNotifications()
-  }, [session?.user?.id])
+  }, [user?.id])
 
   // Clear localStorage when user logs out (not on page reload)
   useEffect(() => {
-    const currentUserId = session?.user?.id
+    const currentUserId = user?.id
 
     // If we had a user before and now don't have one, user logged out
     if (previousUserId && !currentUserId) {
@@ -209,7 +209,7 @@ export const useNotifications = () => {
 
     // Update previous user ID
     setPreviousUserId(currentUserId || null)
-  }, [session?.user?.id, previousUserId])
+  }, [user?.id, previousUserId])
 
   // Create virtual chat notification - only show if there are unread messages
   const chatNotification: NotificationsType & { id: string; message?: string; type?: string; status?: string; createdAt?: string; updatedAt?: string; userId?: string } | null = chatUnreadCount > 0 ? {
@@ -220,7 +220,7 @@ export const useNotifications = () => {
     status: 'unread',
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    userId: session?.user?.id,
+    userId: user?.id,
     subtitle: dictionary?.navigation?.unreadChatMessages ? dictionary.navigation.unreadChatMessages.replace('${count}', chatUnreadCount.toString()) : `You have ${chatUnreadCount} unread chat messages`,
     time: 'только что',
     read: false,

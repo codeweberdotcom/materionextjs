@@ -1,8 +1,6 @@
 // Next Imports
 import { redirect } from 'next/navigation'
-
-// Third-party Imports
-import { getServerSession } from 'next-auth'
+import { cookies } from 'next/headers'
 
 // Type Imports
 import type { ChildrenType } from '@core/types'
@@ -13,9 +11,11 @@ import themeConfig from '@configs/themeConfig'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/i18n'
+import { lucia } from '@/libs/lucia'
 
 const GuestOnlyRoute = async ({ children, lang }: ChildrenType & { lang: Locale }) => {
-  const session = await getServerSession()
+  const sessionId = (await cookies()).get(lucia.sessionCookieName)?.value
+  const { session } = await lucia.validateSession(sessionId || '')
 
   if (session) {
     redirect(getLocalizedUrl(themeConfig.homePageUrl, lang))

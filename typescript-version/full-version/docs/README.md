@@ -40,7 +40,7 @@ Welcome to the Materio MUI Next.js Admin Template documentation! This comprehens
 
 - **Modern Stack**: Next.js 15, React 18, Material-UI v6, TypeScript
 - **Multi-language**: Built-in i18n support with RTL languages
-- **Authentication**: NextAuth.js with multiple providers
+- **Authentication**: Lucia Auth v3.x with session management
 - **Database**: Prisma ORM with SQLite/PostgreSQL support
 - **Real-time**: Socket.io integration for chat features
 - **Email**: Template-based email system with SMTP

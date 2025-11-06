@@ -1,12 +1,12 @@
 import * as jwt from 'jsonwebtoken';
 import { ExtendedError } from 'socket.io';
-import logger from '../../logger';
+import { authLogger } from '../../logger';
 import { User, TypedSocket, Permission } from '../types/common';
 
 // JWT секрет (должен быть в env)
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-here';
 
-logger.info('JWT Secret configured', {
+authLogger.info('JWT Secret configured', {
   hasSecret: !!process.env.NEXTAUTH_SECRET,
   secretLength: process.env.NEXTAUTH_SECRET?.length || 0,
   usingFallback: !process.env.NEXTAUTH_SECRET
@@ -27,7 +27,7 @@ export const authenticateSocket = async (
     const token = socket.handshake.auth?.token as string ||
                   (socket.handshake.query as any)?.token as string;
 
-    logger.info('Socket authentication attempt', {
+    authLogger.info('Socket authentication attempt', {
       socketId: socket.id,
       hasAuthToken: !!socket.handshake.auth?.token,
       hasQueryToken: !!(socket.handshake.query as any)?.token,
@@ -35,21 +35,21 @@ export const authenticateSocket = async (
     });
 
     if (!token) {
-      logger.warn('Socket connection attempt without token', {
+      authLogger.warn('Socket connection attempt without token', {
         socketId: socket.id,
         ip: socket.handshake.address
       });
       return next(new Error('Authentication token required'));
     }
 
-    logger.info('Token received for verification', {
+    authLogger.info('Token received for verification', {
       socketId: socket.id,
       tokenLength: token.length,
       ip: socket.handshake.address
     });
 
     // Верификация JWT токена
-    logger.info('Attempting JWT verification', {
+    authLogger.info('Attempting JWT verification', {
       socketId: socket.id,
       secretLength: JWT_SECRET.length,
       ip: socket.handshake.address
@@ -57,7 +57,7 @@ export const authenticateSocket = async (
 
     const decoded = jwt.verify(token, JWT_SECRET) as any;
 
-    logger.info('JWT token decoded successfully', {
+    authLogger.info('JWT token decoded successfully', {
       socketId: socket.id,
       decodedId: decoded.id,
       decodedRole: decoded.role,
@@ -65,7 +65,7 @@ export const authenticateSocket = async (
     });
 
     if (!decoded || !decoded.id) {
-      logger.warn('Invalid JWT token', {
+      authLogger.warn('Invalid JWT token', {
         socketId: socket.id,
         ip: socket.handshake.address
       });
@@ -92,7 +92,7 @@ export const authenticateSocket = async (
 
     socket.userId = user.id;
 
-    logger.info('Socket authenticated successfully', {
+    authLogger.info('Socket authenticated successfully', {
       socketId: socket.id,
       userId: user.id,
       role: user.role,
@@ -101,7 +101,7 @@ export const authenticateSocket = async (
 
     next();
   } catch (error) {
-    logger.error('Socket authentication failed', {
+    authLogger.error('Socket authentication failed', {
       socketId: socket.id,
       error: error instanceof Error ? error.message : 'Unknown error',
       ip: socket.handshake.address
@@ -135,7 +135,7 @@ function getDefaultPermissions(role: string): string[] {
 export const requirePermission = (permission: string) => {
   return (socket: TypedSocket, next: (err?: ExtendedError) => void) => {
     if (!socket.data?.authenticated) {
-      logger.warn('Permission check failed: not authenticated', {
+      authLogger.warn('Permission check failed: not authenticated', {
         socketId: socket.id,
         userId: socket.userId
       });
@@ -144,7 +144,7 @@ export const requirePermission = (permission: string) => {
 
     const userPermissions = socket.data.user.permissions;
     if (!userPermissions.includes(permission as Permission)) {
-      logger.warn('Permission check failed: insufficient permissions', {
+      authLogger.warn('Permission check failed: insufficient permissions', {
         socketId: socket.id,
         userId: socket.userId,
         requiredPermission: permission,
@@ -174,7 +174,7 @@ export const requireRole = (requiredRole: string) => {
     const requiredRoleIndex = roleHierarchy.indexOf(requiredRole);
 
     if (userRoleIndex < requiredRoleIndex) {
-      logger.warn('Role check failed: insufficient role', {
+      authLogger.warn('Role check failed: insufficient role', {
         socketId: socket.id,
         userId: socket.userId,
         userRole,
@@ -191,7 +191,7 @@ export const requireRole = (requiredRole: string) => {
 // Middleware для логирования активности
 export const logActivity = (eventName: string) => {
   return (socket: TypedSocket, next: (err?: ExtendedError) => void) => {
-    logger.debug('Socket activity', {
+    authLogger.debug('Socket activity', {
       socketId: socket.id,
       userId: socket.userId,
       event: eventName,

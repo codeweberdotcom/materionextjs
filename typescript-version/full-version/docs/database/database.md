@@ -408,7 +408,7 @@ model Account {
 
 ### Session Model
 
-Active user sessions for NextAuth.js.
+Active user sessions for Lucia Auth v3.x.
 
 ```prisma
 model Session {

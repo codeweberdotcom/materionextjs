@@ -4,11 +4,11 @@ import path from 'path'
 
 import { NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
 import { testSmtpConnection } from '@/utils/email'
 
-import { authOptions } from '@/libs/auth'
+
 import { checkPermission } from '@/utils/permissions'
 
 // Simple settings storage (in production, use database)
@@ -52,9 +52,9 @@ const saveStoredSettings = (settings: any) => {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(req)
 
-    if (!session || !checkPermission(session.user, 'smtpManagement', 'update')) {
+    if (!user || !checkPermission(user, 'smtpManagement', 'update')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -105,11 +105,11 @@ return NextResponse.json(
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(req)
 
-    if (!session || !checkPermission(session.user, 'smtpManagement', 'read')) {
+    if (!user || !checkPermission(user, 'smtpManagement', 'read')) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }

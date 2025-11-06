@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+import { lucia } from '@/libs/lucia'
 import { checkPermission, isSuperadmin, getUserPermissions } from '@/utils/permissions'
 
 // Define protected routes and required permissions
@@ -40,8 +39,9 @@ export async function middleware(request: NextRequest) {
   }
 
   try {
-    // Get session
-    const session = await getServerSession(authOptions)
+    // Get session from Lucia
+    const sessionId = lucia.readSessionCookie(request.headers.get('cookie') ?? '')
+    const { session } = await lucia.validateSession(sessionId || '')
 
     // If no session, redirect to login
     if (!session) {

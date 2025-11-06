@@ -15,7 +15,7 @@ import IconButton from '@mui/material/IconButton'
 // Third-party Imports
 import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthProvider'
 import Skeleton from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
 
@@ -74,9 +74,9 @@ type RenderChatType = {
 }
 
 // Render contacts list (all users except current)
-const renderContacts = (props: RenderChatType & { session: any; socket: any; unreadByContact: { [contactId: string]: number }; navigation: any }) => {
+const renderContacts = (props: RenderChatType & { session: any; socket: any; unreadByContact: { [contactId: string]: number }; navigation: any; user: any }) => {
   // Props
-  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen, session, socket, unreadByContact, navigation } = props
+  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen, session, socket, unreadByContact, navigation, user } = props
 
   return chatStore.contacts.map(contact => {
     const isContactActive = chatStore.activeUser?.id === contact.id
@@ -100,7 +100,7 @@ const renderContacts = (props: RenderChatType & { session: any; socket: any; unr
           'text-[var(--mui-palette-primary-contrastText)]': isContactActive
         })}
         onClick={() => {
-          if (socket && session?.user?.id) {
+          if (socket && user?.id) {
             // Listen for room data response
             const handleRoomData = (data: any) => {
               socket.off('roomData', handleRoomData)
@@ -110,7 +110,7 @@ const renderContacts = (props: RenderChatType & { session: any; socket: any; unr
 
             // Emit to socket to get or create room between current user and selected contact
             socket.emit('getOrCreateRoom', {
-              user1Id: session.user.id,
+              user1Id: user.id,
               user2Id: contact.id.toString()
             })
           }
@@ -181,8 +181,8 @@ const SidebarLeft = (props: Props) => {
   } = props
 
   // Hooks
-  const { data: session } = useSession()
-  const { socket } = useSocket(session?.user?.id || null)
+  const { user, session } = useAuth()
+  const { socket } = useSocket(user?.id || null)
   const { unreadByContact } = useUnreadByContact()
   const { navigation } = useTranslation()
 
@@ -333,7 +333,8 @@ const SidebarLeft = (props: Props) => {
                 session: currentSession,
                 socket,
                 unreadByContact,
-                navigation: currentNavigation
+                navigation: currentNavigation,
+                user
               })
             )}
           </ul>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+import { requireAuth } from '@/utils/auth'
+
 import { prisma } from '@/libs/prisma'
 
 export async function PATCH(
@@ -8,9 +8,9 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.id) {
+    if (!user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -19,7 +19,7 @@ export async function PATCH(
     const notification = await prisma.notification.updateMany({
       where: {
         id: params.id,
-        userId: session.user.id, // Ensure user can only update their own notifications
+        userId: user.id, // Ensure user can only update their own notifications
       },
       data: {
         status: status || 'read',
@@ -42,16 +42,16 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.id) {
+    if (!user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const notification = await prisma.notification.deleteMany({
       where: {
         id: params.id,
-        userId: session.user.id, // Ensure user can only delete their own notifications
+        userId: user.id, // Ensure user can only delete their own notifications
       },
     })
 

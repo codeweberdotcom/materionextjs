@@ -1,28 +1,28 @@
 import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
 import { PrismaClient } from '@prisma/client'
 
-import { authOptions } from '@/libs/auth'
+
 
 const prisma = new PrismaClient()
 
 // GET - Fetch current user profile data
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.id) {
+    if (!user.id) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+    const userProfile = await prisma.user.findUnique({
+      where: { id: user.id },
       include: {
         role: true
       }
@@ -38,7 +38,7 @@ export async function GET() {
     // Map database roles to expected UI roles
     let uiRole = 'subscriber'
 
-    switch (user.role?.name) {
+    switch (userProfile.role?.name) {
       case 'admin':
         uiRole = 'admin'
         break
@@ -53,19 +53,19 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      id: user.id,
-      fullName: user.name || 'Unknown User',
-      email: user.email,
+      id: userProfile.id,
+      fullName: userProfile.name || 'Unknown User',
+      email: userProfile.email,
       role: uiRole,
       company: 'N/A',
       contact: 'N/A',
-      username: user.email.split('@')[0],
-      country: user.country || 'russia',
-      language: user.language || 'ru',
-      currency: user.currency || 'RUB',
+      username: userProfile.email.split('@')[0],
+      country: userProfile.country || 'russia',
+      language: userProfile.language || 'ru',
+      currency: userProfile.currency || 'RUB',
       currentPlan: 'basic',
       status: 'active',
-      avatar: user.image || '',
+      avatar: userProfile.image || '',
       avatarColor: 'primary'
     })
   } catch (error) {
@@ -81,9 +81,9 @@ return NextResponse.json(
 // PUT - Update current user profile data
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.id) {
+    if (!user.id) {
       return NextResponse.json(
         { message: 'Unauthorized' },
         { status: 401 }
@@ -95,7 +95,7 @@ export async function PUT(request: NextRequest) {
 
     // Find the current user
     const currentUser = await prisma.user.findUnique({
-      where: { id: session.user.id }
+      where: { id: user.id }
     })
 
     if (!currentUser) {

@@ -5,9 +5,9 @@ import UserList from '@views/apps/user/list'
 import { getUserData } from '@/app/server/actions'
 
 // Util Imports
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 import { redirect } from 'next/navigation'
-import { authOptions } from '@/libs/auth'
+
 import { checkPermission } from '@/utils/permissions'
 
 /**
@@ -30,8 +30,8 @@ import { checkPermission } from '@/utils/permissions'
 
 const UserListApp = async () => {
   // Check permissions
-  const session = await getServerSession(authOptions)
-  if (!session?.user || !checkPermission(session.user as any, 'userManagement', 'read')) {
+  const { user } = await requireAuth()
+  if (!user || !checkPermission(user as any, 'userManagement', 'read')) {
     redirect('/not-authorized')
   }
 

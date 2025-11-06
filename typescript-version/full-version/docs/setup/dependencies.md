@@ -36,8 +36,8 @@ The project supports multiple package managers:
 
 | Package | Version | Description |
 |---------|---------|-------------|
-| `next-auth` | `4.24.11` | Authentication for Next.js |
-| `@auth/prisma-adapter` | `2.7.4` | Prisma adapter for NextAuth |
+| `lucia` | `3.2.2` | Authentication library |
+| `@lucia-auth/adapter-prisma` | `4.0.1` | Prisma adapter for Lucia |
 
 ### Database & ORM
 

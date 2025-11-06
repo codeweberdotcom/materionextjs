@@ -20,7 +20,13 @@ const AuthRedirect = ({ lang }: { lang: Locale }) => {
   const login = `/${lang}/login`
   const homePage = getLocalizedUrl(themeConfig.homePageUrl, lang)
 
-  return redirect(pathname === login ? login : pathname === homePage ? login : redirectUrl)
+  // Use redirect only on client side to avoid hydration issues
+  if (typeof window !== 'undefined') {
+    redirect(pathname === login ? login : pathname === homePage ? login : redirectUrl)
+  }
+
+  // Return null for server-side rendering
+  return null
 }
 
 export default AuthRedirect

@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+import { requireAuth } from '@/utils/auth'
+
 import { prisma } from '@/libs/prisma'
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    if (!session?.user?.id) {
+    if (!user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get notifications for the current user (exclude archived)
     const notifications = await prisma.notification.findMany({
       where: {
-        userId: session.user.id,
+        userId: user.id,
         status: {
           not: 'archived' // Don't show archived notifications in dropdown
         }
@@ -57,9 +60,8 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-
-    if (!session?.user?.id) {
+    const { user } = await requireAuth(request)
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -72,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     const notification = await prisma.notification.create({
       data: {
-        userId: session.user.id,
+        userId: user.id,
         title,
         message,
         type: type || 'system',

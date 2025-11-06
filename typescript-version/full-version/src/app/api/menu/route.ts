@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+import type { NextRequest } from 'next/server'
+import { requireAuth } from '@/utils/auth'
 
-import { authOptions } from '@/libs/auth'
+
 import { checkPermission, isSuperadmin, getUserPermissions } from '@/utils/permissions'
 import menuData from '@/data/navigation/verticalMenuData'
 import { getDictionary } from '@/utils/getDictionary'
@@ -102,16 +103,14 @@ function serializeMenuItem(item: any): any {
   return serialized
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   console.log('=== API MENU GET REQUEST STARTED ===')
   try {
-    const session = await getServerSession(authOptions)
+    const { user, session } = await requireAuth(request)
 
     if (!session?.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    const user = session.user as any
 
     // Get locale from query params or default to 'en'
     const url = new URL(request.url)

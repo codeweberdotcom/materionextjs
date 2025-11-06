@@ -55,7 +55,7 @@ graph TB
 | **State Management** | Redux Toolkit | Global state management |
 | **Backend** | Next.js API Routes | RESTful API endpoints |
 | **Database** | Prisma + SQLite | ORM and database |
-| **Authentication** | NextAuth.js | Session management, OAuth |
+| **Authentication** | Lucia Auth v3.x | Session management, security |
 | **Real-time** | Socket.io | WebSocket communication |
 | **Email** | Nodemailer | Email sending |
 | **Internationalization** | next-intl | Multi-language support |
@@ -89,7 +89,7 @@ src/
 │   ├── useChat.ts              # Chat functionality
 │   └── useSocket.ts            # Socket.io integration
 ├── libs/                        # Library configurations
-│   ├── auth.ts                  # NextAuth configuration
+│   ├── lucia.ts                 # Lucia Auth configuration
 │   ├── prisma.ts                # Prisma client
 │   └── styles/                  # Component style wrappers
 ├── prisma/                      # Database layer
@@ -120,7 +120,7 @@ src/
 sequenceDiagram
     participant U as User
     participant F as Frontend
-    participant A as NextAuth
+    participant L as Lucia
     participant P as Prisma
     participant DB as Database
 

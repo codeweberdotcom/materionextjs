@@ -1,17 +1,17 @@
 // Next Imports
 import { NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
+import { requireAuth } from '@/utils/auth'
 
 import { testSmtpConnection } from '@/utils/email'
-import { authOptions } from '@/libs/auth'
+
 import { checkPermission } from '@/utils/permissions'
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session || !checkPermission(session.user, 'smtpManagement', 'update')) {
+    if (!session || !checkPermission(user, 'smtpManagement', 'update')) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
         { status: 401 }

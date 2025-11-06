@@ -1,10 +1,66 @@
+# Materio MUI Next.js Admin Template
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## 📚 Documentation for AI Agents
 
 Comprehensive documentation for AI agents and developers is available in the `docs/` folder. Start with `docs/README.md` for an overview and navigation to specific sections.
 
-## Getting Started
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18.17.0 or higher
+- pnpm (recommended) or npm/yarn
+
+### Installation
+
+1. **Install dependencies:**
+   ```bash
+   pnpm install
+   ```
+
+2. **Environment setup:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+3. **Database setup:**
+   ```bash
+   pnpm run postinstall  # Generate Prisma client
+   npx prisma db push    # Create database schema
+   npx prisma db seed    # Seed with initial data
+   ```
+
+4. **Start development servers:**
+    ```bash
+    # RECOMMENDED: Start both servers together (Next.js + Socket.IO)
+    pnpm run dev:with-socket
+
+    # Alternative: Start separately
+    pnpm dev --port 3000    # Next.js app only
+    pnpm run socket         # Socket.IO server only
+    ```
+
+5. **Open your browser:**
+   - Main app: http://localhost:3000
+   - Socket.IO server: http://localhost:3003
+
+### Default Admin Credentials
+- **Email:** superadmin@example.com
+- **Password:** admin123
+
+## 📖 Features
+
+- **Modern Stack:** Next.js 15, React 18, Material-UI v6, TypeScript
+- **Authentication:** Lucia Auth v3 with session management
+- **Database:** Prisma ORM with SQLite/PostgreSQL support
+- **Real-time Chat:** Socket.IO integration
+- **Email System:** Template-based email system with SMTP
+- **Permissions:** Granular role-based access control
+- **Theming:** Comprehensive theming system with CSS variables
+
+## 📚 Documentation
 
 For detailed setup instructions, see the [Setup Guide](docs/setup/setup.md).
 

@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { useSession } from 'next-auth/react'
+import { useAuth } from '@/contexts/AuthProvider'
 import { Box, CircularProgress } from '@mui/material'
 
 interface ProtectedRouteProps {
@@ -19,7 +19,7 @@ export function ProtectedRoute({
   children,
   fallbackPath = '/login'
 }: ProtectedRouteProps) {
-  const { data: session, status } = useSession()
+  const { user, session, isLoading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {

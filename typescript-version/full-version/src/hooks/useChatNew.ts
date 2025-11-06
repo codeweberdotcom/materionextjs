@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@/contexts/AuthProvider';
 import { useDispatch } from 'react-redux';
 import { sendMsg } from '@/redux-store/slices/chat';
 import { useSocketNew } from './useSocketNew';
 import type { ChatMessage, ChatRoom } from '../lib/sockets/types/chat';
 
 export const useChatNew = (otherUserId?: string) => {
-  const { data: session } = useSession();
+  const { user, session } = useAuth();
   const { chatSocket, isConnected } = useSocketNew();
   const dispatch = useDispatch();
 
@@ -18,14 +18,14 @@ export const useChatNew = (otherUserId?: string) => {
 
   // Инициализация комнаты при наличии otherUserId
   useEffect(() => {
-    if (chatSocket && isConnected && otherUserId && session?.user?.id) {
+    if (chatSocket && isConnected && otherUserId && user?.id) {
       setIsRoomLoading(true);
       chatSocket.emit('getOrCreateRoom', {
-        user1Id: session.user.id,
+        user1Id: user?.id,
         user2Id: otherUserId
       });
     }
-  }, [chatSocket, isConnected, otherUserId, session?.user?.id]);
+  }, [chatSocket, isConnected, otherUserId, user?.id]);
 
   // Обработка событий чата
   useEffect(() => {
@@ -56,10 +56,10 @@ export const useChatNew = (otherUserId?: string) => {
       setIsRoomLoading(false);
 
       // Обновляем Redux store
-      if (session?.user?.id && data.messages.length > 0) {
+      if (user?.id && data.messages.length > 0) {
         data.messages.forEach((message) => {
-          const receiverId = session.user.id === message.senderId
-            ? (data.room.user1Id === session.user.id ? data.room.user2Id : data.room.user1Id)
+          const receiverId = user?.id === message.senderId
+            ? (data.room.user1Id === user?.id ? data.room.user2Id : data.room.user1Id)
             : message.senderId;
 
           dispatch(sendMsg({
@@ -76,11 +76,11 @@ export const useChatNew = (otherUserId?: string) => {
       setMessages(prev => [...prev, message]);
 
       // Обновляем Redux store
-      if (session?.user?.id) {
+      if (user?.id) {
         dispatch(sendMsg({
           message: message.content,
           senderId: message.senderId,
-          receiverId: session.user.id
+          receiverId: user?.id
         }));
       }
     };
@@ -115,18 +115,18 @@ export const useChatNew = (otherUserId?: string) => {
       chatSocket.off('messagesRead', handleMessagesRead);
       chatSocket.off('rateLimitExceeded', handleRateLimitExceeded);
     };
-  }, [chatSocket, session?.user?.id, dispatch]);
+  }, [chatSocket, user?.id, dispatch]);
 
   // Автоматическая отметка сообщений как прочитанные
   useEffect(() => {
-    if (room?.id && session?.user?.id && messages.length > 0) {
+    if (room?.id && user?.id && messages.length > 0) {
       markMessagesAsRead();
     }
-  }, [room?.id, session?.user?.id, messages.length]);
+  }, [room?.id, user?.id, messages.length]);
 
   // Отправка сообщения
   const sendMessage = async (content: string) => {
-    if (!chatSocket || !room || !session?.user?.id) return;
+    if (!chatSocket || !room || !user?.id) return;
 
     try {
       // Проверяем rate limit через API
@@ -136,7 +136,7 @@ export const useChatNew = (otherUserId?: string) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: session.user.id,
+          userId: user?.id,
           module: 'chat'
         }),
       });
@@ -159,13 +159,13 @@ export const useChatNew = (otherUserId?: string) => {
       chatSocket.emit('sendMessage', {
         roomId: room.id,
         message: content,
-        senderId: session.user.id
+        senderId: user?.id
       });
 
       // Обновляем Redux store
       dispatch(sendMsg({
         message: content,
-        senderId: session.user.id,
+        senderId: user?.id,
         receiverId: otherUserId || ''
       }));
 
@@ -181,14 +181,14 @@ export const useChatNew = (otherUserId?: string) => {
       return;
     }
 
-    if (!room?.id || !session?.user?.id) {
+    if (!room?.id || !user?.id) {
       return;
     }
 
     // Обновляем локальное состояние
     setMessages(prev => {
       const updated = prev.map(msg => {
-        const shouldUpdate = msg.roomId === room.id && msg.senderId !== session.user.id && !msg.readAt;
+        const shouldUpdate = msg.roomId === room.id && msg.senderId !== user?.id && !msg.readAt;
         return shouldUpdate
           ? { ...msg, readAt: new Date().toISOString() }
           : msg;
@@ -199,7 +199,7 @@ export const useChatNew = (otherUserId?: string) => {
     // Отправляем на сервер
     const emitData = {
       roomId: room.id,
-      userId: session.user.id
+      userId: user?.id
     };
 
     try {

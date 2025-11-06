@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/libs/auth'
+import { requireAuth } from '@/utils/auth'
+
 import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.id) {
+    const { user } = await requireAuth(request)
+    if (!user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -16,8 +16,8 @@ export async function GET(request: NextRequest) {
     const userRooms = await (prisma as any).chatRoom.findMany({
       where: {
         OR: [
-          { user1Id: session.user.id },
-          { user2Id: session.user.id }
+          { user1Id: user.id },
+          { user2Id: user.id }
         ]
       }
     })
@@ -54,13 +54,13 @@ export async function GET(request: NextRequest) {
     // Если сообщений нет, создаем пустые записи для комнат с другими пользователями
     if (lastMessages.length === 0) {
       for (const room of userRooms) {
-        const otherUserId = room.user1Id === session.user.id ? room.user2Id : room.user1Id
+        const otherUserId = room.user1Id === user.id ? room.user2Id : room.user1Id
 
         lastMessages.push({
           id: `empty-${room.id}`,
           content: '',
           senderId: otherUserId, // Отправитель - другой пользователь
-          receiverId: session.user.id, // Получатель - текущий пользователь
+          receiverId: user.id, // Получатель - текущий пользователь
           roomId: room.id,
           createdAt: room.createdAt.toISOString()
         })

@@ -1,0 +1,129 @@
+'use client'
+
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { lucia } from '@/libs/lucia'
+
+interface User {
+  id: string
+  email: string
+  name: string
+  role: {
+    id: string
+    name: string
+    permissions: string
+  }
+}
+
+interface AuthContextType {
+  user: User | null
+  session: any
+  isLoading: boolean
+  login: (email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    // Check if user is authenticated on mount
+    checkAuth()
+  }, [])
+
+  const checkAuth = async () => {
+    try {
+      console.log('🔍 [AUTH] Checking authentication...')
+      const response = await fetch('/api/auth/session')
+      console.log('🔍 [AUTH] Session response status:', response.status)
+
+      if (response.ok) {
+        const data = await response.json()
+        console.log('✅ [AUTH] User authenticated:', data.user?.email)
+        setUser(data.user)
+        setSession(data.session)
+      } else {
+        console.log('❌ [AUTH] User not authenticated')
+        setUser(null)
+        setSession(null)
+      }
+    } catch (error) {
+      console.error('❌ [AUTH] Auth check failed:', error)
+      setUser(null)
+      setSession(null)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const login = async (email: string, password: string) => {
+    console.log('🔐 [AUTH] Attempting login for:', email)
+
+    const response = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    })
+
+    console.log('🔐 [AUTH] Login response status:', response.status)
+
+    if (!response.ok) {
+      const error = await response.json()
+      console.error('❌ [AUTH] Login failed:', error.error)
+      throw new Error(error.error || 'Login failed')
+    }
+
+    const data = await response.json()
+    console.log('✅ [AUTH] Login successful for:', data.user?.email)
+
+    setUser(data.user)
+    setSession(data.session)
+  }
+
+  const logout = async () => {
+    console.log('🚪 [AUTH] Starting logout...')
+    try {
+      const response = await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include' // Важно для отправки cookies
+      })
+      console.log('🚪 [AUTH] Logout response status:', response.status)
+
+      if (response.ok) {
+        console.log('✅ [AUTH] Logout successful')
+      } else {
+        console.error('❌ [AUTH] Logout failed with status:', response.status)
+      }
+    } catch (error) {
+      console.error('❌ [AUTH] Logout request failed:', error)
+    }
+
+    // Всегда очищаем локальное состояние, независимо от ответа сервера
+    setUser(null)
+    setSession(null)
+    console.log('🧹 [AUTH] Local state cleared')
+  }
+
+  return (
+    <AuthContext.Provider value={{
+      user,
+      session,
+      isLoading,
+      login,
+      logout
+    }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}
