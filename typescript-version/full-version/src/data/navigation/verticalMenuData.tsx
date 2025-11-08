@@ -322,7 +322,7 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
       {
         label: 'Metrics',
         icon: 'ri-bar-chart-line',
-        href: '/apps/metrics'
+        href: '/admin/monitoring/metrics'
       },
     ]
   },

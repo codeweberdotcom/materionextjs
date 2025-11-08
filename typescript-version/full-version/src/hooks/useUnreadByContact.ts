@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthProvider'
-import { useSocket } from './useSocket'
+import { useSocketNew } from './useSocketNew'
 import { useParams } from 'next/navigation'
 
 export const useUnreadByContact = () => {
   const { user, session } = useAuth()
-  const { socket } = useSocket(user?.id || null)
+  const { chatSocket: socket } = useSocketNew()
   const { lang: locale } = useParams()
   const [unreadByContact, setUnreadByContact] = useState<{ [contactId: string]: number }>({})
+  const [userStatuses, setUserStatuses] = useState<{ [userId: string]: { isOnline: boolean; lastSeen?: string } }>({})
   const [isLoading, setIsLoading] = useState(false)
 
   // Function to play notification sound
@@ -30,7 +31,8 @@ export const useUnreadByContact = () => {
       const response = await fetch('/api/chat/unread-by-contact')
       if (response.ok) {
         const data = await response.json()
-        setUnreadByContact(data)
+        setUnreadByContact(data.unreadByContact || {})
+        setUserStatuses(data.userStatuses || {})
       }
     } catch (error) {
       // Error handling
@@ -105,6 +107,7 @@ export const useUnreadByContact = () => {
 
   return {
     unreadByContact,
+    userStatuses,
     isLoading,
     refetch: fetchUnreadByContact
   }

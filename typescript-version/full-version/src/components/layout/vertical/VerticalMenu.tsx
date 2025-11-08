@@ -330,7 +330,6 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
       )
     }
 
-
     // Communications section (only show if user has at least one communication permission)
     const communicationsChildren = []
 
@@ -370,6 +369,52 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
       menuItems.push(
         <MenuSection key="communications" label={dictionary['navigation'].communications}>
           {communicationsChildren}
+        </MenuSection>
+      )
+    }
+
+    // Monitoring section (only show if user has at least one monitoring permission)
+    const monitoringChildren = []
+
+    // Overview - always visible for monitoring access
+    monitoringChildren.push(
+      <MenuItem key="monitoringOverview" href={`/${locale}/admin/monitoring/overview`} icon={<i className='ri-eye-line' />}>
+        {dictionary['navigation'].monitoringOverview}
+      </MenuItem>
+    )
+
+    // Metrics
+    monitoringChildren.push(
+      <MenuItem key="monitoringMetrics" href={`/${locale}/admin/monitoring/metrics`} icon={<i className='ri-bar-chart-2-line' />}>
+        {dictionary['navigation'].monitoringMetrics}
+      </MenuItem>
+    )
+
+    // Error Tracking
+    monitoringChildren.push(
+      <MenuItem key="monitoringErrorTracking" href={`/${locale}/admin/monitoring/error-tracking`} icon={<i className='ri-error-warning-line' />}>
+        {dictionary['navigation'].monitoringErrorTracking}
+      </MenuItem>
+    )
+
+    // Application Insights
+    monitoringChildren.push(
+      <MenuItem key="monitoringApplicationInsights" href={`/${locale}/admin/monitoring/application-insights`} icon={<i className='ri-lightbulb-line' />}>
+        {dictionary['navigation'].monitoringApplicationInsights}
+      </MenuItem>
+    )
+
+    // Testing
+    monitoringChildren.push(
+      <MenuItem key="monitoringTesting" href={`/${locale}/admin/monitoring/testing`} icon={<i className='ri-test-tube-line' />} >
+        Testing
+      </MenuItem>
+    )
+
+    if (monitoringChildren.length > 0) {
+      menuItems.push(
+        <MenuSection key="monitoring" label={dictionary['navigation'].monitoring}>
+          {monitoringChildren}
         </MenuSection>
       )
     }

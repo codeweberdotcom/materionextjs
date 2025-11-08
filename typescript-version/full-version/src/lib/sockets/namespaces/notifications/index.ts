@@ -2,7 +2,7 @@ import { Server, Namespace } from 'socket.io';
 import logger from '../../../logger';
 import { TypedSocket } from '../../types/common';
 import { NotificationEvents, NotificationEmitEvents, Notification } from '../../types/notifications';
-import { requirePermission } from '../../middleware/auth';
+import { authenticateSocket, requirePermission } from '../../middleware/auth';
 import { rateLimitNotification } from '../../middleware/rateLimit';
 import { PrismaClient } from '@prisma/client';
 
@@ -20,7 +20,8 @@ export const initializeNotificationNamespace = (io: Server): Namespace => {
   logger.info('Initializing notification namespace');
 
   // Middleware для уведомлений
-  notificationNamespace.use(requirePermission('send_notification'));
+  notificationNamespace.use(authenticateSocket);
+  notificationNamespace.use(requirePermission('receive_notifications'));
 
   // Rate limiting для уведомлений (более мягкий)
   notificationNamespace.use(rateLimitNotification);

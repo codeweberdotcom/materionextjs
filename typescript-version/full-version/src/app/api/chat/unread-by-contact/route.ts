@@ -38,9 +38,29 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(unreadByContact)
+    // Get all users except current user for status tracking
+    const allUsers = await (prisma as any).user.findMany({
+      where: {
+        id: {
+          not: user.id
+        }
+      },
+      select: {
+        id: true,
+        lastSeen: true
+      }
+    })
+
+    // Import online users from chat namespace
+    const { getOnlineUsers } = await import('@/lib/sockets/namespaces/chat/index')
+    const userStatuses = await getOnlineUsers()
+
+    return NextResponse.json({
+      unreadByContact,
+      userStatuses
+    })
   } catch (error) {
-    console.error('вќЊ [API] РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РЅРµРїСЂРѕС‡РёС‚Р°РЅРЅС‹С… СЃРѕРѕР±С‰РµРЅРёР№ РїРѕ РєРѕРЅС‚Р°РєС‚Р°Рј:', error)
+    console.error('❌ [API] Ошибка получения непрочитанных сообщений по контактам:', error instanceof Error ? error.message : error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -36,17 +36,10 @@ import { useTranslation } from '@/contexts/TranslationContext'
 // Util Imports
 import { getInitials } from '@/utils/formatting/getInitials'
 import { formatDateToMonthShort } from './utils'
+import { statusObj } from '@/utils/status'
 
 // Custom Hooks
-import { useSocket } from '@/hooks/useSocket'
 import { useUnreadByContact } from '@/hooks/useUnreadByContact'
-
-export const statusObj: StatusObjType = {
-  busy: 'error',
-  away: 'warning',
-  online: 'success',
-  offline: 'secondary'
-}
 
 type Props = {
   chatStore: ChatDataType
@@ -61,6 +54,7 @@ type Props = {
   isBelowSmScreen: boolean
   messageInputRef: RefObject<HTMLDivElement>
   unreadCount: number
+  initializeRoom: (userId: string) => void
 }
 
 type RenderChatType = {
@@ -71,26 +65,68 @@ type RenderChatType = {
   setBackdropOpen: (value: boolean) => void
   isBelowMdScreen: boolean
   navigation: any
+  initializeRoom: (userId: string) => void
 }
 
 // Render contacts list (all users except current)
-const renderContacts = (props: RenderChatType & { session: any; socket: any; unreadByContact: { [contactId: string]: number }; navigation: any; user: any }) => {
+const renderContacts = (props: RenderChatType & { session: any; unreadByContact: { [contactId: string]: number }; userStatuses: { [userId: string]: { isOnline: boolean; lastSeen?: string } }; navigation: any; user: any }) => {
   // Props
-  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen, session, socket, unreadByContact, navigation, user } = props
+  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen, session, unreadByContact, userStatuses, navigation, user, initializeRoom } = props
 
   return chatStore.contacts.map(contact => {
     const isContactActive = chatStore.activeUser?.id === contact.id
 
-    // Find the chat for this contact to get the last message
-    const contactChat = chatStore.chats.find(chat => {
-      const match = chat.id === contact.id.toString()
-      return match
-    })
-
-    const lastMessage = contactChat?.chat && contactChat.chat.length > 0 ? contactChat.chat[contactChat.chat.length - 1]?.message : null
 
     // Get unread count for this contact
     const unreadCount = unreadByContact[contact.id] || 0
+
+    // Get user status
+    const userStatus = userStatuses[contact.id]
+    const isOnline = userStatus?.isOnline || false
+    const lastSeen = userStatus?.lastSeen
+
+    // Determine status text, last seen text and color
+    let statusText: string
+    let lastSeenText: string
+    let statusColor: ThemeColor
+
+    if (!userStatus) {
+      // Data is still loading
+      statusText = navigation.offline
+      lastSeenText = navigation.loadingStatus
+      statusColor = statusObj.offline
+    } else if (isOnline) {
+      statusText = navigation.online
+      lastSeenText = navigation.justNow
+      statusColor = statusObj.online
+    } else if (lastSeen) {
+      statusText = navigation.offline
+      // Format last seen time
+      const lastSeenDate = new Date(lastSeen)
+      const now = new Date()
+      const diffMs = now.getTime() - lastSeenDate.getTime()
+      const diffMins = Math.floor(diffMs / (1000 * 60))
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+      if (diffMins < 1) {
+        lastSeenText = navigation.justNow
+      } else if (diffMins < 60) {
+        lastSeenText = navigation.minutesAgo.replace('{{count}}', diffMins.toString())
+      } else if (diffHours < 24) {
+        lastSeenText = navigation.hoursAgo.replace('{{count}}', diffHours.toString())
+      } else if (diffDays < 7) {
+        lastSeenText = navigation.daysAgo.replace('{{count}}', diffDays.toString())
+      } else {
+        lastSeenText = lastSeenDate.toLocaleDateString('ru-RU')
+      }
+      statusColor = statusObj.offline
+    } else {
+      // User is offline and has no last seen time (null in database)
+      statusText = navigation.offline
+      lastSeenText = navigation.longAgo
+      statusColor = statusObj.offline
+    }
 
     return (
       <li
@@ -100,20 +136,8 @@ const renderContacts = (props: RenderChatType & { session: any; socket: any; unr
           'text-[var(--mui-palette-primary-contrastText)]': isContactActive
         })}
         onClick={() => {
-          if (socket && user?.id) {
-            // Listen for room data response
-            const handleRoomData = (data: any) => {
-              socket.off('roomData', handleRoomData)
-            }
-
-            socket.on('roomData', handleRoomData)
-
-            // Emit to socket to get or create room between current user and selected contact
-            socket.emit('getOrCreateRoom', {
-              user1Id: user.id,
-              user2Id: contact.id.toString()
-            })
-          }
+          // Initialize room for the selected contact
+          initializeRoom(contact.id.toString())
 
           // Set active user for UI
           getActiveUserData(contact.id)
@@ -125,13 +149,13 @@ const renderContacts = (props: RenderChatType & { session: any; socket: any; unr
           src={contact.avatar}
           isChatActive={isContactActive}
           alt={contact.fullName}
-          badgeColor={statusObj[contact.status]}
+          badgeColor={statusColor}
           color={contact.avatarColor}
         />
         <div className='min-is-0 flex-auto'>
-          <Typography color='inherit'>{contact.fullName}</Typography>
+          <Typography color='inherit'>{contact.fullName || 'Unknown User'}</Typography>
           <Typography variant='body2' color={isContactActive ? 'inherit' : 'text.secondary'} className='truncate'>
-            {lastMessage || navigation.noMessagesYet}
+            {lastSeenText}
           </Typography>
         </div>
         <div className='flex flex-col items-end justify-start'>
@@ -145,7 +169,7 @@ const renderContacts = (props: RenderChatType & { session: any; socket: any; unr
                 'text-textDisabled': !isContactActive
               })}
             >
-              {contact.status}
+              {statusText}
             </Typography>
           )}
         </div>
@@ -177,13 +201,13 @@ const SidebarLeft = (props: Props) => {
     isBelowMdScreen,
     isBelowSmScreen,
     messageInputRef,
-    unreadCount
+    unreadCount,
+    initializeRoom
   } = props
 
   // Hooks
   const { user, session } = useAuth()
-  const { socket } = useSocket(user?.id || null)
-  const { unreadByContact } = useUnreadByContact()
+  const { unreadByContact, userStatuses } = useUnreadByContact()
   const { navigation } = useTranslation()
 
   // Make session available in renderContacts function
@@ -331,10 +355,11 @@ const SidebarLeft = (props: Props) => {
                 isBelowMdScreen,
                 setBackdropOpen,
                 session: currentSession,
-                socket,
                 unreadByContact,
+                userStatuses,
                 navigation: currentNavigation,
-                user
+                user,
+                initializeRoom
               })
             )}
           </ul>

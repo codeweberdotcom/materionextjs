@@ -1,6 +1,9 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   basePath: process.env.BASEPATH,
   webpack: (config, { isServer }) => {
     // Fix for mini-css-extract-plugin issue

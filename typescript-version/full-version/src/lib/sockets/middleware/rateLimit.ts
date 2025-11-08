@@ -8,7 +8,7 @@ import { TypedSocket, RateLimitConfig } from '../types/common';
 import logger from '../../logger';
 
 // Глобальный rate limiter для чата
-const chatRateLimiter = new RateLimiterMemory({
+export const chatRateLimiter = new RateLimiterMemory({
   keyPrefix: 'socket_chat',
   points: 10, // 10 сообщений
   duration: 60 * 60, // за час

@@ -19,6 +19,9 @@ import type { Mode } from '@core/types'
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 const ModeDropdown = () => {
   // States
   const [open, setOpen] = useState(false)
@@ -29,6 +32,7 @@ const ModeDropdown = () => {
 
   // Hooks
   const { settings, updateSettings } = useSettings()
+  const dictionary = useTranslation()
 
   const handleClose = () => {
     setOpen(false)
@@ -57,10 +61,20 @@ const ModeDropdown = () => {
     }
   }
 
+  const getModeTooltip = () => {
+    if (settings.mode === 'system') {
+      return dictionary.navigation.systemMode
+    } else if (settings.mode === 'dark') {
+      return dictionary.navigation.darkMode
+    } else {
+      return dictionary.navigation.lightMode
+    }
+  }
+
   return (
     <>
       <Tooltip
-        title={settings.mode + ' Mode'}
+        title={getModeTooltip()}
         onOpen={() => setTooltipOpen(true)}
         onClose={() => setTooltipOpen(false)}
         open={open ? false : tooltipOpen ? true : false}
@@ -92,7 +106,7 @@ const ModeDropdown = () => {
                     selected={settings.mode === 'light'}
                   >
                     <i className='ri-sun-line' />
-                    Light
+                    {dictionary.navigation.light}
                   </MenuItem>
                   <MenuItem
                     className='gap-3'
@@ -100,7 +114,7 @@ const ModeDropdown = () => {
                     selected={settings.mode === 'dark'}
                   >
                     <i className='ri-moon-clear-line' />
-                    Dark
+                    {dictionary.navigation.dark}
                   </MenuItem>
                   <MenuItem
                     className='gap-3'
@@ -108,7 +122,7 @@ const ModeDropdown = () => {
                     selected={settings.mode === 'system'}
                   >
                     <i className='ri-computer-line' />
-                    System
+                    {dictionary.navigation.system}
                   </MenuItem>
                 </MenuList>
               </ClickAwayListener>

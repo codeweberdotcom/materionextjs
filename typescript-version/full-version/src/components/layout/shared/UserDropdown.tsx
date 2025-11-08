@@ -49,6 +49,7 @@ const BadgeContentSpan = styled('span')({
 const UserDropdown = () => {
   // States
   const [open, setOpen] = useState(false)
+  const [logoutLoading, setLogoutLoading] = useState(false)
 
   // Refs
   const anchorRef = useRef<HTMLDivElement>(null)
@@ -77,6 +78,7 @@ const UserDropdown = () => {
   }
 
   const handleUserLogout = async () => {
+    setLogoutLoading(true)
     try {
       // Sign out from the app
       await logout()
@@ -157,10 +159,6 @@ const UserDropdown = () => {
                     <i className='ri-shield-user-line text-error' />
                     <Typography color='error.main'>{dictionary.navigation.roles}</Typography>
                   </MenuItem>
-                  <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/apps/permissions')}>
-                    <i className='ri-lock-2-line text-error' />
-                    <Typography color='error.main'>{dictionary.navigation.permissions}</Typography>
-                  </MenuItem>
                   <MenuItem className='gap-3' onClick={e => handleDropdownClose(e, '/pages/moderation')}>
                     <i className='ri-shield-check-line text-warning' />
                     <Typography color='warning.main'>{dictionary.navigation.moderation}</Typography>
@@ -174,9 +172,10 @@ const UserDropdown = () => {
                       size='small'
                       endIcon={<i className='ri-logout-box-r-line' />}
                       onClick={handleUserLogout}
+                      disabled={logoutLoading}
                       sx={{ '& .MuiButton-endIcon': { marginInlineStart: 1.5 } }}
                     >
-                      {dictionary.navigation.logout}
+                      {logoutLoading ? dictionary.navigation.loggingOut || 'Logging out...' : dictionary.navigation.logout}
                     </Button>
                   </div>
                 </MenuList>

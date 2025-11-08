@@ -1,65 +1,75 @@
-# Documentation
+# 📚 Документация по тестированию и мониторингу
 
-Welcome to the Materio MUI Next.js Admin Template documentation! This comprehensive guide will help you get started, customize, and develop with our template.
+## 📋 Содержание
 
-## 📚 Documentation Structure
+### 🧪 Тестирование
+- [Обзор тестирования](testing/overview.md)
+- [Unit тесты](testing/unit-tests.md)
 
-### 🚀 Getting Started
-- **[Setup](setup/)** - Installation, configuration, and initial setup
-- **[Development](development/)** - Development guidelines, best practices, and workflows
+### 📊 Мониторинг
+- [Обзор мониторинга](monitoring/overview.md)
+- [Error Tracking (Sentry)](monitoring/error-tracking.md)
+- [Метрики (Prometheus)](monitoring/metrics.md)
+- [Application Insights](monitoring/application-insights.md)
 
-### ⚙️ Configuration
-- **[Theming](configuration/theming.md)** - Colors, typography, shadows, and component styling
-- **[Internationalization](configuration/internationalization.md)** - Multi-language support and RTL
-- **[Navigation & Layout](configuration/navigation.md)** - Layout types, navigation, and UI components
-- **[Authentication](configuration/authentication.md)** - User authentication and authorization
-- **[Customizer](configuration/customizer.md)** - Theme customization and logo setup
+## 🎯 Быстрый старт
 
-### 🔌 API Reference
-- **[Overview](api/overview.md)** - API basics, authentication, and error handling
-- **[Users](api/users.md)** - User management endpoints
-- **[Roles](api/roles.md)** - Role management endpoints
-- **[Chat](api/chat.md)** - Chat system endpoints
-- **[Email](api/email.md)** - Email templates and SMTP settings
-- **[References](api/references.md)** - Geographic data and translations
+### Запуск всех тестов
+```bash
+pnpm test
+```
 
-### 💾 Data & Database
-- **[Database](database/)** - Database setup, migrations, and real API integration
-- **[SQLite MCP Setup](sqlite-mcp-setup.md)** - Model Context Protocol server for SQLite
-- **[Database for AI Agents](database-ai-agents.md)** - Working with database using AI tools
+### Запуск E2E тестов
+```bash
+pnpm run test:e2e
+```
 
-### 🔐 Permissions
-- **[Permissions](permissions/)** - Role-based access control and permission management
+### Просмотр метрик
+- Health Check: `http://localhost:3000/api/health`
+- Prometheus: `http://localhost:3000/api/metrics`
+- Админ-панель: `/admin/monitoring`
 
-## 🎯 Quick Start
+### Error Tracking
+Все ошибки автоматически отправляются в Sentry. Проверьте dashboard для просмотра.
 
-1. **Installation**: Follow the [setup guide](setup/) to install dependencies and configure your environment
-2. **Configuration**: Customize your theme and settings using the [configuration guides](configuration/)
-3. **Development**: Learn best practices in the [development guide](development/)
-4. **API Integration**: Use the [API reference](api/) to integrate with your backend
+## 📈 Текущее состояние
 
-## 📖 Key Features
+- ✅ **11 тестов** написано и проходит
+- ✅ **Jest** настроен для unit/integration тестов
+- ✅ **React Testing Library** для component тестов
+- ✅ **Playwright** для E2E тестов
+- ✅ **Sentry** для error tracking
+- ✅ **Prometheus** метрики
+- ✅ **Health checks**
+- ✅ **CI/CD** pipeline
 
-- **Modern Stack**: Next.js 15, React 18, Material-UI v6, TypeScript
-- **Multi-language**: Built-in i18n support with RTL languages
-- **Authentication**: Lucia Auth v3.x with session management
-- **Database**: Prisma ORM with SQLite/PostgreSQL support
-- **Real-time**: Socket.io integration for chat features
-- **Email**: Template-based email system with SMTP
-- **Permissions**: Granular role-based access control
-- **Theming**: Comprehensive theming system with CSS variables
+## 🔧 Архитектура
 
-## 🆘 Support
+```
+📁 docs/                    # Документация
+├── testing/               # Документы по тестированию
+├── monitoring/            # Документы по мониторингу
+└── ci-cd/                 # CI/CD документация
 
-- **Documentation**: This comprehensive guide covers all aspects of the template
-- **Code Examples**: Each section includes practical code examples
-- **Best Practices**: Development guidelines ensure maintainable code
-- **Troubleshooting**: Common issues and solutions are documented
+📁 src/
+├── **/__tests__/         # Unit и integration тесты
+├── components/           # React компоненты с тестами
+├── lib/
+│   ├── sentry.ts         # Error tracking
+│   ├── metrics.ts        # Prometheus метрики
+│   └── insights.ts       # Application Insights
+└── app/api/
+    ├── health/           # Health check endpoint
+    └── metrics/          # Metrics endpoint
 
-## 📝 Contributing
+📁 e2e/                   # E2E тесты
+📁 .github/workflows/     # CI/CD конфигурация
+```
 
-This documentation is maintained alongside the template code. For improvements or corrections, please refer to the main repository.
+## 📞 Поддержка
 
----
-
-Happy coding with Materio! 🎉
+При возникновении вопросов:
+1. Проверьте соответствующий раздел документации
+2. Посмотрите примеры кода в тестах
+3. Проверьте логи в `./logs/` директории
+4. Используйте админ-панель `/admin/monitoring` для диагностики

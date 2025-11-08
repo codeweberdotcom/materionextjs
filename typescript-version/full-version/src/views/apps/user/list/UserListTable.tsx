@@ -55,6 +55,8 @@ import AddUserDrawer from './AddUserDrawer'
 import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
 import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
+import AvatarWithBadge from '@views/apps/chat/AvatarWithBadge'
+import { statusObj } from '@/utils/status'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
@@ -276,7 +278,11 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
         header: dictionary.navigation.user,
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
-            {getAvatar({ avatar: row.original.avatar, fullName: row.original.fullName })}
+            {getAvatar({
+              avatar: row.original.avatar,
+              fullName: row.original.fullName,
+              isOnline: row.original.isOnline
+            })}
             <div className='flex flex-col'>
               <Typography className='font-medium' color='text.primary'>
                 {row.original.fullName}
@@ -421,16 +427,29 @@ return (
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
-  const getAvatar = (params: Pick<UsersType, 'avatar' | 'fullName'>) => {
-    const { avatar, fullName } = params
+  const getAvatar = (params: Pick<UsersType, 'avatar' | 'fullName' | 'isOnline'>) => {
+    const { avatar, fullName, isOnline } = params
+
+    const badgeColor = isOnline ? statusObj.online : statusObj.offline
 
     if (avatar) {
-      return <CustomAvatar src={avatar} skin='light' size={34} />
+      return (
+        <AvatarWithBadge
+          src={avatar}
+          badgeColor={badgeColor}
+          alt={fullName}
+          size={34}
+        />
+      )
     } else {
       return (
-        <CustomAvatar skin='light' size={34}>
+        <AvatarWithBadge
+          badgeColor={badgeColor}
+          alt={fullName}
+          size={34}
+        >
           {getInitials(fullName as string)}
-        </CustomAvatar>
+        </AvatarWithBadge>
       )
     }
   }

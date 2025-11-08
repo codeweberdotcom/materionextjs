@@ -37,6 +37,9 @@ import themeConfig from '@configs/themeConfig'
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
 
+// Context Imports
+import { useTranslation } from '@/contexts/TranslationContext'
+
 // Util Imports
 import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
@@ -72,6 +75,7 @@ const ShortcutsDropdown = ({ shortcuts }: { shortcuts: ShortcutsType[] }) => {
   const isSmallScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))
   const { settings } = useSettings()
   const { lang: locale } = useParams()
+  const dictionary = useTranslation()
 
   const handleClose = useCallback(() => {
     setOpen(false)
@@ -127,7 +131,7 @@ const ShortcutsDropdown = ({ shortcuts }: { shortcuts: ShortcutsType[] }) => {
                 <div className='bs-full flex flex-col'>
                   <div className='flex items-center justify-between plb-2 pli-4 is-full gap-2'>
                     <Typography variant='h5' className='flex-auto'>
-                      Shortcuts
+                      {dictionary.navigation.shortcuts}
                     </Typography>
                     <Tooltip
                       title='Add Shortcut'

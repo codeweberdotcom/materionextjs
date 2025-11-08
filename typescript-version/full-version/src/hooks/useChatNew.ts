@@ -15,25 +15,56 @@ export const useChatNew = (otherUserId?: string) => {
   const [loading, setLoading] = useState(false);
   const [isRoomLoading, setIsRoomLoading] = useState(false);
   const [rateLimitData, setRateLimitData] = useState<{ retryAfter: number; blockedUntil: number } | null>(null);
+  const [currentOtherUserId, setCurrentOtherUserId] = useState<string | undefined>(otherUserId);
 
-  // Инициализация комнаты при наличии otherUserId
+  // Инициализация комнаты при наличии currentOtherUserId
   useEffect(() => {
-    if (chatSocket && isConnected && otherUserId && user?.id) {
+    console.log('🔍 [useChatNew] Room init effect:', {
+      hasChatSocket: !!chatSocket,
+      isConnected,
+      currentOtherUserId,
+      userId: user?.id,
+      isRoomLoading
+    });
+
+    if (chatSocket && isConnected && currentOtherUserId && user?.id) {
+      console.log('📡 [useChatNew] Emitting getOrCreateRoom:', {
+        user1Id: user?.id,
+        user2Id: currentOtherUserId
+      });
+
       setIsRoomLoading(true);
       chatSocket.emit('getOrCreateRoom', {
         user1Id: user?.id,
-        user2Id: otherUserId
+        user2Id: currentOtherUserId
       });
     }
-  }, [chatSocket, isConnected, otherUserId, user?.id]);
+  }, [chatSocket, isConnected, currentOtherUserId, user?.id]);
 
   // Обработка событий чата
   useEffect(() => {
     if (!chatSocket) return;
 
     // Обработка данных комнаты
-    const handleRoomData = (data: { room: ChatRoom; messages: ChatMessage[] }) => {
+    const handleRoomData = async (data: { room: ChatRoom; messages: ChatMessage[] }) => {
+      console.log('📨 [useChatNew] Received roomData:', {
+        room: data.room,
+        messagesCount: data.messages.length,
+        messages: data.messages.map(m => ({ id: m.id, content: m.content?.substring(0, 50) }))
+      });
+
       setRoom(data.room);
+
+      // HTTP запрос для тестирования - получаем последние сообщения через API
+      try {
+        const response = await fetch(`/api/chat/last-messages?roomId=${data.room.id}&limit=50`);
+        if (response.ok) {
+          const apiMessages = await response.json();
+          console.log('📡 [useChatNew] API last-messages loaded:', apiMessages.length);
+        }
+      } catch (error) {
+        console.warn('📡 [useChatNew] API last-messages failed:', error);
+      }
 
       // Сохраняем статус прочтения
       setMessages(prevMessages => {
@@ -49,11 +80,17 @@ export const useChatNew = (otherUserId?: string) => {
           readAt: currentReadStatus.get(msg.id) || msg.readAt
         }));
 
+        console.log('💾 [useChatNew] Messages updated:', mergedMessages.length);
         return mergedMessages;
       });
 
       setLoading(false);
       setIsRoomLoading(false);
+
+      console.log('✅ [useChatNew] Room loaded successfully:', {
+        roomId: data.room.id,
+        isRoomLoading: false
+      });
 
       // Обновляем Redux store
       if (user?.id && data.messages.length > 0) {
@@ -73,6 +110,13 @@ export const useChatNew = (otherUserId?: string) => {
 
     // Обработка входящих сообщений
     const handleReceiveMessage = (message: ChatMessage) => {
+      console.log('📨 [useChatNew] Received message:', {
+        messageId: message.id,
+        content: message.content,
+        senderId: message.senderId,
+        roomId: message.roomId
+      });
+
       setMessages(prev => [...prev, message]);
 
       // Обновляем Redux store
@@ -124,6 +168,12 @@ export const useChatNew = (otherUserId?: string) => {
     }
   }, [room?.id, user?.id, messages.length]);
 
+  // Инициализация комнаты с новым пользователем
+  const initializeRoom = (userId: string) => {
+    console.log('🔄 [useChatNew] Initializing room for user:', userId);
+    setCurrentOtherUserId(userId);
+  };
+
   // Отправка сообщения
   const sendMessage = async (content: string) => {
     if (!chatSocket || !room || !user?.id) return;
@@ -148,7 +198,8 @@ export const useChatNew = (otherUserId?: string) => {
             retryAfter: errorData.retryAfter || 300,
             blockedUntil: new Date(errorData.blockedUntil).getTime()
           });
-          throw new Error('Rate limit exceeded');
+          // Don't throw error, just set rate limit data
+          return;
         } else {
           const errorData = await response.json();
           throw new Error(errorData.error || 'Rate limit check failed');
@@ -214,10 +265,10 @@ export const useChatNew = (otherUserId?: string) => {
     room,
     sendMessage,
     markMessagesAsRead,
+    initializeRoom,
     isConnected,
     loading,
     isRoomLoading,
-    rateLimitData,
-    setRateLimitData
+    rateLimitData
   };
 };

@@ -51,6 +51,7 @@ model User {
        currency      String    @default("RUB")
        country       String    @default("russia")
        isActive      Boolean   @default(true)
+       lastSeen      DateTime?
        role          Role      @relation(fields: [roleId], references: [id])
        accounts      Account[]
        sessions      Session[]

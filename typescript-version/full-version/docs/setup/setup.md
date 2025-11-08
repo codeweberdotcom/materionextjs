@@ -99,31 +99,29 @@ npm run seed
 
 ### 5. Development Server
 
-Launch the development servers:
+Launch the development server:
 
 ```bash
-# Terminal 1: Next.js application with Socket.IO (port 3000)
-pnpm run dev:with-socket
+# Next.js application only (port 3000)
+pnpm run dev
 
-# Alternative: Run servers separately
-# Terminal 1: Next.js application (port 3000)
-# pnpm dev --port 3000
-#
-# Terminal 2: Socket.IO server (port 3003)
-# pnpm run socket
+# Next.js application with Socket.IO (port 3000)
+pnpm run dev:with-socket
 ```
 
 Alternative commands if pnpm is not available:
 
 ```bash
 # npm
-npm run dev -- --port 3000
-npm run socket
+npm run dev
+npm run dev:with-socket
 
 # yarn
-yarn dev --port 3000
-yarn socket
+yarn dev
+yarn dev:with-socket
 ```
+
+**Note**: Use `dev:with-socket` for full functionality with chat and notifications. The `dev` script runs only Next.js.
 
 Visit `http://localhost:3000` to see the application.
 
@@ -311,7 +309,7 @@ pnpm build
 # Start Next.js production server
 pnpm start
 
-# In separate terminal: Start Socket.IO server
+# In separate terminal: Start Socket.IO server (if using chat/notifications)
 pnpm run socket
 ```
 
@@ -578,7 +576,7 @@ The application uses an integrated Socket.IO server for real-time chat functiona
 
 ### Running the Server
 
-For full functionality, run the integrated server:
+For full functionality with chat and notifications, run the integrated server:
 
 ```bash
 # Next.js application with Socket.IO (port 3000)
@@ -594,6 +592,8 @@ npm run dev:with-socket
 # yarn
 yarn run dev:with-socket
 ```
+
+For development without Socket.IO, use `pnpm run dev`.
 
 ### Production Deployment
 

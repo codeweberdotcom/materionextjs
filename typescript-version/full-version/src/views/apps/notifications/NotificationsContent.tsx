@@ -43,10 +43,12 @@ const NotificationsContent = (props: Props) => {
   } = props
 
   // States
-  const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set())
-  const [drawerOpen, setDrawerOpen] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [reload, setReload] = useState(false)
+   const [selectedNotifications, setSelectedNotifications] = useState<Set<string>>(new Set())
+   const [drawerOpen, setDrawerOpen] = useState(false)
+   const [searchTerm, setSearchTerm] = useState('')
+   const [reload, setReload] = useState(false)
+   const [filtering, setFiltering] = useState(false)
+   const [loading, setLoading] = useState(false)
 
   // Vars
   const notifications = store.filteredNotifications
@@ -75,10 +77,22 @@ const NotificationsContent = (props: Props) => {
   }
 
   // Action for opening notification details
-  const handleNotificationClick = (notificationId: string) => {
-    dispatch(setCurrentNotification(notificationId))
-    setDrawerOpen(true)
-  }
+   const handleNotificationClick = (notificationId: string) => {
+     dispatch(setCurrentNotification(notificationId))
+     setDrawerOpen(true)
+   }
+
+  // Handle filtering state
+  useEffect(() => {
+    if (status !== undefined || type !== undefined) {
+      setFiltering(true)
+      // Simulate filtering delay for better UX
+      const timer = setTimeout(() => {
+        setFiltering(false)
+      }, 300)
+      return () => clearTimeout(timer)
+    }
+  }, [status, type])
 
   return (
     <div className='flex flex-col items-center justify-center is-full bs-full relative overflow-hidden bg-backgroundPaper'>
@@ -105,6 +119,8 @@ const NotificationsContent = (props: Props) => {
         isBelowSmScreen={isBelowSmScreen}
         isBelowLgScreen={isBelowLgScreen}
         reload={reload}
+        filtering={filtering}
+        loading={loading}
         searchTerm={searchTerm}
         selectedNotifications={selectedNotifications}
         setSelectedNotifications={setSelectedNotifications}

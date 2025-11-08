@@ -36,11 +36,14 @@ type MsgGroupType = {
   messages: Omit<UserChatType, 'senderId'>[]
 }
 
+import type { ChatMessage } from '@/lib/sockets/types/chat'
+
 type ChatLogProps = {
   chatStore: ChatDataType
   isBelowLgScreen: boolean
   isBelowMdScreen: boolean
   isBelowSmScreen: boolean
+  messages: ChatMessage[]
 }
 
 // Formats the chat data into a structured format for display.
@@ -108,7 +111,7 @@ const ScrollWrapper = ({
   }
 }
 
-const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen }: ChatLogProps) => {
+const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen, messages }: ChatLogProps) => {
   // Props
   const { profileUser, contacts } = chatStore
 
@@ -118,7 +121,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
   // Hooks
   const { user, session } = useAuth()
   const { lang: locale } = useParams()
-  const { messages: socketMessages, markMessagesAsRead, room, isRoomLoading } = useChat(chatStore.activeUser?.id?.toString())
+  const { markMessagesAsRead, room, isRoomLoading } = useChat(chatStore.activeUser?.id?.toString())
 
 
   // Refs
@@ -159,17 +162,17 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
 
   // Scroll to bottom when socket messages change
   useEffect(() => {
-    if (socketMessages && socketMessages.length) {
+    if (messages && messages.length) {
       scrollToBottom()
 
       // Play notification sound for new messages (only for messages not sent by current user)
-      const latestMessage = socketMessages[socketMessages.length - 1]
+      const latestMessage = messages[messages.length - 1]
       if (latestMessage && latestMessage.senderId !== user?.id && latestMessage.id !== lastProcessedMessageId.current) {
         lastProcessedMessageId.current = latestMessage.id
         playNotificationSound()
       }
     }
-  }, [socketMessages, user?.id])
+  }, [messages, user?.id])
 
   // Mark messages as read when chat is opened
   useEffect(() => {
@@ -203,84 +206,91 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen 
         ) : (
           <>
             {/* Render Socket.IO messages if available, otherwise fallback to Redux */}
-            {socketMessages && socketMessages.filter(message => message.content && message.content.trim() !== '').length > 0 ? (
-           socketMessages.filter(message => message.content && message.content.trim() !== '').map((message, index) => {
-            const isSender = message.senderId === user?.id;
+            {messages && messages.filter(message => message.content && message.content.trim() !== '').length > 0 ? (
+            messages.filter(message => message.content && message.content.trim() !== '').map((message, index) => {
+             const isSender = message.senderId === user?.id;
+             const isOptimistic = message.isOptimistic;
 
-            return (
-              <div key={message.id} className={classnames('flex gap-4 p-5', { 'flex-row-reverse': isSender })}>
-                {!isSender ? (
-                  contacts.find(contact => contact.id === message.senderId)?.avatar ? (
-                    <Avatar
-                      alt={contacts.find(contact => contact.id === message.senderId)?.fullName}
-                      src={contacts.find(contact => contact.id === message.senderId)?.avatar}
-                      className='is-8 bs-8'
-                    />
-                  ) : (
-                    <CustomAvatar
-                      color={contacts.find(contact => contact.id === message.senderId)?.avatarColor}
-                      skin='light'
-                      size={32}
-                    >
-                      {getInitials(contacts.find(contact => contact.id === message.senderId)?.fullName as string)}
-                    </CustomAvatar>
-                  )
-                ) : session?.user?.image ? (
-                  <Avatar alt={session?.user?.name || ''} src={session?.user?.image} className='is-8 bs-8' />
-                ) : (
-                  <CustomAvatar alt={session?.user?.name || ''} src={session?.user?.image || undefined} size={32} />
-                )}
-                <div
-                  className={classnames('flex flex-col gap-2', {
-                    'items-end': isSender,
-                    'max-is-[65%]': !isBelowMdScreen,
-                    'max-is-[75%]': isBelowMdScreen && !isBelowSmScreen,
-                    'max-is-[calc(100%-5.75rem)]': isBelowSmScreen
-                  })}
-                >
-                  {message.content && message.content.trim() !== '' ? (
-                    <Typography
-                      className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
-                        'bg-backgroundPaper rounded-e rounded-b': !isSender,
-                        'bg-primary text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
-                      })}
-                      style={{ wordBreak: 'break-word' }}
-                    >
-                      {message.content}
-                    </Typography>
-                  ) : (
-                    <Typography
-                      className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
-                        'bg-backgroundPaper rounded-e rounded-b': !isSender,
-                        'bg-primary text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
-                      })}
-                      style={{ wordBreak: 'break-word' }}
-                    >
-                      Вы можете написать мне личное сообщение
-                    </Typography>
-                  )}
-                  <div className='flex items-center gap-2'>
-                    {isSender && (
-                      <>
-                        {message.readAt ? (
-                          <i className='ri-check-double-line text-success text-base' />
-                        ) : (
-                          <i className='ri-check-line text-base' />
-                        )}
-                      </>
-                    )}
-                    <Typography variant='caption'>
-                      {new Date(message.createdAt).toLocaleString('en-US', {
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        hour12: false
-                      })}
-                    </Typography>
-                  </div>
-                </div>
-              </div>
-            );
-          })
+             return (
+               <div key={message.id} className={classnames('flex gap-4 p-5', { 'flex-row-reverse': isSender })}>
+                 {!isSender ? (
+                   contacts.find(contact => contact.id === message.senderId)?.avatar ? (
+                     <Avatar
+                       alt={contacts.find(contact => contact.id === message.senderId)?.fullName}
+                       src={contacts.find(contact => contact.id === message.senderId)?.avatar}
+                       className='is-8 bs-8'
+                     />
+                   ) : (
+                     <CustomAvatar
+                       color={contacts.find(contact => contact.id === message.senderId)?.avatarColor}
+                       skin='light'
+                       size={32}
+                     >
+                       {getInitials(contacts.find(contact => contact.id === message.senderId)?.fullName as string)}
+                     </CustomAvatar>
+                   )
+                 ) : session?.user?.image ? (
+                   <Avatar alt={session?.user?.name || ''} src={session?.user?.image} className='is-8 bs-8' />
+                 ) : (
+                   <CustomAvatar alt={session?.user?.name || ''} src={session?.user?.image || undefined} size={32} />
+                 )}
+                 <div
+                   className={classnames('flex flex-col gap-2', {
+                     'items-end': isSender,
+                     'max-is-[65%]': !isBelowMdScreen,
+                     'max-is-[75%]': isBelowMdScreen && !isBelowSmScreen,
+                     'max-is-[calc(100%-5.75rem)]': isBelowSmScreen
+                   })}
+                 >
+                   {message.content && message.content.trim() !== '' ? (
+                     <div className='flex items-center gap-2'>
+                       <Typography
+                         className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
+                           'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                           'bg-primary text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender,
+                           'bg-gray-200 text-gray-600': isOptimistic // Gray color for optimistic messages
+                         })}
+                         style={{ wordBreak: 'break-word' }}
+                       >
+                         {message.content}
+                       </Typography>
+                       {isOptimistic && (
+                         <CircularProgress size={16} className='text-gray-400' />
+                       )}
+                     </div>
+                   ) : (
+                     <Typography
+                       className={classnames('whitespace-pre-wrap pli-4 plb-2 shadow-xs', {
+                         'bg-backgroundPaper rounded-e rounded-b': !isSender,
+                         'bg-primary text-[var(--mui-palette-primary-contrastText)] rounded-s rounded-b': isSender
+                       })}
+                       style={{ wordBreak: 'break-word' }}
+                     >
+                       Вы можете написать мне личное сообщение
+                     </Typography>
+                   )}
+                   <div className='flex items-center gap-2'>
+                     {isSender && !isOptimistic && (
+                       <>
+                         {message.readAt ? (
+                           <i className='ri-check-double-line text-success text-base' />
+                         ) : (
+                           <i className='ri-check-line text-base' />
+                         )}
+                       </>
+                     )}
+                     <Typography variant='caption'>
+                       {new Date(message.createdAt).toLocaleString('en-US', {
+                         hour: 'numeric',
+                         minute: 'numeric',
+                         hour12: false
+                       })}
+                     </Typography>
+                   </div>
+                 </div>
+               </div>
+             );
+           })
             ) : (
               activeUserChat &&
               formatedChatData(activeUserChat.chat, profileUser).map((msgGroup, index) => {

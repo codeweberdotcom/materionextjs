@@ -65,7 +65,7 @@ const LanguageDropdown = () => {
   return (
     <>
       <IconButton ref={anchorRef} onClick={handleToggle} className='!text-textPrimary'>
-        {languageData.find(locale => locale.code === lang)?.name || lang?.toUpperCase()}
+        <i className='ri-global-line' />
       </IconButton>
       <Popper
         open={open}

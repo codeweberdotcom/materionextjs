@@ -1,17 +1,10 @@
 // @ts-nocheck
-import * as jwt from 'jsonwebtoken';
 import { ExtendedError } from 'socket.io';
 import { authLogger } from '../../logger';
 import { User, TypedSocket, Permission } from '../types/common';
+import { lucia } from '../../../libs/lucia';
 
-// JWT секрет (должен быть в env)
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key-here';
-
-authLogger.info('JWT Secret configured', {
-  hasSecret: !!process.env.NEXTAUTH_SECRET,
-  secretLength: process.env.NEXTAUTH_SECRET?.length || 0,
-  usingFallback: !process.env.NEXTAUTH_SECRET
-});
+authLogger.info('Lucia auth configured for Socket.IO middleware');
 
 // Расширенный интерфейс для Socket.IO handshake
 interface HandshakeAuth {
@@ -19,14 +12,14 @@ interface HandshakeAuth {
   userId?: string;
 }
 
-// Middleware аутентификации для Socket.IO
+// Middleware аутентификации для Socket.IO с Lucia
 export const authenticateSocket = async (
   socket: TypedSocket,
   next: (err?: ExtendedError) => void
 ) => {
   try {
     const token = socket.handshake.auth?.token as string ||
-                  (socket.handshake.query as any)?.token as string;
+                   (socket.handshake.query as any)?.token as string;
 
     authLogger.info('Socket authentication attempt', {
       socketId: socket.id,
@@ -43,45 +36,43 @@ export const authenticateSocket = async (
       return next(new Error('Authentication token required'));
     }
 
-    authLogger.info('Token received for verification', {
+    authLogger.info('Token received for Lucia validation', {
       socketId: socket.id,
       tokenLength: token.length,
       ip: socket.handshake.address
     });
 
-    // Верификация JWT токена
-    authLogger.info('Attempting JWT verification', {
+    // Валидация сессии через Lucia
+    const session = await lucia.validateSession(token);
+
+    authLogger.info('Lucia session validation result', {
       socketId: socket.id,
-      secretLength: JWT_SECRET.length,
+      hasSession: !!session,
+      hasUser: !!session?.user,
       ip: socket.handshake.address
     });
 
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-
-    authLogger.info('JWT token decoded successfully', {
-      socketId: socket.id,
-      decodedId: decoded.id,
-      decodedRole: decoded.role,
-      ip: socket.handshake.address
-    });
-
-    if (!decoded || !decoded.id) {
-      authLogger.warn('Invalid JWT token', {
+    if (!session || !session.user) {
+      authLogger.warn('Invalid Lucia session', {
         socketId: socket.id,
         ip: socket.handshake.address
       });
-      return next(new Error('Invalid token'));
+      return next(new Error('Invalid session'));
     }
 
-    // Получаем пользователя из токена NextAuth
-    // В NextAuth JWT обычно содержится: id, email, name, role и т.д.
+    // Создаем объект пользователя
     const user: User = {
-      id: decoded.id,
-      role: decoded.role || 'user',
-      permissions: decoded.permissions || getDefaultPermissions(decoded.role || 'user'),
-      name: decoded.name,
-      email: decoded.email
+      id: session.user.id,
+      role: (session.user as any).role || 'user',
+      permissions: (session.user as any).permissions || getDefaultPermissions((session.user as any).role || 'user'),
+      name: (session.user as any).name,
+      email: (session.user as any).email
     };
+
+    // Добавляем receive_notifications к permissions, если его нет
+    if (!user.permissions.includes('receive_notifications')) {
+      user.permissions.push('receive_notifications');
+    }
 
     // Сохраняем данные пользователя в сокете
     socket.data = {
@@ -93,7 +84,7 @@ export const authenticateSocket = async (
 
     socket.userId = user.id;
 
-    authLogger.info('Socket authenticated successfully', {
+    authLogger.info('Socket authenticated successfully with Lucia', {
       socketId: socket.id,
       userId: user.id,
       role: user.role,
@@ -108,14 +99,6 @@ export const authenticateSocket = async (
       ip: socket.handshake.address
     });
 
-    if (error instanceof jwt.JsonWebTokenError) {
-      return next(new Error('Invalid token'));
-    }
-
-    if (error instanceof jwt.TokenExpiredError) {
-      return next(new Error('Token expired'));
-    }
-
     next(new Error('Authentication failed'));
   }
 };
@@ -123,10 +106,10 @@ export const authenticateSocket = async (
 // Получение разрешений по умолчанию для роли
 function getDefaultPermissions(role: string): string[] {
   const rolePermissions: Record<string, string[]> = {
-    admin: ['send_message', 'send_notification', 'moderate_chat', 'view_admin_panel'],
-    moderator: ['send_message', 'send_notification', 'moderate_chat'],
-    user: ['send_message', 'send_notification'],
-    guest: ['send_notification'] // Только получение уведомлений
+    admin: ['send_message', 'receive_notifications', 'send_notification', 'moderate_chat', 'view_admin_panel'],
+    moderator: ['send_message', 'receive_notifications', 'send_notification', 'moderate_chat'],
+    user: ['send_message', 'receive_notifications', 'send_notification'],
+    guest: ['receive_notifications', 'send_notification'] // Только получение уведомлений
   };
 
   return rolePermissions[role] || [];
@@ -144,7 +127,10 @@ export const requirePermission = (permission: string) => {
     }
 
     const userPermissions = socket.data.user.permissions;
-    if (!userPermissions.includes(permission as Permission)) {
+    // Check if user has 'all' permissions or the specific permission
+    const hasPermission = userPermissions === 'all' || userPermissions.includes(permission as Permission);
+
+    if (!hasPermission) {
       authLogger.warn('Permission check failed: insufficient permissions', {
         socketId: socket.id,
         userId: socket.userId,

@@ -74,7 +74,7 @@ export function checkPermission(user: UserWithRole | null, module: string, actio
 
   // If permissions are 'all', allow everything
   if (user.role.permissions === 'all' || getUserPermissions(user) === 'all') {
-    logger.info('✅ [PERMISSIONS] All permissions granted')
+    logger.info('✅ [PERMISSIONS] All permissions granted', { role: user.role.name })
     return true
   }
 

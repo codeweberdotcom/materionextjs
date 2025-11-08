@@ -20,7 +20,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 import type { ContactType } from '@/types/apps/chatTypes'
 
 // Component Imports
-import { statusObj } from './SidebarLeft'
+import { statusObj } from '@/utils/status'
 import AvatarWithBadge from './AvatarWithBadge'
 import { useTranslation } from '@/contexts/TranslationContext'
 

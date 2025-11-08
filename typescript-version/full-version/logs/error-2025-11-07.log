@@ -1,0 +1,1 @@
+{"error":"\nInvalid `prisma.chatRoom.create()` invocation:\n\n\nUnique constraint failed on the fields: (`user1Id`,`user2Id`)","level":"error","message":"Failed to get/create room","service":"materio-nextjs","timestamp":"2025-11-07T12:39:59.127Z","userId":"cmhnuti5l000b8wvzh4h89gzy"}

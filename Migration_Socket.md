@@ -27,6 +27,29 @@ DATABASE_URL=your-database-url
 
 ## 🔄 ПОШАГОВЫЙ ПЛАН МИГРАЦИИ
 
+### ШАГ 0: ЗАВЕРШЕНИЕ МИГРАЦИИ СЕРВЕРА
+
+**Цель:** Переключить проект на новый модульный сервер с namespaces
+
+**Действия:**
+1. Обновить `package.json`: `"dev:with-socket": "tsx src/server/websocket-server-new.ts"`
+2. Исправить middleware аутентификации для интеграции с Lucia
+3. Исправить permissions в notifications namespace
+4. Протестировать работу namespaces
+
+**Файлы для изменения:**
+- `package.json` - обновить скрипт запуска
+- `src/lib/sockets/middleware/auth.ts` - интеграция с Lucia
+- `src/lib/sockets/namespaces/notifications/index.ts` - исправить permissions
+
+**Критерии выполнения:**
+- ✅ Новый сервер запускается и работает
+- ✅ Socket.IO использует Lucia для аутентификации
+- ✅ Namespaces chat и notifications функционируют
+- ✅ Permissions корректно проверяются
+
+---
+
 ### ШАГ 1: МИГРАЦИЯ НА LUCIA AUTH
 
 **Цель:** Заменить NextAuth.js на Lucia Auth v3.x
@@ -131,22 +154,41 @@ export interface TypedSocket extends Socket {
 ```
 
 #### 4.2 Middleware (`src/lib/sockets/middleware/`)
+
 ```typescript
 // auth.ts - интеграция с Lucia
 export const authenticateSocket = async (socket, next) => {
-  const token = socket.handshake.auth?.token;
-  const session = await lucia.validateSession(token);
+  try {
+    const token = socket.handshake.auth?.token;
 
-  if (!session) {
-    return next(new Error('Authentication failed'));
+    if (!token) {
+      return next(new Error('Authentication token required'));
+    }
+
+    // Валидация сессии через Lucia
+    const session = await lucia.validateSession(token);
+
+    if (!session || !session.user) {
+      return next(new Error('Invalid session'));
+    }
+
+    // Сохраняем данные пользователя в сокете
+    socket.data.user = {
+      id: session.user.id,
+      role: session.user.role || 'user',
+      permissions: session.user.permissions || getDefaultPermissions(session.user.role || 'user'),
+      name: session.user.name,
+      email: session.user.email
+    };
+    socket.data.authenticated = true;
+    socket.userId = session.user.id;
+
+    next();
+  } catch (error) {
+    next(new Error('Authentication failed'));
   }
-
-  socket.data.user = session.user;
-  socket.data.authenticated = true;
-  next();
 };
 ```
-
 #### 4.3 Utils (`src/lib/sockets/utils/`)
 ```typescript
 // jwt.ts - интеграция с Lucia
@@ -194,6 +236,7 @@ export const generateChatToken = async (userId: string) => {
 ```
 
 #### 5.2 Notifications Namespace (`src/lib/sockets/namespaces/notifications/`)
+
 ```typescript
 // index.ts
 export const initializeNotificationsNamespace = (io: Server) => {
@@ -204,11 +247,11 @@ export const initializeNotificationsNamespace = (io: Server) => {
 
   notificationsNamespace.on('connection', (socket) => {
     // Обработчики событий уведомлений
-    socket.on('subscribe', handleSubscribe);
-    socket.on('unsubscribe', handleUnsubscribe);
+    socket.on('markAsRead', handleMarkAsRead);
+    socket.on('markAllAsRead', handleMarkAllAsRead);
+    socket.on('deleteNotification', handleDeleteNotification);
   });
 };
-
 // token.ts
 export const generateNotificationsToken = async (userId: string) => {
   return await generateNamespaceToken(userId, 'notifications');

@@ -12,11 +12,14 @@ import Paper from '@mui/material/Paper'
 import ClickAwayListener from '@mui/material/ClickAwayListener'
 import Menu from '@mui/material/Menu'
 import MenuItem from '@mui/material/MenuItem'
+import CircularProgress from '@mui/material/CircularProgress'
 
 // Third-party Imports
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 import { useAuth } from '@/contexts/AuthProvider'
+
+import type { ChatRoom } from '@/lib/sockets/types/chat'
 
 // Type Imports
 import type { ContactType } from '@/types/apps/chatTypes'
@@ -30,13 +33,16 @@ import CustomIconButton from '@core/components/mui/IconButton'
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Custom Hooks
-import { useChat } from '@/hooks/useChat'
 
 type Props = {
   dispatch: AppDispatch
   activeUser: ContactType
   isBelowSmScreen: boolean
   messageInputRef: RefObject<HTMLDivElement>
+  room: ChatRoom | null
+  isRoomLoading: boolean
+  sendMessage: (content: string) => Promise<void>
+  rateLimitData: { retryAfter: number; blockedUntil: number } | null
 }
 
 // Emoji Picker Component for selecting emojis
@@ -89,20 +95,20 @@ const EmojiPicker = ({
   )
 }
 
-const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }: Props) => {
+const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, room, isRoomLoading, sendMessage, rateLimitData }: Props) => {
   // States
   const [msg, setMsg] = useState('')
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [openEmojiPicker, setOpenEmojiPicker] = useState(false)
   const [isRateLimited, setIsRateLimited] = useState(false)
   const [countdown, setCountdown] = useState(0)
+  const [isSending, setIsSending] = useState(false)
 
   // Refs
   const anchorRef = useRef<HTMLButtonElement>(null)
 
   // Hooks
   const { user, session } = useAuth()
-  const { sendMessage, rateLimitData, setRateLimitData, isConnected, isRoomLoading, room } = useChat(activeUser?.id?.toString())
   const { navigation } = useTranslation()
 
   // Handle rate limit countdown
@@ -116,7 +122,6 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
         setCountdown(prev => {
           if (prev <= 1) {
             setIsRateLimited(false)
-            setRateLimitData(null)
             clearInterval(interval)
             return 0
           }
@@ -125,58 +130,11 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
       }, 1000)
 
       return () => clearInterval(interval)
+    } else {
+      setIsRateLimited(false)
+      setCountdown(0)
     }
-  }, [rateLimitData, setRateLimitData])
-
-  // Check for existing blocks on component mount
-   useEffect(() => {
-     const checkExistingBlocks = async () => {
-       console.log('🔍 [DEBUG] Checking existing blocks:', {
-         userId: user?.id,
-         rateLimitData: rateLimitData,
-         isRateLimited: isRateLimited
-       })
-
-       if (user?.id && !rateLimitData) {
-         try {
-           console.log('📡 [DEBUG] Making API call to check rate limit')
-           const response = await fetch('/api/chat/messages/check-rate-limit', {
-             method: 'POST',
-             headers: {
-               'Content-Type': 'application/json',
-             },
-             body: JSON.stringify({
-               userId: user?.id,
-               messageLength: 0
-             })
-           })
-
-           console.log('📡 [DEBUG] API response status:', response.status)
-
-           if (response.status === 429) {
-             const data = await response.json()
-             console.log('🚫 [DEBUG] Rate limit data received:', data)
-             if (data.blockedUntil) {
-               setRateLimitData({
-                 retryAfter: data.retryAfter || 300,
-                 blockedUntil: new Date(data.blockedUntil).getTime()
-               })
-               console.log('⏰ [DEBUG] Rate limit data set')
-             }
-           } else {
-             console.log('✅ [DEBUG] No rate limit active')
-           }
-         } catch (error) {
-           console.error('❌ [DEBUG] Error during rate limit check:', error)
-           // Ignore errors during initial check
-         }
-       } else {
-         console.log('⏭️ [DEBUG] Skipping check - conditions not met')
-       }
-     }
-
-     checkExistingBlocks()
-   }, [user?.id, setRateLimitData])
+  }, [rateLimitData])
 
   const open = Boolean(anchorEl)
 
@@ -195,16 +153,20 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
   const handleSendMsg = (event: FormEvent | KeyboardEvent, msg: string) => {
     event.preventDefault()
 
-    if (isRateLimited) {
-      return // Block sending if rate limited
+    if (isRateLimited || isSending) {
+      return // Block sending if rate limited or already sending
     }
 
     if (msg.trim() !== '') {
-      // Send via Socket.IO if connected, otherwise fallback to Redux
+      setIsSending(true)
+
+      // Send via Socket.IO
       if (user?.id && sendMessage) {
         sendMessage(msg).then(() => {
           setMsg('')
-        }).catch((error) => {
+          setIsSending(false)
+        }).catch((error: any) => {
+          setIsSending(false)
           // Show user-friendly error message for rate limit
           if (error.message === 'Rate limit exceeded') {
             // Error is already handled by setting rateLimitData in useChat hook
@@ -215,6 +177,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
       } else {
         dispatch(sendMsg({ message: msg, senderId: user?.id || '', receiverId: activeUser?.id || '' }))
         setMsg('')
+        setIsSending(false)
       }
     }
   }
@@ -230,8 +193,18 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
 
   // Effect to handle user selection
   useEffect(() => {
+    console.log('🔍 [SendMsgForm] User selection effect:', {
+      activeUser: activeUser?.id,
+      room: room?.id,
+      isRoomLoading,
+      rateLimitData: !!rateLimitData
+    });
+
     if (activeUser && !room) {
+      console.log('🚫 [SendMsgForm] User selected but no room - blocking input');
       handleUserSelect()
+    } else if (room) {
+      console.log('✅ [SendMsgForm] Room loaded - enabling input');
     }
   }, [activeUser, room])
 
@@ -310,23 +283,23 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef }:
             variant='contained'
             color='primary'
             type='submit'
-            disabled={isRateLimited || isRoomLoading || !room}
+            disabled={isRateLimited || isRoomLoading || !room || isSending}
           >
-            {isRateLimited ? countdown : isRoomLoading || !room ? '...' : <i className='ri-send-plane-line' />}
+            {isRateLimited ? countdown : isSending ? <CircularProgress size={16} color="inherit" /> : isRoomLoading || !room ? '...' : <i className='ri-send-plane-line' />}
           </CustomIconButton>
         ) : (
           <Button
             variant='contained'
             color='primary'
             type='submit'
-            disabled={isRateLimited || isRoomLoading || !room}
-            endIcon={<i className='ri-send-plane-line' />}
+            disabled={isRateLimited || isRoomLoading || !room || isSending}
+            endIcon={isSending ? <CircularProgress size={16} color="inherit" /> : <i className='ri-send-plane-line' />}
             sx={{
               whiteSpace: 'nowrap',
               minWidth: 'auto'
             }}
           >
-            {isRateLimited ? navigation.waitMessage.replace('${countdown}', countdown.toString()) : isRoomLoading || !room ? navigation.loadingButton : navigation.send}
+            {isRateLimited ? navigation.waitMessage.replace('${countdown}', countdown.toString()) : isSending ? navigation.sending : isRoomLoading || !room ? navigation.loadingButton : navigation.send}
           </Button>
         )}
       </div>

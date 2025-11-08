@@ -14,6 +14,7 @@ export interface ChatMessage {
   readAt?: string;
   createdAt: string;
   clientId?: string; // Для дедупликации
+  isOptimistic?: boolean; // Для оптимистичных обновлений
 }
 
 // Комната чата

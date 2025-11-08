@@ -15,4 +15,6 @@ export type UsersType = {
   currentPlan: string
   isActive: boolean
   avatarColor?: ThemeColor
+  isOnline?: boolean
+  lastSeen?: string
 }

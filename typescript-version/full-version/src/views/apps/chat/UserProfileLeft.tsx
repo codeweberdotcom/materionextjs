@@ -32,7 +32,7 @@ import { setUserStatus } from '@/redux-store/slices/chat'
 
 // Component Imports
 import AvatarWithBadge from './AvatarWithBadge'
-import { statusObj } from '@views/apps/chat/SidebarLeft'
+import { statusObj } from '@/utils/status'
 
 type Props = {
   userSidebar: boolean

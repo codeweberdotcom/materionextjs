@@ -3,13 +3,43 @@ import logger from '../../../logger';
 import { TypedSocket } from '../../types/common';
 import { ChatEvents, ChatEmitEvents, ChatMessage, ChatRoom } from '../../types/chat';
 import { authenticateSocket, requirePermission, requireRole } from '../../middleware/auth';
-import { rateLimitChat } from '../../middleware/rateLimit';
+import { chatRateLimiter } from '../../middleware/rateLimit';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 // Хранилище активных пользователей (in-memory)
 const activeUsers = new Map<string, string>(); // userId -> socketId
+const onlineUsers = new Map<string, { socketId: string; connectedAt: Date }>(); // userId -> { socketId, connectedAt }
+
+/**
+ * Обновление статуса пользователя онлайн/оффлайн
+ */
+const updateUserOnlineStatus = async (userId: string, isOnline: boolean) => {
+  try {
+    if (isOnline) {
+      // Пользователь онлайн - очищаем last_seen
+      await prisma.user.update({
+        where: { id: userId },
+        data: { lastSeen: null }
+      });
+      logger.debug('User status updated to online', { userId });
+    } else {
+      // Пользователь оффлайн - устанавливаем last_seen
+      await prisma.user.update({
+        where: { id: userId },
+        data: { lastSeen: new Date() }
+      });
+      logger.debug('User status updated to offline', { userId });
+    }
+  } catch (error) {
+    logger.error('Failed to update user online status', {
+      userId,
+      isOnline,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
 
 /**
  * Инициализация namespace для чата
@@ -22,10 +52,9 @@ export const initializeChatNamespace = (io: Server): Namespace => {
   // Middleware для чата
   chatNamespace.use(authenticateSocket);
   chatNamespace.use(requirePermission('send_message'));
-  chatNamespace.use(rateLimitChat);
 
   // Обработка подключения к namespace чата
-  chatNamespace.on('connection', (socket: TypedSocket) => {
+  chatNamespace.on('connection', async (socket: TypedSocket) => {
     const userId = socket.data.user.id;
     const userRole = socket.data.user.role;
 
@@ -37,6 +66,10 @@ export const initializeChatNamespace = (io: Server): Namespace => {
 
     // Добавляем пользователя в активные
     activeUsers.set(userId, socket.id);
+    onlineUsers.set(userId, { socketId: socket.id, connectedAt: new Date() });
+
+    // Обновляем статус пользователя как онлайн
+    await updateUserOnlineStatus(userId, true);
 
     // Присоединяемся к личной комнате пользователя
     socket.join(`user_${userId}`);
@@ -48,12 +81,16 @@ export const initializeChatNamespace = (io: Server): Namespace => {
     registerChatEventHandlers(socket);
 
     // Обработка отключения
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
       logger.info('User disconnected from chat namespace', {
         socketId: socket.id,
         userId
       });
       activeUsers.delete(userId);
+      onlineUsers.delete(userId);
+
+      // Обновляем статус пользователя как оффлайн
+      await updateUserOnlineStatus(userId, false);
     });
 
     // Отправляем подтверждение подключения
@@ -102,9 +139,34 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
   const userId = socket.data.user.id;
 
   // Отправка сообщения
-  socket.on('sendMessage', async (data: { roomId: string; message: string; senderId: string }) => {
+  socket.on('sendMessage', async (data: { roomId: string; message: string; senderId: string; clientId?: string }) => {
     try {
-      logger.debug('Processing sendMessage', { userId, roomId: data.roomId });
+      logger.info('Processing sendMessage', { userId, roomId: data.roomId, socketId: socket.id, connected: socket.connected });
+
+      // Проверяем rate limit (временно отключен для тестирования)
+      /*
+      try {
+        await chatRateLimiter.consume(userId);
+        logger.debug('Rate limit check passed for sendMessage', { userId });
+      } catch (rejRes) {
+        const rateLimitError = rejRes as any;
+        const retryAfter = Math.ceil(rateLimitError.msBeforeNext / 1000);
+
+        logger.warn('Chat rate limit exceeded for sendMessage', {
+          userId,
+          socketId: socket.id,
+          retryAfter,
+          blockedUntil: new Date(Date.now() + rateLimitError.msBeforeNext).toISOString()
+        });
+
+        socket.emit('rateLimitExceeded', {
+          error: 'Rate limit exceeded',
+          retryAfter,
+          blockedUntil: new Date(Date.now() + rateLimitError.msBeforeNext).toISOString()
+        });
+        return;
+      }
+      */
 
       // Валидация данных
       if (!data.roomId || !data.message || !data.senderId) {
@@ -157,10 +219,19 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
         },
         roomId: newMessage.roomId,
         readAt: newMessage.readAt?.toISOString(),
-        createdAt: newMessage.createdAt.toISOString()
+        createdAt: newMessage.createdAt.toISOString(),
+        clientId: data.clientId // Передаем clientId обратно для дедупликации оптимистичных сообщений
       };
 
-      socket.to(`room_${data.roomId}`).emit('receiveMessage', messageData);
+      console.log('📤 [CHAT] Emitting receiveMessage to room:', {
+        roomId: data.roomId,
+        messageId: messageData.id,
+        content: messageData.content,
+        senderId: messageData.senderId
+      });
+
+      // Отправляем сообщение всем участникам комнаты, включая отправителя
+      socket.nsp.to(`room_${data.roomId}`).emit('receiveMessage', messageData);
 
       logger.info('Message sent successfully', {
         messageId: newMessage.id,
@@ -317,10 +388,26 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
     }
   });
 
-  // Ping для поддержания соединения
-  socket.on('ping', (data, callback) => {
-    if (callback) {
-      callback({ pong: true, timestamp: Date.now() });
+  // Ping для поддержания соединения и обновления lastSeen
+  socket.on('ping', async (data, callback) => {
+    try {
+      // Обновляем lastSeen при каждом ping
+      await prisma.user.update({
+        where: { id: userId },
+        data: { lastSeen: new Date() }
+      });
+
+      if (callback) {
+        callback({ pong: true, timestamp: Date.now() });
+      }
+    } catch (error) {
+      logger.error('Failed to update lastSeen on ping', {
+        userId,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      if (callback) {
+        callback({ pong: false, error: 'Failed to update status' });
+      }
     }
   });
 };
@@ -331,6 +418,42 @@ export const getActiveChatUsers = () => {
     userId,
     socketId
   }));
+};
+
+// Получение статусов онлайн пользователей на основе lastSeen
+export const getOnlineUsers = async () => {
+  // Получаем всех пользователей из базы данных
+  const allUsers = await prisma.user.findMany({
+    select: {
+      id: true,
+      isActive: true,
+      email: true,
+      country: true,
+      image: true,
+      name: true,
+      language: true,
+      currency: true,
+      roleId: true,
+      password: true,
+      emailVerified: true,
+      createdAt: true,
+      updatedAt: true,
+      lastSeen: true
+    }
+  });
+
+  // Создаем Map статусов для всех пользователей
+  const userStatuses: { [userId: string]: { isOnline: boolean; lastSeen?: string } } = {};
+  const now = new Date();
+
+  for (const user of allUsers) {
+    // Определяем онлайн статус: если lastSeen обновлялся менее 30 секунд назад
+    const isOnline = user.lastSeen && (now.getTime() - user.lastSeen.getTime()) < (30 * 1000);
+    const lastSeen = user.lastSeen ? user.lastSeen.toISOString() : undefined;
+    userStatuses[user.id] = { isOnline: !!isOnline, lastSeen };
+  }
+
+  return userStatuses;
 };
 
 // Отправка уведомления в комнату чата

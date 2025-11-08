@@ -12,26 +12,26 @@ interface SocketLoggerMethods {
   disconnection(socketId: string, userId: string | null): void;
   joinRoom(socketId: string, userId: string | null, room: string): void;
   message(socketId: string, userId: string | null, roomId: string, messageLength: number): void;
-  error(message: string, meta?: LoggerData): void;
-  debug(message: string, meta?: LoggerData): void;
+  error(message: string | LoggerData, meta?: LoggerData): void;
+  debug(message: string | LoggerData, meta?: LoggerData): void;
 }
 
 interface RateLimitLoggerMethods {
   limitApplied(userId: string, ip: string, remainingPoints: number, resetTime: Date): void;
   limitExceeded(userId: string, ip: string, socketId: string, msBeforeNext: number): void;
-  error(message: string, meta?: LoggerData): void;
+  error(message: string | LoggerData, meta?: LoggerData): void;
 }
 
 interface DatabaseLoggerMethods {
   queryExecuted(query: string, duration: number, userId: string | null): void;
-  error(message: string, meta?: LoggerData): void;
+  error(message: string | LoggerData, meta?: LoggerData): void;
 }
 
 interface AuthLoggerMethods {
-  info(message: string, meta?: LoggerData): void;
-  warn(message: string, meta?: LoggerData): void;
-  error(message: string, meta?: LoggerData): void;
-  debug(message: string, meta?: LoggerData): void;
+  info(message: string | LoggerData, meta?: LoggerData): void;
+  warn(message: string | LoggerData, meta?: LoggerData): void;
+  error(message: string | LoggerData, meta?: LoggerData): void;
+  debug(message: string | LoggerData, meta?: LoggerData): void;
 }
 
 // Check if running on client side
@@ -79,10 +79,34 @@ if (!isClient) {
 } else {
   // Client-side logger using console
   logger = {
-    info: (message: string, meta?: LoggerData) => console.log(`[INFO] ${message}`, meta),
-    warn: (message: string, meta?: LoggerData) => console.warn(`[WARN] ${message}`, meta),
-    error: (message: string, meta?: LoggerData) => console.error(`[ERROR] ${message}`, meta),
-    debug: (message: string, meta?: LoggerData) => console.debug(`[DEBUG] ${message}`, meta),
+    info: (message: string | LoggerData, meta?: LoggerData) => {
+      if (typeof message === 'string') {
+        console.log(`[INFO] ${message}`, meta)
+      } else {
+        console.log('[INFO]', message, meta)
+      }
+    },
+    warn: (message: string | LoggerData, meta?: LoggerData) => {
+      if (typeof message === 'string') {
+        console.warn(`[WARN] ${message}`, meta)
+      } else {
+        console.warn('[WARN]', message, meta)
+      }
+    },
+    error: (message: string | LoggerData, meta?: LoggerData) => {
+      if (typeof message === 'string') {
+        console.error(`[ERROR] ${message}`, meta)
+      } else {
+        console.error('[ERROR]', JSON.stringify(message, null, 2), meta)
+      }
+    },
+    debug: (message: string | LoggerData, meta?: LoggerData) => {
+      if (typeof message === 'string') {
+        console.debug(`[DEBUG] ${message}`, meta)
+      } else {
+        console.debug('[DEBUG]', message, meta)
+      }
+    },
   } as any;
 }
 

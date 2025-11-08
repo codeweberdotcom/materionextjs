@@ -16,6 +16,8 @@ interface Message {
   roomId: string;
   readAt?: string;
   createdAt: string;
+  clientId?: string;
+  isOptimistic?: boolean;
 }
 
 interface ChatRoom {
@@ -33,6 +35,7 @@ export const useChat = (otherUserId?: string) => {
   const [loading, setLoading] = useState(false);
   const [isRoomLoading, setIsRoomLoading] = useState(false);
   const [rateLimitData, setRateLimitData] = useState<{ retryAfter: number; blockedUntil: number } | null>(null);
+  const [optimisticMessages, setOptimisticMessages] = useState<Map<string, Message>>(new Map());
 
 
   // Initialize room when otherUserId is provided
@@ -95,8 +98,21 @@ export const useChat = (otherUserId?: string) => {
     };
 
     const handleReceiveMessage = (message: Message) => {
-
-      setMessages(prev => [...prev, message]);
+      // Check if this message replaces an optimistic one
+      if (message.clientId && optimisticMessages.has(message.clientId)) {
+        // Replace optimistic message with real one
+        setMessages(prev => prev.map(msg =>
+          msg.clientId === message.clientId ? message : msg
+        ));
+        setOptimisticMessages(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(message.clientId!);
+          return newMap;
+        });
+      } else {
+        // Add new message normally
+        setMessages(prev => [...prev, message]);
+      }
 
       // Update Redux store for sidebar display
       if (user?.id) {
@@ -144,8 +160,47 @@ export const useChat = (otherUserId?: string) => {
     }
   }, [room?.id, user?.id, messages.length]);
 
+  // Add optimistic message
+  const addOptimisticMessage = (content: string) => {
+    if (!user?.id || !room) return null;
+
+    const clientId = `optimistic-${Date.now()}-${Math.random()}`;
+    const optimisticMessage: Message = {
+      id: clientId,
+      content,
+      senderId: user.id,
+      sender: {
+        id: user.id,
+        name: user.name || '',
+        email: user.email
+      },
+      roomId: room.id,
+      createdAt: new Date().toISOString(),
+      clientId,
+      isOptimistic: true
+    };
+
+    setMessages(prev => [...prev, optimisticMessage]);
+    setOptimisticMessages(prev => new Map(prev.set(clientId, optimisticMessage)));
+
+    return clientId;
+  };
+
+  // Remove optimistic message on error
+  const removeOptimisticMessage = (clientId: string) => {
+    setMessages(prev => prev.filter(msg => msg.clientId !== clientId));
+    setOptimisticMessages(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(clientId);
+      return newMap;
+    });
+  };
+
   const sendMessage = async (content: string) => {
     if (!socket || !room || !user?.id) return;
+
+    // Add optimistic message immediately
+    const clientId = addOptimisticMessage(content);
 
     try {
       // Check rate limit before sending
@@ -162,15 +217,17 @@ export const useChat = (otherUserId?: string) => {
 
       if (!response.ok) {
         if (response.status === 429) {
-          // Handle rate limit exceeded - set UI state
+          // Handle rate limit exceeded - set UI state and remove optimistic message
           const errorData = await response.json();
           setRateLimitData({
             retryAfter: errorData.retryAfter || 300,
             blockedUntil: new Date(errorData.blockedUntil).getTime()
           });
+          if (clientId) removeOptimisticMessage(clientId);
           throw new Error('Rate limit exceeded');
         } else {
           const errorData = await response.json();
+          if (clientId) removeOptimisticMessage(clientId);
           throw new Error(errorData.error || 'Rate limit check failed');
         }
       }
@@ -179,7 +236,8 @@ export const useChat = (otherUserId?: string) => {
       socket.emit('sendMessage', {
         roomId: room.id,
         message: content,
-        senderId: user?.id
+        senderId: user?.id,
+        clientId // Pass clientId to server for deduplication
       });
 
       // Update Redux store for sidebar display
@@ -189,6 +247,8 @@ export const useChat = (otherUserId?: string) => {
         receiverId: otherUserId || ''
       }));
     } catch (error) {
+      // Remove optimistic message on error
+      if (clientId) removeOptimisticMessage(clientId);
       throw error;
     }
   };

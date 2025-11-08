@@ -2,12 +2,10 @@
 import type { Dispatch, MouseEvent, ReactNode, SetStateAction } from 'react'
 
 // MUI Imports
-import CircularProgress from '@mui/material/CircularProgress'
 import Typography from '@mui/material/Typography'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
-import Backdrop from '@mui/material/Backdrop'
 import Chip from '@mui/material/Chip'
 
 // Third-party Imports
@@ -34,20 +32,22 @@ import { usePermissions } from '@/hooks/usePermissions'
 import styles from './styles.module.css'
 
 type Props = {
-  isInitialMount: boolean
-  isBelowSmScreen: boolean
-  isBelowLgScreen: boolean
-  reload: boolean
-  searchTerm: string
-  selectedNotifications: Set<string>
-  setSelectedNotifications: Dispatch<SetStateAction<Set<string>>>
-  notifications: Notification[]
-  dispatch: AppDispatch
-  status?: string
-  type?: string
-  handleSingleNotificationRead: (notificationId: string) => void
-  handleSingleNotificationArchive: (notificationId: string) => void
-  handleNotificationClick: (notificationId: string) => void
+   isInitialMount: boolean
+   isBelowSmScreen: boolean
+   isBelowLgScreen: boolean
+   reload: boolean
+   filtering: boolean
+   loading: boolean
+   searchTerm: string
+   selectedNotifications: Set<string>
+   setSelectedNotifications: Dispatch<SetStateAction<Set<string>>>
+   notifications: Notification[]
+   dispatch: AppDispatch
+   status?: string
+   type?: string
+   handleSingleNotificationRead: (notificationId: string) => void
+   handleSingleNotificationArchive: (notificationId: string) => void
+   handleNotificationClick: (notificationId: string) => void
 }
 
 const ScrollWrapper = ({ children, isBelowLgScreen }: { children: ReactNode; isBelowLgScreen: boolean }) => {
@@ -60,22 +60,24 @@ const ScrollWrapper = ({ children, isBelowLgScreen }: { children: ReactNode; isB
 
 const NotificationsList = (props: Props) => {
   // Props
-  const {
-    isInitialMount,
-    isBelowSmScreen,
-    isBelowLgScreen,
-    reload,
-    searchTerm,
-    selectedNotifications,
-    setSelectedNotifications,
-    notifications,
-    dispatch,
-    status,
-    type,
-    handleSingleNotificationRead,
-    handleSingleNotificationArchive,
-    handleNotificationClick
-  } = props
+   const {
+     isInitialMount,
+     isBelowSmScreen,
+     isBelowLgScreen,
+     reload,
+     filtering,
+     loading,
+     searchTerm,
+     selectedNotifications,
+     setSelectedNotifications,
+     notifications,
+     dispatch,
+     status,
+     type,
+     handleSingleNotificationRead,
+     handleSingleNotificationArchive,
+     handleNotificationClick
+   } = props
 
   // Hooks
   const dictionary = useTranslation()
@@ -140,8 +142,8 @@ const NotificationsList = (props: Props) => {
     )
   }
 
-  // Show skeleton loading during initial mount
-  if (isInitialMount) {
+  // Show skeleton loading during initial mount, reload, filtering, or loading
+  if (isInitialMount || reload || filtering || loading) {
     return (
       <div className='relative overflow-hidden grow is-full'>
         <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
@@ -231,11 +233,6 @@ const NotificationsList = (props: Props) => {
           })}
         </div>
       </ScrollWrapper>
-      {reload && (
-        <Backdrop open={reload} className='absolute z-10 bg-white'>
-          <CircularProgress color='primary' />
-        </Backdrop>
-      )}
     </div>
   )
 }

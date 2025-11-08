@@ -29,8 +29,9 @@ import ChatContent from './ChatContent'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
-import { useSocket } from '@/hooks/useSocket'
-import { useUnreadMessages } from '@/hooks/useUnreadMessages'
+import { useSocketNew } from '@/hooks/useSocketNew'
+import { useNotificationsNew } from '@/hooks/useNotificationsNew'
+import { useChatNew } from '@/hooks/useChatNew'
 
 // Util Imports
 import { commonLayoutClasses } from '@layouts/utils/layoutClasses'
@@ -41,8 +42,9 @@ const ChatWrapper = () => {
   const dispatch = useDispatch()
   const chatStore = useSelector((state: RootState) => state.chatReducer)
   const { user, session } = useAuth()
-  const { socket, isConnected } = useSocket(user?.id || null)
-  const { unreadCount } = useUnreadMessages()
+  const { chatSocket, isConnected } = useSocketNew()
+  const { unreadCount } = useNotificationsNew()
+  const { initializeRoom, room, isRoomLoading, sendMessage, messages, rateLimitData } = useChatNew()
   const { checkPermission } = usePermissions()
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
@@ -102,14 +104,14 @@ const ChatWrapper = () => {
       // Load messages immediately without delay
       chatStore.contacts.forEach((contact) => {
         if (contact.id !== user?.id) {
-          socket?.emit('getOrCreateRoom', {
+          chatSocket?.emit('getOrCreateRoom', {
             user1Id: user?.id,
             user2Id: contact.id
           })
         }
       })
     }
-  }, [chatStore.contacts.length, user?.id, socket, isConnected])
+  }, [chatStore.contacts.length, user?.id, chatSocket, isConnected])
 
   // Load last messages from database directly
   useEffect(() => {
@@ -188,6 +190,7 @@ const ChatWrapper = () => {
         isBelowSmScreen={isBelowSmScreen}
         messageInputRef={messageInputRef}
         unreadCount={unreadCount}
+        initializeRoom={initializeRoom}
       />
 
       <ChatContent
@@ -200,6 +203,11 @@ const ChatWrapper = () => {
         isBelowLgScreen={isBelowLgScreen}
         isBelowSmScreen={isBelowSmScreen}
         messageInputRef={messageInputRef}
+        room={room}
+        isRoomLoading={isRoomLoading}
+        sendMessage={sendMessage}
+        messages={messages}
+        rateLimitData={rateLimitData}
       />
 
       <Backdrop open={backdropOpen} onClick={() => setBackdropOpen(false)} className='absolute z-10' />

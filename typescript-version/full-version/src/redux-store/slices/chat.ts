@@ -30,7 +30,7 @@ export const fetchUsers = createAsyncThunk('chat/fetchUsers', async () => {
       about: user.email,
       avatar: user.image || undefined,
       avatarColor: 'primary' as const,
-      status: 'online' as StatusType
+      status: 'offline' as StatusType
     }))
 
     return contacts

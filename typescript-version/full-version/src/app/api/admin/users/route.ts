@@ -12,6 +12,7 @@ import { PrismaClient } from '@prisma/client'
 
 
 import { checkPermission } from '@/utils/permissions/permissions'
+import { getOnlineUsers } from '@/lib/sockets/namespaces/chat'
 
 const prisma = new PrismaClient()
 
@@ -185,15 +186,22 @@ export async function GET(request: NextRequest) {
         },
         country: true,
         image: true,
-        isActive: true
+        isActive: true,
+        lastSeen: true
       },
       orderBy: {
         createdAt: 'desc'
       }
     })
 
+    // Получаем статусы онлайн пользователей
+    const { getOnlineUsers } = await import('@/lib/sockets/namespaces/chat')
+    const userStatuses = await getOnlineUsers()
+
     // Transform the data to match the expected UsersType format
     const transformedUsers = users.map((user: any) => {
+      const userStatus = userStatuses[user.id] || { isOnline: false, lastSeen: undefined }
+
       return {
         id: user.id,
         fullName: user.name || 'Unknown User',
@@ -207,7 +215,9 @@ export async function GET(request: NextRequest) {
         status: (user.isActive ?? true) ? 'active' : 'inactive',
         isActive: user.isActive ?? true,
         avatar: user.image || '',
-        avatarColor: 'primary' as const
+        avatarColor: 'primary' as const,
+        isOnline: userStatus.isOnline,
+        lastSeen: userStatus.lastSeen
       }
     })
 

@@ -122,7 +122,7 @@ export class RateLimitService {
 
   private setDefaultConfigs() {
     const defaults = {
-      chat: { maxRequests: 10, windowMs: 60 * 1000, blockMs: 15 * 60 * 1000 }, // 10/min, block 15min
+      chat: { maxRequests: 1000, windowMs: 60 * 60 * 1000, blockMs: 60 * 1000 }, // 1000/hour, block 1min (для тестирования)
       ads: { maxRequests: 5, windowMs: 60 * 60 * 1000, blockMs: 60 * 60 * 1000 }, // 5/hour, block 1hour
       upload: { maxRequests: 20, windowMs: 60 * 60 * 1000, blockMs: 30 * 60 * 1000 }, // 20/hour, block 30min
       auth: { maxRequests: 5, windowMs: 15 * 60 * 1000, blockMs: 60 * 60 * 1000 }, // 5/15min, block 1hour

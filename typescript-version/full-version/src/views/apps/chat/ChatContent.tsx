@@ -12,18 +12,25 @@ import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import CardContent from '@mui/material/CardContent'
 
+import type { ChatRoom } from '../lib/sockets/types/chat'
+
 // Type Imports
 import type { AppDispatch } from '@/redux-store'
 import type { ChatDataType, ContactType } from '@/types/apps/chatTypes'
 
 // Component Imports
 import AvatarWithBadge from './AvatarWithBadge'
-import { statusObj } from './SidebarLeft'
+import { statusObj } from '@/utils/status'
 import ChatLog from './ChatLog'
 import SendMsgForm from './SendMsgForm'
 import UserProfileRight from './UserProfileRight'
 import CustomAvatar from '@core/components/mui/Avatar'
 import { useTranslation } from '@/contexts/TranslationContext'
+
+// Custom Hooks
+import { useUnreadByContact } from '@/hooks/useUnreadByContact'
+
+import type { ChatMessage } from '@/lib/sockets/types/chat'
 
 type Props = {
   chatStore: ChatDataType
@@ -35,37 +42,91 @@ type Props = {
   isBelowLgScreen: boolean
   isBelowSmScreen: boolean
   messageInputRef: RefObject<HTMLDivElement>
+  room: ChatRoom | null
+  isRoomLoading: boolean
+  sendMessage: (content: string) => Promise<void>
+  messages: ChatMessage[]
+  rateLimitData: { retryAfter: number; blockedUntil: number } | null
 }
 
 // Renders the user avatar with badge and user information
 const UserAvatar = ({
   activeUser,
   setUserProfileLeftOpen,
-  setBackdropOpen
+  setBackdropOpen,
+  navigation,
+  userStatuses
 }: {
   activeUser: ContactType
   setUserProfileLeftOpen: (open: boolean) => void
   setBackdropOpen: (open: boolean) => void
-}) => (
-  <div
-    className='flex items-center gap-4 cursor-pointer'
-    onClick={() => {
-      setUserProfileLeftOpen(true)
-      setBackdropOpen(true)
-    }}
-  >
-    <AvatarWithBadge
-      alt={activeUser?.fullName}
-      src={activeUser?.avatar}
-      color={activeUser?.avatarColor}
-      badgeColor={statusObj[activeUser?.status || 'offline']}
-    />
-    <div>
-      <Typography color='text.primary'>{activeUser?.fullName}</Typography>
-      <Typography variant='body2'>{activeUser?.role}</Typography>
+  navigation: any
+  userStatuses: { [userId: string]: { isOnline: boolean; lastSeen?: string } }
+}) => {
+  // Get real-time user status
+  const userStatus = userStatuses[activeUser?.id || '']
+
+  // Determine status text, last seen text and color
+  let statusText: string
+  let statusColor: string
+
+  if (!userStatus) {
+    // Data is still loading - fallback to static status
+    statusText = activeUser?.status === 'online' ? navigation.online : navigation.offline
+    statusColor = statusObj[activeUser?.status || 'offline']
+  } else if (userStatus.isOnline) {
+    statusText = navigation.online
+    statusColor = statusObj.online
+  } else if (userStatus.lastSeen) {
+    // Format last seen time
+    const lastSeenDate = new Date(userStatus.lastSeen)
+    const now = new Date()
+    const diffMs = now.getTime() - lastSeenDate.getTime()
+    const diffMins = Math.floor(diffMs / (1000 * 60))
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+    if (diffMins < 1) {
+      statusText = navigation.justNow
+    } else if (diffMins < 60) {
+      statusText = navigation.minutesAgo.replace('{{count}}', diffMins.toString())
+    } else if (diffHours < 24) {
+      statusText = navigation.hoursAgo.replace('{{count}}', diffHours.toString())
+    } else if (diffDays < 7) {
+      statusText = navigation.daysAgo.replace('{{count}}', diffDays.toString())
+    } else {
+      statusText = lastSeenDate.toLocaleDateString('ru-RU')
+    }
+    statusColor = statusObj.offline
+  } else {
+    // User is offline and has no last seen time
+    statusText = navigation.offline
+    statusColor = statusObj.offline
+  }
+
+  return (
+    <div
+      className='flex items-center gap-4 cursor-pointer'
+      onClick={() => {
+        setUserProfileLeftOpen(true)
+        setBackdropOpen(true)
+      }}
+    >
+      <AvatarWithBadge
+        alt={activeUser?.fullName}
+        src={activeUser?.avatar}
+        color={activeUser?.avatarColor}
+        badgeColor={statusColor}
+      />
+      <div>
+        <Typography color='text.primary'>{activeUser?.fullName}</Typography>
+        <Typography variant='body2' color='text.secondary'>
+          {statusText}
+        </Typography>
+      </div>
     </div>
-  </div>
-)
+  )
+}
 
 const ChatContent = (props: Props) => {
   // Props
@@ -78,7 +139,12 @@ const ChatContent = (props: Props) => {
     isBelowMdScreen,
     isBelowSmScreen,
     isBelowLgScreen,
-    messageInputRef
+    messageInputRef,
+    room,
+    isRoomLoading,
+    sendMessage,
+    messages,
+    rateLimitData
   } = props
 
   const { activeUser } = chatStore
@@ -87,9 +153,16 @@ const ChatContent = (props: Props) => {
   const router = useRouter()
   const { lang } = useParams()
   const { navigation } = useTranslation()
+  const { userStatuses } = useUnreadByContact()
 
   // States
   const [userProfileRightOpen, setUserProfileRightOpen] = useState(false)
+
+  console.log('🔍 [ChatContent] Render:', {
+    hasActiveUser: !!activeUser,
+    activeUserId: activeUser?.id,
+    activeUserName: activeUser?.fullName
+  })
 
   // Close user profile right drawer if backdrop is closed and user profile right drawer is open
   useEffect(() => {
@@ -138,6 +211,8 @@ const ChatContent = (props: Props) => {
                   activeUser={activeUser}
                   setBackdropOpen={setBackdropOpen}
                   setUserProfileLeftOpen={setUserProfileRightOpen}
+                  navigation={navigation}
+                  userStatuses={userStatuses}
                 />
               </div>
             ) : (
@@ -145,6 +220,8 @@ const ChatContent = (props: Props) => {
                 activeUser={activeUser}
                 setBackdropOpen={setBackdropOpen}
                 setUserProfileLeftOpen={setUserProfileRightOpen}
+                navigation={navigation}
+                userStatuses={userStatuses}
               />
             )}
             {isBelowMdScreen ? null : (
@@ -161,6 +238,7 @@ const ChatContent = (props: Props) => {
             isBelowMdScreen={isBelowMdScreen}
             isBelowSmScreen={isBelowSmScreen}
             isBelowLgScreen={isBelowLgScreen}
+            messages={messages}
           />
 
           <SendMsgForm
@@ -168,6 +246,10 @@ const ChatContent = (props: Props) => {
             activeUser={activeUser}
             isBelowSmScreen={isBelowSmScreen}
             messageInputRef={messageInputRef}
+            room={room}
+            isRoomLoading={isRoomLoading}
+            sendMessage={sendMessage}
+            rateLimitData={rateLimitData}
           />
         </div>
       )}
