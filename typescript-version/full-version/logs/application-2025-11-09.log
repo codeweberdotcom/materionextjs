@@ -3849,3 +3849,5 @@
 {"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T23:11:50.621Z"}
 {"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T23:11:50.621Z"}
 {"level":"info","message":"вќЊ [SESSION] No session ID found in cookie","service":"materio-nextjs","timestamp":"2025-11-08T23:11:50.621Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-08T23:12:26.979Z"}
+{"level":"info","message":"User disconnected from notification namespace","service":"materio-nextjs","socketId":"5GalH4VkF1bfeN1NAABt","timestamp":"2025-11-08T23:17:29.849Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
