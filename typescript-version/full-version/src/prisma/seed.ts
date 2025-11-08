@@ -800,11 +800,79 @@ async function main() {
 
   console.log(`✅ Created ${ipBlocks.length} IP blocks via UserBlock for testing`)
 
+  // Create demo users with different roles and lastSeen
+  const demoUsers = [
+    {
+      name: 'Маргарита Менеджер',
+      email: 'manager.demo@example.com',
+      password: 'DemoManager123!',
+      roleId: managerRole.id,
+      lastSeen: new Date(Date.now() - 5 * 60 * 1000) // 5 minutes ago
+    },
+    {
+      name: 'Матвей Модератор',
+      email: 'moderator.demo@example.com',
+      password: 'DemoModerator123!',
+      roleId: moderatorRole.id,
+      lastSeen: new Date(Date.now() - 15 * 60 * 1000) // 15 minutes ago
+    },
+    {
+      name: 'София Support',
+      email: 'support.demo@example.com',
+      password: 'DemoSupport123!',
+      roleId: supportRole.id,
+      lastSeen: new Date(Date.now() - 30 * 60 * 1000) // 30 minutes ago
+    },
+    {
+      name: 'Елена Редактор',
+      email: 'editor.demo@example.com',
+      password: 'DemoEditor123!',
+      roleId: editorRole.id,
+      lastSeen: new Date(Date.now() - 45 * 60 * 1000) // 45 minutes ago
+    },
+    {
+      name: 'Максим Маркетолог',
+      email: 'marketer.demo@example.com',
+      password: 'DemoMarketer123!',
+      roleId: marketologRole.id,
+      lastSeen: new Date(Date.now() - 60 * 60 * 1000) // 1 hour ago
+    }
+  ]
+
+  for (const demoUser of demoUsers) {
+    const hashedDemoPassword = await bcrypt.hash(demoUser.password, 10)
+
+    await prisma.user.upsert({
+      where: { email: demoUser.email },
+      update: {
+        name: demoUser.name,
+        password: hashedDemoPassword,
+        roleId: demoUser.roleId,
+        lastSeen: demoUser.lastSeen
+      },
+      create: {
+        email: demoUser.email,
+        name: demoUser.name,
+        password: hashedDemoPassword,
+        roleId: demoUser.roleId,
+        language: 'ru',
+        currency: 'RUB',
+        country: 'russia',
+        lastSeen: demoUser.lastSeen
+      }
+    })
+  }
+
   console.log('Email templates created successfully!')
   console.log('Database seeded successfully!')
   console.log('Users created:')
   console.log('- Email: superadmin@example.com, Password: admin123, Role: superadmin (DEFAULT ADMIN)')
   console.log('- Email: admin@example.com, Password: admin123, Role: admin')
+  console.log('- Email: manager.demo@example.com, Password: DemoManager123!, Role: manager')
+  console.log('- Email: moderator.demo@example.com, Password: DemoModerator123!, Role: moderator')
+  console.log('- Email: support.demo@example.com, Password: DemoSupport123!, Role: support')
+  console.log('- Email: editor.demo@example.com, Password: DemoEditor123!, Role: editor')
+  console.log('- Email: marketer.demo@example.com, Password: DemoMarketer123!, Role: marketolog')
 }
 
 main()

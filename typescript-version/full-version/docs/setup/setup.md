@@ -573,6 +573,7 @@ The application uses an integrated Socket.IO server for real-time chat functiona
 - **Socket.IO Server**: Integrated with Next.js development server
 - **Default Port**: 3000 (same as Next.js)
 - **CORS Origins**: `http://localhost:3000`
+- **Клиентская конфигурация**: управляется через `NEXT_PUBLIC_ENABLE_SOCKET_IO`, `NEXT_PUBLIC_SOCKET_URL`, `NEXT_PUBLIC_SOCKET_PATH`, `NEXT_PUBLIC_API_URL` в `.env`. Подробности — в [документе по клиентскому Socket.IO](../configuration/socket-client.md).
 
 ### Running the Server
 

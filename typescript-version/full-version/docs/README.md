@@ -12,6 +12,9 @@
 - [Метрики (Prometheus)](monitoring/metrics.md)
 - [Application Insights](monitoring/application-insights.md)
 
+### ⚙️ Конфигурация
+- [Клиент Socket.IO](configuration/socket-client.md)
+
 ## 🎯 Быстрый старт
 
 ### Запуск всех тестов
