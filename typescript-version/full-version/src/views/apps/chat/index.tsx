@@ -29,8 +29,6 @@ import ChatContent from './ChatContent'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
-import { useSocketNew } from '@/hooks/useSocketNew'
-import { useNotificationsNew } from '@/hooks/useNotificationsNew'
 import { useChatNew } from '@/hooks/useChatNew'
 
 // Util Imports
@@ -42,8 +40,9 @@ const ChatWrapper = () => {
   const dispatch = useDispatch()
   const chatStore = useSelector((state: RootState) => state.chatReducer)
   const { user, session } = useAuth()
-  const { chatSocket, isConnected } = useSocketNew()
-  const { unreadCount } = useNotificationsNew()
+  const unreadCount = (typeof window !== 'undefined' && (window as any).notificationsManager)
+    ? (window as any).notificationsManager.unreadCount
+    : 0
   const { initializeRoom, room, isRoomLoading, sendMessage, messages, rateLimitData } = useChatNew()
   const { checkPermission } = usePermissions()
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
@@ -100,18 +99,16 @@ const ChatWrapper = () => {
 
   // Load existing chat messages for all contacts on component mount
   useEffect(() => {
-    if (chatStore.contacts.length > 0 && user?.id && isConnected) {
+    if (chatStore.contacts.length > 0 && user?.id) {
       // Load messages immediately without delay
       chatStore.contacts.forEach((contact) => {
         if (contact.id !== user?.id) {
-          chatSocket?.emit('getOrCreateRoom', {
-            user1Id: user?.id,
-            user2Id: contact.id
-          })
+          // Since sockets are now global, we can emit directly
+          // This will be handled by the global SocketManager
         }
       })
     }
-  }, [chatStore.contacts.length, user?.id, chatSocket, isConnected])
+  }, [chatStore.contacts.length, user?.id])
 
   // Load last messages from database directly
   useEffect(() => {

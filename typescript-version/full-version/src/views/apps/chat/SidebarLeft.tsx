@@ -110,7 +110,7 @@ const renderContacts = (props: RenderChatType & { session: any; unreadByContact:
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
       if (diffMins < 1) {
-        lastSeenText = navigation.justNow
+        lastSeenText = navigation.recently
       } else if (diffMins < 60) {
         lastSeenText = navigation.minutesAgo.replace('{{count}}', diffMins.toString())
       } else if (diffHours < 24) {

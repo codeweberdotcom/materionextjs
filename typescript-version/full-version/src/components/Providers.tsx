@@ -7,6 +7,8 @@ import { VerticalNavProvider } from '@menu/contexts/verticalNavContext'
 import { SettingsProvider } from '@core/contexts/settingsContext'
 import ThemeProvider from '@components/theme'
 import ReduxProvider from '@/redux-store/ReduxProvider'
+import { SocketManager } from '@/components/SocketManager'
+import { NotificationsManager } from '@/components/NotificationsManager'
 
 // Styled Component Imports
 import AppReactToastify from '@/libs/styles/AppReactToastify'
@@ -29,6 +31,8 @@ const Providers = async (props: Props) => {
 
   return (
     <NextAuthProvider>
+      <SocketManager />
+      <NotificationsManager />
       <VerticalNavProvider>
         <SettingsProvider settingsCookie={settingsCookie} mode={mode}>
           <ThemeProvider direction={direction} systemMode={systemMode}>

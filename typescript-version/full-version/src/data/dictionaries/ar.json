@@ -290,6 +290,7 @@
     "offline": "غير متصل",
     "loadingStatus": "جارٍ التحميل...",
     "justNow": "الآن",
+    "recently": "مؤخراً",
     "minutesAgo": "{{count}} دقيقة",
     "hoursAgo": "{{count}} ساعة",
     "daysAgo": "{{count}} يوم",

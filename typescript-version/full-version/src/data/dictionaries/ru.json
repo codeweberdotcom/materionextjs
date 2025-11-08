@@ -512,6 +512,7 @@
     "offline": "оффлайн",
     "loadingStatus": "загрузка...",
     "justNow": "только что",
+    "recently": "недавно",
     "minutesAgo": "{{count}} мин назад",
     "hoursAgo": "{{count}} ч назад",
     "daysAgo": "{{count}} д назад",

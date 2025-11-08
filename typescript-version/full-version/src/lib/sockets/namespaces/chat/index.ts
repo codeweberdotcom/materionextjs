@@ -447,8 +447,11 @@ export const getOnlineUsers = async () => {
   const now = new Date();
 
   for (const user of allUsers) {
-    // Определяем онлайн статус: если lastSeen обновлялся менее 30 секунд назад
-    const isOnline = user.lastSeen && (now.getTime() - user.lastSeen.getTime()) < (30 * 1000);
+    // Определяем онлайн статус:
+    // - Если lastSeen = null, пользователь онлайн (подключен к сокетам)
+    // - Если lastSeen обновлялся менее 30 секунд назад, пользователь онлайн
+    // - Иначе оффлайн
+    const isOnline = !user.lastSeen || (now.getTime() - user.lastSeen.getTime()) < (30 * 1000);
     const lastSeen = user.lastSeen ? user.lastSeen.toISOString() : undefined;
     userStatuses[user.id] = { isOnline: !!isOnline, lastSeen };
   }

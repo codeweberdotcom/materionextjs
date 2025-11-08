@@ -124,12 +124,12 @@ const Login = ({ mode }: { mode: Mode }) => {
       await login(data.email, data.password)
 
       // Vars
-      const redirectURL = searchParams.get('redirectTo') ?? '/en/apps/references/countries'
+      const redirectURL = searchParams.get('redirectTo') ?? '/en/dashboards/crm'
 
-      router.replace(getLocalizedUrl(redirectURL, locale as Locale))
+      window.location.href = getLocalizedUrl(redirectURL, locale as Locale)
     } catch (error: any) {
       setErrorState({ message: [error.message || 'Login failed'] })
-      setLoading(false) // Не разблокировать поля при ошибке
+      setLoading(false)
     }
   }
 

@@ -291,6 +291,7 @@
     "offline": "hors ligne",
     "loadingStatus": "chargement...",
     "justNow": "à l'instant",
+    "recently": "récemment",
     "minutesAgo": "{{count}} min",
     "hoursAgo": "{{count}} h",
     "daysAgo": "{{count}} j",
