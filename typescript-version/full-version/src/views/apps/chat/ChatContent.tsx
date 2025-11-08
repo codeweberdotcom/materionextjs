@@ -12,7 +12,7 @@ import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import CardContent from '@mui/material/CardContent'
 
-import type { ChatRoom } from '../lib/sockets/types/chat'
+import type { ChatRoom } from '@/lib/sockets/types/chat'
 
 // Type Imports
 import type { AppDispatch } from '@/redux-store'
@@ -47,6 +47,7 @@ type Props = {
   sendMessage: (content: string) => Promise<void>
   messages: ChatMessage[]
   rateLimitData: { retryAfter: number; blockedUntil: number } | null
+  markMessagesAsRead: () => void
 }
 
 // Renders the user avatar with badge and user information
@@ -144,7 +145,8 @@ const ChatContent = (props: Props) => {
     isRoomLoading,
     sendMessage,
     messages,
-    rateLimitData
+    rateLimitData,
+    markMessagesAsRead
   } = props
 
   const { activeUser } = chatStore
@@ -239,6 +241,9 @@ const ChatContent = (props: Props) => {
             isBelowSmScreen={isBelowSmScreen}
             isBelowLgScreen={isBelowLgScreen}
             messages={messages}
+            markMessagesAsRead={markMessagesAsRead}
+            room={room}
+            isRoomLoading={isRoomLoading}
           />
 
           <SendMsgForm

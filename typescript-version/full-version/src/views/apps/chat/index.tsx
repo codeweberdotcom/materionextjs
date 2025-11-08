@@ -43,7 +43,7 @@ const ChatWrapper = () => {
   const unreadCount = (typeof window !== 'undefined' && (window as any).notificationsManager)
     ? (window as any).notificationsManager.unreadCount
     : 0
-  const { initializeRoom, room, isRoomLoading, sendMessage, messages, rateLimitData } = useChatNew()
+  const { initializeRoom, room, isRoomLoading, sendMessage, messages, rateLimitData, markMessagesAsRead } = useChatNew()
   const { checkPermission } = usePermissions()
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
@@ -75,27 +75,10 @@ const ChatWrapper = () => {
 
   // Mark messages as read when active user changes
   useEffect(() => {
-    if (chatStore.activeUser?.id) {
-      // Here we would call markMessagesAsRead, but we need to get it from useChat hook
-      // For now, we'll use a direct API call
-      const markAsRead = async () => {
-        try {
-          // Find the room for current user and active user
-          const currentUserId = user?.id
-          const activeUserId = chatStore.activeUser!.id
-
-          if (currentUserId && activeUserId) {
-            // We need to find the actual room ID from the database
-            // For now, let's skip this and implement it properly later
-          }
-        } catch (error) {
-          // Error handling
-        }
-      }
-
-      // markAsRead() // Temporarily disabled
+    if (chatStore.activeUser?.id && user?.id && room?.id) {
+      markMessagesAsRead()
     }
-  }, [chatStore.activeUser?.id, user?.id])
+  }, [chatStore.activeUser?.id, user?.id, room?.id, markMessagesAsRead])
 
   // Load existing chat messages for all contacts on component mount
   useEffect(() => {
@@ -205,6 +188,7 @@ const ChatWrapper = () => {
         sendMessage={sendMessage}
         messages={messages}
         rateLimitData={rateLimitData}
+        markMessagesAsRead={markMessagesAsRead}
       />
 
       <Backdrop open={backdropOpen} onClick={() => setBackdropOpen(false)} className='absolute z-10' />

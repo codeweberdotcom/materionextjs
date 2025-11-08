@@ -1,0 +1,854 @@
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.963Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.964Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.964Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.965Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.965Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.965Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.965Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.965Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.966Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.966Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.966Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.966Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.966Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.967Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.967Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.967Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.967Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.967Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.967Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.967Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.968Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.968Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.968Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.968Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.968Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.968Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.968Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:29.968Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:17:39.121Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:39.123Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:17:39.149Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:39.172Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:17:39.577Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:39.577Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:17:39.610Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:39.642Z"}
+{"level":"info","message":"рџљЄ [LOGOUT] Starting logout process...","service":"materio-nextjs","timestamp":"2025-11-08T21:17:44.524Z"}
+{"level":"info","message":"рџљЄ [LOGOUT] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:44.525Z"}
+{"level":"info","message":"рџљЄ [LOGOUT] Invalidating ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:17:44.525Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:17:44.549Z"}
+{"level":"info","message":"вњ… [LOGOUT] Session invalidated","service":"materio-nextjs","timestamp":"2025-11-08T21:17:44.578Z"}
+{"level":"info","message":"рџљЄ [LOGOUT] Creating blank session cookie","service":"materio-nextjs","timestamp":"2025-11-08T21:17:44.579Z"}
+{"level":"info","message":"вњ… [LOGOUT] Logout completed successfully","service":"materio-nextjs","timestamp":"2025-11-08T21:17:44.580Z"}
+{"level":"info","message":"❌ [SESSION-TOKEN] Invalid session","service":"materio-nextjs","timestamp":"2025-11-08T21:17:44.582Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:17:46.985Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:46.986Z"}
+{"level":"info","message":"вќЊ [SESSION] No session ID found in cookie","service":"materio-nextjs","timestamp":"2025-11-08T21:17:46.986Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:17:47.273Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:47.274Z"}
+{"level":"info","message":"вќЊ [SESSION] No session ID found in cookie","service":"materio-nextjs","timestamp":"2025-11-08T21:17:47.274Z"}
+{"level":"info","message":"рџ”ђ [LOGIN] Login attempt started","service":"materio-nextjs","timestamp":"2025-11-08T21:17:54.596Z"}
+{"email":"superadmin@example.com","hasPassword":true,"level":"info","message":"рџ”ђ [LOGIN] Login data:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:54.597Z"}
+{"level":"info","message":"вњ… [LOGIN] User found:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:54.612Z"}
+{"level":"info","message":"вњ… [LOGIN] Password valid, creating session for:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:54.681Z"}
+{"level":"info","message":"вњ… [LOGIN] Session created:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:54.696Z"}
+{"level":"info","message":"рџЌЄ [LOGIN] Setting session cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:54.696Z"}
+{"level":"info","message":"вњ… [LOGIN] Login successful for:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:54.697Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.033Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.050Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.541Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.542Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.542Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.542Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.542Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.543Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.543Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.543Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.543Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.543Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.544Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.544Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.544Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.544Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.544Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.545Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.545Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.545Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.545Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.545Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.545Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.545Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.546Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.546Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.546Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.546Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.546Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:17:55.546Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:17:56.950Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:56.951Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:17:56.965Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:56.982Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:17:57.296Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:57.297Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:17:57.325Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:57.354Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:17:58.220Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:17:58.272Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:18:31.903Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:18:31.944Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-08T21:18:32.212Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:18:35.266Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:18:35.313Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-08T21:18:35.349Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:18:35.873Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:18:35.891Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:18:36.347Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:18:36.375Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:18:36.835Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:18:36.855Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:18:37.391Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:18:37.412Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.823Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.825Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.826Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.826Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.827Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.827Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.827Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.827Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.827Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.828Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.828Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.828Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.828Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.829Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.829Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.829Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.829Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.829Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.830Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.830Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.830Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.830Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.831Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.831Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.831Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.831Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.831Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:21:52.832Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:21:55.186Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:21:55.188Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:21:55.203Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:21:55.219Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:21:55.779Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:21:55.779Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:21:55.802Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:21:55.823Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:21:56.136Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:21:56.156Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:21:57.045Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:21:57.100Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:21:58.141Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:21:58.163Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:21:58.740Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:21:58.763Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.367Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.370Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.371Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.372Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.373Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.373Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.374Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.374Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.374Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.375Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.375Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.375Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.375Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.376Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.376Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.376Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.377Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.377Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.377Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.377Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.378Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.378Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.378Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.379Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.379Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.379Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.379Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:10.379Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:22:16.127Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:16.128Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:22:16.148Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:16.162Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:22:16.264Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:16.265Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:22:16.272Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:16.282Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:22:17.231Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:17.270Z"}
+{"level":"info","message":"рџљЄ [LOGOUT] Starting logout process...","service":"materio-nextjs","timestamp":"2025-11-08T21:22:24.520Z"}
+{"level":"info","message":"рџљЄ [LOGOUT] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:24.521Z"}
+{"level":"info","message":"рџљЄ [LOGOUT] Invalidating ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:22:24.521Z"}
+{"level":"info","message":"вњ… [LOGOUT] Session invalidated","service":"materio-nextjs","timestamp":"2025-11-08T21:22:24.535Z"}
+{"level":"info","message":"рџљЄ [LOGOUT] Creating blank session cookie","service":"materio-nextjs","timestamp":"2025-11-08T21:22:24.536Z"}
+{"level":"info","message":"вњ… [LOGOUT] Logout completed successfully","service":"materio-nextjs","timestamp":"2025-11-08T21:22:24.538Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:22:27.889Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:27.889Z"}
+{"level":"info","message":"вќЊ [SESSION] No session ID found in cookie","service":"materio-nextjs","timestamp":"2025-11-08T21:22:27.890Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:22:28.101Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:28.102Z"}
+{"level":"info","message":"вќЊ [SESSION] No session ID found in cookie","service":"materio-nextjs","timestamp":"2025-11-08T21:22:28.102Z"}
+{"level":"info","message":"рџ”ђ [LOGIN] Login attempt started","service":"materio-nextjs","timestamp":"2025-11-08T21:22:28.284Z"}
+{"email":"admin@example.com","hasPassword":true,"level":"info","message":"рџ”ђ [LOGIN] Login data:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:28.286Z"}
+{"level":"info","message":"вњ… [LOGIN] User found:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:28.293Z"}
+{"level":"info","message":"вњ… [LOGIN] Password valid, creating session for:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:28.373Z"}
+{"level":"info","message":"вњ… [LOGIN] Session created:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:28.396Z"}
+{"level":"info","message":"рџЌЄ [LOGIN] Setting session cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:28.396Z"}
+{"level":"info","message":"вњ… [LOGIN] Login successful for:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:28.397Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.144Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.173Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.689Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.690Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.690Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.690Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.690Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.691Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.691Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.691Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.691Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.691Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.691Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.692Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.692Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.692Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.692Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.692Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.693Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.693Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.693Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.693Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.693Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.694Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.694Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.694Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.694Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.695Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.695Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:22:29.695Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:22:34.756Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:34.757Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:22:34.767Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:34.782Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:22:34.892Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:34.893Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:22:34.901Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:34.910Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:22:36.207Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:22:36.268Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.370Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.370Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.370Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.370Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.371Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.371Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.371Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.371Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.371Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.371Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.372Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.373Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.373Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.373Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.373Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:43.373Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:23:45.085Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:23:45.085Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:23:45.102Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:23:45.120Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:23:45.700Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:23:45.701Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:23:45.725Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:23:45.748Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:23:46.150Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:23:46.166Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:23:46.681Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:23:46.701Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:23:47.437Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:23:47.463Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:23:48.000Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:23:48.024Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.946Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.946Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.947Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.947Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.947Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.947Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.947Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.947Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.947Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.947Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.948Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.948Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.948Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.948Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.948Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.948Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.948Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.948Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.948Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.948Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.949Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.949Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.949Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.949Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.949Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.949Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.949Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:23:53.949Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.184Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.184Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.185Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.185Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.185Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.185Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.185Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.186Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.186Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.186Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.186Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.186Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.186Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.186Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.186Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.186Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.186Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.187Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.187Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.187Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.187Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.187Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.187Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.187Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.187Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.187Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.187Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:17.187Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.496Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.497Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.498Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.498Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.498Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.498Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.498Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.498Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.499Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.499Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.499Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.499Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.499Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.499Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.499Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.499Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.499Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.500Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.500Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.500Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.500Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.500Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.500Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.500Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.500Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.500Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.500Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:24:59.501Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-08T21:48:32.740Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-08T21:48:52.831Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-08T21:48:52.835Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-08T21:48:52.836Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-08T21:48:52.836Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-08T21:48:52.836Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-08T21:48:52.838Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.240Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.242Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.242Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.242Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.242Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.243Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.243Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.243Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.243Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.243Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.244Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.244Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.244Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.244Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.244Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.244Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.245Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.245Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.245Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.245Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.245Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.245Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.245Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.245Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.246Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.246Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.246Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:33.246Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:49:42.362Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:42.364Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:49:42.381Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:42.386Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"czQKzV96xAH-pGkaAAAB","timestamp":"2025-11-08T21:49:42.591Z"}
+{"ip":"::1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"czQKzV96xAH-pGkaAAAB","timestamp":"2025-11-08T21:49:42.597Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"1RaykUdlXNVr08JlAAAD","timestamp":"2025-11-08T21:49:42.614Z"}
+{"ip":"::1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"1RaykUdlXNVr08JlAAAD","timestamp":"2025-11-08T21:49:42.614Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"xl0zCYfeNlVvLMqOAAAF","timestamp":"2025-11-08T21:49:42.624Z"}
+{"ip":"::1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"xl0zCYfeNlVvLMqOAAAF","timestamp":"2025-11-08T21:49:42.624Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"M-fnHMH0HvTBo-lVAAAH","timestamp":"2025-11-08T21:49:42.644Z"}
+{"ip":"::1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"M-fnHMH0HvTBo-lVAAAH","timestamp":"2025-11-08T21:49:42.645Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"x-xclOV5H6yBFZ3XAAAJ","timestamp":"2025-11-08T21:49:42.786Z"}
+{"ip":"::1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"x-xclOV5H6yBFZ3XAAAJ","timestamp":"2025-11-08T21:49:42.787Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.070Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.073Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.073Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.073Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.074Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.074Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.074Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.074Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.075Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.075Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.076Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.076Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.076Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.076Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.077Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.077Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.077Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.077Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.077Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.078Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.078Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.078Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.078Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.079Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.079Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.079Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.079Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.079Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.910Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.911Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:49:45.929Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.933Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:49:45.964Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:46.020Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"UwTy4BcxnZiVxulXAAAL","timestamp":"2025-11-08T21:49:46.054Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"UwTy4BcxnZiVxulXAAAL","timestamp":"2025-11-08T21:49:46.054Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"jIfk-nm1TjuvyR4zAAAM","timestamp":"2025-11-08T21:49:46.055Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"jIfk-nm1TjuvyR4zAAAM","timestamp":"2025-11-08T21:49:46.055Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"UwTy4BcxnZiVxulXAAAL","timestamp":"2025-11-08T21:49:46.067Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"UwTy4BcxnZiVxulXAAAL","timestamp":"2025-11-08T21:49:46.068Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"jIfk-nm1TjuvyR4zAAAM","timestamp":"2025-11-08T21:49:46.069Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"jIfk-nm1TjuvyR4zAAAM","timestamp":"2025-11-08T21:49:46.069Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"UwTy4BcxnZiVxulXAAAL","timestamp":"2025-11-08T21:49:46.072Z","userId":"cmhjcyju8000d10emrupr4lnz","userRole":"user"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"jIfk-nm1TjuvyR4zAAAM","timestamp":"2025-11-08T21:49:46.073Z","userId":"cmhjcyju8000d10emrupr4lnz","userRole":"user"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-08T21:49:46.112Z"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnhr6fs0001l962yn3wx4aa"],"service":"materio-nextjs","timestamp":"2025-11-08T21:49:46.121Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:49:46.538Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:46.547Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"eFMmrXE1l7TztPNFAAAO","timestamp":"2025-11-08T21:49:46.586Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"eFMmrXE1l7TztPNFAAAO","timestamp":"2025-11-08T21:49:46.587Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"eFMmrXE1l7TztPNFAAAO","timestamp":"2025-11-08T21:49:46.593Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"eFMmrXE1l7TztPNFAAAO","timestamp":"2025-11-08T21:49:46.593Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"eFMmrXE1l7TztPNFAAAO","timestamp":"2025-11-08T21:49:46.594Z","userId":"cmhjcyju8000d10emrupr4lnz","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnhr6fs0001l962yn3wx4aa"],"service":"materio-nextjs","timestamp":"2025-11-08T21:49:46.617Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"e2lw8yIKc7kZmPnlAAAQ","timestamp":"2025-11-08T21:49:46.641Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"e2lw8yIKc7kZmPnlAAAQ","timestamp":"2025-11-08T21:49:46.641Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"e2lw8yIKc7kZmPnlAAAQ","timestamp":"2025-11-08T21:49:46.659Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"e2lw8yIKc7kZmPnlAAAQ","timestamp":"2025-11-08T21:49:46.659Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"e2lw8yIKc7kZmPnlAAAQ","timestamp":"2025-11-08T21:49:46.660Z","userId":"cmhjcyju8000d10emrupr4lnz","userRole":"user"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:49:46.865Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:46.878Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"VqfRaiuS1l7UT9NhAAAS","timestamp":"2025-11-08T21:49:46.957Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"VqfRaiuS1l7UT9NhAAAS","timestamp":"2025-11-08T21:49:46.958Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"VqfRaiuS1l7UT9NhAAAS","timestamp":"2025-11-08T21:49:46.987Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"VqfRaiuS1l7UT9NhAAAS","timestamp":"2025-11-08T21:49:46.988Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"VqfRaiuS1l7UT9NhAAAS","timestamp":"2025-11-08T21:49:46.989Z","userId":"cmhjcyju8000d10emrupr4lnz","userRole":"user"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"w6C4cO9SywZ-Ln-9AAAU","timestamp":"2025-11-08T21:49:47.041Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"w6C4cO9SywZ-Ln-9AAAU","timestamp":"2025-11-08T21:49:47.041Z","tokenLength":40}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnhr6fs0001l962yn3wx4aa"],"service":"materio-nextjs","timestamp":"2025-11-08T21:49:47.062Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"w6C4cO9SywZ-Ln-9AAAU","timestamp":"2025-11-08T21:49:47.103Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"w6C4cO9SywZ-Ln-9AAAU","timestamp":"2025-11-08T21:49:47.104Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"w6C4cO9SywZ-Ln-9AAAU","timestamp":"2025-11-08T21:49:47.105Z","userId":"cmhjcyju8000d10emrupr4lnz","userRole":"user"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:49:47.440Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:47.450Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"gqXMhib2wT8NhuvzAAAW","timestamp":"2025-11-08T21:49:47.510Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"gqXMhib2wT8NhuvzAAAW","timestamp":"2025-11-08T21:49:47.510Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"XluD4tdBqJ1r_HOEAAAY","timestamp":"2025-11-08T21:49:47.516Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"XluD4tdBqJ1r_HOEAAAY","timestamp":"2025-11-08T21:49:47.516Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"gqXMhib2wT8NhuvzAAAW","timestamp":"2025-11-08T21:49:47.519Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"gqXMhib2wT8NhuvzAAAW","timestamp":"2025-11-08T21:49:47.519Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"gqXMhib2wT8NhuvzAAAW","timestamp":"2025-11-08T21:49:47.519Z","userId":"cmhjcyju8000d10emrupr4lnz","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"XluD4tdBqJ1r_HOEAAAY","timestamp":"2025-11-08T21:49:47.524Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"XluD4tdBqJ1r_HOEAAAY","timestamp":"2025-11-08T21:49:47.525Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"XluD4tdBqJ1r_HOEAAAY","timestamp":"2025-11-08T21:49:47.525Z","userId":"cmhjcyju8000d10emrupr4lnz","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnhr6fs0001l962yn3wx4aa"],"service":"materio-nextjs","timestamp":"2025-11-08T21:49:47.533Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:49:48.758Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:49:48.815Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:49:49.306Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:49:50.406Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:50.407Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:49:50.410Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:50.413Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:49:50.450Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:50.450Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:49:50.454Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:50.457Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:49:50.676Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:50.680Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"gja5-6NBSEIoiHhjAAAc","timestamp":"2025-11-08T21:49:50.794Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"gja5-6NBSEIoiHhjAAAc","timestamp":"2025-11-08T21:49:50.794Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"6nsH_9K0RB9A4XE0AAAd","timestamp":"2025-11-08T21:49:50.795Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"6nsH_9K0RB9A4XE0AAAd","timestamp":"2025-11-08T21:49:50.795Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"NyHXojxav6n6DhMtAAAe","timestamp":"2025-11-08T21:49:50.795Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"NyHXojxav6n6DhMtAAAe","timestamp":"2025-11-08T21:49:50.795Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"9Qk8orAqBNKYh2bZAAAg","timestamp":"2025-11-08T21:49:50.935Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"9Qk8orAqBNKYh2bZAAAg","timestamp":"2025-11-08T21:49:50.935Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"2NijR9AUoeLTSJCiAAAh","timestamp":"2025-11-08T21:49:50.936Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"2NijR9AUoeLTSJCiAAAh","timestamp":"2025-11-08T21:49:50.936Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"9Qk8orAqBNKYh2bZAAAg","timestamp":"2025-11-08T21:49:50.938Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"9Qk8orAqBNKYh2bZAAAg","timestamp":"2025-11-08T21:49:50.939Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"2NijR9AUoeLTSJCiAAAh","timestamp":"2025-11-08T21:49:50.939Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"2NijR9AUoeLTSJCiAAAh","timestamp":"2025-11-08T21:49:50.939Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"9Qk8orAqBNKYh2bZAAAg","timestamp":"2025-11-08T21:49:50.940Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"2NijR9AUoeLTSJCiAAAh","timestamp":"2025-11-08T21:49:50.941Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnlwmii000386utugldhoan"],"service":"materio-nextjs","timestamp":"2025-11-08T21:49:50.952Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"wYssu3JNJh3IqaKKAAAl","timestamp":"2025-11-08T21:49:53.013Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"wYssu3JNJh3IqaKKAAAl","timestamp":"2025-11-08T21:49:53.014Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"BoV4gndv5NNS2LWQAAAm","timestamp":"2025-11-08T21:49:53.019Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"BoV4gndv5NNS2LWQAAAm","timestamp":"2025-11-08T21:49:53.020Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:54.892Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":10,"resetTime":"2025-11-08T21:50:54.904Z","service":"materio-nextjs","timestamp":"2025-11-08T21:49:54.904Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-08T21:49:54.905Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","socketId":"gqXMhib2wT8NhuvzAAAW","timestamp":"2025-11-08T21:49:54.908Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhqtic810001wvakt2l637rh","roomId":"cmhjd2c2m003rwoxovp1k612a","senderId":"cmhjcyju8000d10emrupr4lnz","service":"materio-nextjs","timestamp":"2025-11-08T21:49:54.919Z"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:49:55.333Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-08T21:49:55.416Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-08T21:49:57.287Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":9,"resetTime":"2025-11-08T21:50:57.289Z","service":"materio-nextjs","timestamp":"2025-11-08T21:49:57.289Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-08T21:49:57.290Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","socketId":"gqXMhib2wT8NhuvzAAAW","timestamp":"2025-11-08T21:49:57.293Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhqtie2a0003wvak5ukqurd9","roomId":"cmhjd2c2m003rwoxovp1k612a","senderId":"cmhjcyju8000d10emrupr4lnz","service":"materio-nextjs","timestamp":"2025-11-08T21:49:57.304Z"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:49:57.719Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:00.356Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:00.385Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:00.449Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:00.496Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:00.514Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:00.558Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:02.434Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:02.456Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:02.786Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:02.807Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:02.819Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:02.938Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:05.144Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:05.168Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:05.228Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:05.255Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:05.270Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:05.296Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:06.072Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnhr6fs0001l962yn3wx4aa","service":"materio-nextjs","timestamp":"2025-11-08T21:50:06.110Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:06.439Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:06.459Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:06.460Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:50:06.554Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User disconnected from chat namespace","service":"materio-nextjs","socketId":"9Qk8orAqBNKYh2bZAAAg","timestamp":"2025-11-08T21:50:10.056Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User disconnected from notification namespace","service":"materio-nextjs","socketId":"2NijR9AUoeLTSJCiAAAh","timestamp":"2025-11-08T21:50:10.057Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.682Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.685Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.685Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.686Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.686Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.686Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.686Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.687Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.687Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.688Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.688Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.688Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.688Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.688Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.689Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.689Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.689Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.689Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.689Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.689Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.690Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.690Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.690Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.690Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.690Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.690Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.690Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:10.690Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"oeHBlKf2GulXJk_SAAAo","timestamp":"2025-11-08T21:50:11.043Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"oeHBlKf2GulXJk_SAAAo","timestamp":"2025-11-08T21:50:11.043Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"Wol6iEORRBk-qiFSAAAp","timestamp":"2025-11-08T21:50:11.043Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"Wol6iEORRBk-qiFSAAAp","timestamp":"2025-11-08T21:50:11.044Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"oeHBlKf2GulXJk_SAAAo","timestamp":"2025-11-08T21:50:11.050Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"oeHBlKf2GulXJk_SAAAo","timestamp":"2025-11-08T21:50:11.050Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"Wol6iEORRBk-qiFSAAAp","timestamp":"2025-11-08T21:50:11.050Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"Wol6iEORRBk-qiFSAAAp","timestamp":"2025-11-08T21:50:11.050Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"oeHBlKf2GulXJk_SAAAo","timestamp":"2025-11-08T21:50:11.050Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"Wol6iEORRBk-qiFSAAAp","timestamp":"2025-11-08T21:50:11.051Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnlwmii000386utugldhoan"],"service":"materio-nextjs","timestamp":"2025-11-08T21:50:11.064Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User disconnected from chat namespace","service":"materio-nextjs","socketId":"oeHBlKf2GulXJk_SAAAo","timestamp":"2025-11-08T21:50:11.066Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User disconnected from notification namespace","service":"materio-nextjs","socketId":"Wol6iEORRBk-qiFSAAAp","timestamp":"2025-11-08T21:50:11.066Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:50:12.893Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:50:12.894Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:50:12.897Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:50:12.899Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:50:12.929Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:50:12.930Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:50:12.932Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:50:12.934Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:50:13.107Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:50:13.112Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"PFZrEOUiATuGdSf5AAAt","timestamp":"2025-11-08T21:50:13.127Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"PFZrEOUiATuGdSf5AAAt","timestamp":"2025-11-08T21:50:13.127Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"usjI7ycR84M30MsHAAAu","timestamp":"2025-11-08T21:50:13.128Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"usjI7ycR84M30MsHAAAu","timestamp":"2025-11-08T21:50:13.128Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"vMS6lwEh3XBUm1yuAAAv","timestamp":"2025-11-08T21:50:13.128Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"vMS6lwEh3XBUm1yuAAAv","timestamp":"2025-11-08T21:50:13.128Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"f5xRIDLUnz61T5nfAAAx","timestamp":"2025-11-08T21:50:13.398Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"f5xRIDLUnz61T5nfAAAx","timestamp":"2025-11-08T21:50:13.398Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"FwSdbN-bM_fxnKepAAAy","timestamp":"2025-11-08T21:50:13.399Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"FwSdbN-bM_fxnKepAAAy","timestamp":"2025-11-08T21:50:13.399Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"f5xRIDLUnz61T5nfAAAx","timestamp":"2025-11-08T21:50:13.401Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"f5xRIDLUnz61T5nfAAAx","timestamp":"2025-11-08T21:50:13.401Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"f5xRIDLUnz61T5nfAAAx","timestamp":"2025-11-08T21:50:13.402Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"FwSdbN-bM_fxnKepAAAy","timestamp":"2025-11-08T21:50:13.404Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"FwSdbN-bM_fxnKepAAAy","timestamp":"2025-11-08T21:50:13.405Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"FwSdbN-bM_fxnKepAAAy","timestamp":"2025-11-08T21:50:13.406Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnlwmii000386utugldhoan"],"service":"materio-nextjs","timestamp":"2025-11-08T21:50:13.420Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"lOB5RZH246Q1OoyaAAA2","timestamp":"2025-11-08T21:50:15.133Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"lOB5RZH246Q1OoyaAAA2","timestamp":"2025-11-08T21:50:15.133Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"0EfDZGO2MeMiWFdOAAA3","timestamp":"2025-11-08T21:50:15.134Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"0EfDZGO2MeMiWFdOAAA3","timestamp":"2025-11-08T21:50:15.134Z"}
+{"level":"info","message":"User disconnected from chat namespace","service":"materio-nextjs","socketId":"gqXMhib2wT8NhuvzAAAW","timestamp":"2025-11-08T21:50:27.081Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User disconnected from notification namespace","service":"materio-nextjs","socketId":"XluD4tdBqJ1r_HOEAAAY","timestamp":"2025-11-08T21:50:27.083Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User disconnected from chat namespace","service":"materio-nextjs","socketId":"eFMmrXE1l7TztPNFAAAO","timestamp":"2025-11-08T21:50:27.083Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User disconnected from notification namespace","service":"materio-nextjs","socketId":"e2lw8yIKc7kZmPnlAAAQ","timestamp":"2025-11-08T21:50:27.084Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User disconnected from chat namespace","service":"materio-nextjs","socketId":"VqfRaiuS1l7UT9NhAAAS","timestamp":"2025-11-08T21:50:27.084Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"level":"info","message":"User disconnected from notification namespace","service":"materio-nextjs","socketId":"w6C4cO9SywZ-Ln-9AAAU","timestamp":"2025-11-08T21:50:27.085Z","userId":"cmhjcyju8000d10emrupr4lnz"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","role":"superadmin","service":"materio-nextjs","timestamp":"2025-11-08T21:50:30.325Z"}
+{"level":"info","message":"✅ [PERMISSIONS] All permissions granted","role":"superadmin","service":"materio-nextjs","timestamp":"2025-11-08T21:50:30.328Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-08T21:50:30.340Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","role":"superadmin","service":"materio-nextjs","timestamp":"2025-11-08T21:50:30.777Z"}
+{"level":"info","message":"✅ [PERMISSIONS] All permissions granted","role":"superadmin","service":"materio-nextjs","timestamp":"2025-11-08T21:50:30.778Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","role":"superadmin","service":"materio-nextjs","timestamp":"2025-11-08T21:50:49.548Z"}
+{"level":"info","message":"✅ [PERMISSIONS] All permissions granted","role":"superadmin","service":"materio-nextjs","timestamp":"2025-11-08T21:50:49.548Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-08T21:50:49.556Z"}
+{"level":"info","message":"User disconnected from chat namespace","service":"materio-nextjs","socketId":"f5xRIDLUnz61T5nfAAAx","timestamp":"2025-11-08T21:50:57.344Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User disconnected from notification namespace","service":"materio-nextjs","socketId":"FwSdbN-bM_fxnKepAAAy","timestamp":"2025-11-08T21:50:57.345Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.079Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.082Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.082Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.083Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"permissionsManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.083Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.083Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"languageManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.083Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.083Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"countryManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.084Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.084Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"stateManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.084Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.084Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"cityManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.085Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.085Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"districtManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.085Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.085Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"currencyManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.085Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.086Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"smtpManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.086Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.086Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"emailTemplatesManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.086Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.086Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"translationManagement","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.086Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.087Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"chat","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.087Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.087Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission:","module":"notifications","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.087Z"}
+{"level":"info","message":"❌ [PERMISSIONS] No user or role found","service":"materio-nextjs","timestamp":"2025-11-08T21:50:58.087Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:51:00.462Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:00.463Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:51:00.466Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:00.469Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-08T21:51:00.494Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:00.495Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-08T21:51:00.497Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:00.499Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:51:00.685Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:00.690Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"J9wa-DJHib4eFnRNAAA7","timestamp":"2025-11-08T21:51:00.697Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"J9wa-DJHib4eFnRNAAA7","timestamp":"2025-11-08T21:51:00.697Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"xFoOaQn6eLM0Q8PZAAA8","timestamp":"2025-11-08T21:51:00.804Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"xFoOaQn6eLM0Q8PZAAA8","timestamp":"2025-11-08T21:51:00.805Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"aqe7c_TZwN5XrzTdAAA9","timestamp":"2025-11-08T21:51:00.805Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"aqe7c_TZwN5XrzTdAAA9","timestamp":"2025-11-08T21:51:00.805Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"PdfGURkxBY6mP6OiAAA_","timestamp":"2025-11-08T21:51:00.952Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"PdfGURkxBY6mP6OiAAA_","timestamp":"2025-11-08T21:51:00.952Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"lL0oSyBm67L9-bvfAABA","timestamp":"2025-11-08T21:51:00.953Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"lL0oSyBm67L9-bvfAABA","timestamp":"2025-11-08T21:51:00.953Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"PdfGURkxBY6mP6OiAAA_","timestamp":"2025-11-08T21:51:00.955Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"PdfGURkxBY6mP6OiAAA_","timestamp":"2025-11-08T21:51:00.956Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"lL0oSyBm67L9-bvfAABA","timestamp":"2025-11-08T21:51:00.956Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"lL0oSyBm67L9-bvfAABA","timestamp":"2025-11-08T21:51:00.956Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"PdfGURkxBY6mP6OiAAA_","timestamp":"2025-11-08T21:51:00.957Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"lL0oSyBm67L9-bvfAABA","timestamp":"2025-11-08T21:51:00.957Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnlwmii000386utugldhoan"],"service":"materio-nextjs","timestamp":"2025-11-08T21:51:00.967Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"g0h_ylcZoLpK6GDYAABE","timestamp":"2025-11-08T21:51:02.803Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"g0h_ylcZoLpK6GDYAABE","timestamp":"2025-11-08T21:51:02.804Z"}
+{"hasAuthToken":false,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"pGDv2MhJxBxhXGTIAABF","timestamp":"2025-11-08T21:51:02.808Z"}
+{"ip":"::ffff:127.0.0.1","level":"warn","message":"Socket connection attempt without token","service":"materio-nextjs","socketId":"pGDv2MhJxBxhXGTIAABF","timestamp":"2025-11-08T21:51:02.809Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:51:02.953Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:02.957Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.105Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.107Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.113Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.114Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.159Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.167Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"y3pIOo0orxWtmYsXAABI","timestamp":"2025-11-08T21:51:03.176Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"y3pIOo0orxWtmYsXAABI","timestamp":"2025-11-08T21:51:03.177Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"WMpbU_9B3uIKcaJWAABJ","timestamp":"2025-11-08T21:51:03.178Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"WMpbU_9B3uIKcaJWAABJ","timestamp":"2025-11-08T21:51:03.178Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"y3pIOo0orxWtmYsXAABI","timestamp":"2025-11-08T21:51:03.184Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"y3pIOo0orxWtmYsXAABI","timestamp":"2025-11-08T21:51:03.184Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"y3pIOo0orxWtmYsXAABI","timestamp":"2025-11-08T21:51:03.184Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"WMpbU_9B3uIKcaJWAABJ","timestamp":"2025-11-08T21:51:03.188Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"WMpbU_9B3uIKcaJWAABJ","timestamp":"2025-11-08T21:51:03.188Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"WMpbU_9B3uIKcaJWAABJ","timestamp":"2025-11-08T21:51:03.189Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnlwmii000386utugldhoan"],"service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.200Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.211Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.225Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"vdfxS1k3B0Yvo4vcAABM","timestamp":"2025-11-08T21:51:03.243Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"vdfxS1k3B0Yvo4vcAABM","timestamp":"2025-11-08T21:51:03.243Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"vdfxS1k3B0Yvo4vcAABM","timestamp":"2025-11-08T21:51:03.255Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"vdfxS1k3B0Yvo4vcAABM","timestamp":"2025-11-08T21:51:03.256Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"vdfxS1k3B0Yvo4vcAABM","timestamp":"2025-11-08T21:51:03.257Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnlwmii000386utugldhoan"],"service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.293Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"tkhSVpn3d40aNC24AABQ","timestamp":"2025-11-08T21:51:03.312Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"tkhSVpn3d40aNC24AABQ","timestamp":"2025-11-08T21:51:03.313Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"XaJIpxiPP_Hxihr5AABR","timestamp":"2025-11-08T21:51:03.320Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"XaJIpxiPP_Hxihr5AABR","timestamp":"2025-11-08T21:51:03.320Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"AZYqN-ToZax_dsaAAABS","timestamp":"2025-11-08T21:51:03.321Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"AZYqN-ToZax_dsaAAABS","timestamp":"2025-11-08T21:51:03.321Z","tokenLength":40}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.343Z"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"tkhSVpn3d40aNC24AABQ","timestamp":"2025-11-08T21:51:03.332Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"tkhSVpn3d40aNC24AABQ","timestamp":"2025-11-08T21:51:03.333Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"tkhSVpn3d40aNC24AABQ","timestamp":"2025-11-08T21:51:03.333Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"XaJIpxiPP_Hxihr5AABR","timestamp":"2025-11-08T21:51:03.334Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"XaJIpxiPP_Hxihr5AABR","timestamp":"2025-11-08T21:51:03.334Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"XaJIpxiPP_Hxihr5AABR","timestamp":"2025-11-08T21:51:03.335Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"AZYqN-ToZax_dsaAAABS","timestamp":"2025-11-08T21:51:03.336Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"AZYqN-ToZax_dsaAAABS","timestamp":"2025-11-08T21:51:03.336Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"AZYqN-ToZax_dsaAAABS","timestamp":"2025-11-08T21:51:03.336Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.354Z"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnlwmii000386utugldhoan"],"service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.364Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"iTgZz6YiW30c13FNAABW","timestamp":"2025-11-08T21:51:03.661Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"iTgZz6YiW30c13FNAABW","timestamp":"2025-11-08T21:51:03.661Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"wdlJncDQBDJqM3ndAABX","timestamp":"2025-11-08T21:51:03.662Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"wdlJncDQBDJqM3ndAABX","timestamp":"2025-11-08T21:51:03.662Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"YlxMeXdxDw_oCeeBAABY","timestamp":"2025-11-08T21:51:03.663Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"YlxMeXdxDw_oCeeBAABY","timestamp":"2025-11-08T21:51:03.663Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"g9P9J31ID5-cFhkqAABZ","timestamp":"2025-11-08T21:51:03.663Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"g9P9J31ID5-cFhkqAABZ","timestamp":"2025-11-08T21:51:03.663Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"iTgZz6YiW30c13FNAABW","timestamp":"2025-11-08T21:51:03.672Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"iTgZz6YiW30c13FNAABW","timestamp":"2025-11-08T21:51:03.672Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"iTgZz6YiW30c13FNAABW","timestamp":"2025-11-08T21:51:03.673Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"wdlJncDQBDJqM3ndAABX","timestamp":"2025-11-08T21:51:03.674Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"wdlJncDQBDJqM3ndAABX","timestamp":"2025-11-08T21:51:03.674Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"wdlJncDQBDJqM3ndAABX","timestamp":"2025-11-08T21:51:03.675Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"YlxMeXdxDw_oCeeBAABY","timestamp":"2025-11-08T21:51:03.675Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"YlxMeXdxDw_oCeeBAABY","timestamp":"2025-11-08T21:51:03.675Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"YlxMeXdxDw_oCeeBAABY","timestamp":"2025-11-08T21:51:03.676Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"g9P9J31ID5-cFhkqAABZ","timestamp":"2025-11-08T21:51:03.676Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"g9P9J31ID5-cFhkqAABZ","timestamp":"2025-11-08T21:51:03.677Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"g9P9J31ID5-cFhkqAABZ","timestamp":"2025-11-08T21:51:03.677Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"L89TT_iFDGr9P26WAABb","timestamp":"2025-11-08T21:51:03.678Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"L89TT_iFDGr9P26WAABb","timestamp":"2025-11-08T21:51:03.678Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"L89TT_iFDGr9P26WAABb","timestamp":"2025-11-08T21:51:03.698Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"L89TT_iFDGr9P26WAABb","timestamp":"2025-11-08T21:51:03.698Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"L89TT_iFDGr9P26WAABb","timestamp":"2025-11-08T21:51:03.698Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"gQX8mEPR3N9Z_ZybAABd","timestamp":"2025-11-08T21:51:03.699Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"gQX8mEPR3N9Z_ZybAABd","timestamp":"2025-11-08T21:51:03.700Z","tokenLength":40}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnlwmii000386utugldhoan"],"service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.710Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"gQX8mEPR3N9Z_ZybAABd","timestamp":"2025-11-08T21:51:03.712Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"gQX8mEPR3N9Z_ZybAABd","timestamp":"2025-11-08T21:51:03.712Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"gQX8mEPR3N9Z_ZybAABd","timestamp":"2025-11-08T21:51:03.713Z","userId":"cmhjcyjsl000b10em5h6onlx5","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnlwmii000386utugldhoan"],"service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.718Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"User joined rooms","roomCount":2,"rooms":["cmhjd2c2m003rwoxovp1k612a","cmhnlwmii000386utugldhoan"],"service":"materio-nextjs","timestamp":"2025-11-08T21:51:03.720Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":12,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:05.887Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:05.955Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:06.516Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:08.571Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":10,"resetTime":"2025-11-08T21:52:08.577Z","service":"materio-nextjs","timestamp":"2025-11-08T21:51:08.577Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-08T21:51:08.577Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","socketId":"L89TT_iFDGr9P26WAABb","timestamp":"2025-11-08T21:51:08.580Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhqtjx2f0005wvakvailtkts","roomId":"cmhjd2c2m003rwoxovp1k612a","senderId":"cmhjcyjsl000b10em5h6onlx5","service":"materio-nextjs","timestamp":"2025-11-08T21:51:08.590Z"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:08.895Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:12.865Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":9,"resetTime":"2025-11-08T21:52:12.867Z","service":"materio-nextjs","timestamp":"2025-11-08T21:51:12.867Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-08T21:51:12.868Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","socketId":"L89TT_iFDGr9P26WAABb","timestamp":"2025-11-08T21:51:12.872Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhqtk0dn0007wvakk3ustm7m","roomId":"cmhjd2c2m003rwoxovp1k612a","senderId":"cmhjcyjsl000b10em5h6onlx5","service":"materio-nextjs","timestamp":"2025-11-08T21:51:12.879Z"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:13.212Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:15.359Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":8,"resetTime":"2025-11-08T21:52:15.361Z","service":"materio-nextjs","timestamp":"2025-11-08T21:51:15.361Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-08T21:51:15.361Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","socketId":"L89TT_iFDGr9P26WAABb","timestamp":"2025-11-08T21:51:15.365Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhqtk2av0009wvakyi4txcv0","roomId":"cmhjd2c2m003rwoxovp1k612a","senderId":"cmhjcyjsl000b10em5h6onlx5","service":"materio-nextjs","timestamp":"2025-11-08T21:51:15.372Z"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:15.680Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-08T21:51:16.981Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":7,"resetTime":"2025-11-08T21:52:16.985Z","service":"materio-nextjs","timestamp":"2025-11-08T21:51:16.985Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-08T21:51:16.985Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","socketId":"L89TT_iFDGr9P26WAABb","timestamp":"2025-11-08T21:51:16.991Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhqtk3k3000bwvakzc8bxjy2","roomId":"cmhjd2c2m003rwoxovp1k612a","senderId":"cmhjcyjsl000b10em5h6onlx5","service":"materio-nextjs","timestamp":"2025-11-08T21:51:17.003Z"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:17.388Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:19.623Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:19.668Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnlwmii000386utugldhoan","service":"materio-nextjs","timestamp":"2025-11-08T21:51:19.778Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnlwmii000386utugldhoan","service":"materio-nextjs","timestamp":"2025-11-08T21:51:19.787Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnlwmii000386utugldhoan","service":"materio-nextjs","timestamp":"2025-11-08T21:51:19.790Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnlwmii000386utugldhoan","service":"materio-nextjs","timestamp":"2025-11-08T21:51:22.481Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnlwmii000386utugldhoan","service":"materio-nextjs","timestamp":"2025-11-08T21:51:22.553Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:22.911Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:22.970Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:23.507Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:25.088Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhjd2c2m003rwoxovp1k612a","service":"materio-nextjs","timestamp":"2025-11-08T21:51:25.134Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnlwmii000386utugldhoan","service":"materio-nextjs","timestamp":"2025-11-08T21:51:25.230Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnlwmii000386utugldhoan","service":"materio-nextjs","timestamp":"2025-11-08T21:51:25.270Z","userId":"cmhjcyjsl000b10em5h6onlx5"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhnlwmii000386utugldhoan","service":"materio-nextjs","timestamp":"2025-11-08T21:51:25.287Z","userId":"cmhjcyjsl000b10em5h6onlx5"}

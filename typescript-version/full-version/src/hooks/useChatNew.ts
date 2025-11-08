@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useDispatch } from 'react-redux';
 import { sendMsg } from '@/redux-store/slices/chat';
@@ -40,6 +40,39 @@ export const useChatNew = (otherUserId?: string) => {
       });
     }
   }, [chatSocket, isConnected, currentOtherUserId, user?.id]);
+
+  const markMessagesAsRead = useCallback(() => {
+    if (!chatSocket || !chatSocket.connected) {
+      return;
+    }
+
+    if (!room?.id || !user?.id) {
+      return;
+    }
+
+    // Обновляем локальное состояние
+    setMessages(prev => {
+      const updated = prev.map(msg => {
+        const shouldUpdate = msg.roomId === room.id && msg.senderId !== user?.id && !msg.readAt;
+        return shouldUpdate
+          ? { ...msg, readAt: new Date().toISOString() }
+          : msg;
+      });
+      return updated;
+    });
+
+    // Отправляем на сервер
+    const emitData = {
+      roomId: room.id,
+      userId: user?.id
+    };
+
+    try {
+      chatSocket.emit('markMessagesRead', emitData);
+    } catch (error) {
+      console.error('Failed to mark messages as read:', error);
+    }
+  }, [chatSocket, room?.id, user?.id]);
 
   // Обработка событий чата
   useEffect(() => {
@@ -166,7 +199,7 @@ export const useChatNew = (otherUserId?: string) => {
     if (room?.id && user?.id && messages.length > 0) {
       markMessagesAsRead();
     }
-  }, [room?.id, user?.id, messages.length]);
+  }, [room?.id, user?.id, messages.length, markMessagesAsRead]);
 
   // Инициализация комнаты с новым пользователем
   const initializeRoom = (userId: string) => {
@@ -223,40 +256,6 @@ export const useChatNew = (otherUserId?: string) => {
     } catch (error) {
       console.error('Failed to send message:', error);
       throw error;
-    }
-  };
-
-  // Отметка сообщений как прочитанные
-  const markMessagesAsRead = () => {
-    if (!chatSocket || !chatSocket.connected) {
-      return;
-    }
-
-    if (!room?.id || !user?.id) {
-      return;
-    }
-
-    // Обновляем локальное состояние
-    setMessages(prev => {
-      const updated = prev.map(msg => {
-        const shouldUpdate = msg.roomId === room.id && msg.senderId !== user?.id && !msg.readAt;
-        return shouldUpdate
-          ? { ...msg, readAt: new Date().toISOString() }
-          : msg;
-      });
-      return updated;
-    });
-
-    // Отправляем на сервер
-    const emitData = {
-      roomId: room.id,
-      userId: user?.id
-    };
-
-    try {
-      chatSocket.emit('markMessagesRead', emitData);
-    } catch (error) {
-      console.error('Failed to mark messages as read:', error);
     }
   };
 

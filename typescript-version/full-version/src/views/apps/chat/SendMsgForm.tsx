@@ -169,7 +169,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
           setIsSending(false)
           // Show user-friendly error message for rate limit
           if (error.message === 'Rate limit exceeded') {
-            // Error is already handled by setting rateLimitData in useChat hook
+            // Error is already handled by setting rateLimitData in useChatNew hook
             return
           }
           // Handle other errors if needed

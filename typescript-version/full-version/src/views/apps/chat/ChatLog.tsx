@@ -28,15 +28,7 @@ import CustomAvatar from '@core/components/mui/Avatar'
 // Util Imports
 import { getInitials } from '@/utils/formatting/getInitials'
 
-// Custom Hooks
-import { useChat } from '@/hooks/useChat'
-
-type MsgGroupType = {
-  senderId: string
-  messages: Omit<UserChatType, 'senderId'>[]
-}
-
-import type { ChatMessage } from '@/lib/sockets/types/chat'
+import type { ChatMessage, ChatRoom } from '@/lib/sockets/types/chat'
 
 type ChatLogProps = {
   chatStore: ChatDataType
@@ -44,6 +36,14 @@ type ChatLogProps = {
   isBelowMdScreen: boolean
   isBelowSmScreen: boolean
   messages: ChatMessage[]
+  markMessagesAsRead: () => void
+  room: ChatRoom | null
+  isRoomLoading: boolean
+}
+
+type MsgGroupType = {
+  senderId: string
+  messages: Omit<UserChatType, 'senderId'>[]
 }
 
 // Formats the chat data into a structured format for display.
@@ -111,7 +111,16 @@ const ScrollWrapper = ({
   }
 }
 
-const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen, messages }: ChatLogProps) => {
+const ChatLog = ({
+  chatStore,
+  isBelowLgScreen,
+  isBelowMdScreen,
+  isBelowSmScreen,
+  messages,
+  markMessagesAsRead,
+  room,
+  isRoomLoading
+}: ChatLogProps) => {
   // Props
   const { profileUser, contacts } = chatStore
 
@@ -121,8 +130,6 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen,
   // Hooks
   const { user, session } = useAuth()
   const { lang: locale } = useParams()
-  const { markMessagesAsRead, room, isRoomLoading } = useChat(chatStore.activeUser?.id?.toString())
-
 
   // Refs
   const scrollRef = useRef(null)
@@ -179,7 +186,7 @@ const ChatLog = ({ chatStore, isBelowLgScreen, isBelowMdScreen, isBelowSmScreen,
     if (chatStore.activeUser?.id && user?.id && markMessagesAsRead && room?.id) {
       markMessagesAsRead()
     }
-  }, [chatStore.activeUser?.id, user?.id, room?.id])
+  }, [chatStore.activeUser?.id, user?.id, room?.id, markMessagesAsRead])
 
 
   return (
