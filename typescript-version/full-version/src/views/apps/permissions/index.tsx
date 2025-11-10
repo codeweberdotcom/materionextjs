@@ -16,6 +16,12 @@ import TablePagination from '@mui/material/TablePagination'
 import IconButton from '@mui/material/IconButton'
 import type { TextFieldProps } from '@mui/material/TextField'
 import type { ButtonProps } from '@mui/material/Button'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -251,13 +257,13 @@ const Permissions = ({ permissionsData }: { permissionsData?: PermissionRowType[
             dialogProps={{ editValue }}
           />
         </CardContent>
-        <div className='overflow-x-auto'>
-          <table className={tableStyles.table}>
-            <thead>
+        <TableContainer className='overflow-x-auto'>
+          <Table className={tableStyles.table}>
+            <TableHead>
               {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id}>
+                <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map(header => (
-                    <th key={header.id}>
+                    <TableCell key={header.id}>
                       {header.isPlaceholder ? null : (
                         <>
                           <div
@@ -275,37 +281,37 @@ const Permissions = ({ permissionsData }: { permissionsData?: PermissionRowType[
                           </div>
                         </>
                       )}
-                    </th>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </thead>
+            </TableHead>
             {table.getFilteredRowModel().rows.length === 0 ? (
-              <tbody>
-                <tr>
-                  <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
+              <TableBody>
+                <TableRow>
+                  <TableCell colSpan={table.getVisibleFlatColumns().length} className='text-center'>
                     {dictionary.navigation.noDataAvailable}
-                  </td>
-                </tr>
-              </tbody>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
             ) : (
-              <tbody>
+              <TableBody>
                 {table
                   .getRowModel()
                   .rows.slice(0, table.getState().pagination.pageSize)
                   .map(row => {
                     return (
-                      <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                      <TableRow key={row.id} className={classnames({ selected: row.getIsSelected() })}>
                         {row.getVisibleCells().map(cell => (
-                          <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                          <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                         ))}
-                      </tr>
+                      </TableRow>
                     )
                   })}
-              </tbody>
+              </TableBody>
             )}
-          </table>
-        </div>
+          </Table>
+        </TableContainer>
         <TablePagination
           rowsPerPageOptions={[5, 7, 10]}
           component='div'

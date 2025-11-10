@@ -1,9 +1,6 @@
 // React Imports
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
-
-// Next Imports
-import { useRouter } from 'next/navigation'
 
 // MUI Imports
 import Typography from '@mui/material/Typography'
@@ -12,7 +9,6 @@ import Chip from '@mui/material/Chip'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardActions from '@mui/material/CardActions'
-import Button from '@mui/material/Button'
 import Tooltip from '@mui/material/Tooltip'
 import { styled } from '@mui/material'
 
@@ -25,7 +21,7 @@ import type { AppDispatch } from '@/redux-store'
 import type { Notification } from '@/types/apps/notificationTypes'
 
 // Slice Imports
-import { updateNotificationStatus, navigateNotifications } from '@/redux-store/slices/notifications'
+import { navigateNotifications } from '@/redux-store/slices/notifications'
 
 // Components Imports
 import CustomIconButton from '@core/components/mui/IconButton'
@@ -33,9 +29,9 @@ import DirectionalIcon from '@components/DirectionalIcon'
 
 // Hook Imports
 import { useTranslation } from '@/contexts/TranslationContext'
+import { parseNotificationMetadata } from '@/utils/notifications/metadata'
 
 // Styles Imports
-import styles from './styles.module.css'
 
 type Props = {
   drawerOpen: boolean
@@ -93,30 +89,19 @@ const NotificationDetails = (props: Props) => {
   const [showReplies, setShowReplies] = useState(false)
 
   // Hooks
-  const router = useRouter()
   const dictionary = useTranslation()
+  const metadata = useMemo(
+    () => parseNotificationMetadata(currentNotification?.metadata),
+    [currentNotification?.metadata]
+  )
+  const hasMetadata = Object.keys(metadata).length > 0
 
   // Auto-mark as read when drawer opens
   useEffect(() => {
-    if (drawerOpen && currentNotification && currentNotification.status === 'unread' && currentNotification.id !== 'virtual-chat-unread') {
-      // Call the API directly to update the database
-      fetch(`/api/notifications/${currentNotification.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: 'read' }),
-      })
-      .then(response => {
-        if (response.ok) {
-          handleSingleNotificationRead(currentNotification.id)
-        }
-      })
-      .catch(error => {
-        console.error('Error auto-marking as read:', error)
-      })
+    if (drawerOpen && currentNotification && currentNotification.status === 'unread') {
+      handleSingleNotificationRead(currentNotification.id)
     }
-  }, [drawerOpen, currentNotification])
+  }, [drawerOpen, currentNotification, handleSingleNotificationRead])
 
   // Handle navigation between notifications and reset reply state
   const handleNotificationNavigation = (type: 'next' | 'prev') => {
@@ -142,7 +127,7 @@ const NotificationDetails = (props: Props) => {
     switch (status) {
       case 'unread': return 'primary'
       case 'read': return 'secondary'
-      case 'trash': return 'error'
+      case 'archived': return 'error'
       default: return 'default'
     }
   }
@@ -217,102 +202,60 @@ const NotificationDetails = (props: Props) => {
               </div>
             </div>
           </div>
-          {currentNotification.id !== 'virtual-chat-unread' && (
-            <div className='flex items-center justify-between gap-4 plb-2 pli-5 border-y text-textSecondary'>
-              <div className='flex gap-1'>
-                <Tooltip title={currentNotification.status === 'unread' ? dictionary.navigation.unread : dictionary.navigation.read} placement='top'>
-                  <div>
-                    <i
-                      className={classnames(
-                        'text-xl',
-                        currentNotification.status === 'unread' ? 'ri-mail-unread-line text-primary' : 'ri-mail-open-line text-secondary'
-                      )}
-                    />
-                  </div>
-                </Tooltip>
-              </div>
-              <div className='flex gap-1'>
-                {currentNotification.status === 'trash' ? (
-                  <Tooltip title={dictionary.navigation.restore} placement='top'>
-                    <IconButton onClick={async e => {
-                      try {
-                        const response = await fetch(`/api/notifications/${currentNotification.id}`, {
-                          method: 'PATCH',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({ status: 'read' }),
-                        })
-
-                        if (response.ok) {
-                          dispatch(updateNotificationStatus({ notificationId: currentNotification.id, status: 'read' }))
-                          setDrawerOpen(false)
-                        }
-                      } catch (error) {
-                        console.error('Error restoring notification from trash:', error)
-                      }
-                    }}>
-                      <i className='ri-refresh-line text-textSecondary' />
-                    </IconButton>
-                  </Tooltip>
-                ) : (
-                  <Tooltip title={dictionary.navigation.trash} placement='top'>
-                    <IconButton onClick={async e => {
-                      try {
-                        const response = await fetch(`/api/notifications/${currentNotification.id}`, {
-                          method: 'PATCH',
-                          headers: {
-                            'Content-Type': 'application/json',
-                          },
-                          body: JSON.stringify({ status: 'trash' }),
-                        })
-
-                        if (response.ok) {
-                          dispatch(updateNotificationStatus({ notificationId: currentNotification.id, status: 'trash' }))
-                          setDrawerOpen(false)
-                        }
-                      } catch (error) {
-                        console.error('Error moving notification to trash:', error)
-                      }
-                    }}>
-                      <i className='ri-delete-bin-line text-textSecondary' />
-                    </IconButton>
-                  </Tooltip>
-                )}
-              </div>
+          <div className='flex items-center justify-between gap-4 plb-2 pli-5 border-y text-textSecondary'>
+            <div className='flex gap-1'>
+              <Tooltip title={currentNotification.status === 'unread' ? dictionary.navigation.unread : dictionary.navigation.read} placement='top'>
+                <div>
+                  <i
+                    className={classnames(
+                      'text-xl',
+                      currentNotification.status === 'unread' ? 'ri-mail-unread-line text-primary' : 'ri-mail-open-line text-secondary'
+                    )}
+                  />
+                </div>
+              </Tooltip>
             </div>
-          )}
+            <div className='flex gap-1'>
+              {currentNotification.status === 'archived' ? (
+                <Tooltip title={dictionary.navigation.restore} placement='top'>
+                  <IconButton
+                    onClick={() => {
+                      handleSingleNotificationRead(currentNotification.id)
+                      setDrawerOpen(false)
+                    }}
+                  >
+                    <i className='ri-refresh-line text-textSecondary' />
+                  </IconButton>
+                </Tooltip>
+              ) : (
+                <Tooltip title={dictionary.navigation.trash} placement='top'>
+                  <IconButton
+                    onClick={() => {
+                      handleSingleNotificationArchive(currentNotification.id)
+                      setDrawerOpen(false)
+                    }}
+                  >
+                    <i className='ri-delete-bin-line text-textSecondary' />
+                  </IconButton>
+                </Tooltip>
+              )}
+            </div>
+          </div>
           <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
             <div className='plb-5 pli-8 flex flex-col gap-4'>
               <div>
                 <Card className='border mbs-4'>
                   <CardContent>
-                    {currentNotification.id === 'virtual-chat-unread' ? (
-                      <div>
-                        <Typography variant='body1' className='whitespace-pre-wrap mb-4'>
-                          {currentNotification.message?.split('<button')[0]}
-                        </Typography>
-                        <Button
-                          variant='contained'
-                          color='primary'
-                          onClick={handleGoToChat}
-                          startIcon={<i className='ri-wechat-line' />}
-                        >
-                          {dictionary.navigation.goToChat}
-                        </Button>
-                      </div>
-                    ) : (
-                      <Typography variant='body1' className='whitespace-pre-wrap'>
-                        {currentNotification.message}
-                      </Typography>
-                    )}
-                    {currentNotification.metadata && (
+                    <Typography variant='body1' className='whitespace-pre-wrap'>
+                      {currentNotification.message}
+                    </Typography>
+                    {hasMetadata && (
                       <div className='mt-4'>
                         <Typography variant='body2' color='text.secondary'>
                           Additional Information:
                         </Typography>
                         <pre className='mt-2 p-3 bg-grey-50 rounded text-sm overflow-auto'>
-                          {JSON.stringify(currentNotification.metadata, null, 2)}
+                          {JSON.stringify(metadata, null, 2)}
                         </pre>
                       </div>
                     )}

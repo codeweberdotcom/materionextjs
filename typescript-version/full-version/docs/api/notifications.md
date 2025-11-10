@@ -20,11 +20,30 @@ The notifications system provides real-time notification management with databas
 - `src/app/api/notifications/` - API endpoints
 - `src/types/apps/notificationTypes.ts` - TypeScript types
 
-## 🔌 WebSocket Events
+### Layered view
 
-### Server → Client
-- `new-notification` - New notification received
-- `notification-update` - Notification status updated
+| Layer | Location | Notes |
+| --- | --- | --- |
+| Socket namespace | `src/lib/sockets/namespaces/notifications/index.ts` | Lucia auth, rate limits, события `markAsRead/deleteNotification`. |
+| REST API | `src/app/api/notifications/*.ts` | CRUD, `mark-all`, `clear-all`, socket-эмиты. |
+| Provider | `src/contexts/SocketProvider.tsx` | Делится `notificationSocket`/`chatSocket`. |
+| State management | `src/hooks/useNotifications.ts`, `src/redux-store/slices/notifications.ts` | Нормализация, фильтры, fallback на fetch. |
+| UI | `src/views/apps/notifications/*`, `src/components/layout/shared/NotificationsDropdown.tsx` | Страница и dropdown. |
+| Metadata utils | `src/utils/notifications/metadata.ts` | JSON <-> String сериализация для Prisma. |
+
+## 🔌 Real-time architecture
+
+Notifications синхронизируются через Socket.IO namespace `/notifications`. Клиент подключается через `SocketProvider`, а бизнес-логика живёт в `useNotifications`.
+
+### Сервер → Клиент
+- `newNotification` — новое уведомление после создания через REST или сокет.
+- `notificationUpdate` — изменение статуса/metadata.
+- `notificationDeleted` — удаление уведомления.
+- `notificationsRead` — массовое чтение (mark-all).
+
+### Клиент → Сервер
+- `markAsRead`, `markAllAsRead`, `deleteNotification` — вызываются хуком `useNotifications`, который автоматически использует Socket.IO либо REST.
+- AI-агентам предпочтительнее REST API, поскольку оно даёт детерминированные ответы; сокет служит для live-обновлений UI.
 
 ## 📡 API Endpoints
 
@@ -49,6 +68,8 @@ Get all notifications for current authenticated user.
       "createdAt": "2024-01-01T10:00:00Z",
       "updatedAt": "2024-01-01T10:00:00Z",
       "userId": "user-id",
+      "readAt": null,
+      "metadata": {},
       "subtitle": "Welcome to our platform",
       "time": "1/1/2024, 10:00:00 AM",
       "read": false,
@@ -64,10 +85,9 @@ Get all notifications for current authenticated user.
 ```
 
 **AI Agent Usage:**
-- Fetch all user notifications on app initialization
-- Includes virtual chat notifications if unread messages exist
-- Filters out locally cleared notifications per user session
-- Use for populating notification dropdown
+- Fetch up to 100 latest notifications on initialization
+- Apply client-side filters (status, type) for lists and dropdowns
+- Use `readAt`/`metadata` for richer rendering (timelines, custom payloads)
 
 ### POST `/api/notifications`
 Create a new notification.
@@ -81,7 +101,10 @@ Create a new notification.
   "message": "You have a new message",
   "type": "user",
   "avatarIcon": "ri-message-line",
-  "avatarColor": "primary"
+  "avatarColor": "primary",
+  "metadata": {
+    "cta": "/en/apps/chat"
+  }
 }
 ```
 
@@ -97,6 +120,8 @@ Create a new notification.
     "createdAt": "2024-01-01T10:00:00Z",
     "updatedAt": "2024-01-01T10:00:00Z",
     "userId": "user-id",
+    "readAt": null,
+    "metadata": {},
     "subtitle": "You have a new message",
     "time": "1/1/2024, 10:00:00 AM",
     "read": false,
@@ -112,14 +137,17 @@ Create a new notification.
 - Use appropriate avatar icons and colors for different notification types
 
 ### PATCH `/api/notifications/{id}`
-Update notification status.
+Update notification status or metadata.
 
 **Authentication:** Required (user can only update their own notifications)
 
 **Request Body:**
 ```json
 {
-  "status": "read"
+  "status": "read",
+  "metadata": {
+    "cta": "/en/apps/chat"
+  }
 }
 ```
 
@@ -131,9 +159,9 @@ Update notification status.
 ```
 
 **AI Agent Usage:**
-- Mark notifications as read when user interacts with them
-- Update status to 'trash' for soft deletion
-- Emit WebSocket event for real-time status updates
+- Mark notifications as read/archived when пользователь взаимодействует с ними
+- Передавайте дополнительные данные (CTA, ссылки) через `metadata`
+- Изменения автоматически рассылаются по WebSocket всем вкладкам
 
 ### DELETE `/api/notifications/{id}`
 Delete notification permanently.
@@ -152,7 +180,7 @@ Delete notification permanently.
 - Use for cleanup or when user explicitly deletes notifications
 
 ### DELETE `/api/notifications/clear-all`
-Clear all notifications from dropdown (marks as hidden for current session).
+Archive all notifications (скрывает их из выпадающего списка).
 
 **Authentication:** Required
 
@@ -164,12 +192,11 @@ Clear all notifications from dropdown (marks as hidden for current session).
 ```
 
 **AI Agent Usage:**
-- Hide all notifications from UI for current session
-- Stores cleared IDs in localStorage per user
-- Keeps virtual chat notifications visible if applicable
+- Скрывайте все уведомления одним действием (например, «Очистить всё»)
+- Все активные вкладки получают WebSocket обновления и синхронизируются
 
 ### PATCH `/api/notifications/mark-all`
-Mark all notifications as archived (hide from dropdown).
+Mark all unread notifications as read.
 
 **Authentication:** Required
 
@@ -204,27 +231,16 @@ Mark all notifications as archived (hide from dropdown).
 
 ### 2. Notification Status
 - `unread` - New notification
-- `read` - User has read the notification
-- `trash` - Notification marked for deletion
-- `archived` - Hidden from dropdown but still in database
+- `read` - User has read the notification (server stores `readAt`)
+- `archived` - Hidden from dropdown but доступна на странице уведомлений
+- `deleted` - Удалена пользователем (не отображается)
 
-### 3. Virtual Notifications
-- Chat unread messages notification
-- Dynamically generated based on chat state
-- Not persisted in database
-- Auto-updates with chat unread count
-
-### 4. Avatar Support
+### 3. Avatar Support
 - `avatarImage` - Image URL
 - `avatarIcon` - RemixIcon class name
 - `avatarText` - Text to display
 - `avatarColor` - Theme color
 - `avatarSkin` - Avatar skin style
-
-### 5. Local Storage Management
-- Cleared notifications persist per user
-- Automatic cleanup on logout
-- Session-based notification hiding
 
 ## 🗄️ Database Schema
 
@@ -236,8 +252,10 @@ model Notification {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
   message     String
-  type        String   @default("system") // system, user, security, marketing, info
-  status      String   @default("unread") // unread, read, trash, archived
+  type        String   @default("system")
+  status      String   @default("unread") // unread, read, archived, deleted
+  readAt      DateTime?
+  metadata    Json?    @default("{}")
   avatarImage String?
   avatarIcon  String?
   avatarText  String?
@@ -245,19 +263,20 @@ model Notification {
   avatarSkin  String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([userId, status, createdAt])
 }
 ```
 
 ## 🔧 Redux State Management
 
 ### Notification Slice Actions
-- `setNotifications` - Set all notifications from API
-- `filterNotifications` - Filter by status and type (similar to email filtering)
-- `updateNotificationStatus` - Update single notification status (read/unread/trash)
-- `deleteNotification` - Remove notification from state
-- `markAllAsRead` - Mark all notifications as read in bulk
-- `addNotification` - Add new notification (for real-time updates)
-- `updateNotification` - Update existing notification properties
+- `setLoading` / `setNotifications` — управление состоянием загрузки и данными
+- `filterNotifications` — применение фильтров по статусу/типу
+- `upsertNotification` — добавление или обновление записи на лету (сокеты, API)
+- `updateNotification` / `deleteNotification` — точечные изменения
+- `markAllAsRead` — массовое обновление статуса `read`
+- `setCurrentNotification` / `navigateNotifications` — управление детальным просмотром
 - `setCurrentNotification` - Set active notification for details view
 - `navigateNotifications` - Navigate between notifications (next/prev)
 - `addClearedNotifications` - Add notification IDs to cleared set (localStorage)
@@ -457,6 +476,13 @@ console.log('Cleared:', localStorage.getItem('clearedNotifications_userId'))
 console.log('Socket connected:', socket?.connected)
 ```
 
+## 🧪 Testing & Observability
+
+- `pnpm dev:with-socket` — поднимает Next.js + Socket.IO сервер на 3000 порту.
+- `pnpm lint` — требует доступа к `~/.cache/next-swc`.
+- Prisma: `pnpm prisma migrate dev`, `pnpm prisma db seed`.
+- Логи: `logs/application-*.log` (Winston) + консольный вывод `pnpm run dev:with-socket`.
+
 ## 📝 Development Notes
 
 - Virtual notifications are generated client-side
@@ -501,8 +527,10 @@ interface Notification {
 - **chat**: Virtual chat unread notifications (client-side only)
 
 ### WebSocket Events
-- `new-notification` - New notification created
-- `notification-update` - Status changed (read/unread)
+- `newNotification`
+- `notificationUpdate`
+- `notificationDeleted`
+- `notificationsRead`
 
 ### Virtual Notifications
 - Generated client-side for chat unread messages

@@ -1,8 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
 import { prisma } from '@/libs/prisma'
+import { getSocketServer } from '@/lib/sockets'
+
+const emitNotificationUpdate = (userId: string, notificationId: string, status: string) => {
+  const io = getSocketServer()
+  if (!io) return
+
+  const namespace = io.of('/notifications')
+  const payload = {
+    notificationId,
+    updates: {
+      status
+    },
+    userId
+  }
+
+  namespace.to(`user_${userId}`).emit('notificationUpdate', payload)
+  namespace.to(`user_${userId}`).emit('notification-update', payload)
+}
 
 export async function DELETE(request: NextRequest) {
   try {
@@ -12,9 +28,34 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Instead of deleting, mark all notifications as 'trash' status to hide them from dropdown
-    // Don't modify database - just return success
-    // Notifications will be hidden from dropdown via local state management
+    const notificationsToArchive = await prisma.notification.findMany({
+      where: {
+        userId: user.id,
+        status: {
+          notIn: ['archived', 'deleted']
+        }
+      },
+      select: { id: true }
+    })
+
+    if (notificationsToArchive.length === 0) {
+      return NextResponse.json({ success: true })
+    }
+
+    await prisma.notification.updateMany({
+      where: {
+        id: {
+          in: notificationsToArchive.map(notification => notification.id)
+        }
+      },
+      data: {
+        status: 'archived'
+      }
+    })
+
+    notificationsToArchive.forEach(notification => {
+      emitNotificationUpdate(user.id, notification.id, 'archived')
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthProvider'
-import { useSocketNew } from './useSocketNew'
+import { useSockets } from '@/contexts/SocketProvider'
 import { useParams } from 'next/navigation'
 
 export const useUnreadByContact = () => {
-  const { user, session } = useAuth()
-  const { chatSocket: socket } = useSocketNew()
+  const { user } = useAuth()
+  const { chatSocket: socket } = useSockets()
   const { lang: locale } = useParams()
   const [unreadByContact, setUnreadByContact] = useState<{ [contactId: string]: number }>({})
   const [userStatuses, setUserStatuses] = useState<{ [userId: string]: { isOnline: boolean; lastSeen?: string } }>({})

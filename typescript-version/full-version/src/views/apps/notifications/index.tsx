@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 
 // MUI Imports
 import { useMediaQuery } from '@mui/material'
@@ -14,9 +14,6 @@ import classnames from 'classnames'
 // Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState, AppDispatch } from '@/redux-store'
-
-// Slice Imports
-import { setNotifications, filterNotifications } from '@/redux-store/slices/notifications'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
@@ -42,57 +39,30 @@ const NotificationsWrapper = ({ status, type }: { status?: string; type?: string
   const { settings } = useSettings()
   const dispatch = useDispatch<AppDispatch>()
   const notificationsStore = useSelector((state: RootState) => state.notificationsReducer)
-  const { notifications: apiNotifications } = useNotifications()
+  const {
+    setFilters: applyNotificationFilters,
+    markAsRead,
+    updateStatus,
+    refresh
+  } = useNotifications()
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
   const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))
 
-  // Load notifications on mount (use fresh notifications without localStorage filtering)
-  useEffect(() => {
-    // Force refresh of notifications to get latest data without localStorage filtering
-    const refreshNotifications = async () => {
-      try {
-        const response = await fetch('/api/notifications')
-        if (response.ok) {
-          const data = await response.json()
-          const mappedNotifications = (data.notifications || []).map((notification: any) => ({
-            id: notification.id,
-            title: notification.title,
-            message: notification.message,
-            type: notification.type,
-            status: notification.status,
-            createdAt: notification.createdAt,
-            updatedAt: notification.updatedAt,
-            userId: notification.userId,
-            subtitle: notification.subtitle || notification.message,
-            time: notification.time || new Date(notification.createdAt).toLocaleString(),
-            read: notification.read !== undefined ? notification.read : notification.status === 'read',
-            avatarImage: notification.avatarImage,
-            avatarIcon: notification.avatarIcon,
-            avatarText: notification.avatarText,
-            avatarColor: notification.avatarColor,
-            avatarSkin: notification.avatarSkin,
-          }))
-
-          // Update Redux store with fresh data (no localStorage filtering)
-          dispatch(setNotifications(mappedNotifications))
-        }
-      } catch (error) {
-        console.error('Error refreshing notifications:', error)
-      }
-    }
-
-    refreshNotifications()
-  }, [dispatch])
-
   // Filter notifications when status or type changes
   useEffect(() => {
-    dispatch(filterNotifications({
-      notifications: notificationsStore.notifications,
-      status: status || undefined,
-      type: type || undefined
-    }))
-  }, [notificationsStore.notifications, status, type, dispatch])
+    applyNotificationFilters({
+      status: status || 'all',
+      type: type || 'all'
+    })
+  }, [applyNotificationFilters, status, type])
+
+  const handleRefresh = useCallback(
+    (reason?: string) => {
+      refresh(reason)
+    },
+    [refresh]
+  )
 
   // Set loading false on initial mount
   useEffect(() => {
@@ -141,6 +111,9 @@ const NotificationsWrapper = ({ status, type }: { status?: string; type?: string
       <NotificationsContent
         store={notificationsStore}
         dispatch={dispatch}
+        onMarkAsRead={markAsRead}
+        onUpdateStatus={updateStatus}
+        onRefresh={handleRefresh}
         status={status}
         type={type}
         isInitialMount={isInitialMount.current}

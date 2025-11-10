@@ -210,7 +210,9 @@ model Notification {
    title       String
    message     String
    type        String   @default("system") // system, chat, email, etc.
-   status      String   @default("unread") // unread, read, trash
+   status      String   @default("unread") // unread, read, archived, deleted
+   readAt      DateTime?
+   metadata    String?  @default("{}")
    avatarImage String?
    avatarIcon  String?
    avatarText  String?
@@ -218,6 +220,8 @@ model Notification {
    avatarSkin  String?
    createdAt   DateTime @default(now())
    updatedAt   DateTime @updatedAt
+ 
+   @@index([userId, status, createdAt])
  }
 
 model RateLimit {

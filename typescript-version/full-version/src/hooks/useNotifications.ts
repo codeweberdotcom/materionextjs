@@ -1,246 +1,279 @@
-import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/AuthProvider'
-import { useSocket } from './useSocket'
-import { useUnreadMessages } from './useUnreadMessages'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useAuth } from '@/contexts/AuthProvider'
+import { useSockets } from '@/contexts/SocketProvider'
 import type { RootState, AppDispatch } from '@/redux-store'
-import { addClearedNotifications } from '@/redux-store/slices/notifications'
-import type { NotificationsType } from '@/components/layout/shared/NotificationsDropdown'
-import { useTranslation } from '@/contexts/TranslationContext'
+import type { Notification, NotificationStatus, NotificationType } from '@/types/apps/notificationTypes'
+import { parseNotificationMetadata } from '@/utils/notifications/metadata'
+import {
+  deleteNotification as deleteNotificationAction,
+  filterNotifications,
+  markAllAsRead as markAllAsReadAction,
+  setLoading,
+  setNotifications as setNotificationsAction,
+  upsertNotification,
+  updateNotification
+} from '@/redux-store/slices/notifications'
+import logger from '@/lib/logger'
+
+type FilterPayload = {
+  status?: NotificationStatus | 'all'
+  type?: NotificationType | 'all'
+}
+
+const normalizeNotification = (notification: any): Notification => ({
+  id: notification.id,
+  title: notification.title,
+  message: notification.message,
+  subtitle: notification.subtitle ?? notification.message,
+  type: notification.type,
+  status: notification.status === 'trash' ? 'archived' : notification.status,
+  createdAt: notification.createdAt,
+  updatedAt: notification.updatedAt,
+  userId: notification.userId,
+  readAt: notification.readAt ?? (notification.status === 'read' ? notification.updatedAt : null),
+  avatarImage: notification.avatarImage,
+  avatarIcon: notification.avatarIcon,
+  avatarText: notification.avatarText,
+  avatarColor: notification.avatarColor,
+  avatarSkin: notification.avatarSkin,
+  metadata: parseNotificationMetadata(notification.metadata)
+})
 
 export const useNotifications = () => {
-  const [notifications, setNotifications] = useState<NotificationsType[]>([])
-  const [loading, setLoading] = useState(true)
-  const [previousUserId, setPreviousUserId] = useState<string | null>(null)
-  const { user, session } = useAuth()
-  const { socket, isConnected } = useSocket(user?.id || null)
-  const { unreadCount: chatUnreadCount } = useUnreadMessages()
-  const dictionary = useTranslation()
+  const dispatch = useDispatch<AppDispatch>()
+  const { user } = useAuth()
+  const { notificationSocket } = useSockets()
+  const { notifications, filteredNotifications, loading, filters } = useSelector(
+    (state: RootState) => state.notificationsReducer
+  )
+  const filtersRef = useRef(filters)
 
-  // Helper functions for localStorage management
-  const getClearedNotificationsKey = (userId: string) => `clearedNotifications_${userId}`
+  useEffect(() => {
+    filtersRef.current = filters
+  }, [filters])
 
-  const getClearedNotifications = (userId: string): Set<string> => {
-    if (typeof window === 'undefined') return new Set()
+  const unreadCount = useMemo(
+    () => notifications.filter(notification => notification.status === 'unread').length,
+    [notifications]
+  )
+
+  const refresh = useCallback(async (source = 'manual') => {
+    if (!user?.id) return
+
+    logger.info('Refreshing notifications', { source, userId: user.id })
+    dispatch(setLoading(true))
     try {
-      const stored = localStorage.getItem(getClearedNotificationsKey(userId))
-      const parsed = stored ? JSON.parse(stored) : []
-      return new Set(parsed)
-    } catch (error) {
-      console.error('Error parsing cleared notifications from localStorage:', error)
-      return new Set()
-    }
-  }
+      const response = await fetch('/api/notifications', {
+        method: 'GET'
+      })
 
-  const setClearedNotifications = (userId: string, clearedIds: Set<string>) => {
-    if (typeof window === 'undefined') return
-    try {
-      const arrayValue = Array.from(clearedIds)
-      localStorage.setItem(getClearedNotificationsKey(userId), JSON.stringify(arrayValue))
+      if (response.ok) {
+        const data = await response.json()
+        const mapped = (data.notifications || []).map(normalizeNotification)
+        dispatch(setNotificationsAction(mapped))
+        dispatch(filterNotifications(filtersRef.current))
+        logger.info('Notifications refreshed', {
+          source,
+          userId: user.id,
+          total: mapped.length
+        })
+      }
     } catch (error) {
-      console.error('Error saving cleared notifications to localStorage:', error)
+      logger.error('Error refreshing notifications', {
+        source,
+        error: error instanceof Error ? error.message : String(error)
+      })
+    } finally {
+      dispatch(setLoading(false))
     }
-  }
+  }, [dispatch, user?.id])
 
-  const clearUserClearedNotifications = (userId: string) => {
-    if (typeof window === 'undefined') return
-    try {
-      localStorage.removeItem(getClearedNotificationsKey(userId))
-    } catch (error) {
-      console.error('Error clearing user notifications from localStorage:', error)
-    }
-  }
+  const markAsRead = useCallback(
+    async (notificationId: string, read = true) => {
+      if (!user?.id) return
 
-  // Load notifications from API
-  const loadNotifications = async () => {
+      const status: NotificationStatus = read ? 'read' : 'unread'
+      const payload = { notificationId, updates: { status, readAt: read ? new Date().toISOString() : null } }
+
+      try {
+        if (notificationSocket?.connected) {
+          notificationSocket.emit('markAsRead', {
+            notificationId,
+            userId: user.id,
+            read
+          })
+        } else {
+          await fetch(`/api/notifications/${notificationId}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status })
+          })
+        }
+
+        dispatch(updateNotification(payload))
+      } catch (error) {
+        console.error('Error marking notification as read:', error)
+      }
+    },
+    [dispatch, notificationSocket, user?.id]
+  )
+
+  const markAllAsRead = useCallback(async () => {
     if (!user?.id) return
 
     try {
-      const response = await fetch('/api/notifications')
-      if (response.ok) {
-        const data = await response.json()
-        const mappedNotifications = (data.notifications || []).map((notification: any) => ({
-          id: notification.id,
-          title: notification.title,
-          message: notification.message,
-          type: notification.type,
-          status: notification.status,
-          createdAt: notification.createdAt,
-          updatedAt: notification.updatedAt,
-          userId: notification.userId,
-          // Keep backward compatibility fields
-          subtitle: notification.subtitle || notification.message,
-          time: notification.time || new Date(notification.createdAt).toLocaleString(),
-          read: notification.read !== undefined ? notification.read : notification.status === 'read',
-          avatarImage: notification.avatarImage,
-          avatarIcon: notification.avatarIcon,
-          avatarText: notification.avatarText,
-          avatarColor: notification.avatarColor,
-          avatarSkin: notification.avatarSkin,
-        }))
-        // Filter out notifications that were cleared for this user
-        const userId = user?.id
-        const clearedNotifications = userId ? getClearedNotifications(userId) : new Set<string>()
-        const filteredNotifications = mappedNotifications.filter((notification: any) =>
-          !clearedNotifications.has((notification as any).id)
-        )
-        setNotifications(filteredNotifications)
+      if (notificationSocket?.connected) {
+        notificationSocket.emit('markAllAsRead', user.id)
+      } else {
+        await fetch('/api/notifications/mark-all', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ read: true })
+        })
       }
+
+      dispatch(markAllAsReadAction())
     } catch (error) {
-      console.error('Error loading notifications:', error)
-    } finally {
-      setLoading(false)
+      console.error('Error marking all notifications as read:', error)
     }
-  }
+  }, [dispatch, notificationSocket, user?.id])
 
-  // Mark notification as read/unread
-  const markAsRead = async (notificationId: string, read: boolean) => {
-    try {
-      const status = read ? 'read' : 'unread'
-      const response = await fetch(`/api/notifications/${notificationId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status }),
-      })
+  const updateStatus = useCallback(
+    async (notificationId: string, status: NotificationStatus) => {
+      if (!user?.id) return
 
-      if (response.ok) {
-        setNotifications(prev =>
-          prev.map(notification =>
-            (notification as any).id === notificationId
-              ? { ...notification, read, status, updatedAt: new Date().toISOString() }
-              : notification
-          )
-        )
+      try {
+        await fetch(`/api/notifications/${notificationId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status })
+        })
+
+        dispatch(updateNotification({ notificationId, updates: { status } }))
+      } catch (error) {
+        console.error('Error updating notification status:', error)
       }
-    } catch (error) {
-      console.error('Error updating notification:', error)
-    }
-  }
+    },
+    [dispatch, user?.id]
+  )
 
-  // Remove notification
-  const removeNotification = async (notificationId: string) => {
-    try {
-      const response = await fetch(`/api/notifications/${notificationId}`, {
-        method: 'DELETE',
-      })
+  const removeNotification = useCallback(
+    async (notificationId: string) => {
+      if (!user?.id) return
 
-      if (response.ok) {
-        setNotifications(prev =>
-          prev.filter(notification => (notification as any).id !== notificationId)
-        )
-      }
-    } catch (error) {
-      console.error('Error removing notification:', error)
-    }
-  }
-
-  // Clear all notifications (hide from dropdown for current session only)
-  const clearAllNotifications = async () => {
-    try {
-      const response = await fetch('/api/notifications/clear-all', {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        // Mark all current notifications as cleared for this session
-        // They will remain hidden until next login
-        const currentNotificationIds = notifications
-          .filter(notification => !(notification as any).id?.startsWith('virtual-'))
-          .map(notification => (notification as any).id)
-
-        if (user?.id) {
-          const currentCleared = getClearedNotifications(user?.id)
-          const newCleared = new Set([...currentCleared, ...currentNotificationIds])
-          setClearedNotifications(user?.id, newCleared)
+      try {
+        if (notificationSocket?.connected) {
+          notificationSocket.emit('deleteNotification', {
+            notificationId,
+            userId: user.id
+          })
+        } else {
+          await fetch(`/api/notifications/${notificationId}`, {
+            method: 'DELETE'
+          })
         }
 
-        // Remove cleared notifications from current state (keep virtual chat notification)
-        setNotifications(prev =>
-          prev.filter(notification => (notification as any).id?.startsWith('virtual-'))
-        )
+        dispatch(deleteNotificationAction({ notificationId }))
+      } catch (error) {
+        console.error('Error deleting notification:', error)
       }
+    },
+    [dispatch, notificationSocket, user?.id]
+  )
+
+  const clearAllNotifications = useCallback(async () => {
+    if (!user?.id) return
+
+    try {
+      await fetch('/api/notifications/clear-all', {
+        method: 'DELETE'
+      })
+      await refresh('clear-all')
     } catch (error) {
-      console.error('Error clearing all notifications:', error)
+      console.error('Error clearing notifications:', error)
     }
-  }
+  }, [refresh, user?.id])
 
-  // Listen for real-time notifications
+  const setFilters = useCallback(
+    (nextFilters: FilterPayload) => {
+      logger.info('Applying notification filters', nextFilters)
+      dispatch(filterNotifications(nextFilters))
+    },
+    [dispatch]
+  )
+
   useEffect(() => {
-    if (socket && isConnected) {
-      const handleNewNotification = (notification: NotificationsType & { id: string }) => {
-        setNotifications(prev => [notification, ...prev])
-      }
-
-      const handleNotificationUpdate = (data: { id: string; read: boolean }) => {
-        setNotifications(prev =>
-          prev.map(notification =>
-            (notification as any).id === data.id
-              ? { ...notification, read: data.read, status: data.read ? 'read' : 'unread', updatedAt: new Date().toISOString() }
-              : notification
-          )
-        )
-      }
-
-      socket.on('new-notification', handleNewNotification)
-      socket.on('notification-update', handleNotificationUpdate)
-
-      return () => {
-        socket.off('new-notification', handleNewNotification)
-        socket.off('notification-update', handleNotificationUpdate)
-      }
+    if (!user?.id) {
+      dispatch(setNotificationsAction([]))
     }
-  }, [socket, isConnected])
+  }, [dispatch, user?.id])
 
-  // Load notifications on mount and when user changes
   useEffect(() => {
-    loadNotifications()
-  }, [user?.id])
+    if (!notificationSocket) return
 
-  // Clear localStorage when user logs out (not on page reload)
-  useEffect(() => {
-    const currentUserId = user?.id
-
-    // If we had a user before and now don't have one, user logged out
-    if (previousUserId && !currentUserId) {
-      clearUserClearedNotifications(previousUserId)
+    const handleNewNotification = (notification: any) => {
+      dispatch(upsertNotification(normalizeNotification(notification)))
     }
 
-    // Update previous user ID
-    setPreviousUserId(currentUserId || null)
-  }, [user?.id, previousUserId])
+    const handleNotificationUpdate = (payload: any) => {
+      const notificationId = payload.notificationId ?? payload.id
+      if (!notificationId) return
 
-  // Create virtual chat notification - only show if there are unread messages
-  const chatNotification: NotificationsType & { id: string; message?: string; type?: string; status?: string; createdAt?: string; updatedAt?: string; userId?: string } | null = chatUnreadCount > 0 ? {
-    id: 'virtual-chat-unread',
-    title: dictionary?.navigation?.unreadChatTitle || 'Unread Chat Messages',
-    message: dictionary?.navigation?.unreadChatMessages ? dictionary.navigation.unreadChatMessages.replace('${count}', chatUnreadCount.toString()) : `You have ${chatUnreadCount} unread chat messages`,
-    type: 'chat',
-    status: 'unread',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    userId: user?.id,
-    subtitle: dictionary?.navigation?.unreadChatMessages ? dictionary.navigation.unreadChatMessages.replace('${count}', chatUnreadCount.toString()) : `You have ${chatUnreadCount} unread chat messages`,
-    time: 'только что',
-    read: false,
-    avatarIcon: 'ri-wechat-line',
-    avatarColor: 'success', // Changed to success color to match chat theme
-  } : null
+      const updates = payload.updates ?? {
+        status: payload.read ? 'read' : 'unread',
+        readAt: payload.read ? new Date().toISOString() : null
+      }
 
-  // Combine real notifications with virtual chat notification
-  const allNotifications = chatNotification ? [chatNotification, ...notifications] : notifications
+      dispatch(updateNotification({ notificationId, updates }))
+    }
 
-  const unreadCount = allNotifications.filter(notification => !notification.read && (notification as any).status !== 'trash').length
+    const handleNotificationDeleted = (payload: any) => {
+      const notificationId = payload.notificationId ?? payload.id
+      if (!notificationId) return
+      dispatch(deleteNotificationAction({ notificationId }))
+    }
+
+    const handleNotificationsRead = (payload: { userId: string }) => {
+      if (payload.userId !== user?.id) return
+      dispatch(markAllAsReadAction())
+    }
+
+    notificationSocket.on('newNotification', handleNewNotification)
+    notificationSocket.on('new-notification', handleNewNotification)
+    notificationSocket.on('notificationUpdate', handleNotificationUpdate)
+    notificationSocket.on('notification-update', handleNotificationUpdate)
+    notificationSocket.on('notificationDeleted', handleNotificationDeleted)
+    notificationSocket.on('notificationsRead', handleNotificationsRead)
+
+    return () => {
+      notificationSocket.off('newNotification', handleNewNotification)
+      notificationSocket.off('new-notification', handleNewNotification)
+      notificationSocket.off('notificationUpdate', handleNotificationUpdate)
+      notificationSocket.off('notification-update', handleNotificationUpdate)
+      notificationSocket.off('notificationDeleted', handleNotificationDeleted)
+      notificationSocket.off('notificationsRead', handleNotificationsRead)
+    }
+  }, [dispatch, notificationSocket, user?.id])
 
   return {
-    notifications: allNotifications,
+    notifications,
+    filteredNotifications,
     loading,
     unreadCount,
+    filters,
     markAsRead,
+    markAllAsRead,
+    updateStatus,
     removeNotification,
     clearAllNotifications,
-    refresh: loadNotifications,
-    setNotifications,
+    refresh,
+    setFilters
   }
 }

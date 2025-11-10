@@ -110,18 +110,23 @@ const getAvatar = (
 
 const NotificationDropdown = ({ notifications: staticNotifications }: { notifications: NotificationsType[] }) => {
   // Hooks
-  const { notifications, loading, unreadCount, markAsRead, removeNotification, clearAllNotifications, setNotifications } = useNotifications()
+  const { notifications, loading, unreadCount, markAsRead, removeNotification, clearAllNotifications, updateStatus } = useNotifications()
   const router = useRouter()
   const dictionary = useTranslation()
 
   // States
   const [open, setOpen] = useState(false)
 
+  // Filter out archived/deleted notifications for dropdown display
+  const visibleNotifications = notifications.filter(
+    notification => (notification as any).status !== 'archived' && (notification as any).status !== 'deleted'
+  )
+
   // Use dynamic notifications if available, fallback to static
-  const notificationsState = notifications.length > 0 ? notifications : staticNotifications
+  const notificationsState = visibleNotifications.length > 0 ? visibleNotifications : staticNotifications
 
   // Vars
-  const notificationCount = unreadCount || notificationsState.filter(notification => (notification as any).status !== 'read' && (notification as any).status !== 'archived' && (notification as any).status !== 'trash').length
+  const notificationCount = unreadCount || notificationsState.filter(notification => (notification as any).status !== 'read' && (notification as any).status !== 'archived' && (notification as any).status !== 'deleted').length
   const readAll = notificationsState.every(notification => (notification as any).status === 'read' || (notification as any).status === 'archived')
 
   // Refs
@@ -158,23 +163,8 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
     const notification = notificationsState[index]
 
     // Skip virtual chat notifications - they can't be archived through API
-    if (notification && (notification as any).id && !(notification as any).id.startsWith('virtual-')) {
-      try {
-        const response = await fetch(`/api/notifications/${(notification as any).id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ status: 'archived' }),
-        })
-
-        if (response.ok) {
-          // Remove from local state using the hook's remove function
-          await removeNotification((notification as any).id)
-        }
-      } catch (error) {
-        console.error('Error archiving notification:', error)
-      }
+    if (notification && (notification as any).id) {
+      await updateStatus((notification as any).id, 'archived')
     }
   }
 
@@ -191,8 +181,6 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
 
   // Clear all notifications when read all icon is clicked (only for dropdown)
   const readAllNotifications = async () => {
-    console.log('Clearing all notifications from dropdown')
-    // Use the hook's clearAllNotifications function to properly manage cleared state
     await clearAllNotifications()
   }
 

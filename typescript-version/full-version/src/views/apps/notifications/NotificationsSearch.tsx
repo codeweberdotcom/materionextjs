@@ -3,14 +3,7 @@ import IconButton from '@mui/material/IconButton'
 import InputBase from '@mui/material/InputBase'
 import Tooltip from '@mui/material/Tooltip'
 
-// Type Imports
-import type { AppDispatch } from '@/redux-store'
-
-// Slice Imports
-import { setNotifications } from '@/redux-store/slices/notifications'
-
 // Hook Imports
-import { useNotifications } from '@/hooks/useNotifications'
 import { useTranslation } from '@/contexts/TranslationContext'
 
 type Props = {
@@ -19,15 +12,14 @@ type Props = {
   setSidebarOpen: (value: boolean) => void
   setBackdropOpen: (value: boolean) => void
   setSearchTerm: (value: string) => void
-  dispatch: AppDispatch
+  onRefresh: (reason?: string) => void
 }
 
 const NotificationsSearch = (props: Props) => {
   // Props
-  const { isBelowScreen, searchTerm, setSidebarOpen, setBackdropOpen, setSearchTerm, dispatch } = props
+  const { isBelowScreen, searchTerm, setSidebarOpen, setBackdropOpen, setSearchTerm, onRefresh } = props
 
   // Hooks
-  const { notifications: freshNotifications } = useNotifications()
   const dictionary = useTranslation()
 
   // Open sidebar on below md screen
@@ -38,8 +30,7 @@ const NotificationsSearch = (props: Props) => {
 
   // Refresh notifications from database
   const handleRefresh = () => {
-    // Always refresh to ensure virtual chat notification is included
-    dispatch(setNotifications(freshNotifications))
+    onRefresh('search-bar')
   }
 
   return (

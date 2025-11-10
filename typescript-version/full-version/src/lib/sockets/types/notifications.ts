@@ -1,23 +1,34 @@
 import { User } from './common';
 
-// Уведомление
 export interface Notification {
   id: string;
   title: string;
   message: string;
+  subtitle?: string;
   type: NotificationType;
   status: NotificationStatus;
   userId: string;
   createdAt: string;
   updatedAt: string;
-  readAt?: string;
+  readAt?: string | null;
+  avatarImage?: string;
+  avatarIcon?: string;
+  avatarText?: string;
+  avatarColor?: string;
+  avatarSkin?: string;
   metadata?: Record<string, any>;
 }
 
-// Типы уведомлений
-export type NotificationType = 'info' | 'success' | 'warning' | 'error' | 'chat' | 'system';
+export type NotificationType =
+  | 'system'
+  | 'user'
+  | 'security'
+  | 'marketing'
+  | 'info'
+  | 'chat'
+  | 'feature'
+  | 'update';
 
-// Статусы уведомлений
 export type NotificationStatus = 'unread' | 'read' | 'archived' | 'deleted';
 
 // События уведомлений (входящие)

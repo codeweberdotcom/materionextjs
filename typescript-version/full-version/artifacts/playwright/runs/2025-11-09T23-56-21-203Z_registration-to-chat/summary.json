@@ -1,0 +1,21 @@
+{
+  "runId": "2025-11-09T23-56-21-203Z_registration-to-chat",
+  "label": "Registration -> Chat Flow",
+  "testId": "registration-to-chat",
+  "status": "failed",
+  "startedAt": "2025-11-09T23:51:23.202Z",
+  "finishedAt": "2025-11-09T23:56:21.210Z",
+  "scripts": [
+    {
+      "runId": "2025-11-09T23-56-21-203Z_registration-to-chat",
+      "scriptId": "registration-to-chat",
+      "title": "user can register, login, message superadmin, and logout",
+      "file": "register-chat-flow.spec.ts",
+      "status": "failed",
+      "duration": 30122,
+      "startedAt": "2025-11-09T23:51:24.111Z",
+      "finishedAt": "2025-11-09T23:51:54.233Z"
+    }
+  ],
+  "artifactsPath": "artifacts\\playwright\\runs\\2025-11-09T23-56-21-203Z_registration-to-chat"
+}

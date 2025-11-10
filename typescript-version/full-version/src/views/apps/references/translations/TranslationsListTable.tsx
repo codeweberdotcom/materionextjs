@@ -20,6 +20,12 @@ import Switch from '@mui/material/Switch'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
 import type { TextFieldProps } from '@mui/material/TextField'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -450,40 +456,40 @@ const TranslationsListTable = () => {
             <Skeleton width={150} height={36} />
           </div>
         </div>
-        <div className='overflow-x-auto'>
-          <table className={tableStyles.table}>
-            <thead>
-              <tr>
-                <th><Skeleton width={20} height={20} /></th>
-                <th><Skeleton width={100} height={20} /></th>
-                <th><Skeleton width={80} height={20} /></th>
-                <th><Skeleton width={70} height={20} /></th>
-                <th><Skeleton width={120} height={20} /></th>
-                <th><Skeleton width={60} height={20} /></th>
-                <th><Skeleton width={100} height={20} /></th>
-              </tr>
-            </thead>
-            <tbody>
+        <TableContainer className='overflow-x-auto'>
+          <Table className={tableStyles.table}>
+            <TableHead>
+              <TableRow>
+                <TableCell><Skeleton width={20} height={20} /></TableCell>
+                <TableCell><Skeleton width={100} height={20} /></TableCell>
+                <TableCell><Skeleton width={80} height={20} /></TableCell>
+                <TableCell><Skeleton width={70} height={20} /></TableCell>
+                <TableCell><Skeleton width={120} height={20} /></TableCell>
+                <TableCell><Skeleton width={60} height={20} /></TableCell>
+                <TableCell><Skeleton width={100} height={20} /></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {Array.from({ length: 10 }).map((_, index) => (
-                <tr key={index}>
-                  <td><Skeleton width={20} height={20} /></td>
-                  <td><Skeleton width={100} height={16} /></td>
-                  <td><Skeleton width={80} height={16} /></td>
-                  <td><Skeleton width={50} height={24} /></td>
-                  <td><Skeleton width={150} height={16} /></td>
-                  <td><Skeleton width={60} height={24} /></td>
-                  <td>
+                <TableRow key={index}>
+                  <TableCell><Skeleton width={20} height={20} /></TableCell>
+                  <TableCell><Skeleton width={100} height={16} /></TableCell>
+                  <TableCell><Skeleton width={80} height={16} /></TableCell>
+                  <TableCell><Skeleton width={50} height={24} /></TableCell>
+                  <TableCell><Skeleton width={150} height={16} /></TableCell>
+                  <TableCell><Skeleton width={60} height={24} /></TableCell>
+                  <TableCell>
                     <div className='flex items-center gap-2'>
                       <Skeleton width={24} height={24} />
                       <Skeleton width={40} height={20} />
                       <Skeleton width={24} height={24} />
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
         <div className='border-bs p-4'>
           <Skeleton width={200} height={24} />
         </div>
@@ -517,13 +523,13 @@ const TranslationsListTable = () => {
             </Button>
           </div>
         </div>
-      <div className='overflow-x-auto'>
-        <table className={tableStyles.table}>
-          <thead>
+      <TableContainer className='overflow-x-auto'>
+        <Table className={tableStyles.table}>
+          <TableHead>
             {table.getHeaderGroups().map(headerGroup => (
-              <tr key={headerGroup.id}>
+              <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <th key={header.id}>
+                  <TableCell key={header.id}>
                     {header.isPlaceholder ? null : (
                       <div
                         className={classnames({
@@ -539,35 +545,35 @@ const TranslationsListTable = () => {
                         }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
                       </div>
                     )}
-                  </th>
+                  </TableCell>
                 ))}
-              </tr>
+              </TableRow>
             ))}
-          </thead>
+          </TableHead>
           {table.getFilteredRowModel().rows.length === 0 ? (
-            <tbody>
-              <tr>
-                <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
+            <TableBody>
+              <TableRow>
+                <TableCell colSpan={table.getVisibleFlatColumns().length} className='text-center'>
                   {dictionary.navigation.noTranslationsAvailable}
-                </td>
-              </tr>
-            </tbody>
+                </TableCell>
+              </TableRow>
+            </TableBody>
           ) : (
-            <tbody>
+            <TableBody>
               {table
                 .getRowModel()
                 .rows.slice(0, table.getState().pagination.pageSize)
                 .map(row => (
-                  <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                  <TableRow key={row.id} className={classnames({ selected: row.getIsSelected() })}>
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                      <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                     ))}
-                  </tr>
+                  </TableRow>
                 ))}
-            </tbody>
+            </TableBody>
           )}
-        </table>
-      </div>
+        </Table>
+      </TableContainer>
       <TablePagination
         rowsPerPageOptions={[10, 25, 50]}
         component='div'

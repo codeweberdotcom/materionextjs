@@ -86,8 +86,8 @@ const ChatWrapper = () => {
       // Load messages immediately without delay
       chatStore.contacts.forEach((contact) => {
         if (contact.id !== user?.id) {
-          // Since sockets are now global, we can emit directly
-          // This will be handled by the global SocketManager
+          // Since sockets are global, we can emit directly
+          // SocketProvider keeps the connection alive for us
         }
       })
     }

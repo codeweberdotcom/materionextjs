@@ -1,8 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
 import { prisma } from '@/libs/prisma'
+import { getSocketServer } from '@/lib/sockets'
+import { parseNotificationMetadata, serializeNotificationMetadata } from '@/utils/notifications/metadata'
+
+const toApiNotification = (notification: any) => ({
+  id: notification.id,
+  title: notification.title,
+  message: notification.message,
+  type: notification.type as any,
+  status: notification.status as any,
+  createdAt: notification.createdAt.toISOString(),
+  updatedAt: notification.updatedAt.toISOString(),
+  userId: notification.userId,
+  readAt: notification.readAt ? notification.readAt.toISOString() : null,
+  metadata: parseNotificationMetadata(notification.metadata),
+  subtitle: notification.message,
+  time: new Date(notification.createdAt).toLocaleString(),
+  read: notification.status === 'read',
+  avatarImage: notification.avatarImage || undefined,
+  avatarIcon: notification.avatarIcon || undefined,
+  avatarText: notification.avatarText || undefined,
+  avatarColor: notification.avatarColor as any || undefined,
+  avatarSkin: notification.avatarSkin as any || undefined
+})
+
+const emitNotificationEvent = (userId: string, event: string, payload: any) => {
+  const io = getSocketServer()
+  if (!io) return
+
+  const namespace = io.of('/notifications')
+  namespace.to(`user_${userId}`).emit(event, payload)
+
+  const legacyMap: Record<string, string> = {
+    newNotification: 'new-notification',
+    notificationUpdate: 'notification-update',
+    notificationDeleted: 'notification-deleted',
+    notificationsRead: 'notifications-read'
+  }
+
+  if (legacyMap[event]) {
+    namespace.to(`user_${userId}`).emit(legacyMap[event], payload)
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,39 +55,20 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get notifications for the current user (exclude archived)
+    const searchParams = request.nextUrl.searchParams
+    const limit = Number(searchParams.get('limit')) || 100
+
     const notifications = await prisma.notification.findMany({
       where: {
-        userId: user.id,
-        status: {
-          not: 'archived' // Don't show archived notifications in dropdown
-        }
+        userId: user.id
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: 'desc'
       },
-      take: 50, // Limit to 50 most recent notifications
+      take: limit
     })
 
-    // Transform to match the expected format
-    const transformedNotifications = notifications.map(notification => ({
-      id: notification.id,
-      title: notification.title,
-      message: notification.message,
-      type: notification.type as any,
-      status: notification.status as any,
-      createdAt: notification.createdAt.toISOString(),
-      updatedAt: notification.updatedAt.toISOString(),
-      userId: notification.userId,
-      subtitle: notification.message, // For backward compatibility with dropdown
-      time: new Date(notification.createdAt).toLocaleString(), // For backward compatibility with dropdown
-      read: notification.status === 'read', // For backward compatibility with dropdown
-      avatarImage: notification.avatarImage || undefined,
-      avatarIcon: notification.avatarIcon || undefined,
-      avatarText: notification.avatarText || undefined,
-      avatarColor: notification.avatarColor as any || undefined,
-      avatarSkin: notification.avatarSkin as any || undefined,
-    }))
+    const transformedNotifications = notifications.map(toApiNotification)
 
     return NextResponse.json({
       notifications: transformedNotifications,
@@ -67,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, message, type, avatarImage, avatarIcon, avatarText, avatarColor, avatarSkin } = body
+    const { title, message, type, avatarImage, avatarIcon, avatarText, avatarColor, avatarSkin, metadata } = body
 
     if (!title || !message) {
       return NextResponse.json({ error: 'Title and message are required' }, { status: 400 })
@@ -85,31 +106,15 @@ export async function POST(request: NextRequest) {
         avatarText,
         avatarColor,
         avatarSkin,
-      },
+        metadata: serializeNotificationMetadata(metadata)
+      }
     })
 
-    // Emit real-time notification via WebSocket
-    // This would be handled by the WebSocket server
+    const payload = toApiNotification(notification)
+    emitNotificationEvent(user.id, 'newNotification', payload)
 
     return NextResponse.json({
-      notification: {
-        id: notification.id,
-        title: notification.title,
-        message: notification.message,
-        type: notification.type as any,
-        status: notification.status as any,
-        createdAt: notification.createdAt.toISOString(),
-        updatedAt: notification.updatedAt.toISOString(),
-        userId: notification.userId,
-        subtitle: notification.message, // For backward compatibility with dropdown
-        time: new Date(notification.createdAt).toLocaleString(), // For backward compatibility with dropdown
-        read: notification.status === 'read', // For backward compatibility with dropdown
-        avatarImage: notification.avatarImage || undefined,
-        avatarIcon: notification.avatarIcon || undefined,
-        avatarText: notification.avatarText || undefined,
-        avatarColor: notification.avatarColor as any || undefined,
-        avatarSkin: notification.avatarSkin as any || undefined,
-      },
+      notification: payload
     })
   } catch (error) {
     console.error('Error creating notification:', error)

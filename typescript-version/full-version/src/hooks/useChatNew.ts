@@ -2,12 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthProvider';
 import { useDispatch } from 'react-redux';
 import { sendMsg } from '@/redux-store/slices/chat';
-import { useSocketNew } from './useSocketNew';
+import { useSockets } from '@/contexts/SocketProvider';
 import type { ChatMessage, ChatRoom } from '../lib/sockets/types/chat';
 
 export const useChatNew = (otherUserId?: string) => {
-  const { user, session } = useAuth();
-  const { chatSocket, isConnected } = useSocketNew();
+  const { user } = useAuth();
+  const { chatSocket } = useSockets();
+  const isConnected = Boolean(chatSocket?.connected);
   const dispatch = useDispatch();
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);

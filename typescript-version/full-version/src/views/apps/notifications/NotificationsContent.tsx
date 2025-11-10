@@ -1,12 +1,9 @@
-// React Imports
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
-// Type Imports
 import type { AppDispatch } from '@/redux-store'
-import type { NotificationState } from '@/types/apps/notificationTypes'
+import type { NotificationState, NotificationStatus } from '@/types/apps/notificationTypes'
 
-// Slice Imports
-import { updateNotificationStatus, deleteNotification, markAllAsRead, setCurrentNotification } from '@/redux-store/slices/notifications'
+import { setCurrentNotification } from '@/redux-store/slices/notifications'
 
 // Component Imports
 import NotificationsSearch from './NotificationsSearch'
@@ -25,6 +22,9 @@ type Props = {
   isBelowMdScreen: boolean
   isBelowSmScreen: boolean
   setBackdropOpen: (value: boolean) => void
+  onMarkAsRead: (notificationId: string, read?: boolean) => void
+  onUpdateStatus: (notificationId: string, status: NotificationStatus) => void
+  onRefresh: (reason?: string) => void
 }
 
 const NotificationsContent = (props: Props) => {
@@ -39,7 +39,10 @@ const NotificationsContent = (props: Props) => {
     isBelowLgScreen,
     isBelowMdScreen,
     isBelowSmScreen,
-    setBackdropOpen
+    setBackdropOpen,
+    onMarkAsRead,
+    onUpdateStatus,
+    onRefresh
   } = props
 
   // States
@@ -67,20 +70,32 @@ const NotificationsContent = (props: Props) => {
     ).length === 0
 
   // Action for marking single notification as read
-  const handleSingleNotificationRead = (notificationId: string) => {
-    dispatch(updateNotificationStatus({ notificationId, status: 'read' }))
-  }
+  const handleSingleNotificationRead = useCallback(
+    (notificationId: string) => {
+      onMarkAsRead(notificationId, true)
+    },
+    [onMarkAsRead]
+  )
 
-  // Action for archiving single notification
-  const handleSingleNotificationArchive = (notificationId: string) => {
-    dispatch(updateNotificationStatus({ notificationId, status: 'archived' }))
-  }
+  const handleSingleNotificationArchive = useCallback(
+    (notificationId: string) => {
+      onUpdateStatus(notificationId, 'archived')
+    },
+    [onUpdateStatus]
+  )
 
   // Action for opening notification details
-   const handleNotificationClick = (notificationId: string) => {
-     dispatch(setCurrentNotification(notificationId))
-     setDrawerOpen(true)
-   }
+  const handleNotificationClick = useCallback((notificationId: string) => {
+    dispatch(setCurrentNotification(notificationId))
+    setDrawerOpen(true)
+  }, [dispatch])
+
+  const handleRefresh = useCallback(
+    (reason?: string) => {
+      onRefresh(reason)
+    },
+    [onRefresh]
+  )
 
   // Handle filtering state
   useEffect(() => {
@@ -102,17 +117,16 @@ const NotificationsContent = (props: Props) => {
         setSidebarOpen={setSidebarOpen}
         setBackdropOpen={setBackdropOpen}
         setSearchTerm={setSearchTerm}
-        dispatch={dispatch}
+        onRefresh={handleRefresh}
       />
       <NotificationsActions
         areFilteredNotificationsNone={areFilteredNotificationsNone}
         selectedNotifications={selectedNotifications}
         setSelectedNotifications={setSelectedNotifications}
         notifications={notifications}
-        dispatch={dispatch}
-        status={status}
-        type={type}
         setReload={setReload}
+        onArchive={id => onUpdateStatus(id, 'archived')}
+        onRefresh={handleRefresh}
       />
       <NotificationsList
         isInitialMount={isInitialMount}
@@ -125,9 +139,6 @@ const NotificationsContent = (props: Props) => {
         selectedNotifications={selectedNotifications}
         setSelectedNotifications={setSelectedNotifications}
         notifications={notifications}
-        dispatch={dispatch}
-        status={status}
-        type={type}
         handleSingleNotificationRead={handleSingleNotificationRead}
         handleSingleNotificationArchive={handleSingleNotificationArchive}
         handleNotificationClick={handleNotificationClick}

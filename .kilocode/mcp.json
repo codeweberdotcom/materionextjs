@@ -7,7 +7,7 @@
         "--db-path",
         "c:/laragon/www/materionextjs/typescript-version/full-version/src/prisma/dev3.db"
       ],
-      "disabled": false,
+      "disabled": true,
       "alwaysAllow": []
     }
   }

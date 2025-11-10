@@ -9,10 +9,10 @@ export async function GET() {
 
     // Проверяем, существует ли файл
     if (!fs.existsSync(filePath)) {
-      return NextResponse.json(
-        { error: 'Test results file not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({
+        suites: [],
+        message: 'No Playwright results yet. Run tests to populate this table.'
+      })
     }
 
     // Читаем файл

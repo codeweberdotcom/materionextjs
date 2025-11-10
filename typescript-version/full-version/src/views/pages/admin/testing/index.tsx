@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -9,8 +9,9 @@ import CardHeader from '@mui/material/CardHeader'
 import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
 import IconButton from '@mui/material/IconButton'
-import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
+import Tooltip from '@mui/material/Tooltip'
+import Typography from '@mui/material/Typography'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
@@ -18,114 +19,216 @@ import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 
-interface TestResult {
+// Third-party Imports
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
+
+// Data Imports
+import { playwrightTestScripts } from '@/data/testing/test-scripts'
+import tableStyles from '@core/styles/table.module.css'
+
+type ScriptRunSummary = {
+  runId: string
+  scriptId: string
   title: string
+  file: string
   status: 'passed' | 'failed'
   duration: number
-  file: string
-  timestamp: string
-  type: string
+  startedAt: string
+  finishedAt: string
+}
+
+type PlaywrightRun = {
+  runId: string
+  label: string
+  testId: string
+  status: 'passed' | 'failed'
+  startedAt: string
+  finishedAt: string
+  scripts: ScriptRunSummary[]
 }
 
 const TestingPage = () => {
-  const [testResults, setTestResults] = useState<TestResult[]>([])
+  const [runs, setRuns] = useState<PlaywrightRun[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [runningTests, setRunningTests] = useState(false)
+  const [runningTestId, setRunningTestId] = useState<string | null>(null)
+  const [runningMode, setRunningMode] = useState<'headed' | 'headless' | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const [selectedTest, setSelectedTest] = useState<TestResult | null>(null)
+  const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
+  const [selectedRunTitle, setSelectedRunTitle] = useState<string>('')
 
-  const fetchTestResults = async () => {
+  const latestByScript = useMemo<Map<string, ScriptRunSummary & { runId: string }>>(() => {
+    const map = new Map<string, ScriptRunSummary & { runId: string }>()
+    runs.forEach(run => {
+      run.scripts?.forEach(script => {
+        const key = script.scriptId || script.file
+        if (!key) return
+        if (!map.has(key)) {
+          map.set(key, { ...script, runId: run.runId })
+        }
+      })
+    })
+    return map
+  }, [runs])
+
+  const recentEntries = useMemo<(ScriptRunSummary & { runId: string; runLabel: string })[]>(() => {
+    const entries = runs.flatMap(run =>
+      (run.scripts || []).map(script => ({
+        ...script,
+        runId: run.runId,
+        runLabel: run.label,
+        startedAt: script.startedAt || run.startedAt
+      }))
+    )
+
+    entries.sort(
+      (a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+    )
+
+    return entries
+  }, [runs])
+
+  const scriptStats = useMemo(() => {
+    const map = new Map<string, { total: number; passed: number; failed: number }>()
+
+    runs.forEach(run => {
+      run.scripts?.forEach(script => {
+        const key = script.scriptId || script.file || script.title
+        if (!key) return
+        const entry = map.get(key) || { total: 0, passed: 0, failed: 0 }
+        entry.total += 1
+        if (script.status === 'passed') {
+          entry.passed += 1
+        } else {
+          entry.failed += 1
+        }
+        map.set(key, entry)
+      })
+    })
+
+    return map
+  }, [runs])
+
+
+  const fetchRuns = async () => {
+    setError(null)
     try {
-      // Используем API endpoint для чтения результатов тестов
-      const response = await fetch('/api/admin/test-results')
+      const response = await fetch('/api/admin/test-runs?limit=50')
       if (!response.ok) {
-        throw new Error('Failed to load test results')
+        throw new Error('Failed to load test runs')
       }
       const data = await response.json()
-
-      // Парсим результаты из JSON структуры Playwright
-      const results: TestResult[] = []
-
-      data.suites?.forEach((suite: any) => {
-        suite.specs?.forEach((spec: any) => {
-          spec.tests?.forEach((test: any) => {
-            const result = test.results?.[0]
-            if (result) {
-              results.push({
-                title: test.title || spec.title,
-                status: result.status === 'passed' ? 'passed' : 'failed',
-                duration: result.duration || 0,
-                file: suite.file || spec.file,
-                timestamp: result.startTime ? new Date(result.startTime).toISOString() : new Date().toISOString(),
-                type: (suite.file || spec.file).endsWith('.spec.ts') || (suite.file || spec.file).endsWith('.test.ts') ? 'E2E' :
-                      (suite.file || spec.file).includes('unit') ? 'Unit' :
-                      (suite.file || spec.file).includes('integration') ? 'Integration' : 'Unknown'
-              })
-            }
-          })
-        })
-      })
-
-      setTestResults(results)
+      setRuns(Array.isArray(data.runs) ? data.runs : [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load test results')
+      setError(err instanceof Error ? err.message : 'Failed to load test runs')
     } finally {
       setLoading(false)
     }
   }
 
-  // Calculate test statistics
-  const getTestStats = () => {
-    const total = testResults.length
-    const passed = testResults.filter(t => t.status === 'passed').length
-    const failed = testResults.filter(t => t.status === 'failed').length
-    return `${total}/${passed}/${failed}`
-  }
-
   useEffect(() => {
-    fetchTestResults()
+    fetchRuns()
   }, [])
 
-  const runTests = async () => {
-    setRunningTests(true)
-    setError(null)
-    try {
+  const runTests = async (testId: string = 'all', mode: 'headed' | 'headless' = 'headed') => {
+    const runSingleTest = async (id: string) => {
       const response = await fetch('/api/admin/run-tests', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ testId: id, mode })
       })
 
       const result = await response.json()
 
-      if (!result.success) {
+      if (!response.ok || result.success === false) {
         throw new Error(result.error || 'Test execution failed')
       }
 
-      // Refresh test results after running
-      await fetchTestResults()
+      if (!result.success) {
+        throw new Error(result.error || 'Test execution failed')
+      }
+    }
+
+    setRunningTests(true)
+    setRunningMode(mode)
+    setError(null)
+
+    try {
+      if (testId === 'all') {
+      for (const script of playwrightTestScripts) {
+        setRunningTestId(script.id)
+        await runSingleTest(script.id)
+      }
+    } else {
+      setRunningTestId(testId)
+      await runSingleTest(testId)
+    }
+
+      await fetchRuns()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run tests')
     } finally {
       setRunningTests(false)
+      setRunningTestId(null)
+      setRunningMode(null)
     }
   }
 
-  const openTestDetails = (test: TestResult) => {
-    setSelectedTest(test)
+  const openTestDetails = (scriptRun: ScriptRunSummary & { runId: string }) => {
+    setSelectedRunId(scriptRun.runId)
+    setSelectedRunTitle(`${scriptRun.title} (${new Date(scriptRun.startedAt).toLocaleString()})`)
     setDrawerOpen(true)
   }
 
   const closeDrawer = () => {
     setDrawerOpen(false)
-    setSelectedTest(null)
+    setSelectedRunId(null)
+    setSelectedRunTitle('')
   }
 
   if (loading) {
+    const skeletonRows = playwrightTestScripts.length || 3
+
     return (
       <Card>
-        <CardHeader title="Testing Dashboard" />
-        <div className="p-5">
-          <Typography>Loading test results...</Typography>
+        <CardHeader>
+          <Skeleton width={200} height={28} />
+        </CardHeader>
+        <Divider />
+        <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
+          <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
+            <Skeleton width={220} height={40} />
+          </div>
+          <Skeleton width={150} height={36} />
+        </div>
+        <TableContainer className='overflow-x-auto'>
+          <Table className={tableStyles.table}>
+            <TableHead>
+              <TableRow>
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <TableCell key={index}>
+                    <Skeleton width={100} height={20} />
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {Array.from({ length: skeletonRows }).map((_, rowIdx) => (
+                <TableRow key={rowIdx}>
+                  {Array.from({ length: 8 }).map((__, cellIdx) => (
+                    <TableCell key={cellIdx}>
+                      <Skeleton width={cellIdx === 7 ? 120 : 100} height={16} />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <div className='border-bs p-4'>
+          <Skeleton width={200} height={24} />
         </div>
       </Card>
     )
@@ -158,58 +261,63 @@ const TestingPage = () => {
           </Button>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <Button
-              onClick={runTests}
+              onClick={() => runTests('all', 'headed')}
               disabled={runningTests}
               variant='contained'
               className='max-sm:is-full'
-              startIcon={runningTests ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <i className='ri-play-line text-xl' />}
+              startIcon={
+                runningTests ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <i className='ri-play-line text-xl' />
+                )
+              }
             >
               {runningTests ? 'Running Tests...' : 'Run Tests'}
             </Button>
           </div>
         </div>
-        <TableContainer>
-          <Table>
+        <TableContainer className='overflow-x-auto'>
+          <Table className={tableStyles.table}>
             <TableHead>
               <TableRow>
                 <TableCell>Status</TableCell>
                 <TableCell>Test</TableCell>
                 <TableCell>Type</TableCell>
-                <TableCell>Duration</TableCell>
-                <TableCell>Date/Time</TableCell>
                 <TableCell>File</TableCell>
                 <TableCell>Total/Passed/Failed</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {testResults.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={8} align="center">
-                    <Typography color="text.secondary">No test results found.</Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                testResults.map((test, index) => (
-                  <TableRow key={index} hover>
+              {playwrightTestScripts.map(script => {
+                const scriptKey = script.id || script.file
+                const scriptResult = scriptKey ? latestByScript.get(scriptKey) : undefined
+                const statsKey = scriptKey || script.file || script.title
+                const stats = statsKey ? scriptStats.get(statsKey) : undefined
+                const chipLabel = scriptResult ? (scriptResult.status === 'passed' ? 'Passed' : 'Failed') : 'Not run'
+                const chipColor: 'default' | 'success' | 'error' =
+                  scriptResult ? (scriptResult.status === 'passed' ? 'success' : 'error') : 'default'
+                return (
+                  <TableRow key={script.id}>
                     <TableCell>
                       <Chip
                         variant='tonal'
-                        label={test.status === 'passed' ? 'Passed' : 'Failed'}
+                        label={chipLabel}
                         size='small'
-                        color={test.status === 'passed' ? 'success' : 'error'}
+                        color={chipColor}
                         className='capitalize'
                       />
                     </TableCell>
                     <TableCell>
                       <Typography className='font-medium' color='text.primary'>
-                        {test.title}
+                        {script.title}
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Chip
                         variant='tonal'
-                        label={test.type}
+                        label={script.type}
                         size='small'
                         color='primary'
                         className='capitalize'
@@ -217,26 +325,142 @@ const TestingPage = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant='body2' color='text.secondary'>
-                        {(test.duration / 1000).toFixed(1)}s
+                        {script.file}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <div className='flex items-center gap-2 text-sm font-medium'>
+                        <Chip
+                          size='small'
+                          variant='tonal'
+                          color='default'
+                          label={stats?.total ?? 0}
+                          className='!text-xs'
+                        />
+                        <Chip
+                          size='small'
+                          variant='tonal'
+                          color='success'
+                          label={stats?.passed ?? 0}
+                          className='!text-xs'
+                        />
+                        <Chip
+                          size='small'
+                          variant='tonal'
+                          color='error'
+                          label={stats?.failed ?? 0}
+                          className='!text-xs'
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='flex items-center gap-1'>
+                        <Tooltip title={script.description} arrow>
+                          <IconButton aria-label='Test info' size='small'>
+                            <i className='ri-information-line text-textSecondary' />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title='Run with UI' arrow>
+                          <IconButton
+                            aria-label='Run headed'
+                            onClick={() => runTests(script.id, 'headed')}
+                            disabled={runningTests}
+                            size='small'
+                          >
+                            {runningTests && runningTestId === script.id && runningMode === 'headed' ? (
+                              <div className="w-4 h-4 border-2 border-[var(--mui-palette-success-main)] border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <i className='ri-play-line text-[var(--mui-palette-success-main)]' />
+                            )}
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title='Run headless' arrow>
+                          <IconButton
+                            aria-label='Run headless'
+                            onClick={() => runTests(script.id, 'headless')}
+                            disabled={runningTests}
+                            size='small'
+                          >
+                            {runningTests && runningTestId === script.id && runningMode === 'headless' ? (
+                              <div className="w-4 h-4 border-2 border-[var(--mui-palette-info-main)] border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <i className='ri-play-line text-[var(--mui-palette-info-main)]' />
+                            )}
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+      </Card>
+
+      <Card className='mt-6'>
+        <CardHeader title='Recent Runs' />
+        <Divider />
+        <TableContainer className='overflow-x-auto'>
+          <Table className={tableStyles.table}>
+            <TableHead>
+              <TableRow>
+                <TableCell>Run</TableCell>
+                <TableCell>Test</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Duration</TableCell>
+                <TableCell>Date/Time</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {recentEntries.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className='text-center'>
+                    No runs yet. Execute a test to populate this table.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                recentEntries.slice(0, 10).map(entry => (
+                  <TableRow key={`${entry.runId}-${entry.file}-${entry.startedAt}`}>
+                    <TableCell>
+                      <Typography className='font-medium'>{entry.runLabel}</Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        {entry.runId}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography>{entry.title}</Typography>
+                      <Typography variant='body2' color='text.secondary'>
+                        {entry.file}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={entry.status === 'passed' ? 'Passed' : 'Failed'}
+                        color={entry.status === 'passed' ? 'success' : 'error'}
+                        variant='tonal'
+                        size='small'
+                        className='capitalize'
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant='body2' color='text.secondary'>
+                        {(entry.duration / 1000).toFixed(1)}s
                       </Typography>
                     </TableCell>
                     <TableCell>
                       <Typography variant='body2' color='text.secondary'>
-                        {new Date(test.timestamp).toLocaleString()}
+                        {new Date(entry.startedAt).toLocaleString()}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Typography variant='body2' color='text.secondary'>
-                        {test.file}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant='body2' color='text.primary' className='font-medium'>
-                        {getTestStats()}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <IconButton onClick={() => openTestDetails(test)}>
+                      <IconButton
+                        aria-label='View report'
+                        size='small'
+                        onClick={() => openTestDetails(entry)}
+                      >
                         <i className='ri-eye-line text-textSecondary' />
                       </IconButton>
                     </TableCell>
@@ -246,12 +470,11 @@ const TestingPage = () => {
             </TableBody>
           </Table>
         </TableContainer>
-
       </Card>
 
       {/* Right Drawer for Test Details */}
       <div
-        className="fixed inset-y-0 right-0 z-50 flex flex-col bg-white shadow-xl overflow-hidden"
+        className="fixed inset-y-0 right-0 z-[1200] flex flex-col bg-white shadow-xl overflow-hidden"
         style={{
           width: '100%',
           maxWidth: '60rem',
@@ -259,11 +482,11 @@ const TestingPage = () => {
           transition: 'transform 0.3s ease'
         }}
       >
-        {selectedTest && (
+        {selectedRunId && (
           <>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900">
-                Test Details: {selectedTest.title}
+                Test Details: {selectedRunTitle || selectedRunId}
               </h2>
               <button
                 onClick={closeDrawer}
@@ -277,7 +500,7 @@ const TestingPage = () => {
             </div>
             <div className="flex-1 overflow-hidden">
               <iframe
-                src="/api/admin/html-report"
+                src={`/api/admin/html-report${selectedRunId ? `?runId=${selectedRunId}` : ''}`}
                 className="w-full h-full border-0"
                 title="Test Report"
               />
@@ -289,7 +512,7 @@ const TestingPage = () => {
       {/* Backdrop */}
       {drawerOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black bg-opacity-50 z-[1100] transition-opacity duration-300"
           onClick={closeDrawer}
         />
       )}

@@ -1,26 +1,43 @@
-// Notification Status
-export type NotificationStatus = 'unread' | 'read' | 'trash'
+export type NotificationStatus = 'unread' | 'read' | 'archived' | 'deleted'
 
-// Notification Type
-export type NotificationType = 'system' | 'user' | 'security' | 'marketing' | 'info'
+export type NotificationType =
+  | 'system'
+  | 'user'
+  | 'security'
+  | 'marketing'
+  | 'info'
+  | 'chat'
+  | 'feature'
+  | 'update'
 
-// Notification Interface
 export interface Notification {
   id: string
   title: string
   message: string
+  subtitle?: string
   type: NotificationType
   status: NotificationStatus
   createdAt: string
   updatedAt: string
   userId?: string
+  readAt?: string | null
+  avatarImage?: string
+  avatarIcon?: string
+  avatarText?: string
+  avatarColor?: string
+  avatarSkin?: string
   metadata?: Record<string, any>
 }
 
-// Notification State for Redux
+export interface NotificationFilters {
+  status?: NotificationStatus | 'all'
+  type?: NotificationType | 'all'
+}
+
 export interface NotificationState {
   notifications: Notification[]
   filteredNotifications: Notification[]
   currentNotificationId?: string
-  clearedNotifications: Set<string>
+  loading: boolean
+  filters: NotificationFilters
 }

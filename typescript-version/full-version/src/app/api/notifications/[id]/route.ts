@@ -1,8 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
 import { prisma } from '@/libs/prisma'
+import { getSocketServer } from '@/lib/sockets'
+import { parseNotificationMetadata, serializeNotificationMetadata } from '@/utils/notifications/metadata'
+
+const emitNotificationEvent = (userId: string, event: string, payload: any) => {
+  const io = getSocketServer()
+  if (!io) return
+
+  const namespace = io.of('/notifications')
+  namespace.to(`user_${userId}`).emit(event, payload)
+
+  const legacyMap: Record<string, string> = {
+    notificationUpdate: 'notification-update',
+    notificationDeleted: 'notification-deleted'
+  }
+
+  if (legacyMap[event]) {
+    namespace.to(`user_${userId}`).emit(legacyMap[event], payload)
+  }
+}
 
 export async function PATCH(
   request: NextRequest,
@@ -16,21 +33,49 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { status } = await request.json()
+    const body = await request.json()
+    const { status, metadata } = body
 
-    const notification = await prisma.notification.updateMany({
+    const existingNotification = await prisma.notification.findFirst({
       where: {
-        id: id,
-        userId: user.id, // Ensure user can only update their own notifications
-      },
-      data: {
-        status: status || 'read',
-      },
+        id,
+        userId: user.id
+      }
     })
 
-    if (notification.count === 0) {
+    if (!existingNotification) {
       return NextResponse.json({ error: 'Notification not found' }, { status: 404 })
     }
+
+    const data: Record<string, any> = {}
+
+    if (status) {
+      data.status = status
+      data.readAt = status === 'read' ? new Date() : null
+    }
+
+    if (metadata !== undefined) {
+      data.metadata = serializeNotificationMetadata(metadata)
+    }
+
+    if (Object.keys(data).length === 0) {
+      return NextResponse.json({ error: 'No changes provided' }, { status: 400 })
+    }
+
+    const updatedNotification = await prisma.notification.update({
+      where: { id },
+      data
+    })
+
+    emitNotificationEvent(user.id, 'notificationUpdate', {
+      notificationId: id,
+      updates: {
+        status: updatedNotification.status,
+        readAt: updatedNotification.readAt ? updatedNotification.readAt.toISOString() : null,
+        metadata: parseNotificationMetadata(updatedNotification.metadata)
+      },
+      userId: user.id
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {
@@ -51,16 +96,25 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const notification = await prisma.notification.deleteMany({
+    const notification = await prisma.notification.findFirst({
       where: {
-        id: id,
-        userId: user.id, // Ensure user can only delete their own notifications
-      },
+        id,
+        userId: user.id
+      }
     })
 
-    if (notification.count === 0) {
+    if (!notification) {
       return NextResponse.json({ error: 'Notification not found' }, { status: 404 })
     }
+
+    await prisma.notification.delete({
+      where: { id }
+    })
+
+    emitNotificationEvent(user.id, 'notificationDeleted', {
+      notificationId: id,
+      userId: user.id
+    })
 
     return NextResponse.json({ success: true })
   } catch (error) {

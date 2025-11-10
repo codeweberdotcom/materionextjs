@@ -14,8 +14,6 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 import Skeleton from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
 
-// Type Imports
-import type { AppDispatch } from '@/redux-store'
 import type { Notification } from '@/types/apps/notificationTypes'
 
 // Component Imports
@@ -42,7 +40,6 @@ type Props = {
    selectedNotifications: Set<string>
    setSelectedNotifications: Dispatch<SetStateAction<Set<string>>>
    notifications: Notification[]
-   dispatch: AppDispatch
    status?: string
    type?: string
    handleSingleNotificationRead: (notificationId: string) => void
@@ -71,7 +68,6 @@ const NotificationsList = (props: Props) => {
      selectedNotifications,
      setSelectedNotifications,
      notifications,
-     dispatch,
      status,
      type,
      handleSingleNotificationRead,
@@ -127,7 +123,7 @@ const NotificationsList = (props: Props) => {
     switch (status) {
       case 'unread': return 'primary'
       case 'read': return 'secondary'
-      case 'trash': return 'error'
+      case 'archived': return 'error'
       default: return 'default'
     }
   }

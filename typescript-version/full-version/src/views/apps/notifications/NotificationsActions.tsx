@@ -3,34 +3,32 @@ import Checkbox from '@mui/material/Checkbox'
 import Tooltip from '@mui/material/Tooltip'
 import IconButton from '@mui/material/IconButton'
 
-// Hook Imports
-import { useNotifications } from '@/hooks/useNotifications'
 import { useTranslation } from '@/contexts/TranslationContext'
 import { usePermissions } from '@/hooks/usePermissions'
-
-// Type Imports
-import type { AppDispatch } from '@/redux-store'
-
-// Slice Imports
-import { updateNotificationStatus, deleteNotification, markAllAsRead } from '@/redux-store/slices/notifications'
 
 type Props = {
   areFilteredNotificationsNone: boolean
   selectedNotifications: Set<string>
   setSelectedNotifications: (value: Set<string>) => void
   notifications: any[]
-  dispatch: AppDispatch
-  status?: string
-  type?: string
   setReload: (value: boolean) => void
+  onArchive: (notificationId: string) => void
+  onRefresh: (reason?: string) => void
 }
 
 const NotificationsActions = (props: Props) => {
   // Props
-  const { areFilteredNotificationsNone, selectedNotifications, setSelectedNotifications, notifications, dispatch, setReload } = props
+  const {
+    areFilteredNotificationsNone,
+    selectedNotifications,
+    setSelectedNotifications,
+    notifications,
+    setReload,
+    onArchive,
+    onRefresh
+  } = props
 
   // Hooks
-  const { refresh } = useNotifications()
   const dictionary = useTranslation()
   const { checkPermission } = usePermissions()
 
@@ -48,18 +46,10 @@ const NotificationsActions = (props: Props) => {
     }
   }
 
-  // Mark selected notifications as read
-  const handleMarkAsRead = () => {
-    for (const id of selectedNotifications) {
-      dispatch(updateNotificationStatus({ notificationId: id, status: 'read' }))
-    }
-    setSelectedNotifications(new Set())
-  }
-
   // Archive selected notifications
   const handleArchive = () => {
     for (const id of selectedNotifications) {
-      dispatch(updateNotificationStatus({ notificationId: id, status: 'trash' }))
+      onArchive(id)
     }
     setSelectedNotifications(new Set())
   }
@@ -89,7 +79,7 @@ const NotificationsActions = (props: Props) => {
         <Tooltip title={dictionary.navigation.refresh} placement='top'>
           <IconButton onClick={() => {
             setReload(true)
-            refresh().finally(() => {
+            Promise.resolve(onRefresh('toolbar')).finally(() => {
               setTimeout(() => setReload(false), 2000)
             })
           }}>

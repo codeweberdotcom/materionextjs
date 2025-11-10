@@ -17,7 +17,6 @@ import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 
 // Hook Imports
-import { useNotifications } from '@/hooks/useNotifications'
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Redux Imports
@@ -50,7 +49,7 @@ const statusIcons = {
   all: 'ri-inbox-line',
   unread: 'ri-mail-line',
   read: 'ri-mail-open-line',
-  trash: 'ri-delete-bin-line'
+  archived: 'ri-archive-line'
 }
 
 const typeIcons = {
@@ -67,7 +66,7 @@ const typeIcons = {
 export const statusColors: { [key: string]: LabelColor } = {
   unread: { color: 'primary', colorClass: 'text-primary' },
   read: { color: 'secondary', colorClass: 'text-secondary' },
-  trash: { color: 'error', colorClass: 'text-error' }
+  archived: { color: 'error', colorClass: 'text-error' }
 }
 
 export const typeColors: { [key: string]: LabelColor } = {
@@ -101,7 +100,6 @@ const SidebarLeft = (props: Props) => {
   } = props
 
   // Hooks
-   const { refresh } = useNotifications()
    const notifications = useSelector((state: RootState) => state.notificationsReducer.notifications)
    const { lang: locale } = useParams()
    const router = useRouter()
@@ -193,7 +191,7 @@ const SidebarLeft = (props: Props) => {
                   color={
                     key === 'unread' ? 'primary' :
                     key === 'read' ? 'secondary' :
-                    key === 'trash' ? 'error' : 'default'
+                    key === 'archived' ? 'error' : 'default'
                   }
                 />
               )}

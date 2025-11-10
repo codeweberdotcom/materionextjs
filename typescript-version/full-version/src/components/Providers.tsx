@@ -7,8 +7,8 @@ import { VerticalNavProvider } from '@menu/contexts/verticalNavContext'
 import { SettingsProvider } from '@core/contexts/settingsContext'
 import ThemeProvider from '@components/theme'
 import ReduxProvider from '@/redux-store/ReduxProvider'
-import { SocketManager } from '@/components/SocketManager'
-import { NotificationsManager } from '@/components/NotificationsManager'
+import { SocketProvider } from '@/contexts/SocketProvider'
+import NotificationsInitializer from '@/components/NotificationsInitializer'
 
 // Styled Component Imports
 import AppReactToastify from '@/libs/styles/AppReactToastify'
@@ -31,16 +31,19 @@ const Providers = async (props: Props) => {
 
   return (
     <NextAuthProvider>
-      <SocketManager />
-      <NotificationsManager />
-      <VerticalNavProvider>
-        <SettingsProvider settingsCookie={settingsCookie} mode={mode}>
-          <ThemeProvider direction={direction} systemMode={systemMode}>
-            <ReduxProvider>{children}</ReduxProvider>
-            <AppReactToastify direction={direction} hideProgressBar />
-          </ThemeProvider>
-        </SettingsProvider>
-      </VerticalNavProvider>
+      <SocketProvider>
+        <ReduxProvider>
+          <NotificationsInitializer />
+          <VerticalNavProvider>
+            <SettingsProvider settingsCookie={settingsCookie} mode={mode}>
+              <ThemeProvider direction={direction} systemMode={systemMode}>
+                {children}
+                <AppReactToastify direction={direction} hideProgressBar />
+              </ThemeProvider>
+            </SettingsProvider>
+          </VerticalNavProvider>
+        </ReduxProvider>
+      </SocketProvider>
     </NextAuthProvider>
   )
 }

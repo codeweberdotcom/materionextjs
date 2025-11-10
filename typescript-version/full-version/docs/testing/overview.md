@@ -1,4 +1,4 @@
-# 🧪 Обзор тестирования
+﻿# 🧪 Обзор тестирования
 
 ## 📋 Архитектура тестирования
 
@@ -237,3 +237,10 @@ it('должен выбрасывать ошибку', () => {
 - [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
 - [Playwright документация](https://playwright.dev/docs/intro)
 - [Testing Library принципы](https://testing-library.com/docs/guiding-principles/)
+## Playwright в admin-панели
+
+- Дашборд тестов доступен по адресу `/en/admin/monitoring/testing` (`src/views/pages/admin/testing/index.tsx`). Здесь отображаются свежие прогоны и доступна кнопка **Run Tests**.
+- Кнопка вызывает API `POST /api/admin/run-tests` (`src/app/api/admin/run-tests/route.ts`), которое запускает `npx playwright test e2e/chat.spec.ts --headed`, ждёт завершения и возвращает stdout/stderr.
+- Таблица результатов читает `test-results.json` через `GET /api/admin/test-results` (`src/app/api/admin/test-results/route.ts`). Файл появляется при выполнении `pnpm exec playwright test`.
+- Детальный HTML-репорт подгружается в iframe `/api/admin/html-report` (`src/app/api/admin/html-report/route.ts`), который отдаёт `playwright-report/index.html`.
+- Перед открытием панели убедись, что тесты недавно выполнялись (через CLI или кнопку Run Tests), иначе API вернёт 404 из-за отсутствия артефактов.

@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthProvider'
-import { useSocket } from './useSocket'
+import { useSockets } from '@/contexts/SocketProvider'
 
 export const useUnreadMessages = () => {
-  const { user, session } = useAuth()
-  const { socket } = useSocket(user?.id || null)
+  const { user } = useAuth()
+  const { chatSocket } = useSockets()
   const [unreadCount, setUnreadCount] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -35,7 +35,7 @@ export const useUnreadMessages = () => {
 
   // Listen for real-time updates via Socket.IO
   useEffect(() => {
-    if (!socket) return
+    if (!chatSocket) return
 
     const handleNewMessage = () => {
       fetchUnreadCount()
@@ -45,14 +45,14 @@ export const useUnreadMessages = () => {
       fetchUnreadCount()
     }
 
-    socket.on('receiveMessage', handleNewMessage)
-    socket.on('messagesRead', handleMessagesRead)
+    chatSocket.on('receiveMessage', handleNewMessage)
+    chatSocket.on('messagesRead', handleMessagesRead)
 
     return () => {
-      socket.off('receiveMessage', handleNewMessage)
-      socket.off('messagesRead', handleMessagesRead)
+      chatSocket.off('receiveMessage', handleNewMessage)
+      chatSocket.off('messagesRead', handleMessagesRead)
     }
-  }, [socket, fetchUnreadCount])
+  }, [chatSocket, fetchUnreadCount])
 
   // Periodic refresh every 60 seconds as fallback
   useEffect(() => {

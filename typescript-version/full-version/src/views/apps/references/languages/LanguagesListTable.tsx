@@ -16,8 +16,14 @@ import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
+import TableRow from '@mui/material/TableRow'
 import Switch from '@mui/material/Switch'
 import type { TextFieldProps } from '@mui/material/TextField'
 
@@ -368,36 +374,36 @@ const LanguagesListTable = () => {
           </div>
           <Skeleton width={150} height={36} />
         </div>
-        <div className='overflow-x-auto'>
-          <table className={tableStyles.table}>
-            <thead>
-              <tr>
-                <th><Skeleton width={20} height={20} /></th>
-                <th><Skeleton width={120} height={20} /></th>
-                <th><Skeleton width={80} height={20} /></th>
-                <th><Skeleton width={70} height={20} /></th>
-                <th><Skeleton width={100} height={20} /></th>
-              </tr>
-            </thead>
-            <tbody>
+        <TableContainer>
+          <Table className={tableStyles.table}>
+            <TableHead>
+              <TableRow>
+                {[20, 120, 80, 70, 100].map((width, idx) => (
+                  <TableCell key={idx}>
+                    <Skeleton width={width} height={20} />
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {Array.from({ length: 10 }).map((_, index) => (
-                <tr key={index}>
-                  <td><Skeleton width={20} height={20} /></td>
-                  <td><Skeleton width={120} height={16} /></td>
-                  <td><Skeleton width={80} height={16} /></td>
-                  <td><Skeleton width={70} height={24} /></td>
-                  <td>
+                <TableRow key={index}>
+                  <TableCell><Skeleton width={20} height={20} /></TableCell>
+                  <TableCell><Skeleton width={120} height={16} /></TableCell>
+                  <TableCell><Skeleton width={80} height={16} /></TableCell>
+                  <TableCell><Skeleton width={70} height={24} /></TableCell>
+                  <TableCell>
                     <div className='flex items-center gap-2'>
                       <Skeleton width={24} height={24} />
                       <Skeleton width={24} height={24} />
                       <Skeleton width={40} height={20} />
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </TableContainer>
         <div className='border-bs p-4'>
           <Skeleton width={200} height={24} />
         </div>
@@ -423,13 +429,13 @@ const LanguagesListTable = () => {
             {dictionary.navigation.addNewLanguage}
           </Button>
         </div>
-        <div className='overflow-x-auto'>
-          <table className={tableStyles.table}>
-            <thead>
+        <TableContainer>
+          <Table className={tableStyles.table}>
+            <TableHead>
               {table.getHeaderGroups().map(headerGroup => (
-                <tr key={headerGroup.id}>
+                <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map(header => (
-                    <th key={header.id}>
+                    <TableCell key={header.id}>
                       {header.isPlaceholder ? null : (
                         <div
                           className={classnames({
@@ -445,35 +451,33 @@ const LanguagesListTable = () => {
                           }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
                         </div>
                       )}
-                    </th>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </thead>
-            {table.getFilteredRowModel().rows.length === 0 ? (
-              <tbody>
-                <tr>
-                  <td colSpan={table.getVisibleFlatColumns().length} className='text-center'>
+            </TableHead>
+            <TableBody>
+              {table.getFilteredRowModel().rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={table.getVisibleFlatColumns().length} className='text-center'>
                     {dictionary.navigation.noDataAvailable}
-                  </td>
-                </tr>
-              </tbody>
-            ) : (
-              <tbody>
-                {table
+                  </TableCell>
+                </TableRow>
+              ) : (
+                table
                   .getRowModel()
                   .rows.slice(0, table.getState().pagination.pageSize)
                   .map(row => (
-                    <tr key={row.id} className={classnames({ selected: row.getIsSelected() })}>
+                    <TableRow key={row.id} className={classnames({ selected: row.getIsSelected() })}>
                       {row.getVisibleCells().map(cell => (
-                        <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                       ))}
-                    </tr>
-                  ))}
-              </tbody>
-            )}
-          </table>
-        </div>
+                    </TableRow>
+                  ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
         <TablePagination
           rowsPerPageOptions={[10, 25, 50]}
           component='div'

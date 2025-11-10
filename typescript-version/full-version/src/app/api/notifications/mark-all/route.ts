@@ -1,8 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
 import { prisma } from '@/libs/prisma'
+import { getSocketServer } from '@/lib/sockets'
+
+const emitNotificationsRead = (userId: string, notificationIds: string[]) => {
+  const io = getSocketServer()
+  if (!io) return
+
+  const namespace = io.of('/notifications')
+  const payload = {
+    userId,
+    count: notificationIds.length,
+    notificationIds
+  }
+
+  namespace.to(`user_${userId}`).emit('notificationsRead', payload)
+  namespace.to(`user_${userId}`).emit('notifications-read', payload)
+}
 
 export async function PATCH(request: NextRequest) {
   try {
@@ -12,19 +26,35 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { read } = await request.json()
+    const unreadNotifications = await prisma.notification.findMany({
+      where: {
+        userId: user.id,
+        status: 'unread'
+      },
+      select: { id: true }
+    })
+
+    if (unreadNotifications.length === 0) {
+      emitNotificationsRead(user.id, [])
+      return NextResponse.json({ success: true })
+    }
 
     await prisma.notification.updateMany({
       where: {
-        userId: user.id,
-        status: {
-          not: 'archived' // Don't update archived notifications
+        id: {
+          in: unreadNotifications.map(notification => notification.id)
         }
       },
       data: {
-        status: 'archived', // Archive all active notifications
-      },
+        status: 'read',
+        readAt: new Date()
+      }
     })
+
+    emitNotificationsRead(
+      user.id,
+      unreadNotifications.map(notification => notification.id)
+    )
 
     return NextResponse.json({ success: true })
   } catch (error) {
