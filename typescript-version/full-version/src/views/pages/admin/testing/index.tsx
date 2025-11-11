@@ -145,10 +145,6 @@ const TestingPage = () => {
       if (!response.ok || result.success === false) {
         throw new Error(result.error || 'Test execution failed')
       }
-
-      if (!result.success) {
-        throw new Error(result.error || 'Test execution failed')
-      }
     }
 
     setRunningTests(true)
@@ -157,22 +153,21 @@ const TestingPage = () => {
 
     try {
       if (testId === 'all') {
-      for (const script of playwrightTestScripts) {
-        setRunningTestId(script.id)
-        await runSingleTest(script.id)
+        for (const script of playwrightTestScripts) {
+          setRunningTestId(script.id)
+          await runSingleTest(script.id)
+        }
+      } else {
+        setRunningTestId(testId)
+        await runSingleTest(testId)
       }
-    } else {
-      setRunningTestId(testId)
-      await runSingleTest(testId)
-    }
-
-      await fetchRuns()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to run tests')
     } finally {
       setRunningTests(false)
       setRunningTestId(null)
       setRunningMode(null)
+      await fetchRuns()
     }
   }
 

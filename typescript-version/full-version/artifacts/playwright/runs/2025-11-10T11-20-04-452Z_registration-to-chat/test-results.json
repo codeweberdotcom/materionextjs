@@ -23,9 +23,7 @@
       ],
       [
         "html",
-        {
-          "open": "never"
-        }
+        null
       ]
     ],
     "reportSlowTests": {
@@ -67,7 +65,7 @@
       "specs": [
         {
           "title": "user can register, login, message superadmin, and logout",
-          "ok": true,
+          "ok": false,
           "tags": [],
           "tests": [
             {
@@ -80,18 +78,40 @@
                 {
                   "workerIndex": 0,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 16530,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 30298,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\e2e\\register-chat-flow.spec.ts",
+                        "column": 14,
+                        "line": 92
+                      },
+                      "message": "Error: page.waitForURL: Test timeout of 30000ms exceeded.\n=========================== logs ===========================\nwaiting for navigation to \"**/login**\" until \"load\"\n  navigated to \"http://localhost:3000/en/login\"\n  \"domcontentloaded\" event fired\n============================================================\n\n  90 |   ])\n  91 |\n> 92 |   await page.waitForURL('**/login**', { timeout: 20000 })\n     |              ^\n  93 | })\n  94 |\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\e2e\\register-chat-flow.spec.ts:92:14"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2025-11-11T00:02:47.975Z",
+                  "startTime": "2025-11-10T11:15:08.560Z",
                   "annotations": [],
-                  "attachments": []
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\test-results\\register-chat-flow-user-ca-8f07c-ssage-superadmin-and-logout-chromium\\error-context.md"
+                    }
+                  ]
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
           "id": "a28f4b357235bc23f56a-71950651d4fb36585a03",
@@ -104,11 +124,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-11-11T00:02:47.177Z",
-    "duration": 18986.835,
-    "expected": 1,
+    "startTime": "2025-11-10T11:15:07.144Z",
+    "duration": 33339.079,
+    "expected": 0,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 1,
     "flaky": 0
   }
 }

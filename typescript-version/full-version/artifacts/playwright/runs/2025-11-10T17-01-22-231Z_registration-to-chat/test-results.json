@@ -23,9 +23,7 @@
       ],
       [
         "html",
-        {
-          "open": "never"
-        }
+        null
       ]
     ],
     "reportSlowTests": {
@@ -67,7 +65,7 @@
       "specs": [
         {
           "title": "user can register, login, message superadmin, and logout",
-          "ok": true,
+          "ok": false,
           "tags": [],
           "tests": [
             {
@@ -80,18 +78,34 @@
                 {
                   "workerIndex": 0,
                   "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 16530,
-                  "errors": [],
+                  "status": "timedOut",
+                  "duration": 35055,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\e2e\\register-chat-flow.spec.ts",
+                        "column": 14,
+                        "line": 45
+                      },
+                      "message": "Error: page.goto: net::ERR_ABORTED; maybe frame was detached?\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/en/apps/chat\", waiting until \"load\"\u001b[22m\n\n\n  43 |\n  44 |   // Navigate to the chat application\n> 45 |   await page.goto('/en/apps/chat')\n     |              ^\n  46 |\n  47 |   await page.waitForResponse(resp => resp.url().includes('/api/users') && resp.status() === 200, {\n  48 |     timeout: 20000\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\e2e\\register-chat-flow.spec.ts:45:14"
+                    }
+                  ],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2025-11-11T00:02:47.975Z",
+                  "startTime": "2025-11-10T16:56:25.575Z",
                   "annotations": [],
                   "attachments": []
                 }
               ],
-              "status": "expected"
+              "status": "unexpected"
             }
           ],
           "id": "a28f4b357235bc23f56a-71950651d4fb36585a03",
@@ -104,11 +118,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-11-11T00:02:47.177Z",
-    "duration": 18986.835,
-    "expected": 1,
+    "startTime": "2025-11-10T16:56:24.557Z",
+    "duration": 38379.266,
+    "expected": 0,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 1,
     "flaky": 0
   }
 }

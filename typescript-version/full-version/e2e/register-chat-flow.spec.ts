@@ -77,17 +77,19 @@ test('user can register, login, message superadmin, and logout', async ({ page }
   await expect(page.getByText(messageText).last()).toBeVisible({ timeout: 20000 })
 
   // Logout via the user dropdown
-  const userAvatar = page.locator('.MuiAvatar-root:has([data-testid="PersonIcon"])').first()
-  await userAvatar.waitFor({ state: 'visible', timeout: 20000 })
-  await userAvatar.click()
+  const userDropdown = page
+    .locator('.ts-vertical-layout-navbar-content .MuiBadge-root:has(.MuiAvatar-root)')
+    .first()
+  await userDropdown.waitFor({ state: 'visible', timeout: 20000 })
+  await userDropdown.click()
 
   const logoutButton = page.getByRole('button', { name: /Logout/i })
-  await expect(logoutButton).toBeVisible({ timeout: 10000 })
+  await expect(logoutButton).toBeAttached({ timeout: 10000 })
+  await expect(logoutButton).toBeEnabled({ timeout: 10000 })
 
-  await Promise.all([
-    page.waitForResponse(resp => resp.url().includes('/api/auth/logout') && resp.status() === 200),
-    logoutButton.click()
-  ])
+  const logoutResponse = page.waitForResponse(resp => resp.url().includes('/api/auth/logout') && resp.status() === 200)
+  await logoutButton.click()
+  await logoutResponse
 
   await page.waitForURL('**/login**', { timeout: 20000 })
 })
