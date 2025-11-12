@@ -4,20 +4,27 @@ import logger from '@/lib/logger'
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { lucia } from '@/libs/lucia'
 
-interface User {
+interface UserRole {
+  id: string
+  name: string
+  permissions: string
+}
+
+export interface User {
   id: string
   email: string
   name: string
-  role: {
-    id: string
-    name: string
-    permissions: string
-  }
+  image?: string | null
+  role: UserRole
+}
+
+export interface SessionInfo {
+  user: Pick<User, 'id' | 'email' | 'name' | 'image'>
 }
 
 interface AuthContextType {
   user: User | null
-  session: any
+  session: SessionInfo | null
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -27,7 +34,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<any>(null)
+  const [session, setSession] = useState<SessionInfo | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {

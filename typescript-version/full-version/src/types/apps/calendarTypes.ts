@@ -1,6 +1,6 @@
 // Third-party Imports
 import type { Dispatch } from '@reduxjs/toolkit'
-import type { EventInput } from '@fullcalendar/core'
+import type { CalendarApi, EventApi, EventInput } from '@fullcalendar/core'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
@@ -15,10 +15,12 @@ export type CalendarColors = {
   Business: ThemeColor
 }
 
+export type CalendarSelectedEvent = (EventInput & { id?: string }) | EventApi | null
+
 export type CalendarType = {
   events: EventInput[]
   filteredEvents: EventInput[]
-  selectedEvent: null | any
+  selectedEvent: CalendarSelectedEvent
   selectedCalendars: CalendarFiltersType[]
 }
 
@@ -26,7 +28,7 @@ export type AddEventType = Omit<EventInput, 'id'>
 
 export type SidebarLeftProps = {
   mdAbove: boolean
-  calendarApi: any
+  calendarApi: CalendarApi | null
   calendarStore: CalendarType
   leftSidebarOpen: boolean
   dispatch: Dispatch
@@ -37,7 +39,7 @@ export type SidebarLeftProps = {
 
 export type AddEventSidebarType = {
   calendarStore: CalendarType
-  calendarApi: any
+  calendarApi: CalendarApi | null
   dispatch: Dispatch
   addEventSidebarOpen: boolean
   handleAddEventSidebarToggle: () => void

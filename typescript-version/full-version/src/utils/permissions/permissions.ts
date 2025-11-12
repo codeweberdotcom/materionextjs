@@ -1,17 +1,23 @@
-// @ts-nocheck
-import type { User } from '@/libs/auth'
 import logger from '@/lib/logger'
-
 
 export interface Role {
   id: string
   name: string
   description?: string | null
-  permissions?: string | null  // JSON string: { "module": ["action1", "action2"] }
+  permissions?: string | null // JSON string: { "module": ["action1", "action2"] } | 'all'
 }
 
-export interface UserWithRole extends User {
-  role?: Role
+export interface BaseUser {
+  id: string
+  email?: string | null
+  name?: string | null
+  image?: string | null
+  roleId?: string | null
+  permissions?: string | null
+}
+
+export interface UserWithRole extends BaseUser {
+  role?: Role | null
 }
 
 export interface ModulePermission {
@@ -19,110 +25,102 @@ export interface ModulePermission {
   action: string
 }
 
-export type Permissions = Record<string, string[]> | 'all'  // module -> actions array or 'all'
+export type PermissionMap = Record<string, string[]>
+export type Permissions = PermissionMap | 'all'
 
-/**
- * Get user's permissions as a Permissions object
- */
-export function getUserPermissions(user: UserWithRole | null): Permissions {
-  if (!user?.role?.permissions) {
+const isPermissionMap = (value: unknown): value is PermissionMap => {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return false
+  }
+
+  return Object.values(value).every(actions => Array.isArray(actions))
+}
+
+const isStringArray = (value: unknown): value is string[] =>
+  Array.isArray(value) && value.every(action => typeof action === 'string')
+
+const transformLegacyPermissions = (permissions: string[]): Permissions => {
+  if (permissions.includes('all')) {
+    return 'all'
+  }
+
+  return permissions.reduce<PermissionMap>((acc, permission) => {
+    const [module, action] = permission.split('-')
+
+    if (module && action) {
+      if (!acc[module]) {
+        acc[module] = []
+      }
+
+      acc[module].push(action)
+    }
+
+    return acc
+  }, {})
+}
+
+const parsePermissions = (permissions: string | null | undefined): Permissions => {
+  if (!permissions) {
     return {}
+  }
+
+  if (permissions === 'all') {
+    return 'all'
   }
 
   try {
-    const parsed = JSON.parse(user.role.permissions)
+    const parsed = JSON.parse(permissions) as unknown
 
-    // If it's an object (new format), return as is
-    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+    if (isPermissionMap(parsed)) {
       return parsed
     }
 
-    // If it's an array (legacy format), convert to object
-    if (Array.isArray(parsed)) {
-      if (parsed.includes('all')) {
-        return 'all'
-      }
-      const permissions: Permissions = {}
-      parsed.forEach(perm => {
-        const [module, action] = perm.split('-')
-        if (module && action) {
-          if (!permissions[module]) {
-            permissions[module] = []
-          }
-          permissions[module].push(action)
-        }
-      })
-      return permissions
+    if (isStringArray(parsed)) {
+      return transformLegacyPermissions(parsed)
     }
-
-    return {}
-  } catch {
-    return {}
+  } catch (error) {
+    logger.warn('Failed to parse permissions JSON', { error })
   }
+
+  return {}
 }
 
-/**
- * Check if a user has a specific permission for a module
- */
-export function checkPermission(user: UserWithRole | null, module: string, action: string): boolean {
-  logger.info('🔍 [PERMISSIONS] Checking permission:', { module, action, role: user?.role?.name })
+export const getUserPermissions = (user: UserWithRole | null): Permissions => {
+  if (!user) {
+    return {}
+  }
+
+  return parsePermissions(user.role?.permissions ?? user.permissions)
+}
+
+export const checkPermission = (user: UserWithRole | null, module: string, action: string): boolean => {
+  logger.info('🔍 [PERMISSIONS] Checking permission', { module, action, role: user?.role?.name })
 
   if (!user?.role) {
     logger.info('❌ [PERMISSIONS] No user or role found')
     return false
   }
 
-  // If permissions are 'all', allow everything
-  if (user.role.permissions === 'all' || getUserPermissions(user) === 'all') {
+  const permissions = getUserPermissions(user)
+
+  if (permissions === 'all') {
     logger.info('✅ [PERMISSIONS] All permissions granted', { role: user.role.name })
     return true
   }
 
-  const permissions = getUserPermissions(user)
-  logger.info('🔍 [PERMISSIONS] Parsed permissions:', permissions)
+  const hasPermission = permissions[module]?.includes(action) ?? false
+  logger.info('🔍 [PERMISSIONS] Result', { module, action, hasPermission })
 
-  if (typeof permissions === 'object' && permissions !== null && typeof permissions === 'object') {
-    const hasPermission = permissions[module]?.includes(action) || false
-    logger.info('🔍 [PERMISSIONS] Module permissions:', permissions[module])
-    logger.info('🔍 [PERMISSIONS] Has permission:', hasPermission)
-    return hasPermission
-  }
-
-  logger.info('❌ [PERMISSIONS] Invalid permissions format')
-  return false
+  return hasPermission
 }
 
-/**
- * Check if a user has a specific role
- */
-export function hasRole(user: UserWithRole | null, roleName: string): boolean {
-  return user?.role?.name === roleName
-}
+export const hasRole = (user: UserWithRole | null, roleName: string): boolean =>
+  user?.role?.name === roleName
 
-/**
- * Check if a user is an admin (example role)
- */
-export function isAdmin(user: UserWithRole | null): boolean {
-  return hasRole(user, 'admin')
-}
+export const isAdmin = (user: UserWithRole | null): boolean => hasRole(user, 'admin')
 
-/**
- * Check if a user is a moderator (example role)
- */
-export function isModerator(user: UserWithRole | null): boolean {
-  return hasRole(user, 'moderator')
-}
+export const isModerator = (user: UserWithRole | null): boolean => hasRole(user, 'moderator')
 
-/**
- * Check if a user is a regular user (example role)
- */
-export function isUser(user: UserWithRole | null): boolean {
-  return hasRole(user, 'user')
-}
+export const isUser = (user: UserWithRole | null): boolean => hasRole(user, 'user')
 
-/**
- * Check if a user is superadmin (unlimited access)
- */
-export function isSuperadmin(user: UserWithRole | null): boolean {
-  return user?.role?.permissions === 'all' || getUserPermissions(user) === 'all'
-}
+export const isSuperadmin = (user: UserWithRole | null): boolean => getUserPermissions(user) === 'all'

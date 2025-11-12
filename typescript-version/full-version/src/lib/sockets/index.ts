@@ -12,7 +12,14 @@ import { initializeNotificationNamespace } from './namespaces/notifications';
 let io: Server | null = null;
 
 // Активные пользователи (in-memory cache)
-const activeUsers = new Map<string, any>();
+type ActiveUserInfo = {
+  socketId: string
+  connectedAt: Date
+  lastActivity: Date
+  role?: string
+};
+
+const activeUsers = new Map<string, ActiveUserInfo>();
 
 // Метрики для мониторинга
 const metrics = {
@@ -120,8 +127,8 @@ const handleConnection = (socket: Socket) => {
   metrics.activeConnections++;
   metrics.totalConnections++;
 
-  const userId = (socket as any).userId;
-  const userRole = (socket as any).data?.user?.role;
+  const userId = (socket.data as { user?: { id?: string } }).user?.id ?? (socket as Socket & { userId?: string }).userId
+  const userRole = (socket.data as { user?: { role?: string } }).user?.role
 
   logger.info('New socket connection', {
     socketId: socket.id,
@@ -150,7 +157,7 @@ const handleConnection = (socket: Socket) => {
       activeUsers.delete(userId);
     }
 
-    handleDisconnect(reason, socket as any);
+    handleDisconnect(reason, socket as Socket & { userId?: string });
   });
 
   // Ping для поддержания соединения
@@ -220,7 +227,7 @@ export const getSocketMetrics = () => {
 /**
  * Отправка уведомления пользователю
  */
-export const sendNotificationToUser = (userId: string, event: string, data: any) => {
+export const sendNotificationToUser = <TPayload>(userId: string, event: string, data: TPayload) => {
   if (!io) {
     logger.warn('Socket.IO server not initialized');
     return false;
@@ -249,7 +256,7 @@ export const sendNotificationToUser = (userId: string, event: string, data: any)
 /**
  * Отправка сообщения в комнату
  */
-export const sendMessageToRoom = (roomId: string, event: string, data: any) => {
+export const sendMessageToRoom = <TPayload>(roomId: string, event: string, data: TPayload) => {
   if (!io) {
     logger.warn('Socket.IO server not initialized');
     return false;

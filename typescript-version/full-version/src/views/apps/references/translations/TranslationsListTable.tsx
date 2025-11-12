@@ -30,8 +30,7 @@ import TableRow from '@mui/material/TableRow'
 // Third-party Imports
 import classnames from 'classnames'
 import { rankItem } from '@tanstack/match-sorter-utils'
-import Skeleton from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
+import Skeleton from '@mui/material/Skeleton'
 import {
   createColumnHelper,
   flexRender,

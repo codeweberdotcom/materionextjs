@@ -1,6 +1,6 @@
 // User repository for database operations
 import { prisma } from '@/libs/prisma'
-import type { User } from '@prisma/client'
+import type { Prisma, User } from '@prisma/client'
 
 export class UserRepository {
   async findById(id: string): Promise<User | null> {
@@ -37,9 +37,9 @@ export class UserRepository {
   async findMany(options?: {
     skip?: number
     take?: number
-    where?: any
-    orderBy?: any
-    select?: any
+    where?: Prisma.UserWhereInput
+    orderBy?: Prisma.UserOrderByWithRelationInput | Prisma.UserOrderByWithRelationInput[]
+    select?: Prisma.UserSelect
   }): Promise<User[]> {
     return prisma.user.findMany(options)
   }

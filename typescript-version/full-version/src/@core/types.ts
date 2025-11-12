@@ -1,5 +1,5 @@
 // React Imports
-import type { ReactNode } from 'react'
+import type { ReactNode, UIEvent } from 'react'
 
 export type Layout = 'vertical' | 'collapsed' | 'horizontal'
 
@@ -20,3 +20,8 @@ export type ChildrenType = {
 }
 
 export type ThemeColor = 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success'
+
+export type ScrollMenuHandler = (
+  container: HTMLElement | UIEvent<HTMLElement>,
+  isPerfectScrollbar: boolean
+) => void

@@ -2,6 +2,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import type { MouseEvent, ReactNode } from 'react'
 
+// Next Imports
+import { useRouter } from 'next/navigation'
+
 // MUI Imports
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
@@ -90,6 +93,7 @@ const NotificationDetails = (props: Props) => {
 
   // Hooks
   const dictionary = useTranslation()
+  const router = useRouter()
   const metadata = useMemo(
     () => parseNotificationMetadata(currentNotification?.metadata),
     [currentNotification?.metadata]

@@ -12,7 +12,7 @@ import { styled } from '@mui/material/styles'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 
 // Type Imports
-import type { ChildrenType } from '@core/types'
+import type { ChildrenType, ScrollMenuHandler } from '@core/types'
 import type { Locale } from '@configs/i18n'
 
 // Component Imports
@@ -52,23 +52,43 @@ const VerticalNavContent = ({ children }: ChildrenType) => {
   const safeLocale = Array.isArray(locale) ? locale[0] : locale || 'en'
 
   // Refs
-  const shadowRef = useRef(null)
+  const shadowRef = useRef<HTMLDivElement | null>(null)
 
   // Vars
   const ScrollWrapper = isBreakpointReached ? 'div' : PerfectScrollbar
 
-  const scrollMenu = (container: any, isPerfectScrollbar: boolean) => {
-    container = isBreakpointReached || !isPerfectScrollbar ? container.target : container
+  const resolveScrollElement = (
+    container: Parameters<ScrollMenuHandler>[0],
+    useEventTarget: boolean
+  ): HTMLElement | null => {
+    if (!useEventTarget && container instanceof HTMLElement) {
+      return container
+    }
 
-    if (shadowRef && container.scrollTop > 0) {
-      // @ts-ignore
-      if (!shadowRef.current.classList.contains('scrolled')) {
-        // @ts-ignore
-        shadowRef.current.classList.add('scrolled')
+    if (useEventTarget && container && 'target' in (container as { target?: EventTarget | null })) {
+      const target = (container as { target?: EventTarget | null }).target
+
+      if (target instanceof HTMLElement) {
+        return target
       }
+    }
+
+    return null
+  }
+
+  const scrollMenu: ScrollMenuHandler = (container, isPerfectScrollbar) => {
+    const shadowElement = shadowRef.current
+    if (!shadowElement) return
+
+    const shouldUseEventTarget = isBreakpointReached || !isPerfectScrollbar
+    const scrollElement = resolveScrollElement(container, shouldUseEventTarget)
+
+    if (!scrollElement) return
+
+    if (scrollElement.scrollTop > 0) {
+      shadowElement.classList.add('scrolled')
     } else {
-      // @ts-ignore
-      shadowRef.current.classList.remove('scrolled')
+      shadowElement.classList.remove('scrolled')
     }
   }
 

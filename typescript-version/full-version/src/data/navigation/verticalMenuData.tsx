@@ -320,6 +320,11 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         href: '/apps/settings/email-templates'
       },
       {
+        label: dictionary['navigation'].rateLimitManagement,
+        icon: 'ri-timer-flash-line',
+        href: '/admin/rate-limits'
+      },
+      {
         label: 'Metrics',
         icon: 'ri-bar-chart-line',
         href: '/admin/monitoring/metrics'

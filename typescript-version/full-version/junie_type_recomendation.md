@@ -22,7 +22,6 @@
   - // @ts-ignore: найдено 17 мест (например, layout/navigation, calendar, chat, logistics и т. п.).
   - // @ts-expect-error: только в тестах (целевое использование, норм).
 - Принудительные приведения к any: минимум 79 в src/ (в том числе в критичных местах):
-  - Компоненты уведомлений: `NotificationsDropdown.tsx` — массово `(notification as any)` для id/status/type.
   - WebSocket слой: `(socket as any)`, `(global as any).io`, декодирование JWT как any.
   - NextAuth/Session: `(session.user as any)` для role/permissions.
   - Prisma: `(prisma as any).model.method(...)` вместо типизированного клиента.
@@ -36,26 +35,6 @@
 
 ### Прицельные рекомендации (приоритет слева — выше)
 1) Убрать системные any в доменных сущностях
-- Уведомления
-  - Завести явные типы для Notification, NotificationStatus, NotificationType.
-  - Пример:
-    ```ts
-    export type NotificationStatus = 'unread' | 'read' | 'archived' | 'deleted'
-    export type NotificationType = 'system' | 'message' | 'warning' | 'success'
-    export interface Notification {
-      id: string
-      title: string
-      description?: string
-      createdAt: string | Date
-      status: NotificationStatus
-      type: NotificationType
-      avatarColor?: string
-      avatarSkin?: string
-      // ... прочие поля из вашей доменной модели
-    }
-    ```
-  - В `NotificationsDropdown.tsx` заменить `(notification as any)` на нормальные свойства: `notification.id`, `notification.status` и т. п., используя `Notification[]` как тип состояния.
-
 - Меню/навигация
   - Ввести интерфейсы `MenuItem`, `MenuSection` и использовать их в провайдерах/компонентах (`MenuProvider.tsx`, `ClientVerticalMenu.tsx`).
   - Пример:
@@ -184,8 +163,6 @@
 ---
 
 ### Быстрые выигрыши (конкретные файлы/участки)
-- src/components/layout/shared/NotificationsDropdown.tsx
-  - Ввести `Notification` тип и заменить все `(notification as any)`.
 - src/lib/sockets/**/*.ts
   - Ввести типизацию событий, расширение глобала `io` и убрать `(global as any)`, `(socket as any)`.
 - src/app/api/**/route.ts
@@ -202,9 +179,9 @@
 ---
 
 ### Пошаговый план миграции (в безопасном темпе)
-1) Типы домена уведомлений + меню (1–2 часа)
-   - Создать `src/types/apps/notification.ts`, `src/types/menu.ts`.
-   - Пройтись по компонентам уведомлений/меню, убрать any.
+1) Меню (1–2 часа)
+   - Создать/уточнить `src/types/menu.ts`.
+   - Пройтись по компонентам меню/навигации, убрать any.
 2) API-роуты (2–4 часа)
    - Унифицировать сигнатуры `NextRequest/NextResponse`, ввести Zod-схемы тел для 2–3 ключевых эндпоинтов.
 3) Prisma (2–3 часа)

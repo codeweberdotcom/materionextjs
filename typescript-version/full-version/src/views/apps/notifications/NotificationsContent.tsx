@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from 'react'
 
 import type { AppDispatch } from '@/redux-store'
-import type { NotificationState, NotificationStatus } from '@/types/apps/notificationTypes'
+import type {
+  NotificationState,
+  NotificationStatus,
+  NotificationStatusFilter,
+  NotificationTypeFilter
+} from '@/types/apps/notificationTypes'
 
 import { setCurrentNotification } from '@/redux-store/slices/notifications'
 
@@ -14,8 +19,8 @@ import NotificationDetails from './NotificationDetails'
 type Props = {
   store: NotificationState
   dispatch: AppDispatch
-  status?: string
-  type?: string
+  status?: NotificationStatusFilter
+  type?: NotificationTypeFilter
   isInitialMount: boolean
   setSidebarOpen: (value: boolean) => void
   isBelowLgScreen: boolean
@@ -51,10 +56,10 @@ const NotificationsContent = (props: Props) => {
    const [searchTerm, setSearchTerm] = useState('')
    const [reload, setReload] = useState(false)
    const [filtering, setFiltering] = useState(false)
-   const [loading, setLoading] = useState(false)
 
   // Vars
   const notifications = store.filteredNotifications
+  const isLoading = store.loading
   const currentNotification = notifications.find(notification => notification.id === store.currentNotificationId) ||
     // If current notification is not in filtered list, find it in all notifications
     store.notifications.find(notification => notification.id === store.currentNotificationId)
@@ -62,12 +67,13 @@ const NotificationsContent = (props: Props) => {
 
   // Check if filtered notifications are none (including search)
   const areFilteredNotificationsNone =
-    notifications.length === 0 ||
-    notifications.filter(
-      notification =>
-        notification.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        notification.message?.toLowerCase().includes(searchTerm.toLowerCase())
-    ).length === 0
+    !isLoading &&
+    (notifications.length === 0 ||
+      notifications.filter(
+        notification =>
+          notification.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          notification.message?.toLowerCase().includes(searchTerm.toLowerCase())
+      ).length === 0)
 
   // Action for marking single notification as read
   const handleSingleNotificationRead = useCallback(
@@ -134,7 +140,7 @@ const NotificationsContent = (props: Props) => {
         isBelowLgScreen={isBelowLgScreen}
         reload={reload}
         filtering={filtering}
-        loading={loading}
+        loading={isLoading}
         searchTerm={searchTerm}
         selectedNotifications={selectedNotifications}
         setSelectedNotifications={setSelectedNotifications}

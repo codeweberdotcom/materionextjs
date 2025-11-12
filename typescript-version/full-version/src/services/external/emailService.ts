@@ -1,5 +1,6 @@
 // Email service for external API integrations
 import nodemailer from 'nodemailer'
+import type SMTPTransport from 'nodemailer/lib/smtp-transport'
 import * as cron from 'node-cron'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -55,9 +56,9 @@ export class EmailService {
   private async createTransporter(): Promise<nodemailer.Transporter> {
     if (!this.config) throw new Error('SMTP config not initialized')
 
-    const transporterConfig: any = {
+    const transporterConfig: SMTPTransport.Options = {
       host: this.config.host,
-      port: parseInt(this.config.port),
+      port: Number.parseInt(this.config.port, 10),
       auth: {
         user: this.config.username,
         pass: this.config.password
@@ -73,11 +74,11 @@ export class EmailService {
     return nodemailer.createTransport(transporterConfig)
   }
 
-  async sendEmail(options: EmailOptions): Promise<any> {
+  async sendEmail(options: EmailOptions): Promise<nodemailer.SentMessageInfo> {
     if (!this.transporter) await this.initialize()
     if (!this.config) throw new Error('Service not initialized')
 
-    const mailOptions = {
+    const mailOptions: nodemailer.SendMailOptions = {
       from: options.from || `"${this.config.fromName}" <${this.config.fromEmail}>`,
       to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
       subject: options.subject,

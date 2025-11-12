@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 
 // Next Imports
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Drawer from '@mui/material/Drawer'
@@ -25,6 +25,7 @@ import type { RootState } from '@/redux-store'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/formatting/i18n'
+import type { NotificationStatusFilter, NotificationTypeFilter } from '@/types/apps/notificationTypes'
 
 // Styles Imports
 import styles from './styles.module.css'
@@ -35,8 +36,8 @@ type Props = {
   isBelowSmScreen: boolean
   sidebarOpen: boolean
   setSidebarOpen: (value: boolean) => void
-  status?: string
-  type?: string
+  status?: NotificationStatusFilter
+  type?: NotificationTypeFilter
 }
 
 type LabelColor = {
@@ -100,26 +101,28 @@ const SidebarLeft = (props: Props) => {
   } = props
 
   // Hooks
-   const notifications = useSelector((state: RootState) => state.notificationsReducer.notifications)
-   const { lang: locale } = useParams()
-   const router = useRouter()
-   const dictionary = useTranslation()
+  const notifications = useSelector((state: RootState) => state.notificationsReducer.notifications)
+  const { lang: locale } = useParams()
+  const dictionary = useTranslation()
 
   // Calculate statistics
-  const stats = notifications.reduce((acc, notification) => {
-    const notifStatus = (notification as any).status || 'unread'
-    const notifType = (notification as any).type || 'system'
+  const stats = notifications.reduce(
+    (acc, notification) => {
+      const notifStatus = notification.status ?? 'unread'
+      const notifType = notification.type ?? 'system'
 
-    acc.total++
-    acc.byStatus[notifStatus] = (acc.byStatus[notifStatus] || 0) + 1
-    acc.byType[notifType] = (acc.byType[notifType] || 0) + 1
+      acc.total += 1
+      acc.byStatus[notifStatus] = (acc.byStatus[notifStatus] || 0) + 1
+      acc.byType[notifType] = (acc.byType[notifType] || 0) + 1
 
-    return acc
-  }, {
-    total: 0,
-    byStatus: {} as Record<string, number>,
-    byType: {} as Record<string, number>
-  })
+      return acc
+    },
+    {
+      total: 0,
+      byStatus: {} as Record<string, number>,
+      byType: {} as Record<string, number>
+    }
+  )
 
   // Force re-render when notifications change
   const [, forceUpdate] = useState({})

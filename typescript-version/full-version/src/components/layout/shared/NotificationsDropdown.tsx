@@ -30,6 +30,7 @@ import PerfectScrollbar from 'react-perfect-scrollbar'
 // Type Imports
 import type { ThemeColor } from '@core/types'
 import type { CustomAvatarProps } from '@core/components/mui/Avatar'
+import type { Notification } from '@/types/apps/notificationTypes'
 
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
@@ -44,6 +45,14 @@ import { useTranslation } from '@/contexts/TranslationContext'
 
 // Util Imports
 import { getInitials } from '@/utils/formatting/getInitials'
+import {
+  deriveNotificationStatus,
+  formatNotificationTimestamp,
+  isStoreNotification,
+  isVirtualNotification as isVirtualStoreNotification,
+  normalizeAvatarSkin,
+  normalizeThemeColor
+} from '@/utils/notifications/helpers'
 
 export type NotificationsType = {
   title: string
@@ -119,15 +128,25 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
 
   // Filter out archived/deleted notifications for dropdown display
   const visibleNotifications = notifications.filter(
-    notification => (notification as any).status !== 'archived' && (notification as any).status !== 'deleted'
+    notification => notification.status !== 'archived' && notification.status !== 'deleted'
   )
 
   // Use dynamic notifications if available, fallback to static
-  const notificationsState = visibleNotifications.length > 0 ? visibleNotifications : staticNotifications
+  const isUsingStoreNotifications = visibleNotifications.length > 0
+  const notificationsState: Array<Notification | NotificationsType> = isUsingStoreNotifications
+    ? visibleNotifications
+    : staticNotifications
 
   // Vars
-  const notificationCount = unreadCount || notificationsState.filter(notification => (notification as any).status !== 'read' && (notification as any).status !== 'archived' && (notification as any).status !== 'deleted').length
-  const readAll = notificationsState.every(notification => (notification as any).status === 'read' || (notification as any).status === 'archived')
+  const notificationCount =
+    unreadCount ||
+    notificationsState.filter(notification => {
+      if (isStoreNotification(notification)) {
+        return notification.status !== 'read' && notification.status !== 'archived' && notification.status !== 'deleted'
+      }
+
+      return !notification.read
+    }).length
 
   // Refs
   const anchorRef = useRef<HTMLButtonElement>(null)
@@ -151,10 +170,11 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
     event.stopPropagation()
     const notification = notificationsState[index]
 
-    // Skip virtual chat notifications - they can't be marked as read through API
-    if (notification && (notification as any).id && !(notification as any).id.startsWith('virtual-')) {
-      await markAsRead((notification as any).id, value)
+    if (!notification || !isStoreNotification(notification) || !notification.id || notification.id.startsWith('virtual-')) {
+      return
     }
+
+    await markAsRead(notification.id, value)
   }
 
   // Archive notification when close icon is clicked
@@ -162,10 +182,9 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
     event.stopPropagation()
     const notification = notificationsState[index]
 
-    // Skip virtual chat notifications - they can't be archived through API
-    if (notification && (notification as any).id) {
-      await updateStatus((notification as any).id, 'archived')
-    }
+    if (!notification || !isStoreNotification(notification) || !notification.id) return
+
+    await updateStatus(notification.id, 'archived')
   }
 
   // Archive notification when close icon is clicked
@@ -173,10 +192,11 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
     event.stopPropagation()
     const notification = notificationsState[index]
 
-    // Skip virtual chat notifications - they can't be archived through API
-    if (notification && (notification as any).id && !(notification as any).id.startsWith('virtual-')) {
-      await handleArchiveNotification(event, index)
+    if (!notification || !isStoreNotification(notification) || !notification.id || notification.id.startsWith('virtual-')) {
+      return
     }
+
+    await handleArchiveNotification(event, index)
   }
 
   // Clear all notifications when read all icon is clicked (only for dropdown)
@@ -268,17 +288,18 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
                   <Divider />
                   <ScrollWrapper hidden={hidden}>
                     {notificationsState.map((notification, index) => {
-                      const {
-                        title,
-                        subtitle,
-                        time,
-                        read,
-                        avatarImage,
-                        avatarIcon,
-                        avatarText,
-                        avatarColor,
-                        avatarSkin
-                      } = notification
+                      const isStoreItem = isStoreNotification(notification)
+                      const title = notification.title
+                      const subtitle = isStoreItem ? notification.subtitle ?? notification.message : notification.subtitle
+                      const timeLabel = isStoreItem ? formatNotificationTimestamp(notification.createdAt) : notification.time
+                      const status = deriveNotificationStatus(notification)
+                      const avatarImage = notification.avatarImage
+                      const avatarIcon = notification.avatarIcon
+                      const avatarText = notification.avatarText
+                      const avatarColor = normalizeThemeColor(notification.avatarColor)
+                      const avatarSkin = normalizeAvatarSkin(notification.avatarSkin)
+                      const isVirtualNotification =
+                        isStoreItem && isVirtualStoreNotification({ id: notification.id })
 
                       return (
                         <div
@@ -290,8 +311,7 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
                             // Removed auto-mark as read on hover functionality
                           }}
                           onClick={e => {
-                            // Handle virtual chat notification click
-                            if ((notification as any).id?.startsWith('virtual-')) {
+                            if (isVirtualNotification && notification.id) {
                               router.push('/en/apps/chat')
                               setOpen(false)
                             } else {
@@ -299,7 +319,14 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
                             }
                           }}
                         >
-                          {getAvatar({ avatarImage, avatarIcon, title, avatarText, avatarColor, avatarSkin })}
+                          {getAvatar({
+                            avatarImage,
+                            avatarIcon,
+                            title,
+                            avatarText,
+                            avatarColor,
+                            avatarSkin
+                          })}
                           <div className='flex flex-col flex-auto'>
                             <Typography className='font-medium mbe-1' color='text.primary'>
                               {title}
@@ -307,23 +334,23 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
                             <Typography variant='caption' color='text.secondary' className='mbe-2'>
                               {subtitle}
                             </Typography>
-                            <Typography variant='caption'>{time}</Typography>
+                            {timeLabel && <Typography variant='caption'>{timeLabel}</Typography>}
                           </div>
                           <div className='flex flex-col items-end gap-2.5'>
                             <Badge
                               variant='dot'
                               color={
-                                (notification as any).id?.startsWith('virtual-')
+                                isVirtualNotification
                                   ? 'error' // Красная точка для виртуальных уведомлений чата
-                                  : (notification as any).status === 'read'
+                                  : status === 'read'
                                   ? 'secondary' // Серая точка для прочитанных уведомлений из БД
                                   : 'primary' // Фиолетовая точка для непрочитанных уведомлений из БД
                               }
                               className={classnames('mbs-1 mie-1', {
-                                'invisible group-hover:visible': (notification as any).status === 'read' && !(notification as any).id?.startsWith('virtual-')
+                                'invisible group-hover:visible': status === 'read' && !isVirtualNotification
                               })}
                             />
-                            {!(notification as any).id?.startsWith('virtual-') && (
+                            {!isVirtualNotification && isStoreItem && (
                               <IconButton
                                 size='small'
                                 className='invisible group-hover:visible p-0'

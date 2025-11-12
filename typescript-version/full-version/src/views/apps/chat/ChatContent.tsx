@@ -48,6 +48,10 @@ type Props = {
   messages: ChatMessage[]
   rateLimitData: { retryAfter: number; blockedUntil: number } | null
   markMessagesAsRead: () => void
+  loadMoreMessages: () => Promise<void>
+  historyLoading: boolean
+  hasMoreHistory: boolean
+  isConnected: boolean
 }
 
 // Renders the user avatar with badge and user information
@@ -138,15 +142,19 @@ const ChatContent = (props: Props) => {
     setBackdropOpen,
     setSidebarOpen,
     isBelowMdScreen,
-    isBelowSmScreen,
     isBelowLgScreen,
+    isBelowSmScreen,
     messageInputRef,
     room,
     isRoomLoading,
     sendMessage,
     messages,
     rateLimitData,
-    markMessagesAsRead
+    markMessagesAsRead,
+    loadMoreMessages,
+    historyLoading,
+    hasMoreHistory,
+    isConnected
   } = props
 
   const { activeUser } = chatStore
@@ -239,11 +247,13 @@ const ChatContent = (props: Props) => {
             chatStore={chatStore}
             isBelowMdScreen={isBelowMdScreen}
             isBelowSmScreen={isBelowSmScreen}
-            isBelowLgScreen={isBelowLgScreen}
             messages={messages}
             markMessagesAsRead={markMessagesAsRead}
             room={room}
             isRoomLoading={isRoomLoading}
+            loadMoreMessages={loadMoreMessages}
+            historyLoading={historyLoading}
+            hasMoreHistory={hasMoreHistory}
           />
 
           <SendMsgForm

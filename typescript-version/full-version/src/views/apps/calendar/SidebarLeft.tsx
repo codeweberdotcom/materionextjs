@@ -102,7 +102,11 @@ const SidebarLeft = (props: SidebarLeftProps) => {
         <Divider className='is-full' />
         <AppReactDatepicker
           inline
-          onChange={date => calendarApi.gotoDate(date)}
+          onChange={date => {
+            if (date) {
+              calendarApi?.gotoDate(date)
+            }
+          }}
           boxProps={{
             className: 'flex justify-center is-full',
             sx: { '& .react-datepicker': { boxShadow: 'none !important', border: 'none !important' } }

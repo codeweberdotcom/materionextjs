@@ -33,17 +33,16 @@ export interface ActiveUser {
 }
 
 // Элемент очереди сообщений
-export interface MessageQueueItem {
+export interface MessageQueueItem<TPayload = unknown> {
   id: string;
   event: string;
-  data: any;
+  data: TPayload;
   timestamp: number;
   retries: number;
   maxRetries: number;
 }
 
-// Общий ответ API
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -65,11 +64,11 @@ export interface RateLimitConfig {
 }
 
 // События для логирования
-export interface LogEvent {
+export interface LogEvent<TData = unknown> {
   event: string;
   userId?: string;
   socketId?: string;
-  data?: any;
+  data?: TData;
   timestamp: Date;
   correlationId?: string;
 }

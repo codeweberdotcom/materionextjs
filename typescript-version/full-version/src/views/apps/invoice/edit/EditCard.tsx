@@ -2,7 +2,6 @@
 
 // React Imports
 import { useState } from 'react'
-import type { SyntheticEvent } from 'react'
 
 // MUI Imports
 import Grid from '@mui/material/Grid2'
@@ -36,18 +35,19 @@ import AppReactDatepicker from '@/libs/styles/AppReactDatepicker'
 const EditCard = ({ invoiceData, id, data }: { invoiceData?: InvoiceType; id: string; data?: InvoiceType[] }) => {
   // States
   const [selectData, setSelectData] = useState<InvoiceType | null>(data?.[0] || null)
-  const [count, setCount] = useState(1)
+  const [lineItems, setLineItems] = useState<number[]>([0])
   const [issueDate, setIssueDate] = useState(new Date(invoiceData?.issuedDate ?? ''))
   const [dueDate, setDueDate] = useState(new Date(invoiceData?.dueDate ?? ''))
 
   // Hooks
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
 
-  const deleteForm = (e: SyntheticEvent) => {
-    e.preventDefault()
+  const handleAddLineItem = () => {
+    setLineItems(prev => [...prev, (prev[prev.length - 1] ?? 0) + 1])
+  }
 
-    // @ts-ignore
-    e.target.closest('.repeater-item').remove()
+  const handleRemoveLineItem = (lineItemId: number) => {
+    setLineItems(prev => (prev.length > 1 ? prev.filter(id => id !== lineItemId) : prev))
   }
 
   return (
@@ -174,9 +174,9 @@ const EditCard = ({ invoiceData, id, data }: { invoiceData?: InvoiceType; id: st
               <Divider className='border-dashed' />
             </Grid>
             <Grid size={{ xs: 12 }}>
-              {Array.from(Array(count).keys()).map((item, index) => (
+              {lineItems.map((lineItemId, index) => (
                 <div
-                  key={index}
+                  key={lineItemId}
                   className={classnames('repeater-item flex relative mbe-4 border rounded', {
                     'mbs-8': !isBelowMdScreen,
                     '!mbs-14': index !== 0 && !isBelowMdScreen,
@@ -259,7 +259,7 @@ const EditCard = ({ invoiceData, id, data }: { invoiceData?: InvoiceType; id: st
                     </Grid>
                   </Grid>
                   <div className='flex flex-col justify-start border-is'>
-                    <IconButton size='small' onClick={deleteForm}>
+                    <IconButton size='small' onClick={() => handleRemoveLineItem(lineItemId)}>
                       <i className='ri-close-line text-actionActive text-2xl' />
                     </IconButton>
                   </div>
@@ -269,7 +269,7 @@ const EditCard = ({ invoiceData, id, data }: { invoiceData?: InvoiceType; id: st
                 <Button
                   size='small'
                   variant='contained'
-                  onClick={() => setCount(count + 1)}
+                  onClick={handleAddLineItem}
                   startIcon={<i className='ri-add-line' />}
                 >
                   Add Item

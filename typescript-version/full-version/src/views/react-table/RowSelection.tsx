@@ -10,7 +10,7 @@ import Checkbox from '@mui/material/Checkbox'
 
 // Third-party Imports
 import { createColumnHelper, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
-import type { ColumnDef } from '@tanstack/react-table'
+import type { ColumnDef, RowSelectionState } from '@tanstack/react-table'
 
 // Type Imports
 import type { DataType } from './data'
@@ -26,13 +26,11 @@ const columnHelper = createColumnHelper<DataType>()
 
 const RowSelection = () => {
   // States
-  const [rowSelection, setRowSelection] = useState({})
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [data, setData] = useState(() => defaultData)
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [data] = useState(() => defaultData)
 
   // Hooks
-  const columns = useMemo<ColumnDef<DataType, any>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<DataType, unknown>[]>(() => [
       {
         id: 'select',
         header: ({ table }) => (
@@ -62,23 +60,23 @@ const RowSelection = () => {
       columnHelper.accessor('fullName', {
         cell: info => info.getValue(),
         header: 'Name'
-      }),
+      }) as ColumnDef<DataType, unknown>,
       columnHelper.accessor('email', {
         cell: info => info.getValue(),
         header: 'Email'
-      }),
+      }) as ColumnDef<DataType, unknown>,
       columnHelper.accessor('start_date', {
         cell: info => info.getValue(),
         header: 'Date'
-      }),
+      }) as ColumnDef<DataType, unknown>,
       columnHelper.accessor('experience', {
         cell: info => info.getValue(),
         header: 'Experience'
-      }),
+      }) as ColumnDef<DataType, unknown>,
       columnHelper.accessor('age', {
         cell: info => info.getValue(),
         header: 'Age'
-      })
+      }) as ColumnDef<DataType, unknown>
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []

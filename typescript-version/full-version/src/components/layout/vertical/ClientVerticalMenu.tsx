@@ -1,3 +1,5 @@
+'use client'
+
 // MUI Imports
 import { useTheme } from '@mui/material/styles'
 
@@ -9,6 +11,8 @@ import type { getDictionary } from '@/utils/formatting/getDictionary'
 import type { VerticalMenuContextProps } from '@menu/components/vertical-menu/Menu'
 import type { VerticalMenuDataType } from '@/types/menuTypes'
 import type { Locale } from '@configs/i18n'
+import type { ScrollMenuHandler } from '@core/types'
+import type { MenuBranch } from '@/utils/menu/shared'
 
 // Component Imports
 import { Menu } from '@menu/vertical-menu'
@@ -23,6 +27,7 @@ import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNav
 // Style Imports
 import menuItemStyles from '@core/styles/vertical/menuItemStyles'
 import menuSectionStyles from '@core/styles/vertical/menuSectionStyles'
+import { getMenuNavigationLabels, hasMenuChildren } from '@/utils/menu/shared'
 
 type RenderExpandIconProps = {
   open?: boolean
@@ -32,7 +37,7 @@ type RenderExpandIconProps = {
 type Props = {
   menuData: VerticalMenuDataType[]
   dictionary: Awaited<ReturnType<typeof getDictionary>>
-  scrollMenu: (container: any, isPerfectScrollbar: boolean) => void
+  scrollMenu: ScrollMenuHandler
   locale: Locale
 }
 
@@ -47,29 +52,27 @@ const ClientVerticalMenu = ({ menuData, dictionary, scrollMenu, locale }: Props)
   console.log('CLIENT MENU: Received menuData:', menuData)
   console.log('CLIENT MENU: Menu data length:', menuData?.length)
 
-  // Check if menuData contains references
-  if (menuData && Array.isArray(menuData)) {
-    const adminSection = menuData.find(item => item.label === 'Admin & Settings')
-    console.log('CLIENT MENU: Admin section found:', !!adminSection)
-    if (adminSection && (adminSection as any)?.children) {
-      const referencesSection = (adminSection as any)?.children?.find((child: any) => child.label === 'References')
-      console.log('CLIENT MENU: References section found:', !!referencesSection)
-      if (referencesSection && referencesSection.children) {
-        console.log('CLIENT MENU: References children count:', referencesSection.children.length)
-        console.log('CLIENT MENU: References children:', referencesSection.children.map((child: any) => child.label))
-      }
-    }
-  }
+  const navigationLabels = getMenuNavigationLabels(dictionary)
 
-  // Check if references section exists
-  const adminSection = menuData?.find(item => item.label === dictionary['navigation'].adminAndSettings)
-  console.log('CLIENT MENU: Admin section found:', !!adminSection)
-  if (adminSection && (adminSection as any).children) {
-    const referencesSection = (adminSection as any).children.find((child: any) => child.label === dictionary['navigation'].references)
-    console.log('CLIENT MENU: References section found:', !!referencesSection)
-    if (referencesSection && referencesSection.children) {
-      console.log('CLIENT MENU: References children:', referencesSection.children.map((child: any) => child.label))
-    }
+  const findSectionByLabel = (items: VerticalMenuDataType[] | undefined, label: string) =>
+    items?.find(
+      (item): item is MenuBranch =>
+        hasMenuChildren(item) && typeof item.label === 'string' && item.label === label
+    )
+
+  const adminSection = findSectionByLabel(menuData, navigationLabels.adminAndSettings)
+  console.log('CLIENT MENU: Admin section found:', Boolean(adminSection))
+
+  const referencesSection = findSectionByLabel(adminSection?.children, navigationLabels.references)
+  console.log('CLIENT MENU: References section found:', Boolean(referencesSection))
+
+  if (referencesSection?.children) {
+    const referencesChildren = referencesSection.children
+      .map(child => (typeof child.label === 'string' ? child.label : null))
+      .filter((label): label is string => Boolean(label))
+
+    console.log('CLIENT MENU: References children count:', referencesChildren.length)
+    console.log('CLIENT MENU: References children:', referencesChildren)
   }
 
   // Hooks

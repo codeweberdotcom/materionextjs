@@ -3,7 +3,7 @@ import logger from '../../../logger';
 import { TypedSocket } from '../../types/common';
 import { ChatEvents, ChatEmitEvents, ChatMessage, ChatRoom } from '../../types/chat';
 import { authenticateSocket, requirePermission, requireRole } from '../../middleware/auth';
-import { chatRateLimiter } from '../../middleware/rateLimit';
+import { rateLimitService } from '@/lib/rate-limit';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -139,34 +139,33 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
   const userId = socket.data.user.id;
 
   // Отправка сообщения
-  socket.on('sendMessage', async (data: { roomId: string; message: string; senderId: string; clientId?: string }) => {
+  socket.on('sendMessage', async (data: { roomId: string; message: string; senderId: string; clientId?: string }, callback?: (response: { ok: boolean; message?: ChatMessage; error?: string }) => void) => {
     try {
       logger.info('Processing sendMessage', { userId, roomId: data.roomId, socketId: socket.id, connected: socket.connected });
 
-      // Проверяем rate limit (временно отключен для тестирования)
-      /*
-      try {
-        await chatRateLimiter.consume(userId);
-        logger.debug('Rate limit check passed for sendMessage', { userId });
-      } catch (rejRes) {
-        const rateLimitError = rejRes as any;
-        const retryAfter = Math.ceil(rateLimitError.msBeforeNext / 1000);
+      const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat')
+
+      if (rateLimitResult.warning) {
+        socket.emit('rateLimitWarning', rateLimitResult.warning)
+      }
+
+      if (!rateLimitResult.allowed) {
+        const retryAfter = Math.max(1, Math.ceil((rateLimitResult.blockedUntil!.getTime() - Date.now()) / 1000))
 
         logger.warn('Chat rate limit exceeded for sendMessage', {
           userId,
           socketId: socket.id,
           retryAfter,
-          blockedUntil: new Date(Date.now() + rateLimitError.msBeforeNext).toISOString()
-        });
+          blockedUntil: rateLimitResult.blockedUntil?.toISOString()
+        })
 
         socket.emit('rateLimitExceeded', {
           error: 'Rate limit exceeded',
           retryAfter,
-          blockedUntil: new Date(Date.now() + rateLimitError.msBeforeNext).toISOString()
-        });
-        return;
+          blockedUntil: rateLimitResult.blockedUntil?.toISOString()
+        })
+        return
       }
-      */
 
       // Валидация данных
       if (!data.roomId || !data.message || !data.senderId) {
@@ -232,6 +231,7 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
 
       // Отправляем сообщение всем участникам комнаты, включая отправителя
       socket.nsp.to(`room_${data.roomId}`).emit('receiveMessage', messageData);
+      callback?.({ ok: true, message: messageData });
 
       logger.info('Message sent successfully', {
         messageId: newMessage.id,
@@ -245,6 +245,7 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
       socket.emit('error', { message: 'Failed to send message' });
+      callback?.({ ok: false, error: 'Failed to send message' });
     }
   });
 

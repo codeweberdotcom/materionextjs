@@ -1,7 +1,9 @@
 import { trackEvent, trackError, trackPerformance } from './sentry'
 
-// Application Insights functions
-export const trackEventAI = (event: string, properties?: Record<string, any>) => {
+export type InsightsEventProperties = Record<string, string | number | boolean | undefined>
+export type InsightsContext = Record<string, unknown>
+
+export const trackEventAI = (event: string, properties?: InsightsEventProperties) => {
   trackEvent(event, properties)
 
   // В production отправлять в аналитику
@@ -11,7 +13,7 @@ export const trackEventAI = (event: string, properties?: Record<string, any>) =>
   }
 }
 
-export const trackErrorAI = (error: Error, context?: any) => {
+export const trackErrorAI = (error: Error, context?: InsightsContext) => {
   trackError(error, context)
 
   // Дополнительная аналитика ошибок
@@ -22,7 +24,7 @@ export const trackErrorAI = (error: Error, context?: any) => {
   })
 }
 
-export const trackPerformanceAI = (operation: string, duration: number, metadata?: any) => {
+export const trackPerformanceAI = (operation: string, duration: number, metadata?: InsightsContext) => {
   trackPerformance(operation, duration, metadata)
 
   // Метрики производительности

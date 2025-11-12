@@ -52,7 +52,7 @@ declare module '@tanstack/react-table' {
   }
 }
 
-const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+const fuzzyFilter: FilterFn<DataType> = (row, columnId, value, addMeta) => {
   // Rank the item
   const itemRank = rankItem(row.getValue(columnId), value)
 
@@ -95,7 +95,7 @@ const DebouncedInput = ({
   return <TextField {...props} size='small' value={value} onChange={e => setValue(e.target.value)} />
 }
 
-const Filter = ({ column, table }: { column: Column<any, unknown>; table: Table<any> }) => {
+const Filter = ({ column, table }: { column: Column<DataType, unknown>; table: Table<DataType> }) => {
   // Vars
   const firstValue = table.getPreFilteredRowModel().flatRows[0]?.getValue(column.id)
 
@@ -142,28 +142,28 @@ const KitchenSink = () => {
   const [data, setData] = useState<DataType[]>(() => defaultData)
 
   // Hooks
-  const columns = useMemo<ColumnDef<DataType, any>[]>(
+  const columns = useMemo<ColumnDef<DataType, unknown>[]>(
     () => [
       columnHelper.accessor('fullName', {
         cell: info => info.getValue(),
         header: 'Name'
-      }),
+      }) as ColumnDef<DataType, unknown>,
       columnHelper.accessor('email', {
         cell: info => info.getValue(),
         header: 'Email'
-      }),
+      }) as ColumnDef<DataType, unknown>,
       columnHelper.accessor('start_date', {
         cell: info => info.getValue(),
         header: 'Date'
-      }),
+      }) as ColumnDef<DataType, unknown>,
       columnHelper.accessor('experience', {
         cell: info => info.getValue(),
         header: 'Experience'
-      }),
+      }) as ColumnDef<DataType, unknown>,
       columnHelper.accessor('age', {
         cell: info => info.getValue(),
         header: 'Age'
-      })
+      }) as ColumnDef<DataType, unknown>
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     []

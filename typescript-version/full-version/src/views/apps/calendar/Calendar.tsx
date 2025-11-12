@@ -13,18 +13,18 @@ import listPlugin from '@fullcalendar/list'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
-import type { CalendarOptions } from '@fullcalendar/core'
+import type { CalendarApi, CalendarOptions } from '@fullcalendar/core'
 
 // Type Imports
-import type { AddEventType, CalendarColors, CalendarType } from '@/types/apps/calendarTypes'
+import type { AddEventType, CalendarColors, CalendarFiltersType, CalendarType } from '@/types/apps/calendarTypes'
 
 // Slice Imports
 import { filterEvents, selectedEvent, updateEvent } from '@/redux-store/slices/calendar'
 
 type CalenderProps = {
   calendarStore: CalendarType
-  calendarApi: any
-  setCalendarApi: (val: any) => void
+  calendarApi: CalendarApi | null
+  setCalendarApi: (val: CalendarApi | null) => void
   calendarsColor: CalendarColors
   dispatch: Dispatch
   handleLeftSidebarToggle: () => void
@@ -57,18 +57,16 @@ const Calendar = (props: CalenderProps) => {
   } = props
 
   // Refs
-  const calendarRef = useRef()
+  const calendarRef = useRef<FullCalendar | null>(null)
 
   // Hooks
   const theme = useTheme()
 
   useEffect(() => {
-    if (calendarApi === null) {
-      // @ts-ignore
-      setCalendarApi(calendarRef.current?.getApi())
+    if (calendarApi === null && calendarRef.current) {
+      setCalendarApi(calendarRef.current.getApi())
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [calendarApi, setCalendarApi])
 
   // calendarOptions(Props)
   const calendarOptions: CalendarOptions = {
@@ -115,9 +113,9 @@ const Calendar = (props: CalenderProps) => {
     */
     navLinks: true,
 
-    eventClassNames({ event: calendarEvent }: any) {
-      // @ts-ignore
-      const colorName = calendarsColor[calendarEvent._def.extendedProps.calendar]
+    eventClassNames({ event: calendarEvent }) {
+      const calendarKey = (calendarEvent.extendedProps?.calendar || 'Personal') as CalendarFiltersType
+      const colorName = calendarsColor[calendarKey]
 
       return [
         // Background Color
@@ -125,7 +123,7 @@ const Calendar = (props: CalenderProps) => {
       ]
     },
 
-    eventClick({ event: clickedEvent, jsEvent }: any) {
+    eventClick({ event: clickedEvent, jsEvent }) {
       jsEvent.preventDefault()
 
       dispatch(selectedEvent(clickedEvent))
@@ -151,7 +149,7 @@ const Calendar = (props: CalenderProps) => {
       }
     },
 
-    dateClick(info: any) {
+    dateClick(info) {
       const ev = { ...blankEvent }
 
       ev.start = info.date
@@ -167,7 +165,7 @@ const Calendar = (props: CalenderProps) => {
       ? Docs: https://fullcalendar.io/docs/eventDrop
       ? We can use `eventDragStop` but it doesn't return updated event so we have to use `eventDrop` which returns updated event
     */
-    eventDrop({ event: droppedEvent }: any) {
+    eventDrop({ event: droppedEvent }) {
       dispatch(updateEvent(droppedEvent))
       dispatch(filterEvents())
     },
@@ -176,18 +174,15 @@ const Calendar = (props: CalenderProps) => {
       Handle event resize
       ? Docs: https://fullcalendar.io/docs/eventResize
     */
-    eventResize({ event: resizedEvent }: any) {
+    eventResize({ event: resizedEvent }) {
       dispatch(updateEvent(resizedEvent))
       dispatch(filterEvents())
     },
 
-    // @ts-ignore
-    ref: calendarRef,
-
     direction: theme.direction
   }
 
-  return <FullCalendar {...calendarOptions} />
+  return <FullCalendar ref={calendarRef} {...calendarOptions} />
 }
 
 export default Calendar

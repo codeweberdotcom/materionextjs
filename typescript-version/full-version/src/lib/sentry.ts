@@ -1,6 +1,9 @@
 import * as Sentry from '@sentry/nextjs'
 import logger from './logger'
 
+type SentryContext = Record<string, unknown>
+type SentryEventProperties = Record<string, string | number | boolean | undefined>
+
 Sentry.init({
   dsn: process.env.SENTRY_DSN || process.env.GLITCHTIP_DSN,
   environment: process.env.NODE_ENV,
@@ -10,10 +13,10 @@ Sentry.init({
     if (event.request?.data) {
       // Удаляем пароли и другие чувствительные данные
       if (typeof event.request.data === 'object') {
-        const data = event.request.data as any
-        if (data.password) data.password = '[FILTERED]'
-        if (data.confirmPassword) data.confirmPassword = '[FILTERED]'
-        if (data.token) data.token = '[FILTERED]'
+        const data = event.request.data as Record<string, unknown>
+        if ('password' in data) data.password = '[FILTERED]'
+        if ('confirmPassword' in data) data.confirmPassword = '[FILTERED]'
+        if ('token' in data) data.token = '[FILTERED]'
       }
     }
     return event
@@ -21,7 +24,7 @@ Sentry.init({
 })
 
 // Глобальный error handler
-export const errorHandler = (error: Error | any, context?: any) => {
+export const errorHandler = (error: unknown, context?: SentryContext) => {
   // Убеждаемся, что error является объектом Error
   const errorObj = error instanceof Error ? error : new Error(String(error))
 
@@ -40,13 +43,12 @@ export const errorHandler = (error: Error | any, context?: any) => {
   })
 }
 
-// Функция для трекинга ошибок
-export const trackError = (error: Error, context?: any) => {
+export const trackError = (error: Error, context?: SentryContext) => {
   errorHandler(error, context)
 }
 
 // Функция для трекинга производительности
-export const trackPerformance = (operation: string, duration: number, metadata?: any) => {
+export const trackPerformance = (operation: string, duration: number, metadata?: SentryContext) => {
   Sentry.captureMessage(`Performance: ${operation}`, {
     level: 'info',
     tags: {
@@ -59,8 +61,7 @@ export const trackPerformance = (operation: string, duration: number, metadata?:
   logger.info(`PERF: ${operation}`, { duration, ...metadata })
 }
 
-// Функция для трекинга событий
-export const trackEvent = (event: string, properties?: Record<string, any>) => {
+export const trackEvent = (event: string, properties?: SentryEventProperties) => {
   Sentry.captureMessage(event, {
     level: 'info',
     tags: {

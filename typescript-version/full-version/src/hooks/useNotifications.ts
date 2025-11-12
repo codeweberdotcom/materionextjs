@@ -3,7 +3,16 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useAuth } from '@/contexts/AuthProvider'
 import { useSockets } from '@/contexts/SocketProvider'
 import type { RootState, AppDispatch } from '@/redux-store'
-import type { Notification, NotificationStatus, NotificationType } from '@/types/apps/notificationTypes'
+import type {
+  Notification,
+  NotificationApiResponse,
+  NotificationDeletePayload,
+  NotificationFilters,
+  NotificationSocketReadPayload,
+  NotificationStatus,
+  NotificationUpdatePayload
+} from '@/types/apps/notificationTypes'
+import { isNotificationStatus, isNotificationType } from '@/types/apps/notificationTypes'
 import { parseNotificationMetadata } from '@/utils/notifications/metadata'
 import {
   deleteNotification as deleteNotificationAction,
@@ -16,29 +25,42 @@ import {
 } from '@/redux-store/slices/notifications'
 import logger from '@/lib/logger'
 
-type FilterPayload = {
-  status?: NotificationStatus | 'all'
-  type?: NotificationType | 'all'
+type NotificationsApiResponse = {
+  notifications?: NotificationApiResponse[]
 }
 
-const normalizeNotification = (notification: any): Notification => ({
-  id: notification.id,
-  title: notification.title,
-  message: notification.message,
-  subtitle: notification.subtitle ?? notification.message,
-  type: notification.type,
-  status: notification.status === 'trash' ? 'archived' : notification.status,
-  createdAt: notification.createdAt,
-  updatedAt: notification.updatedAt,
-  userId: notification.userId,
-  readAt: notification.readAt ?? (notification.status === 'read' ? notification.updatedAt : null),
-  avatarImage: notification.avatarImage,
-  avatarIcon: notification.avatarIcon,
-  avatarText: notification.avatarText,
-  avatarColor: notification.avatarColor,
-  avatarSkin: notification.avatarSkin,
-  metadata: parseNotificationMetadata(notification.metadata)
-})
+const normalizeNotificationStatus = (status: string): NotificationStatus => {
+  if (status === 'trash') return 'archived'
+
+  return isNotificationStatus(status) ? status : 'unread'
+}
+
+const normalizeNotification = (notification: NotificationApiResponse): Notification => {
+  const status = normalizeNotificationStatus(notification.status)
+  const type = isNotificationType(notification.type) ? notification.type : 'info'
+
+  return {
+    id: notification.id,
+    title: notification.title,
+    message: notification.message,
+    subtitle: notification.subtitle ?? notification.message,
+    type,
+    status,
+    createdAt: notification.createdAt,
+    updatedAt: notification.updatedAt,
+    userId: notification.userId ?? undefined,
+    readAt: notification.readAt ?? (status === 'read' ? notification.updatedAt : null),
+    avatarImage: notification.avatarImage ?? undefined,
+    avatarIcon: notification.avatarIcon ?? undefined,
+    avatarText: notification.avatarText ?? undefined,
+    avatarColor: notification.avatarColor ?? undefined,
+    avatarSkin: notification.avatarSkin ?? undefined,
+    metadata: parseNotificationMetadata(notification.metadata)
+  }
+}
+
+const resolveNotificationId = (payload: { notificationId?: string; id?: string }): string | undefined =>
+  payload.notificationId ?? payload.id ?? undefined
 
 export const useNotifications = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -47,7 +69,7 @@ export const useNotifications = () => {
   const { notifications, filteredNotifications, loading, filters } = useSelector(
     (state: RootState) => state.notificationsReducer
   )
-  const filtersRef = useRef(filters)
+  const filtersRef = useRef<NotificationFilters>(filters)
 
   useEffect(() => {
     filtersRef.current = filters
@@ -69,8 +91,8 @@ export const useNotifications = () => {
       })
 
       if (response.ok) {
-        const data = await response.json()
-        const mapped = (data.notifications || []).map(normalizeNotification)
+        const data: NotificationsApiResponse = await response.json()
+        const mapped = (data.notifications ?? []).map(normalizeNotification)
         dispatch(setNotificationsAction(mapped))
         dispatch(filterNotifications(filtersRef.current))
         logger.info('Notifications refreshed', {
@@ -202,7 +224,7 @@ export const useNotifications = () => {
   }, [refresh, user?.id])
 
   const setFilters = useCallback(
-    (nextFilters: FilterPayload) => {
+    (nextFilters: Partial<NotificationFilters>) => {
       logger.info('Applying notification filters', nextFilters)
       dispatch(filterNotifications(nextFilters))
     },
@@ -218,29 +240,32 @@ export const useNotifications = () => {
   useEffect(() => {
     if (!notificationSocket) return
 
-    const handleNewNotification = (notification: any) => {
+    const handleNewNotification = (notification: NotificationApiResponse) => {
       dispatch(upsertNotification(normalizeNotification(notification)))
     }
 
-    const handleNotificationUpdate = (payload: any) => {
-      const notificationId = payload.notificationId ?? payload.id
+    const handleNotificationUpdate = (payload: NotificationUpdatePayload) => {
+      const notificationId = resolveNotificationId(payload)
       if (!notificationId) return
 
-      const updates = payload.updates ?? {
-        status: payload.read ? 'read' : 'unread',
-        readAt: payload.read ? new Date().toISOString() : null
-      }
+      const updates: NotificationUpdatePayload['updates'] =
+        payload.updates && Object.keys(payload.updates).length > 0
+          ? payload.updates
+          : {
+              status: payload.read ? 'read' : 'unread',
+              readAt: payload.read ? new Date().toISOString() : null
+            }
 
       dispatch(updateNotification({ notificationId, updates }))
     }
 
-    const handleNotificationDeleted = (payload: any) => {
-      const notificationId = payload.notificationId ?? payload.id
+    const handleNotificationDeleted = (payload: NotificationDeletePayload) => {
+      const notificationId = resolveNotificationId(payload)
       if (!notificationId) return
       dispatch(deleteNotificationAction({ notificationId }))
     }
 
-    const handleNotificationsRead = (payload: { userId: string }) => {
+    const handleNotificationsRead = (payload: NotificationSocketReadPayload) => {
       if (payload.userId !== user?.id) return
       dispatch(markAllAsReadAction())
     }

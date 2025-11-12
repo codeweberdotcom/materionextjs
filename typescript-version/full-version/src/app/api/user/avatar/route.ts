@@ -1,13 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-import { PrismaClient } from '@prisma/client'
-
-
-
-const prisma = new PrismaClient()
+import { prisma } from '@/libs/prisma'
 
 // POST - Upload avatar for current user
 export async function POST(request: NextRequest) {
@@ -83,6 +77,35 @@ export async function POST(request: NextRequest) {
     console.error('Error uploading avatar:', error)
     
 return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { user } = await requireAuth(request)
+
+    if (!user?.id) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { image: null }
+    })
+
+    return NextResponse.json({
+      message: 'Avatar removed'
+    })
+  } catch (error) {
+    console.error('Error removing avatar:', error)
+
+    return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

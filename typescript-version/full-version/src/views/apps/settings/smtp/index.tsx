@@ -22,8 +22,7 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { toast } from 'react-toastify'
 
 // Third-party Imports
-import Skeleton from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
+import Skeleton from '@mui/material/Skeleton'
 
 type SmtpPreset = {
   host: string

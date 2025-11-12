@@ -3,8 +3,7 @@
 import classnames from 'classnames'
 import { useState, useEffect } from 'react'
 // Third-party Imports
-import Skeleton from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
+import Skeleton from '@mui/material/Skeleton'
 
 // Type Imports
 import type { ShortcutsType } from '@components/layout/shared/ShortcutsDropdown'
@@ -130,11 +129,11 @@ const NavbarContent = () => {
       <div className='flex items-center'>
         {isLoading ? (
           <>
-            <Skeleton width={40} height={40} circle />
-            <Skeleton width={40} height={40} circle />
-            <Skeleton width={40} height={40} circle />
-            <Skeleton width={40} height={40} circle />
-            <Skeleton width={40} height={40} circle />
+            <Skeleton variant='circular' width={40} height={40} />
+            <Skeleton variant='circular' width={40} height={40} />
+            <Skeleton variant='circular' width={40} height={40} />
+            <Skeleton variant='circular' width={40} height={40} />
+            <Skeleton variant='circular' width={40} height={40} />
           </>
         ) : (
           <>

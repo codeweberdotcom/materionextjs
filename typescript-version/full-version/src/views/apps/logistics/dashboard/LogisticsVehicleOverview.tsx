@@ -6,6 +6,7 @@ import CardHeader from '@mui/material/CardHeader'
 import CardContent from '@mui/material/CardContent'
 import LinearProgress from '@mui/material/LinearProgress'
 import Typography from '@mui/material/Typography'
+import type { Theme } from '@mui/material/styles'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -17,17 +18,20 @@ import OptionMenu from '@core/components/option-menu'
 import tableStyles from '@core/styles/table.module.css'
 import styles from './styles.module.css'
 
-type dataTypes = {
+type ProgressColor = 'action' | 'primary' | 'info' | 'SnackbarContent'
+type ProgressVariant = 'hover' | 'main' | 'bg'
+
+type VehicleMetric = {
   icon: string
   heading: string
   time: string
-  progressColor: string
-  progressColorVariant: string
+  progressColor: ProgressColor
+  progressColorVariant: ProgressVariant
   progressData: string
   widthClass?: string
 }
 
-const data: dataTypes[] = [
+const data: VehicleMetric[] = [
   {
     icon: 'ri-car-line',
     heading: 'On the way',
@@ -66,6 +70,25 @@ const data: dataTypes[] = [
   }
 ]
 
+const getCssVarColor = (color: ProgressColor, variant: ProgressVariant) =>
+  `var(--mui-palette-${color}-${variant})`
+
+const getProgressTextColor = (theme: Theme, index: number, item: VehicleMetric) => {
+  if (index === 0) {
+    return theme.palette.text.primary
+  }
+
+  if (item.progressColor === 'info') {
+    return theme.palette.common.white
+  }
+
+  if (item.progressColor === 'primary') {
+    return theme.palette.getContrastText(theme.palette.primary.main)
+  }
+
+  return theme.palette.text.primary
+}
+
 const LogisticsVehicleOverview = () => {
   return (
     <Card>
@@ -86,26 +109,20 @@ const LogisticsVehicleOverview = () => {
                   variant='determinate'
                   value={-1}
                   className={classnames('bs-[46px]')}
-                  // eslint-disable-next-line lines-around-comment
-                  // @ts-ignore
                   sx={{
-                    backgroundColor: `var(--mui-palette-${item.progressColor}-${item.progressColorVariant})`,
-                    borderRadius: 0
+                    backgroundColor: getCssVarColor(item.progressColor, item.progressColorVariant),
+                    borderRadius: 0,
+                    '& .MuiLinearProgress-bar': {
+                      backgroundColor: getCssVarColor(item.progressColor, item.progressColorVariant)
+                    }
                   }}
                 />
                 <Typography
                   variant='body2'
                   className='absolute bottom-3 start-2 font-medium'
-                  sx={{
-                    color: theme =>
-                      index === 0
-                        ? 'var(--mui-palette-text-primary)'
-                        : item.progressColor === 'info'
-                          ? 'var(--mui-palette-common-white)'
-                          : // eslint-disable-next-line lines-around-comment
-                            // @ts-ignore
-                            theme.palette.getContrastText(theme.palette[item.progressColor][item.progressColorVariant])
-                  }}
+                  sx={theme => ({
+                    color: getProgressTextColor(theme, index, item)
+                  })}
                 >
                   {item.progressData}
                 </Typography>

@@ -1,6 +1,7 @@
 // Third-party Imports
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
+import type { User } from '@prisma/client'
 
 // Type Imports
 import type { StatusType, ContactType, ChatDataType } from '@/types/apps/chatTypes'
@@ -20,20 +21,22 @@ export const fetchUsers = createAsyncThunk('chat/fetchUsers', async () => {
     if (!response.ok) {
       throw new Error('Failed to fetch users')
     }
-    const users = await response.json()
+    const users = (await response.json()) as User[]
 
-    // Transform database users to chat contacts format
-    const contacts: ContactType[] = users.map((user: any) => ({
-      id: user.id, // Keep as string (CUID from database)
+    return users.map<ContactType>((user: User & { role?: { name?: string } | string | null }) => ({
+      id: user.id,
       fullName: user.name || user.email,
-      role: user.role?.name || 'User',
+      role:
+        typeof user.role === 'string'
+          ? user.role
+          : (user.role && typeof user.role === 'object' ? user.role?.name : undefined) ??
+            (user as { roleId?: string }).roleId ??
+            'User',
       about: user.email,
       avatar: user.image || undefined,
-      avatarColor: 'primary' as const,
-      status: 'offline' as StatusType
+      avatarColor: 'primary',
+      status: 'offline'
     }))
-
-    return contacts
   } catch (error) {
     // Return empty array if API fails - no fake data fallback
     return []

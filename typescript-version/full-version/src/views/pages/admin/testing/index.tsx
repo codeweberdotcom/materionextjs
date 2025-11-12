@@ -20,8 +20,7 @@ import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 
 // Third-party Imports
-import Skeleton from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
+import Skeleton from '@mui/material/Skeleton'
 
 // Data Imports
 import { playwrightTestScripts } from '@/data/testing/test-scripts'

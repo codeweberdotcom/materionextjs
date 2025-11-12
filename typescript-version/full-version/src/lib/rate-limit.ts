@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+import { Prisma, PrismaClient } from '@prisma/client'
+import type { RateLimitState, User, UserBlock } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
@@ -6,6 +7,9 @@ export interface RateLimitConfig {
   maxRequests: number
   windowMs: number // в миллисекундах
   blockMs?: number // в миллисекундах (опционально для rate-limiter-flexible)
+  warnThreshold?: number
+  isActive?: boolean
+  mode?: 'monitor' | 'enforce'
 }
 
 export interface RateLimitResult {
@@ -13,9 +17,52 @@ export interface RateLimitResult {
   remaining: number
   resetTime: Date
   blockedUntil?: Date
+  warning?: {
+    remaining: number
+  }
 }
 
-export class RateLimitService {
+export interface RateLimitCheckOptions {
+  increment?: boolean
+}
+
+export interface RateLimitStats {
+  module: string
+  config: RateLimitConfig
+  totalRequests: number
+  blockedCount: number
+  activeWindows: number
+}
+
+export interface ListRateLimitStatesParams {
+  module?: string
+  limit?: number
+  cursor?: string
+  search?: string
+}
+
+export interface RateLimitStateAdminEntry {
+  id: string
+  key: string
+  module: string
+  count: number
+  windowStart: Date
+  windowEnd: Date
+  blockedUntil: Date | null
+  remaining: number
+  config: RateLimitConfig
+  source: 'state' | 'manual'
+  user?: Pick<User, 'id' | 'name' | 'email'> | null
+  activeBlock?: Pick<UserBlock, 'id' | 'reason' | 'blockedAt' | 'unblockedAt'> | null
+}
+
+export interface RateLimitStateListResult {
+  items: RateLimitStateAdminEntry[]
+  total: number
+  nextCursor?: string
+}
+
+class RateLimitService {
   private static instance: RateLimitService
   private configs: Map<string, RateLimitConfig> = new Map()
 
@@ -23,7 +70,54 @@ export class RateLimitService {
     this.loadConfigs()
   }
 
-  private async getOrCreateState(key: string, module: string): Promise<any | null> {
+  static getInstance(): RateLimitService {
+    if (!RateLimitService.instance) {
+      RateLimitService.instance = new RateLimitService()
+    }
+
+    return RateLimitService.instance
+  }
+
+  private async loadConfigs() {
+    try {
+      const configs = await prisma.rateLimitConfig.findMany()
+      this.configs.clear()
+
+      for (const config of configs) {
+        this.configs.set(config.module, {
+          maxRequests: config.maxRequests,
+          windowMs: config.windowMs,
+          blockMs: config.blockMs,
+          warnThreshold: config.warnThreshold ?? 0,
+          isActive: config.isActive,
+          mode: (config.mode === 'monitor' || config.mode === 'enforce') ? config.mode : 'enforce'
+        })
+      }
+
+      this.setDefaultConfigs()
+    } catch (error) {
+      console.error('Error loading rate limit configs:', error)
+      this.setDefaultConfigs()
+    }
+  }
+
+  private setDefaultConfigs() {
+    const defaults: Record<string, RateLimitConfig> = {
+      chat: { maxRequests: 1000, windowMs: 60 * 60 * 1000, blockMs: 60 * 1000, warnThreshold: 5, isActive: true, mode: 'enforce' },
+      ads: { maxRequests: 5, windowMs: 60 * 60 * 1000, blockMs: 60 * 60 * 1000, isActive: true, mode: 'enforce' },
+      upload: { maxRequests: 20, windowMs: 60 * 60 * 1000, blockMs: 30 * 60 * 1000, isActive: true, mode: 'enforce' },
+      auth: { maxRequests: 5, windowMs: 15 * 60 * 1000, blockMs: 60 * 60 * 1000, isActive: true, mode: 'enforce' },
+      email: { maxRequests: 50, windowMs: 60 * 60 * 1000, blockMs: 60 * 60 * 1000, isActive: true, mode: 'enforce' }
+    }
+
+    for (const [module, config] of Object.entries(defaults)) {
+      if (!this.configs.has(module)) {
+        this.configs.set(module, config)
+      }
+    }
+  }
+
+  private async getOrCreateState(key: string, module: string): Promise<RateLimitState | null> {
     try {
       const config = this.configs.get(module)
       if (!config) return null
@@ -32,7 +126,6 @@ export class RateLimitService {
       const windowStart = new Date(now.getTime() - (now.getTime() % config.windowMs))
       const windowEnd = new Date(windowStart.getTime() + config.windowMs)
 
-      // Найти или создать запись в БД
       let state = await prisma.rateLimitState.findUnique({
         where: {
           key_module: {
@@ -42,7 +135,6 @@ export class RateLimitService {
         }
       })
 
-      // Если записи нет или окно истекло, создаем новую
       if (!state || state.windowEnd <= now) {
         state = await prisma.rateLimitState.upsert({
           where: {
@@ -69,11 +161,12 @@ export class RateLimitService {
 
       return state
     } catch (error) {
+      console.error('Error fetching rate limit state:', error)
       return null
     }
   }
 
-  private async updateState(key: string, module: string, count: number, blockedUntil?: Date): Promise<void> {
+  private async updateState(key: string, module: string, data: Partial<RateLimitState>) {
     try {
       await prisma.rateLimitState.update({
         where: {
@@ -82,63 +175,16 @@ export class RateLimitService {
             module
           }
         },
-        data: {
-          count,
-          blockedUntil
-        }
+        data
       })
     } catch (error) {
       console.error('Error updating rate limit state:', error)
     }
   }
 
-  static getInstance(): RateLimitService {
-    if (!RateLimitService.instance) {
-      RateLimitService.instance = new RateLimitService()
-    }
-    return RateLimitService.instance
-  }
+  async checkLimit(key: string, module: string, options?: RateLimitCheckOptions): Promise<RateLimitResult> {
+    const increment = options?.increment ?? true
 
-  private async loadConfigs() {
-    try {
-      const configs = await prisma.rateLimitConfig.findMany()
-      this.configs.clear()
-
-      for (const config of configs) {
-        this.configs.set(config.module, {
-          maxRequests: config.maxRequests,
-          windowMs: config.windowMs,
-          blockMs: config.blockMs
-        })
-      }
-
-      // Дефолтные настройки если нет в БД
-      this.setDefaultConfigs()
-    } catch (error) {
-      console.error('Error loading rate limit configs:', error)
-      this.setDefaultConfigs()
-    }
-  }
-
-  private setDefaultConfigs() {
-    const defaults = {
-      chat: { maxRequests: 1000, windowMs: 60 * 60 * 1000, blockMs: 60 * 1000 }, // 1000/hour, block 1min (для тестирования)
-      ads: { maxRequests: 5, windowMs: 60 * 60 * 1000, blockMs: 60 * 60 * 1000 }, // 5/hour, block 1hour
-      upload: { maxRequests: 20, windowMs: 60 * 60 * 1000, blockMs: 30 * 60 * 1000 }, // 20/hour, block 30min
-      auth: { maxRequests: 5, windowMs: 15 * 60 * 1000, blockMs: 60 * 60 * 1000 }, // 5/15min, block 1hour
-      email: { maxRequests: 50, windowMs: 60 * 60 * 1000, blockMs: 60 * 60 * 1000 } // 50/hour for emails
-    }
-
-    for (const [module, config] of Object.entries(defaults)) {
-      if (!this.configs.has(module)) {
-        this.configs.set(module, config)
-      }
-    }
-  }
-
-  async checkLimit(key: string, module: string): Promise<RateLimitResult> {
-
-    // Сначала проверяем активные блокировки в UserBlock
     const activeBlock = await prisma.userBlock.findFirst({
       where: {
         OR: [
@@ -149,8 +195,8 @@ export class RateLimitService {
         isActive: true,
         AND: {
           OR: [
-            { unblockedAt: null }, // permanent
-            { unblockedAt: { gt: new Date() } } // not expired
+            { unblockedAt: null },
+            { unblockedAt: { gt: new Date() } }
           ]
         }
       }
@@ -160,70 +206,29 @@ export class RateLimitService {
       return {
         allowed: false,
         remaining: 0,
-        resetTime: activeBlock.unblockedAt || new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 часа если permanent
+        resetTime: activeBlock.unblockedAt || new Date(Date.now() + 24 * 60 * 60 * 1000),
         blockedUntil: activeBlock.unblockedAt || undefined
       }
     }
 
-    // Для чата подсчитываем по сообщениям в БД
-    if (module === 'chat') {
-      const config = this.configs.get(module)
-      if (!config) {
-        return { allowed: true, remaining: 999, resetTime: new Date(Date.now() + 60000) }
-      }
-
-      // Подсчитываем сообщения за последний час
-      const oneHourAgo = new Date(Date.now() - config.windowMs)
-
-      const messageCount = await prisma.message.count({
-        where: {
-          senderId: key,
-          createdAt: { gte: oneHourAgo }
-        }
-      })
-
-      const remaining = Math.max(0, config.maxRequests - messageCount)
-      const allowed = messageCount < config.maxRequests
-
-      if (!allowed) {
-        // Создаем блокировку в UserBlock
-        const blockedUntil = new Date(Date.now() + (config.blockMs || 15 * 60 * 1000)) // 15 мин по умолчанию
-
-        await prisma.userBlock.create({
-          data: {
-            userId: key,
-            module,
-            reason: 'rate_limit_violation',
-            blockedBy: 'system', // Система автоматически заблокировала
-            unblockedAt: blockedUntil,
-            notes: `Exceeded ${config.maxRequests} messages per hour`
-          }
-        })
-
-        return {
-          allowed: false,
-          remaining: 0,
-          resetTime: new Date(Date.now() + config.windowMs),
-          blockedUntil
-        }
-      }
-
-      return {
-        allowed: true,
-        remaining,
-        resetTime: new Date(Date.now() + config.windowMs)
-      }
+    const config = this.configs.get(module)
+    if (!config) {
+      return { allowed: true, remaining: 999, resetTime: new Date(Date.now() + 60000) }
     }
 
-    // Для других модулей используем старую логику с RateLimitState
+    if (config.isActive === false) {
+      const windowMs = config.windowMs || 60000
+      const remaining = config.maxRequests ?? 999
+      return { allowed: true, remaining, resetTime: new Date(Date.now() + windowMs) }
+    }
+
     const state = await this.getOrCreateState(key, module)
     if (!state) {
-      return { allowed: true, remaining: 999, resetTime: new Date(Date.now() + 60000) }
+      return { allowed: true, remaining: config.maxRequests, resetTime: new Date(Date.now() + config.windowMs) }
     }
 
     const now = new Date()
 
-    // Если пользователь заблокирован
     if (state.blockedUntil && state.blockedUntil > now) {
       return {
         allowed: false,
@@ -233,60 +238,67 @@ export class RateLimitService {
       }
     }
 
-    // Если окно истекло, сбрасываем счетчик
+    let currentState = state
     if (state.windowEnd <= now) {
-      await this.updateState(key, module, 0)
-      return { allowed: true, remaining: this.configs.get(module)?.maxRequests || 10, resetTime: state.windowEnd }
-    }
+      const windowStart = new Date(now.getTime() - (now.getTime() % config.windowMs))
+      const windowEnd = new Date(windowStart.getTime() + config.windowMs)
 
-    const config = this.configs.get(module)
-    if (!config) {
-      return { allowed: true, remaining: 999, resetTime: new Date(Date.now() + 60000) }
-    }
-
-    // Проверяем лимит
-    if (state.count >= config.maxRequests) {
-      // Блокируем пользователя
-      const blockedUntil = new Date(now.getTime() + (config.blockMs || 0))
-      await this.updateState(key, module, state.count, blockedUntil)
-
-      // Также создаем запись в UserBlock для совместимости
-      await prisma.userBlock.create({
-        data: {
-          userId: key,
-          module,
-          reason: 'rate_limit_violation',
-          blockedBy: 'system',
-          unblockedAt: blockedUntil,
-          notes: `Exceeded ${config.maxRequests} requests`
-        }
+      await this.updateState(key, module, {
+        count: 0,
+        windowStart,
+        windowEnd,
+        blockedUntil: null
       })
+
+      currentState = { ...state, count: 0, windowStart, windowEnd, blockedUntil: null }
+    }
+
+    const remainingBefore = Math.max(0, config.maxRequests - currentState.count)
+    const warnThreshold = config.warnThreshold ?? 0
+    const shouldWarnBefore = warnThreshold > 0 && remainingBefore > 0 && remainingBefore <= warnThreshold
+
+    if (!increment) {
+      return {
+        allowed: true,
+        remaining: remainingBefore,
+        resetTime: currentState.windowEnd,
+        warning: shouldWarnBefore ? { remaining: remainingBefore } : undefined
+      }
+    }
+
+    if (currentState.count + 1 > config.maxRequests) {
+      const blockDuration = config.blockMs ?? config.windowMs
+      const blockedUntil = new Date(now.getTime() + blockDuration)
+
+      await this.updateState(key, module, { blockedUntil })
 
       return {
         allowed: false,
         remaining: 0,
-        resetTime: state.windowEnd,
+        resetTime: currentState.windowEnd,
         blockedUntil
       }
     }
 
-    // Увеличиваем счетчик
-    await this.updateState(key, module, state.count + 1)
+    const newCount = currentState.count + 1
+    await this.updateState(key, module, { count: newCount })
 
-    const remaining = config.maxRequests - state.count - 1
+    const remainingAfter = Math.max(0, config.maxRequests - newCount)
+    const shouldWarnAfter = warnThreshold > 0 && remainingAfter > 0 && remainingAfter <= warnThreshold
+
     return {
       allowed: true,
-      remaining,
-      resetTime: state.windowEnd
+      remaining: remainingAfter,
+      resetTime: currentState.windowEnd,
+      warning: shouldWarnAfter ? { remaining: remainingAfter } : undefined
     }
   }
 
-  async getStats(module: string) {
+  async getStats(module: string): Promise<RateLimitStats | null> {
     try {
       const config = this.configs.get(module)
       if (!config) return null
 
-      // Получаем статистику из базы данных
       const activeStates = await prisma.rateLimitState.count({
         where: {
           module,
@@ -296,13 +308,12 @@ export class RateLimitService {
         }
       })
 
-      const totalStates = await prisma.rateLimitState.count({
+      const states = await prisma.rateLimitState.findMany({
         where: { module }
       })
 
-      // Для чата подсчитываем сообщения
-      let totalRequests = 0
-      let blockedCount = 0
+      let totalRequests = states.reduce((sum, state) => sum + state.count, 0)
+      let blockedCount = activeStates
 
       if (module === 'chat') {
         const oneHourAgo = new Date(Date.now() - config.windowMs)
@@ -311,26 +322,6 @@ export class RateLimitService {
             createdAt: { gte: oneHourAgo }
           }
         })
-
-        // Подсчитываем активные блокировки для чата
-        blockedCount = await prisma.userBlock.count({
-          where: {
-            module,
-            isActive: true,
-            OR: [
-              { unblockedAt: null },
-              { unblockedAt: { gt: new Date() } }
-            ]
-          }
-        })
-      } else {
-        // Для других модулей используем RateLimitState
-        const states = await prisma.rateLimitState.findMany({
-          where: { module }
-        })
-
-        totalRequests = states.reduce((sum, state) => sum + state.count, 0)
-        blockedCount = activeStates
       }
 
       return {
@@ -348,28 +339,50 @@ export class RateLimitService {
 
   async updateConfig(module: string, config: Partial<RateLimitConfig>) {
     try {
+      const payload = {
+        maxRequests: config.maxRequests ?? undefined,
+        windowMs: config.windowMs ?? undefined,
+        blockMs: config.blockMs ?? undefined,
+        warnThreshold: config.warnThreshold ?? undefined,
+        isActive: typeof config.isActive === 'boolean' ? config.isActive : undefined
+      }
+
+      console.info('[rate-limit] Updating config', {
+        module,
+        payload
+      })
+
       await prisma.rateLimitConfig.upsert({
         where: { module },
         update: {
-          maxRequests: config.maxRequests,
-          windowMs: config.windowMs,
-          blockMs: config.blockMs
+          ...(payload.maxRequests !== undefined ? { maxRequests: payload.maxRequests } : {}),
+          ...(payload.windowMs !== undefined ? { windowMs: payload.windowMs } : {}),
+          ...(payload.blockMs !== undefined ? { blockMs: payload.blockMs } : {}),
+          ...(payload.warnThreshold !== undefined ? { warnThreshold: payload.warnThreshold } : {}),
+          ...(payload.isActive !== undefined ? { isActive: payload.isActive } : {})
         },
         create: {
           module,
-          maxRequests: config.maxRequests || 10,
-          windowMs: config.windowMs || 60000,
-          blockMs: config.blockMs || 900000
+          maxRequests: payload.maxRequests || 10,
+          windowMs: payload.windowMs || 60000,
+          blockMs: payload.blockMs || 900000,
+          warnThreshold: payload.warnThreshold ?? 0,
+          isActive: payload.isActive ?? true
         }
       })
 
-      // Перезагружаем конфигурации
       await this.loadConfigs()
-
-      return true
     } catch (error) {
-      console.error('Error updating rate limit config:', error)
-      return false
+      if (error instanceof Error) {
+        console.error('Error updating rate limit config:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        })
+      } else {
+        console.error('Error updating rate limit config:', error)
+      }
+      throw error
     }
   }
 
@@ -382,40 +395,258 @@ export class RateLimitService {
 
   async resetLimits(key?: string, module?: string) {
     try {
-      if (key && module) {
-        // Сбрасываем конкретного пользователя для конкретного модуля
-        await prisma.rateLimitState.updateMany({
-          where: {
-            key,
-            module
-          },
+      const stateWhere: Prisma.RateLimitStateWhereInput = {}
+      if (key) stateWhere.key = key
+      if (module) stateWhere.module = module
+
+      await prisma.rateLimitState.updateMany({
+        where: Object.keys(stateWhere).length ? stateWhere : undefined,
+        data: {
+          count: 0,
+          blockedUntil: null
+        }
+      })
+
+      if (key || module) {
+        const blockWhere: Prisma.UserBlockWhereInput = {
+          isActive: true
+        }
+
+        if (key) {
+          blockWhere.OR = [
+            { userId: key },
+            { ipAddress: key }
+          ]
+        }
+
+        if (module) {
+          blockWhere.module = module
+        }
+
+        await prisma.userBlock.updateMany({
+          where: blockWhere,
           data: {
-            count: 0,
-            blockedUntil: null
-          }
-        })
-      } else if (module) {
-        // Сбрасываем все записи для модуля
-        await prisma.rateLimitState.updateMany({
-          where: { module },
-          data: {
-            count: 0,
-            blockedUntil: null
-          }
-        })
-      } else {
-        // Сбрасываем все записи
-        await prisma.rateLimitState.updateMany({
-          data: {
-            count: 0,
-            blockedUntil: null
+            isActive: false,
+            unblockedAt: new Date()
           }
         })
       }
+
       return true
     } catch (error) {
       console.error('Error resetting rate limits:', error)
       return false
+    }
+  }
+
+  async clearState(stateId: string) {
+    try {
+      const state = await prisma.rateLimitState.findUnique({
+        where: { id: stateId }
+      })
+
+      if (state) {
+        await this.resetLimits(state.key, state.module)
+        return true
+      }
+
+      const manualBlock = await prisma.userBlock.findUnique({
+        where: { id: stateId }
+      })
+
+      if (!manualBlock) {
+        return false
+      }
+
+      await prisma.userBlock.update({
+        where: { id: manualBlock.id },
+        data: {
+          isActive: false,
+          unblockedAt: new Date()
+        }
+      })
+
+      return true
+    } catch (error) {
+      console.error('Error clearing rate limit state:', error)
+      return false
+    }
+  }
+
+  async listStates(params: ListRateLimitStatesParams = {}): Promise<RateLimitStateListResult> {
+    const limit = Math.min(Math.max(params.limit ?? 20, 1), 100)
+
+    const where: Prisma.RateLimitStateWhereInput = {}
+    if (params.module) {
+      where.module = params.module
+    }
+    if (params.search) {
+      where.OR = [
+        { key: { contains: params.search, mode: 'insensitive' } },
+        { module: { contains: params.search, mode: 'insensitive' } }
+      ]
+    }
+
+    const [states, total] = await Promise.all([
+      prisma.rateLimitState.findMany({
+        where,
+        orderBy: [
+          { blockedUntil: 'desc' },
+          { updatedAt: 'desc' }
+        ],
+        take: limit + 1,
+        cursor: params.cursor ? { id: params.cursor } : undefined,
+        skip: params.cursor ? 1 : 0
+      }),
+      prisma.rateLimitState.count({ where })
+    ])
+
+    const manualBlockWhere: Prisma.UserBlockWhereInput = {
+      isActive: true,
+      ...(params.module ? { module: params.module } : {})
+    }
+
+    if (params.search) {
+      const searchCondition: Prisma.UserBlockWhereInput = {
+        OR: [
+          { userId: { contains: params.search, mode: 'insensitive' } },
+          { ipAddress: { contains: params.search, mode: 'insensitive' } },
+          { user: { is: { name: { contains: params.search, mode: 'insensitive' } } } },
+          { user: { is: { email: { contains: params.search, mode: 'insensitive' } } } }
+        ]
+      }
+
+      manualBlockWhere.AND = manualBlockWhere.AND
+        ? [...manualBlockWhere.AND, searchCondition]
+        : [searchCondition]
+    }
+
+    const manualBlocks = await prisma.userBlock.findMany({
+      where: manualBlockWhere,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    })
+
+    const keys = Array.from(new Set(states.map(state => state.key).filter(Boolean)))
+
+    const users = keys.length
+      ? await prisma.user.findMany({
+          where: { id: { in: keys } },
+          select: { id: true, name: true, email: true }
+        })
+      : []
+
+    const userMap = new Map(users.map(user => [user.id, user]))
+
+    const blockKeyMap = new Map(
+      manualBlocks
+        .map(block => {
+          const blockKey = block.userId || block.ipAddress
+          if (!blockKey) return null
+          return [`${blockKey}::${block.module}`, block] as const
+        })
+        .filter((entry): entry is [string, (typeof manualBlocks)[number]] => Boolean(entry))
+    )
+
+    const stateItems = states.slice(0, limit).map<RateLimitStateAdminEntry>(state => {
+      const config = this.configs.get(state.module) ?? {
+        maxRequests: 0,
+        windowMs: state.windowEnd.getTime() - state.windowStart.getTime(),
+        blockMs: 0,
+        warnThreshold: 0,
+        isActive: true
+      }
+
+      const user = userMap.get(state.key) || null
+      const activeBlock = blockKeyMap.get(`${state.key}::${state.module}`) || null
+      const remaining = Math.max(0, config.maxRequests - state.count)
+
+      return {
+        id: state.id,
+        key: state.key,
+        module: state.module,
+        count: state.count,
+        windowStart: state.windowStart,
+        windowEnd: state.windowEnd,
+        blockedUntil: state.blockedUntil,
+        remaining,
+        config,
+        source: 'state',
+        user,
+        activeBlock: activeBlock
+          ? {
+              id: activeBlock.id,
+              reason: activeBlock.reason,
+              blockedAt: activeBlock.blockedAt,
+              unblockedAt: activeBlock.unblockedAt
+            }
+          : null
+      }
+    })
+
+    const stateKeySet = new Set(stateItems.map(item => `${item.key}::${item.module}`))
+
+    const manualOnlyEntries: RateLimitStateAdminEntry[] = manualBlocks
+      .filter(block => {
+        const blockKey = block.userId || block.ipAddress
+        if (!blockKey) {
+          return false
+        }
+        return !stateKeySet.has(`${blockKey}::${block.module}`)
+      })
+      .map(block => {
+        const key = block.userId || block.ipAddress || block.id
+        const config = this.configs.get(block.module) ?? {
+          maxRequests: 0,
+          windowMs: 0,
+          blockMs: 0,
+          warnThreshold: 0,
+          isActive: true
+        }
+
+        return {
+          id: block.id,
+          key,
+          module: block.module,
+          count: 0,
+          windowStart: block.blockedAt,
+          windowEnd: block.blockedAt,
+          blockedUntil: block.unblockedAt ?? null,
+          remaining: 0,
+          config,
+          source: 'manual',
+          user: block.user
+            ? {
+                id: block.user.id,
+                name: block.user.name,
+                email: block.user.email
+              }
+            : null,
+          activeBlock: {
+            id: block.id,
+            reason: block.reason,
+            blockedAt: block.blockedAt,
+            unblockedAt: block.unblockedAt ?? null
+          }
+        }
+      })
+
+    const items = [...stateItems, ...manualOnlyEntries]
+
+    const hasMore = states.length > limit
+    const nextCursor = hasMore ? states[limit].id : undefined
+
+    return {
+      items,
+      total: total + manualOnlyEntries.length,
+      nextCursor
     }
   }
 }

@@ -18,6 +18,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
 import { useAuth } from '@/contexts/AuthProvider'
+import { toast } from 'react-toastify'
 
 import type { ChatRoom } from '@/lib/sockets/types/chat'
 
@@ -43,6 +44,7 @@ type Props = {
   isRoomLoading: boolean
   sendMessage: (content: string) => Promise<void>
   rateLimitData: { retryAfter: number; blockedUntil: number } | null
+  isConnected: boolean
 }
 
 // Emoji Picker Component for selecting emojis
@@ -95,7 +97,7 @@ const EmojiPicker = ({
   )
 }
 
-const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, room, isRoomLoading, sendMessage, rateLimitData }: Props) => {
+const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, room, isRoomLoading, sendMessage, rateLimitData, isConnected }: Props) => {
   // States
   const [msg, setMsg] = useState('')
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
@@ -150,35 +152,56 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
     setAnchorEl(null)
   }
 
-  const handleSendMsg = (event: FormEvent | KeyboardEvent, msg: string) => {
+  const handleSendMsg = async (event: FormEvent | KeyboardEvent, value: string) => {
     event.preventDefault()
 
-    if (isRateLimited || isSending) {
-      return // Block sending if rate limited or already sending
+    if (isRateLimited || isSending || !room) {
+      return
     }
 
-    if (msg.trim() !== '') {
-      setIsSending(true)
+    const trimmed = value.trim()
+    if (!trimmed) return
 
-      // Send via Socket.IO
+    console.log('🟠 [CHAT UI] Кнопка отправки нажата', {
+      roomId: room.id,
+      isConnected,
+      length: trimmed.length
+    })
+
+    setIsSending(true)
+    console.log('🔒 [CHAT UI] Кнопка отправки деактивирована')
+
+    try {
       if (user?.id && sendMessage) {
-        sendMessage(msg).then(() => {
-          setMsg('')
-          setIsSending(false)
-        }).catch((error: any) => {
-          setIsSending(false)
-          // Show user-friendly error message for rate limit
-          if (error.message === 'Rate limit exceeded') {
-            // Error is already handled by setting rateLimitData in useChatNew hook
-            return
-          }
-          // Handle other errors if needed
-        })
+        await sendMessage(trimmed)
       } else {
-        dispatch(sendMsg({ message: msg, senderId: user?.id || '', receiverId: activeUser?.id || '' }))
-        setMsg('')
-        setIsSending(false)
+        dispatch(sendMsg({ message: trimmed, senderId: user?.id || '', receiverId: activeUser?.id || '' }))
       }
+
+      setMsg('')
+    } catch (error: any) {
+      const blockedUntil =
+        (error as { blockedUntil?: number })?.blockedUntil ??
+        rateLimitData?.blockedUntil
+
+      if (error?.message === 'NETWORK_OFFLINE') {
+        toast.error(navigation.checkInternetConnection ?? 'Check your internet connection')
+      } else if (error?.message === 'OFFLINE_LIMIT_REACHED') {
+        toast.error(navigation.offlineLimitReached ?? 'Only one offline message can be queued')
+      } else if (error?.message === 'RATE_LIMITED') {
+        const seconds = blockedUntil
+          ? Math.max(1, Math.ceil((blockedUntil - Date.now()) / 1000))
+          : 1
+        const message = navigation.rateLimitMessage
+          ? navigation.rateLimitMessage.replace('${countdown}', seconds.toString())
+          : 'You are sending messages too frequently.'
+        toast.error(message)
+      } else if (error?.message !== 'Rate limit exceeded') {
+        toast.error(navigation.failedToSendMessage ?? 'Failed to send message')
+      }
+    } finally {
+      setIsSending(false)
+      console.log('🔓 [CHAT UI] Кнопка отправки активирована')
     }
   }
 
@@ -285,7 +308,16 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
             type='submit'
             disabled={isRateLimited || isRoomLoading || !room || isSending}
           >
-            {isRateLimited ? countdown : isSending ? <CircularProgress size={16} color="inherit" /> : isRoomLoading || !room ? '...' : <i className='ri-send-plane-line' />}
+            <div className='flex items-center gap-2'>
+              {isRateLimited ? (
+                countdown
+              ) : isRoomLoading || !room ? (
+                '...'
+              ) : (
+                <i className='ri-send-plane-line' />
+              )}
+              {isSending && <CircularProgress size={16} color='inherit' />}
+            </div>
           </CustomIconButton>
         ) : (
           <Button
@@ -293,13 +325,24 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
             color='primary'
             type='submit'
             disabled={isRateLimited || isRoomLoading || !room || isSending}
-            endIcon={isSending ? <CircularProgress size={16} color="inherit" /> : <i className='ri-send-plane-line' />}
             sx={{
               whiteSpace: 'nowrap',
               minWidth: 'auto'
             }}
           >
-            {isRateLimited ? navigation.waitMessage.replace('${countdown}', countdown.toString()) : isSending ? navigation.sending : isRoomLoading || !room ? navigation.loadingButton : navigation.send}
+            <div className='flex items-center gap-2'>
+              {isRateLimited ? (
+                navigation.waitMessage.replace('${countdown}', countdown.toString())
+              ) : isRoomLoading || !room ? (
+                navigation.loadingButton
+              ) : (
+                <span className='flex items-center gap-2'>
+                  {navigation.send}
+                  <i className='ri-send-plane-line' />
+                </span>
+              )}
+              {isSending && <CircularProgress size={16} color='inherit' />}
+            </div>
           </Button>
         )}
       </div>
@@ -309,7 +352,9 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
   return (
     <form
       autoComplete='off'
-      onSubmit={event => handleSendMsg(event, msg)}
+      onSubmit={event => {
+        void handleSendMsg(event, msg)
+      }}
       className=' bg-[var(--mui-palette-customColors-chatBg)]'
     >
       <TextField
@@ -331,7 +376,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
         }}
         onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
           if (e.key === 'Enter' && !e.shiftKey) {
-            handleSendMsg(e, msg)
+            void handleSendMsg(e, msg)
           }
         }}
         size='small'

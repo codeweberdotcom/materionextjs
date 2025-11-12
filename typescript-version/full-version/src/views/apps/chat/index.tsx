@@ -43,7 +43,19 @@ const ChatWrapper = () => {
   const unreadCount = (typeof window !== 'undefined' && (window as any).notificationsManager)
     ? (window as any).notificationsManager.unreadCount
     : 0
-  const { initializeRoom, room, isRoomLoading, sendMessage, messages, rateLimitData, markMessagesAsRead } = useChatNew()
+  const {
+    initializeRoom,
+    room,
+    isRoomLoading,
+    sendMessage,
+    messages,
+    rateLimitData,
+    markMessagesAsRead,
+    loadMoreMessages,
+    historyLoading,
+    hasMoreHistory,
+    isConnected
+  } = useChatNew()
   const { checkPermission } = usePermissions()
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
@@ -93,39 +105,6 @@ const ChatWrapper = () => {
     }
   }, [chatStore.contacts.length, user?.id])
 
-  // Load last messages from database directly
-  useEffect(() => {
-    const loadLastMessages = async () => {
-      if (chatStore.contacts.length > 0 && user?.id) {
-        try {
-          const response = await fetch('/api/chat/last-messages', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          })
-
-          if (response.ok) {
-            const lastMessages = await response.json()
-
-            // Update Redux store with last messages
-            lastMessages.forEach((msg: any) => {
-              dispatch(sendMsg({
-                message: msg.content,
-                senderId: msg.senderId,
-                receiverId: msg.receiverId
-              }))
-            })
-          }
-        } catch (error) {
-          // Error handling
-        }
-      }
-    }
-
-    loadLastMessages()
-  }, [chatStore.contacts.length, user?.id, dispatch])
-
   // Close backdrop when sidebar is open on below md screen
   useEffect(() => {
     if (!isBelowMdScreen && backdropOpen && sidebarOpen) {
@@ -151,12 +130,13 @@ const ChatWrapper = () => {
   }, [backdropOpen])
 
   return (
-    <div
-      className={classNames(commonLayoutClasses.contentHeightFixed, 'flex is-full overflow-hidden rounded relative', {
-        border: settings.skin === 'bordered',
-        'shadow-md': settings.skin !== 'bordered'
-      })}
-    >
+    <>
+      <div
+        className={classNames(commonLayoutClasses.contentHeightFixed, 'flex is-full overflow-hidden rounded relative', {
+          border: settings.skin === 'bordered',
+          'shadow-md': settings.skin !== 'bordered'
+        })}
+      >
       <SidebarLeft
         chatStore={chatStore}
         getActiveUserData={activeUser}
@@ -189,10 +169,15 @@ const ChatWrapper = () => {
         messages={messages}
         rateLimitData={rateLimitData}
         markMessagesAsRead={markMessagesAsRead}
+        loadMoreMessages={loadMoreMessages}
+        historyLoading={historyLoading}
+        hasMoreHistory={hasMoreHistory}
+        isConnected={isConnected}
       />
 
       <Backdrop open={backdropOpen} onClick={() => setBackdropOpen(false)} className='absolute z-10' />
     </div>
+    </>
   )
 }
 

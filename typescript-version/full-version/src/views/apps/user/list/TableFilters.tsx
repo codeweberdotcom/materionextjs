@@ -8,6 +8,7 @@ import Grid from '@mui/material/Grid2'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
 import Select from '@mui/material/Select'
+import Skeleton from '@mui/material/Skeleton'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
@@ -33,6 +34,7 @@ const TableFilters = ({ setData, tableData }: { setData: (data: UsersType[]) => 
   const [plan, setPlan] = useState<UsersType['currentPlan']>('')
   const [status, setStatus] = useState<UsersType['status']>('')
   const [roles, setRoles] = useState<Role[]>([])
+  const [rolesLoading, setRolesLoading] = useState(true)
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -49,7 +51,7 @@ const TableFilters = ({ setData, tableData }: { setData: (data: UsersType[]) => 
       }
     }
 
-    fetchRoles()
+    fetchRoles().finally(() => setRolesLoading(false))
   }, []) // Empty dependency array is correct - we only want to fetch roles once on mount
 
   // Memoize filtered data to prevent unnecessary re-renders
@@ -71,6 +73,14 @@ const TableFilters = ({ setData, tableData }: { setData: (data: UsersType[]) => 
   return (
     <CardContent>
       <Grid container spacing={5}>
+        {rolesLoading ? (
+          Array.from({ length: 3 }).map((_, index) => (
+            <Grid key={`filters-skeleton-${index}`} size={{ xs: 12, sm: 4 }}>
+              <Skeleton variant='rectangular' height={56} />
+            </Grid>
+          ))
+        ) : (
+          <>
         <Grid size={{ xs: 12, sm: 4 }}>
           <FormControl fullWidth>
             <InputLabel id='role-select'>{dictionary.navigation.selectRoleFilter}</InputLabel>
@@ -131,6 +141,8 @@ const TableFilters = ({ setData, tableData }: { setData: (data: UsersType[]) => 
             </Select>
           </FormControl>
         </Grid>
+          </>
+        )}
       </Grid>
     </CardContent>
   )

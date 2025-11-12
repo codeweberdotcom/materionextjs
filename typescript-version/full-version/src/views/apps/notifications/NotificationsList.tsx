@@ -11,16 +11,16 @@ import Chip from '@mui/material/Chip'
 // Third-party Imports
 import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
-import Skeleton from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
+import Skeleton from '@mui/material/Skeleton'
 
-import type { Notification } from '@/types/apps/notificationTypes'
+import type { Notification, NotificationStatus } from '@/types/apps/notificationTypes'
 
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
 
 // Util Imports
 import { getInitials } from '@/utils/formatting/getInitials'
+import { formatNotificationTimestamp, normalizeAvatarSkin, normalizeThemeColor } from '@/utils/notifications/helpers'
 
 // Hook Imports
 import { useTranslation } from '@/contexts/TranslationContext'
@@ -30,21 +30,19 @@ import { usePermissions } from '@/hooks/usePermissions'
 import styles from './styles.module.css'
 
 type Props = {
-   isInitialMount: boolean
-   isBelowSmScreen: boolean
-   isBelowLgScreen: boolean
-   reload: boolean
-   filtering: boolean
-   loading: boolean
-   searchTerm: string
-   selectedNotifications: Set<string>
-   setSelectedNotifications: Dispatch<SetStateAction<Set<string>>>
-   notifications: Notification[]
-   status?: string
-   type?: string
-   handleSingleNotificationRead: (notificationId: string) => void
-   handleSingleNotificationArchive: (notificationId: string) => void
-   handleNotificationClick: (notificationId: string) => void
+  isInitialMount: boolean
+  isBelowSmScreen: boolean
+  isBelowLgScreen: boolean
+  reload: boolean
+  filtering: boolean
+  loading: boolean
+  searchTerm: string
+  selectedNotifications: Set<string>
+  setSelectedNotifications: Dispatch<SetStateAction<Set<string>>>
+  notifications: Notification[]
+  handleSingleNotificationRead: (notificationId: string) => void
+  handleSingleNotificationArchive: (notificationId: string) => void
+  handleNotificationClick: (notificationId: string) => void
 }
 
 const ScrollWrapper = ({ children, isBelowLgScreen }: { children: ReactNode; isBelowLgScreen: boolean }) => {
@@ -68,8 +66,6 @@ const NotificationsList = (props: Props) => {
      selectedNotifications,
      setSelectedNotifications,
      notifications,
-     status,
-     type,
      handleSingleNotificationRead,
      handleSingleNotificationArchive,
      handleNotificationClick
@@ -95,47 +91,36 @@ const NotificationsList = (props: Props) => {
     setSelectedNotifications(newSelected)
   }
 
-  const handleMarkAsRead = (id: string) => {
-    handleSingleNotificationRead(id)
-  }
+  const getAvatar = (notification: Notification) => {
+    const color = normalizeThemeColor(notification.avatarColor) || 'primary'
+    const skin = normalizeAvatarSkin(notification.avatarSkin) || 'light-static'
 
-  const handleArchive = (id: string) => {
-    handleSingleNotificationArchive(id)
-  }
+    if (notification.avatarImage) {
+      return <CustomAvatar src={notification.avatarImage} skin={skin} />
+    }
 
-  const getAvatar = (notification: any) => {
     if (notification.avatarIcon) {
       return (
-        <CustomAvatar color={notification.avatarColor || 'primary'} skin='light-static'>
+        <CustomAvatar color={color} skin={skin}>
           <i className={notification.avatarIcon} />
         </CustomAvatar>
       )
     }
 
     return (
-      <CustomAvatar color={notification.avatarColor || 'primary'} skin='light-static'>
-        {getInitials(notification.title || 'N')}
+      <CustomAvatar color={color} skin={skin}>
+        {notification.avatarText || getInitials(notification.title || 'N')}
       </CustomAvatar>
     )
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: NotificationStatus) => {
     switch (status) {
       case 'unread': return 'primary'
       case 'read': return 'secondary'
       case 'archived': return 'error'
       default: return 'default'
     }
-  }
-
-  if (searchFilteredNotifications.length === 0 && !isInitialMount) {
-    return (
-      <div className='relative flex justify-center gap-2 grow is-full'>
-        <Typography color='text.primary' className='m-3'>
-          {dictionary.navigation.noNotificationsFound}
-        </Typography>
-      </div>
-    )
   }
 
   // Show skeleton loading during initial mount, reload, filtering, or loading
@@ -148,16 +133,16 @@ const NotificationsList = (props: Props) => {
               <div key={`skeleton-${index}`} className='p-4'>
                 <div className='flex items-center justify-between gap-2'>
                   <div className='flex items-center gap-2 overflow-hidden'>
-                    <Skeleton circle width={40} height={40} />
+                    <Skeleton variant='circular' width={40} height={40} />
                     <div className='flex gap-4 justify-between items-center overflow-hidden'>
-                      <Skeleton width={150} height={20} />
+                      <Skeleton variant='rectangular' width={150} height={20} />
                     </div>
                   </div>
                   {!isBelowSmScreen && (
                     <div className='flex items-center gap-2'>
-                      <Skeleton width={100} height={16} />
-                      <Skeleton width={60} height={24} />
-                      <Skeleton width={20} height={20} />
+                      <Skeleton variant='rectangular' width={100} height={16} />
+                      <Skeleton variant='rectangular' width={60} height={24} />
+                      <Skeleton variant='rectangular' width={20} height={20} />
                     </div>
                   )}
                 </div>
@@ -169,13 +154,24 @@ const NotificationsList = (props: Props) => {
     )
   }
 
+  if (searchFilteredNotifications.length === 0) {
+    return (
+      <div className='relative flex justify-center gap-2 grow is-full'>
+        <Typography color='text.primary' className='m-3'>
+          {dictionary.navigation.noNotificationsFound}
+        </Typography>
+      </div>
+    )
+  }
+
   return (
     <div className='relative overflow-hidden grow is-full'>
       <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
         <div className='flex flex-col'>
           {searchFilteredNotifications.map((notification: Notification, index: number) => {
-            const notif = notification as any
-            const isSelected = selectedNotifications.has(notif.id)
+            const isSelected = selectedNotifications.has(notification.id)
+            const timestampLabel =
+              formatNotificationTimestamp(notification.createdAt) ?? dictionary.navigation.justNow ?? 'Just now'
 
             return (
               <div
@@ -188,8 +184,8 @@ const NotificationsList = (props: Props) => {
                     {checkPermission('notifications', 'delete') && (
                       <Checkbox
                         checked={isSelected}
-                        onChange={(e) => handleSelectNotification(notification.id, e.target.checked)}
-                        onClick={(e) => e.stopPropagation()}
+                        onChange={event => handleSelectNotification(notification.id, event.target.checked)}
+                        onClick={event => event.stopPropagation()}
                       />
                     )}
                     {getAvatar(notification)}
@@ -203,10 +199,9 @@ const NotificationsList = (props: Props) => {
                     <div
                       className={classnames('flex items-center gap-2', styles.notificationInfo)}
                     >
-                      <div className='flex items-center gap-2'>
-                      </div>
+                      <div className='flex items-center gap-2' />
                       <Typography variant='body2' color='text.disabled' className='whitespace-nowrap'>
-                        {notification.createdAt ? new Date(notification.createdAt).toLocaleString() : 'Just now'}
+                        {timestampLabel}
                       </Typography>
                       {notification.type && (
                         <Chip

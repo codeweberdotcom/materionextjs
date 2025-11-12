@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check rate limit for chat messages
-    const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat')
+    const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat', { increment: false })
 
     logger.info('рџ“Љ [API DEBUG] Rate limit result:', {
       allowed: rateLimitResult.allowed,
@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     })
 
     if (!rateLimitResult.allowed) {
-      const retryAfter = Math.ceil((rateLimitResult.resetTime.getTime() - Date.now()) / 1000)
-      const blockedUntil = rateLimitResult.blockedUntil ? rateLimitResult.blockedUntil : new Date(Date.now() + (retryAfter * 1000))
+      const blockedUntil = rateLimitResult.blockedUntil || rateLimitResult.resetTime
+      const retryAfter = Math.max(1, Math.ceil((blockedUntil.getTime() - Date.now()) / 1000))
 
       logger.info('рџљ« [API DEBUG] Rate limit exceeded:', {
         retryAfter,
@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       allowed: true,
       remaining: rateLimitResult.remaining,
-      resetTime: rateLimitResult.resetTime.toISOString()
+      resetTime: rateLimitResult.resetTime.toISOString(),
+      warning: rateLimitResult.warning || null
     })
   } catch (error) {
     console.error('вќЊ [API DEBUG] Error in rate limit check:', error)

@@ -34,7 +34,7 @@ const FleetMap = (props: Props) => {
   const { carIndex, viewState, geojson, mapboxAccessToken } = props
 
   // Hooks
-  const mapRef = useRef<MapRef>()
+  const mapRef = useRef<MapRef | null>(null)
 
   useEffect(() => {
     mapRef.current?.flyTo({ center: [viewState.longitude, viewState.latitude], zoom: 16 })
@@ -44,8 +44,6 @@ const FleetMap = (props: Props) => {
     <div className='is-full bs-full'>
       <Map
         mapboxAccessToken={mapboxAccessToken}
-        // eslint-disable-next-line lines-around-comment
-        // @ts-ignore
         ref={mapRef}
         initialViewState={{ longitude: -73.999024, latitude: 40.75249842, zoom: 12.5 }}
         mapStyle='mapbox://styles/mapbox/light-v9'

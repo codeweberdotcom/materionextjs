@@ -2,7 +2,7 @@
 import { UserRepository } from '../database/userRepository'
 import { emailService } from '../external/emailService'
 import logger from '@/lib/logger'
-import type { User } from '@prisma/client'
+import type { Prisma, User } from '@prisma/client'
 
 export class UserService {
   private userRepository: UserRepository
@@ -73,9 +73,9 @@ export class UserService {
   async getUsers(options?: {
     skip?: number
     take?: number
-    where?: any
-    orderBy?: any
-    select?: any
+    where?: Prisma.UserWhereInput
+    orderBy?: Prisma.UserOrderByWithRelationInput | Prisma.UserOrderByWithRelationInput[]
+    select?: Prisma.UserSelect
   }): Promise<User[]> {
     try {
       return await this.userRepository.findMany(options)

@@ -26,6 +26,7 @@ import pagination from './pagination'
 import paper from './paper'
 import popover from './popover'
 import progress from './progress'
+import skeleton from './skeleton'
 import Radio from './radio'
 import Rating from './rating'
 import Select from './select'
@@ -66,6 +67,7 @@ const overrides = (skin: Skin) => {
     paper,
     popover(skin),
     progress,
+    skeleton,
     Radio,
     Rating,
     Select,

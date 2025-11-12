@@ -15,6 +15,7 @@ export interface ChatMessage {
   createdAt: string;
   clientId?: string; // Для дедупликации
   isOptimistic?: boolean; // Для оптимистичных обновлений
+  deliveryStatus?: 'pending' | 'failed';
 }
 
 // Комната чата
@@ -29,10 +30,10 @@ export interface ChatRoom {
 // События чата (входящие)
 export interface ChatEvents {
   join: (userId: string) => void;
-  sendMessage: (data: SendMessageData) => void;
+  sendMessage: (data: SendMessageData, callback?: (response: SendMessageAck) => void) => void;
   getOrCreateRoom: (data: GetOrCreateRoomData) => void;
   markMessagesRead: (data: MarkMessagesReadData) => void;
-  ping: (data: any, callback: (response: { pong: boolean; timestamp: number }) => void) => void;
+  ping: (callback: (response: { pong: boolean; timestamp: number }) => void) => void;
 }
 
 // События чата (исходящие)
@@ -41,6 +42,7 @@ export interface ChatEmitEvents {
   roomData: (data: RoomData) => void;
   messagesRead: (data: MessagesReadData) => void;
   rateLimitExceeded: (data: RateLimitExceededData) => void;
+  rateLimitWarning: (data: RateLimitWarningData) => void;
   error: (error: ErrorData) => void;
 }
 
@@ -49,6 +51,13 @@ export interface SendMessageData {
   roomId: string;
   message: string;
   senderId: string;
+  clientId?: string;
+}
+
+export interface SendMessageAck {
+  ok: boolean;
+  message?: ChatMessage;
+  error?: string;
 }
 
 // Данные для создания/получения комнаты
@@ -81,6 +90,10 @@ export interface RateLimitExceededData {
   error: string;
   retryAfter: number;
   blockedUntil: string;
+}
+
+export interface RateLimitWarningData {
+  remaining: number;
 }
 
 // Общие данные ошибки

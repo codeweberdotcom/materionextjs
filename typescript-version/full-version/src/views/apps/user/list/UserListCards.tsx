@@ -6,8 +6,7 @@ import { useState, useEffect } from 'react'
 import Grid from '@mui/material/Grid2'
 
 // Third-party Imports
-import Skeleton from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
+import Skeleton from '@mui/material/Skeleton'
 
 // Type Imports
 import type { UserDataType } from '@components/card-statistics/HorizontalWithSubtitle'
@@ -98,7 +97,7 @@ const UserListCards = () => {
                   </div>
                   <Skeleton width={100} height={16} />
                 </div>
-                <Skeleton circle width={42} height={42} />
+                <Skeleton variant='circular' width={42} height={42} />
               </div>
             </div>
           </Grid>

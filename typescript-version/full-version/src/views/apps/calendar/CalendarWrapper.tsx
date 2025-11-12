@@ -9,6 +9,7 @@ import type { Theme } from '@mui/material/styles'
 
 // Third-party Imports
 import { useDispatch, useSelector } from 'react-redux'
+import type { CalendarApi } from '@fullcalendar/core'
 
 // Type Imports
 import type { CalendarColors, CalendarType } from '@/types/apps/calendarTypes'
@@ -29,7 +30,7 @@ const calendarsColor: CalendarColors = {
 
 const AppCalendar = () => {
   // States
-  const [calendarApi, setCalendarApi] = useState<null | any>(null)
+  const [calendarApi, setCalendarApi] = useState<CalendarApi | null>(null)
   const [leftSidebarOpen, setLeftSidebarOpen] = useState<boolean>(false)
   const [addEventSidebarOpen, setAddEventSidebarOpen] = useState<boolean>(false)
 

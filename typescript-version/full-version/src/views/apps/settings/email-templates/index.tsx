@@ -49,8 +49,7 @@ import {
 } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
-import Skeleton from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
+import Skeleton from '@mui/material/Skeleton'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'

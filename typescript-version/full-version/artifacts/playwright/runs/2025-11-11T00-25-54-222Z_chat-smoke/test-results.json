@@ -1,0 +1,136 @@
+{
+  "config": {
+    "configFile": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\playwright.config.ts",
+    "rootDir": "C:/laragon/www/materionextjs/typescript-version/full-version/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "test-results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "open": "never"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/laragon/www/materionextjs/typescript-version/full-version/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/laragon/www/materionextjs/typescript-version/full-version/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.1",
+    "workers": 6,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "chat.spec.ts",
+      "file": "chat.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "chat functionality works end-to-end",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chromium",
+              "projectName": "chromium",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 30171,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\e2e\\chat.spec.ts",
+                        "column": 30,
+                        "line": 56
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveValue\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator:  locator('form[class*=\"chatBg\"] textarea').first()\nExpected: \u001b[32m\"\"\u001b[39m\nReceived: \u001b[31m\"Test message from Playwright\"\u001b[39m\n\nCall log:\n\u001b[2m  - Expect \"toHaveValue\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for locator('form[class*=\"chatBg\"] textarea').first()\u001b[22m\n\u001b[2m    8 × locator resolved to <textarea id=\":r7:\" aria-invalid=\"false\" placeholder=\"Start typing a message...\" class=\"MuiInputBase-input MuiOutlinedInput-input MuiInputBase-inputMultiline MuiInputBase-inputSizeSmall MuiInputBase-inputAdornedEnd mui-1rlum6l-MuiInputBase-input-MuiOutlinedInput-input\">Test message from Playwright</textarea>\u001b[22m\n\u001b[2m      - unexpected value \"Test message from Playwright\"\u001b[22m\n\n\n  54 |\n  55 |   // Check that input is cleared after sending\n> 56 |   await expect(messageInput).toHaveValue('')\n     |                              ^\n  57 |\n  58 | })\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\e2e\\chat.spec.ts:56:30"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2025-11-11T00:25:22.512Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\test-results\\chat-chat-functionality-works-end-to-end-chromium\\error-context.md"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "6dac514d5d837ca37b9e-19491270cea2b50426d9",
+          "file": "chat.spec.ts",
+          "line": 3,
+          "column": 5
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-11T00:25:21.301Z",
+    "duration": 32780.799,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

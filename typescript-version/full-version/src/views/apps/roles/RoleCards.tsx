@@ -36,8 +36,7 @@ import { useTranslation } from '@/contexts/TranslationContext'
 import { usePermissions } from '@/hooks/usePermissions'
 
 // Third-party Imports
-import Skeleton from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
+import Skeleton from '@mui/material/Skeleton'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/formatting/i18n'
@@ -330,25 +329,31 @@ const RoleCards = () => {
               <Card>
                 <CardContent className='flex flex-col gap-4'>
                   <div className='flex items-center justify-between'>
-                    <Skeleton width={100} height={20} />
+                    <Skeleton variant='rectangular' width={100} height={20} />
                     <div className='flex -space-x-2'>
                       {Array.from({ length: 3 }).map((_, avatarIndex) => (
-                        <Skeleton key={avatarIndex} circle width={32} height={32} className='border-2 border-white' />
+                        <Skeleton
+                          key={avatarIndex}
+                          variant='circular'
+                          width={32}
+                          height={32}
+                          className='border-2 border-white'
+                        />
                       ))}
                     </div>
                   </div>
                   <div className='flex justify-between items-center'>
                     <div className='flex flex-col items-start gap-1'>
                       <div className='flex items-center gap-2'>
-                        <Skeleton width={20} height={20} />
-                        <Skeleton width={80} height={24} />
+                        <Skeleton variant='rectangular' width={20} height={20} />
+                        <Skeleton variant='rectangular' width={80} height={24} />
                       </div>
-                      <Skeleton width={120} height={16} />
+                      <Skeleton variant='rectangular' width={120} height={16} />
                     </div>
                     <div className='flex gap-2'>
-                      <Skeleton width={32} height={32} />
-                      <Skeleton width={32} height={32} />
-                      <Skeleton width={32} height={32} />
+                      <Skeleton variant='rectangular' width={32} height={32} />
+                      <Skeleton variant='rectangular' width={32} height={32} />
+                      <Skeleton variant='rectangular' width={32} height={32} />
                     </div>
                   </div>
                 </CardContent>

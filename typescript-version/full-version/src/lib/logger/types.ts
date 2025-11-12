@@ -7,7 +7,7 @@ export interface LogMetadata {
   event?: string;
   error?: string;
   duration?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface LogEntry {

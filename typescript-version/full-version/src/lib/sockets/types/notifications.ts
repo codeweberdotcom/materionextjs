@@ -1,5 +1,7 @@
 import { User } from './common';
 
+export type NotificationMetadata = Record<string, unknown>;
+
 export interface Notification {
   id: string;
   title: string;
@@ -16,7 +18,7 @@ export interface Notification {
   avatarText?: string;
   avatarColor?: string;
   avatarSkin?: string;
-  metadata?: Record<string, any>;
+  metadata?: NotificationMetadata;
 }
 
 export type NotificationType =
@@ -36,7 +38,7 @@ export interface NotificationEvents {
   markAsRead: (data: MarkAsReadData) => void;
   markAllAsRead: (userId: string) => void;
   deleteNotification: (data: DeleteNotificationData) => void;
-  ping: (data: any, callback: (response: { pong: boolean; timestamp: number }) => void) => void;
+  ping: (callback: (response: { pong: boolean; timestamp: number }) => void) => void;
 }
 
 // События уведомлений (исходящие)
@@ -116,7 +118,7 @@ export interface CreateNotificationData {
   message: string;
   type: NotificationType;
   userId: string;
-  metadata?: Record<string, any>;
+  metadata?: NotificationMetadata;
 }
 
 // Массовое создание уведомлений

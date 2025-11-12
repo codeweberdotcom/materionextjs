@@ -1,30 +1,43 @@
 import jwt from 'jsonwebtoken';
+import type { SignOptions } from 'jsonwebtoken';
+import type { IncomingMessage } from 'http';
+import type { Socket } from 'socket.io';
+import type { ParsedUrlQuery } from 'querystring';
 import { User } from '../types/common';
 
-// Секрет для JWT (должен браться из env)
 const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key';
 
-/**
- * Верифицировать JWT токен и извлечь данные пользователя
- */
+type JwtPayload = {
+  id: string;
+  role?: User['role'];
+  permissions?: User['permissions'];
+  name?: string;
+  email?: string;
+  exp?: number;
+  iat?: number;
+};
+
+type HandshakeLike = {
+  auth?: { token?: string };
+  query?: ParsedUrlQuery & { token?: string };
+  headers?: IncomingMessage['headers'];
+};
+
 export const verifyToken = (token: string): User | null => {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
     if (!decoded || !decoded.id) {
       return null;
     }
 
-    // Создаем пользователя на основе данных из токена
-    const user: User = {
+    return {
       id: decoded.id,
       role: decoded.role || 'user',
       permissions: decoded.permissions || getDefaultPermissions(decoded.role || 'user'),
       name: decoded.name,
       email: decoded.email
     };
-
-    return user;
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError) {
       console.error('Invalid JWT token:', error.message);
@@ -33,36 +46,32 @@ export const verifyToken = (token: string): User | null => {
     } else {
       console.error('JWT verification error:', error);
     }
+
     return null;
   }
 };
 
-/**
- * Извлечь токен из handshake данных Socket.IO
- */
-export const extractTokenFromHandshake = (handshake: any): string | null => {
-  // Токен может быть в разных местах
-  return handshake.auth?.token ||
-         handshake.query?.token ||
-         handshake.headers?.authorization?.replace('Bearer ', '') ||
-         null;
+export const extractTokenFromHandshake = (handshake: HandshakeLike): string | null => {
+  const headerAuth = handshake.headers?.authorization;
+
+  return (
+    handshake.auth?.token ||
+    handshake.query?.token ||
+    (headerAuth?.startsWith('Bearer ') ? headerAuth.replace('Bearer ', '') : undefined) ||
+    null
+  );
 };
 
-/**
- * Проверить токен из handshake
- */
-export const verifyHandshakeToken = (handshake: any): User | null => {
+export const verifyHandshakeToken = (handshake: HandshakeLike): User | null => {
   const token = extractTokenFromHandshake(handshake);
+
   if (!token) return null;
 
   return verifyToken(token);
 };
 
-/**
- * Получить разрешения по умолчанию для роли
- */
-function getDefaultPermissions(role: string): string[] {
-  const rolePermissions: Record<string, string[]> = {
+function getDefaultPermissions(role: User['role']): User['permissions'] {
+  const rolePermissions: Record<User['role'], User['permissions']> = {
     admin: ['send_message', 'send_notification', 'moderate_chat', 'view_admin_panel'],
     moderator: ['send_message', 'send_notification', 'moderate_chat'],
     user: ['send_message', 'send_notification'],
@@ -72,11 +81,8 @@ function getDefaultPermissions(role: string): string[] {
   return rolePermissions[role] || [];
 }
 
-/**
- * Создать JWT токен для пользователя (для тестирования)
- */
 export const createToken = (user: User, expiresIn: string = '24h'): string => {
-  const payload = {
+  const payload: JwtPayload = {
     id: user.id,
     role: user.role,
     permissions: user.permissions,
@@ -85,15 +91,12 @@ export const createToken = (user: User, expiresIn: string = '24h'): string => {
     iat: Math.floor(Date.now() / 1000)
   };
 
-  return jwt.sign(payload, JWT_SECRET, { expiresIn } as any);
+  return jwt.sign(payload, JWT_SECRET, { expiresIn } as SignOptions);
 };
 
-/**
- * Проверить, истек ли токен
- */
 export const isTokenExpired = (token: string): boolean => {
   try {
-    const decoded = jwt.decode(token) as any;
+    const decoded = jwt.decode(token) as JwtPayload | null;
     if (!decoded || !decoded.exp) return true;
 
     const currentTime = Math.floor(Date.now() / 1000);
@@ -103,12 +106,9 @@ export const isTokenExpired = (token: string): boolean => {
   }
 };
 
-/**
- * Получить оставшееся время жизни токена в секундах
- */
 export const getTokenTimeToLive = (token: string): number | null => {
   try {
-    const decoded = jwt.decode(token) as any;
+    const decoded = jwt.decode(token) as JwtPayload | null;
     if (!decoded || !decoded.exp) return null;
 
     const currentTime = Math.floor(Date.now() / 1000);

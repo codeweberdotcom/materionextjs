@@ -1,7 +1,7 @@
 // Third-party Imports
 import { createSlice } from '@reduxjs/toolkit'
 import type { PayloadAction } from '@reduxjs/toolkit'
-import type { EventInput } from '@fullcalendar/core'
+import type { EventApi, EventInput } from '@fullcalendar/core'
 
 // Type Imports
 import type { CalendarFiltersType, CalendarType } from '@/types/apps/calendarTypes'
@@ -20,6 +20,28 @@ const filterEventsUsingCheckbox = (events: EventInput[], selectedCalendars: Cale
   return events.filter(event => selectedCalendars.includes(event.extendedProps?.calendar as CalendarFiltersType))
 }
 
+type UpdateEventPayload = EventInput | EventApi
+
+const isEventApiPayload = (event: UpdateEventPayload): event is EventApi => {
+  return typeof (event as EventApi).setProp === 'function'
+}
+
+const toEventInput = (event: UpdateEventPayload): EventInput => {
+  if (isEventApiPayload(event)) {
+    return {
+      id: event.id,
+      url: event.url ?? undefined,
+      title: event.title,
+      allDay: event.allDay,
+      end: event.end ?? undefined,
+      start: event.start ?? undefined,
+      extendedProps: event.extendedProps
+    }
+  }
+
+  return event
+}
+
 export const calendarSlice = createSlice({
   name: 'calendar',
   initialState: initialState,
@@ -34,23 +56,15 @@ export const calendarSlice = createSlice({
       state.events.push(newEvent)
     },
 
-    updateEvent: (state, action: PayloadAction<EventInput>) => {
+    updateEvent: (state, action: PayloadAction<UpdateEventPayload>) => {
+      const updatedEvent = toEventInput(action.payload)
+
       state.events = state.events.map(event => {
-        if (action.payload._def && event.id === action.payload._def.publicId) {
-          return {
-            id: event.id,
-            url: action.payload._def.url,
-            title: action.payload._def.title,
-            allDay: action.payload._def.allDay,
-            end: action.payload._instance.range.end,
-            start: action.payload._instance.range.start,
-            extendedProps: action.payload._def.extendedProps
-          }
-        } else if (event.id === action.payload.id) {
-          return action.payload
-        } else {
-          return event
+        if (event.id === updatedEvent.id) {
+          return updatedEvent
         }
+
+        return event
       })
     },
 

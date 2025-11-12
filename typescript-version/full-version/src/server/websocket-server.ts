@@ -2,8 +2,9 @@ import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { parse } from 'url';
 import next from 'next';
 import { Server as SocketIOServer, Socket } from 'socket.io';
-import { PrismaClient, Message, ChatRoom } from '@prisma/client';
+import { PrismaClient, Message, ChatRoom, User } from '@prisma/client';
 import { RateLimiterMemory } from 'rate-limiter-flexible';
+import type { RateLimiterRes } from 'rate-limiter-flexible';
 import { socketLogger, rateLimitLogger, databaseLogger } from '../lib/logger';
 import logger from '@/lib/logger'
 
@@ -34,9 +35,11 @@ interface MarkMessagesReadData {
   userId: string;
 }
 
+type MessageWithSender = Message & { sender: User | null };
+
 interface RoomDataResponse {
   room: ChatRoom;
-  messages: (Message & { sender: any })[];
+  messages: MessageWithSender[];
 }
 
 interface RateLimitExceededData {
@@ -55,7 +58,7 @@ interface ReceiveMessageData {
   id: string;
   content: string;
   senderId: string;
-  sender: any;
+  sender: User | null;
   roomId: string;
   readAt: Date | null;
   createdAt: Date;
@@ -143,7 +146,7 @@ app.prepare().then(() => {
           if (rejRes instanceof Error) {
             rateLimitLogger.error('Rate limit check error', { userId: senderId, error: rejRes.message });
           } else {
-            const rateLimitError = rejRes as { msBeforeNext: number };
+            const rateLimitError = rejRes as RateLimiterRes;
             rateLimitLogger.limitExceeded(senderId, socket.handshake.address, socket.id, rateLimitError.msBeforeNext);
 
             socket.emit('rateLimitExceeded', {
@@ -172,7 +175,7 @@ app.prepare().then(() => {
           id: newMessage.id,
           content: newMessage.content,
           senderId: newMessage.senderId,
-          sender: newMessage.sender || {},
+          sender: newMessage.sender ?? null,
           roomId: newMessage.roomId,
           readAt: newMessage.readAt,
           createdAt: newMessage.createdAt
@@ -228,11 +231,11 @@ app.prepare().then(() => {
 
         // Get messages for the room
         // Fetching messages for room
-        const messages = await prisma.message.findMany({
+        const messages = (await prisma.message.findMany({
           where: { roomId: room.id },
           include: { sender: true },
           orderBy: { createdAt: 'asc' }
-        });
+        })) as MessageWithSender[];
         // Messages found
 
         const responseData: RoomDataResponse = { room, messages };
@@ -366,7 +369,7 @@ app.prepare().then(() => {
     });
 
     // Test ping event
-    socket.on('ping', (data: any, callback: PingCallback) => {
+    socket.on('ping', (_data: unknown, callback: PingCallback) => {
       // Ping received
       if (callback && typeof callback === 'function') {
         callback({ pong: true, timestamp: Date.now() });

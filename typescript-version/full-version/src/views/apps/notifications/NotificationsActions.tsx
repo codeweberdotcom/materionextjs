@@ -5,12 +5,13 @@ import IconButton from '@mui/material/IconButton'
 
 import { useTranslation } from '@/contexts/TranslationContext'
 import { usePermissions } from '@/hooks/usePermissions'
+import type { Notification } from '@/types/apps/notificationTypes'
 
 type Props = {
   areFilteredNotificationsNone: boolean
   selectedNotifications: Set<string>
   setSelectedNotifications: (value: Set<string>) => void
-  notifications: any[]
+  notifications: Notification[]
   setReload: (value: boolean) => void
   onArchive: (notificationId: string) => void
   onRefresh: (reason?: string) => void
@@ -41,7 +42,7 @@ const NotificationsActions = (props: Props) => {
     if (areAllSelected) {
       setSelectedNotifications(new Set())
     } else {
-      const visibleNotificationIds = new Set(notifications.map(notif => (notif as any).id))
+      const visibleNotificationIds = new Set(notifications.map(notification => notification.id))
       setSelectedNotifications(visibleNotificationIds)
     }
   }

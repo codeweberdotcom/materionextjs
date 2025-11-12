@@ -16,8 +16,7 @@ import IconButton from '@mui/material/IconButton'
 import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 import { useAuth } from '@/contexts/AuthProvider'
-import Skeleton from 'react-loading-skeleton'
-import 'react-loading-skeleton/dist/skeleton.css'
+import Skeleton from '@mui/material/Skeleton'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
@@ -336,13 +335,13 @@ const SidebarLeft = (props: Props) => {
               // Show skeleton loading for contacts
               Array.from({ length: 8 }).map((_, index) => (
                 <li key={`skeleton-${index}`} className='flex items-start gap-4 pli-3 plb-2 mbe-1'>
-                  <Skeleton circle width={40} height={40} />
-                  <div className='min-is-0 flex-auto'>
-                    <Skeleton width={120} height={16} />
-                    <Skeleton width={80} height={14} />
+                  <Skeleton variant='circular' width={40} height={40} />
+                  <div className='min-is-0 flex-auto space-y-1.5'>
+                    <Skeleton variant='rectangular' width={120} height={16} sx={{ borderRadius: 1 }} />
+                    <Skeleton variant='rectangular' width={80} height={14} sx={{ borderRadius: 1 }} />
                   </div>
                   <div className='flex flex-col items-end justify-start'>
-                    <Skeleton width={40} height={20} />
+                    <Skeleton variant='rectangular' width={40} height={20} sx={{ borderRadius: 1 }} />
                   </div>
                 </li>
               ))

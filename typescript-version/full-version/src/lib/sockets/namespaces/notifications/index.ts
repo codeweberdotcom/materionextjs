@@ -1,7 +1,12 @@
 import { Server, Namespace } from 'socket.io'
 import logger from '../../../logger'
 import { TypedSocket } from '../../types/common'
-import { NotificationEvents, NotificationEmitEvents, Notification } from '../../types/notifications'
+import {
+  NotificationEvents,
+  NotificationEmitEvents,
+  Notification,
+  NotificationMetadata
+} from '../../types/notifications'
 import { authenticateSocket, requirePermission } from '../../middleware/auth'
 import { rateLimitNotification } from '../../middleware/rateLimit'
 import { PrismaClient } from '@prisma/client'
@@ -19,12 +24,16 @@ const legacyEventMap: Partial<Record<keyof NotificationEmitEvents, string>> = {
   notificationsRead: 'notifications-read'
 }
 
-const emitNotificationEvent = (
+type NotificationEventPayload<T extends keyof NotificationEmitEvents> = Parameters<
+  NotificationEmitEvents[T]
+>[0]
+
+const emitNotificationEvent = <T extends keyof NotificationEmitEvents>(
   userId: string,
-  event: keyof NotificationEmitEvents,
-  payload: any
+  event: T,
+  payload: NotificationEventPayload<T>
 ) => {
-  const io = (global as any).io as Server | undefined
+  const io = (global as typeof globalThis & { io?: Server }).io
 
   if (!io) {
     logger.warn('Socket.IO server not initialized when emitting notification event', {
@@ -53,7 +62,7 @@ const toNotificationPayload = (notification: {
   createdAt: Date
   updatedAt: Date
   readAt: Date | null
-  metadata: any
+  metadata: unknown
   avatarImage?: string | null
   avatarIcon?: string | null
   avatarText?: string | null
@@ -63,13 +72,13 @@ const toNotificationPayload = (notification: {
   id: notification.id,
   title: notification.title,
   message: notification.message,
-  type: notification.type as any,
-  status: notification.status as any,
+  type: notification.type as Notification['type'],
+  status: notification.status as Notification['status'],
   userId: notification.userId,
   createdAt: notification.createdAt.toISOString(),
   updatedAt: notification.updatedAt.toISOString(),
   readAt: notification.readAt ? notification.readAt.toISOString() : undefined,
-  metadata: parseNotificationMetadata(notification.metadata),
+  metadata: parseNotificationMetadata(notification.metadata) as NotificationMetadata,
   avatarImage: notification.avatarImage || undefined,
   avatarIcon: notification.avatarIcon || undefined,
   avatarText: notification.avatarText || undefined,

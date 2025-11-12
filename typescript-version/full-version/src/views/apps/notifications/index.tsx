@@ -14,6 +14,7 @@ import classnames from 'classnames'
 // Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
 import type { RootState, AppDispatch } from '@/redux-store'
+import type { NotificationStatusFilter, NotificationTypeFilter } from '@/types/apps/notificationTypes'
 
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
@@ -26,7 +27,7 @@ import { commonLayoutClasses } from '@layouts/utils/layoutClasses'
 import SidebarLeft from './SidebarLeft'
 import NotificationsContent from './NotificationsContent'
 
-const NotificationsWrapper = ({ status, type }: { status?: string; type?: string }) => {
+const NotificationsWrapper = ({ status, type }: { status?: NotificationStatusFilter; type?: NotificationTypeFilter }) => {
 
   // States
   const [sidebarOpen, setSidebarOpen] = useState(false)

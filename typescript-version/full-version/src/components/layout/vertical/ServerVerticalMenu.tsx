@@ -5,13 +5,14 @@ import { useEffect, useState } from 'react'
 import type { getDictionary } from '@/utils/formatting/getDictionary'
 import type { VerticalMenuDataType } from '@/types/menuTypes'
 import type { Locale } from '@configs/i18n'
+import type { ScrollMenuHandler } from '@core/types'
 
 // Component Imports
 import ClientVerticalMenu from './ClientVerticalMenu'
 
 type Props = {
   dictionary: Awaited<ReturnType<typeof getDictionary>>
-  scrollMenu: (container: any, isPerfectScrollbar: boolean) => void
+  scrollMenu: ScrollMenuHandler
   locale: Locale
 }
 

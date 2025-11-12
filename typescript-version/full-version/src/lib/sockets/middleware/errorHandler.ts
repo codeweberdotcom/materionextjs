@@ -2,6 +2,12 @@ import { ExtendedError } from 'socket.io';
 import logger from '../../logger';
 import { TypedSocket } from '../types/common';
 
+type SocketErrorPayload = {
+  message: string;
+  code: string;
+  timestamp: string;
+};
+
 // Middleware для централизованной обработки ошибок
 export const errorHandler = (
   error: ExtendedError,
@@ -9,7 +15,7 @@ export const errorHandler = (
   next: (err?: ExtendedError) => void
 ) => {
   const errorMessage = error.message || 'Unknown error';
-  const errorCode = (error as any).code || 'INTERNAL_ERROR';
+  const errorCode = (error as SocketError).code || 'INTERNAL_ERROR';
 
   logger.error('Socket error occurred', {
     socketId: socket.id,

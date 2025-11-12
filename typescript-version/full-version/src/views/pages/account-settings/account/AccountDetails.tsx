@@ -16,7 +16,8 @@ import InputLabel from '@mui/material/InputLabel'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import Autocomplete from '@mui/material/Autocomplete'
-import Chip from '@mui/material/Chip'
+import Skeleton from '@mui/material/Skeleton'
+import Stack from '@mui/material/Stack'
 import type { SelectChangeEvent } from '@mui/material/Select'
 import { toast } from 'react-toastify'
 
@@ -52,6 +53,43 @@ const initialData: Data = {
   currency: ''
 }
 
+const ProfileSkeleton = () => (
+  <Stack
+    direction={{ xs: 'column', sm: 'row' }}
+    spacing={4}
+    alignItems='center'
+    className='w-full'
+  >
+    <Skeleton variant='circular' width={100} height={100} />
+    <Stack spacing={2} flex={1} width='100%'>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+        <Skeleton variant='rectangular' width={180} height={40} />
+        <Skeleton variant='rectangular' width={180} height={40} />
+      </Stack>
+      <Skeleton variant='text' width='60%' />
+    </Stack>
+  </Stack>
+)
+
+const FormSkeleton = () => (
+  <Grid container spacing={5}>
+    {Array.from({ length: 8 }).map((_, index) => (
+      <Grid key={`form-skeleton-${index}`} size={{ xs: 12, sm: 6 }}>
+        <Stack spacing={1.5}>
+          <Skeleton variant='text' width='40%' height={18} />
+          <Skeleton variant='rectangular' height={50} />
+        </Stack>
+      </Grid>
+    ))}
+    <Grid size={{ xs: 12 }}>
+      <Stack direction='row' spacing={2}>
+        <Skeleton variant='rectangular' width={130} height={42} />
+        <Skeleton variant='rectangular' width={130} height={42} />
+      </Stack>
+    </Grid>
+  </Grid>
+)
+
 const AccountDetails = () => {
   // Hooks
   const dictionary = useTranslation()
@@ -66,6 +104,8 @@ const AccountDetails = () => {
   const [countries, setCountries] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [clearingAvatar, setClearingAvatar] = useState(false)
 
   const handleLanguageChange = (event: SelectChangeEvent<string>) => {
     setLanguage(event.target.value)
@@ -85,69 +125,100 @@ const AccountDetails = () => {
   const handleFileInputChange = async (fileEvent: ChangeEvent) => {
     const { files } = fileEvent.target as HTMLInputElement
 
-    if (files && files.length !== 0) {
-      const file = files[0]
+    if (!files || files.length === 0 || uploading || clearingAvatar || loading) {
+      return
+    }
 
-      // Validate file type
-      if (!file.type.startsWith('image/')) {
-        toast.error('Please select an image file')
-        
-return
-      }
+    const file = files[0]
 
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('File size must be less than 5MB')
-        
-return
-      }
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file')
 
-      try {
-        // Show preview immediately
-        const reader = new FileReader()
+      return
+    }
 
-        reader.onload = () => setImgSrc(reader.result as string)
-        reader.readAsDataURL(file)
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be less than 5MB')
 
-        // Upload file to server
-        const formData = new FormData()
+      return
+    }
 
-        formData.append('avatar', file)
+    setUploading(true)
 
-        const response = await fetch('/api/user/avatar', {
-          method: 'POST',
-          body: formData
-        })
+    try {
+      // Show preview immediately
+      const reader = new FileReader()
 
-        if (response.ok) {
-          const result = await response.json()
+      reader.onload = () => setImgSrc(reader.result as string)
+      reader.readAsDataURL(file)
 
-          setImgSrc(result.avatarUrl)
-          toast.success('Avatar uploaded successfully!')
-        } else {
-          const error = await response.json()
+      // Upload file to server
+      const formData = new FormData()
 
-          toast.error(error.message || 'Failed to upload avatar')
+      formData.append('avatar', file)
 
-          // Reset to previous image on error
-          const profileResponse = await fetch('/api/user/profile')
+      const response = await fetch('/api/user/avatar', {
+        method: 'POST',
+        body: formData
+      })
 
-          if (profileResponse.ok) {
-            const userData = await profileResponse.json()
+      if (response.ok) {
+        const result = await response.json()
 
-            setImgSrc(userData.avatar || '/images/avatars/1.png')
-          }
+        setImgSrc(result.avatarUrl)
+        toast.success('Avatar uploaded successfully!')
+      } else {
+        const error = await response.json()
+
+        toast.error(error.message || 'Failed to upload avatar')
+
+        // Reset to previous image on error
+        const profileResponse = await fetch('/api/user/profile')
+
+        if (profileResponse.ok) {
+          const userData = await profileResponse.json()
+
+          setImgSrc(userData.avatar || '/images/avatars/1.png')
         }
-      } catch (error) {
-        console.error('Error uploading avatar:', error)
-        toast.error('Failed to upload avatar')
       }
+    } catch (error) {
+      console.error('Error uploading avatar:', error)
+      toast.error('Failed to upload avatar')
+    } finally {
+      setUploading(false)
     }
   }
 
-  const handleFileInputReset = () => {
-    setFileInput('')
-    setImgSrc('/images/avatars/1.png')
+  const handleFileInputReset = async () => {
+    if (clearingAvatar || uploading || loading) {
+      return
+    }
+
+    const previousImage = imgSrc
+
+    setClearingAvatar(true)
+
+    try {
+      const response = await fetch('/api/user/avatar', { method: 'DELETE' })
+
+      if (!response.ok) {
+        const error = await response.json()
+
+        throw new Error(error.message || 'Failed to reset avatar')
+      }
+
+      setFileInput('')
+      setImgSrc('/images/avatars/1.png')
+      toast.success(dictionary.navigation.avatarResetSuccess || 'Avatar reset successfully')
+    } catch (error) {
+      console.error('Error resetting avatar:', error)
+      setImgSrc(previousImage)
+      toast.error(dictionary.navigation.avatarResetError || 'Failed to reset avatar')
+    } finally {
+      setClearingAvatar(false)
+    }
   }
 
   // Fetch current user data and languages
@@ -289,32 +360,53 @@ return
   return (
     <Card>
       <CardContent className='mbe-5'>
-        <div className='flex max-sm:flex-col items-center gap-6'>
-          <img height={100} width={100} className='rounded' src={imgSrc} alt='Profile' />
-          <div className='flex flex-grow flex-col gap-4'>
-            <div className='flex flex-col sm:flex-row gap-4'>
-              <Button component='label' size='small' variant='contained' htmlFor='account-settings-upload-image'>
-                {dictionary.navigation.uploadNewPhoto}
-                <input
-                  hidden
-                  type='file'
-                  value={fileInput}
-                  accept='image/png, image/jpeg'
-                  onChange={handleFileInputChange}
-                  id='account-settings-upload-image'
-                />
-              </Button>
-              <Button size='small' variant='outlined' color='error' onClick={handleFileInputReset}>
-                {dictionary.navigation.reset}
-              </Button>
+        {loading ? (
+          <ProfileSkeleton />
+        ) : (
+          <div className='flex max-sm:flex-col items-center gap-6'>
+            <img height={100} width={100} className='rounded' src={imgSrc} alt='Profile' />
+            <div className='flex flex-grow flex-col gap-4'>
+              <div className='flex flex-col sm:flex-row gap-4'>
+                <Button
+                  component='label'
+                  size='small'
+                  variant='contained'
+                  htmlFor='account-settings-upload-image'
+                  disabled={uploading || clearingAvatar || loading}
+                >
+                  {uploading
+                    ? dictionary.navigation.uploadingPhoto || 'Uploading...'
+                    : dictionary.navigation.uploadNewPhoto}
+                  <input
+                    hidden
+                    type='file'
+                    value={fileInput}
+                    accept='image/png, image/jpeg'
+                    onChange={handleFileInputChange}
+                    disabled={uploading || clearingAvatar || loading}
+                    id='account-settings-upload-image'
+                  />
+                </Button>
+                <Button
+                  size='small'
+                  variant='outlined'
+                  color='error'
+                  onClick={handleFileInputReset}
+                  disabled={uploading || clearingAvatar || loading}
+                >
+                  {clearingAvatar
+                    ? dictionary.navigation.resettingPhoto || 'Resetting...'
+                    : dictionary.navigation.reset}
+                </Button>
+              </div>
+              <Typography>{dictionary.navigation.allowedImageFormats}</Typography>
             </div>
-            <Typography>{dictionary.navigation.allowedImageFormats}</Typography>
           </div>
-        </div>
+        )}
       </CardContent>
       <CardContent>
         {loading ? (
-          <Typography>{dictionary.forms.loadingUserData}</Typography>
+          <FormSkeleton />
         ) : (
           <form onSubmit={handleSubmit}>
           <Grid container spacing={5}>

@@ -62,6 +62,18 @@ const defaultState: DefaultStateType = {
   startDate: new Date()
 }
 
+const toDateOrFallback = (value: unknown, fallback = new Date()): Date => {
+  if (value instanceof Date) {
+    return value
+  }
+
+  if (typeof value === 'string' || typeof value === 'number') {
+    return new Date(value)
+  }
+
+  return fallback
+}
+
 const AddEventSidebar = (props: AddEventSidebarType) => {
   // Props
   const { calendarStore, dispatch, addEventSidebarOpen, handleAddEventSidebarToggle } = props
@@ -96,17 +108,20 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
   const resetToStoredValues = useCallback(() => {
     if (calendarStore.selectedEvent !== null) {
       const event = calendarStore.selectedEvent
+      const extendedProps = event.extendedProps || {}
+      const startDate = toDateOrFallback(event.start)
+      const endDate = event.end ? toDateOrFallback(event.end, startDate) : startDate
 
       setValue('title', event.title || '')
       setValues({
         url: event.url || '',
         title: event.title || '',
-        allDay: event.allDay,
-        guests: event.extendedProps.guests || [],
-        description: event.extendedProps.description || '',
-        calendar: event.extendedProps.calendar || 'Business',
-        endDate: event.end !== null ? event.end : event.start,
-        startDate: event.start !== null ? event.start : new Date()
+        allDay: Boolean(event.allDay),
+        guests: (extendedProps.guests as string[] | undefined) || [],
+        description: (extendedProps.description as string | undefined) || '',
+        calendar: (extendedProps.calendar as string | undefined) || 'Business',
+        endDate,
+        startDate
       })
     }
   }, [setValue, calendarStore.selectedEvent])
@@ -138,10 +153,9 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
       }
     }
 
-    if (
-      calendarStore.selectedEvent === null ||
-      (calendarStore.selectedEvent !== null && !calendarStore.selectedEvent.title.length)
-    ) {
+    const hasExistingTitle = Boolean(calendarStore.selectedEvent?.title?.length)
+
+    if (calendarStore.selectedEvent === null || !hasExistingTitle) {
       dispatch(addEvent(modifiedEvent))
     } else {
       dispatch(updateEvent({ ...modifiedEvent, id: calendarStore.selectedEvent.id }))
@@ -153,7 +167,7 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
   }
 
   const handleDeleteButtonClick = () => {
-    if (calendarStore.selectedEvent) {
+    if (calendarStore.selectedEvent?.id) {
       dispatch(deleteEvent(calendarStore.selectedEvent.id))
       dispatch(filterEvents())
     }
@@ -169,10 +183,9 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
   }
 
   const RenderSidebarFooter = () => {
-    if (
-      calendarStore.selectedEvent === null ||
-      (calendarStore.selectedEvent && !calendarStore.selectedEvent.title.length)
-    ) {
+    const hasExistingTitle = Boolean(calendarStore.selectedEvent?.title?.length)
+
+    if (calendarStore.selectedEvent === null || !hasExistingTitle) {
       return (
         <div className='flex gap-4'>
           <Button type='submit' variant='contained'>
@@ -183,18 +196,18 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
           </Button>
         </div>
       )
-    } else {
-      return (
-        <div className='flex gap-4'>
-          <Button type='submit' variant='contained'>
-            Update
-          </Button>
-          <Button variant='outlined' color='secondary' onClick={resetToStoredValues}>
-            Reset
-          </Button>
-        </div>
-      )
     }
+
+    return (
+      <div className='flex gap-4'>
+        <Button type='submit' variant='contained'>
+          Update
+        </Button>
+        <Button variant='outlined' color='secondary' onClick={resetToStoredValues}>
+          Reset
+        </Button>
+      </div>
+    )
   }
 
   const ScrollWrapper = isBelowSmScreen ? 'div' : PerfectScrollbar
@@ -217,9 +230,9 @@ const AddEventSidebar = (props: AddEventSidebarType) => {
     >
       <Box className='flex justify-between items-center sidebar-header pli-5 plb-4 border-be'>
         <Typography variant='h5'>
-          {calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? 'Update Event' : 'Add Event'}
+          {calendarStore.selectedEvent?.title?.length ? 'Update Event' : 'Add Event'}
         </Typography>
-        {calendarStore.selectedEvent && calendarStore.selectedEvent.title.length ? (
+        {calendarStore.selectedEvent?.title?.length ? (
           <Box className='flex items-center' sx={{ gap: calendarStore.selectedEvent !== null ? 1 : 0 }}>
             <IconButton size='small' onClick={handleDeleteButtonClick}>
               <i className='ri-delete-bin-7-line text-2xl' />

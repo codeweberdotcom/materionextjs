@@ -2,7 +2,6 @@
 
 // React Imports
 import { useState } from 'react'
-import type { SyntheticEvent } from 'react'
 
 // MUI Imports
 import Grid from '@mui/material/Grid2'
@@ -20,14 +19,14 @@ import TextField from '@mui/material/TextField'
 import CustomIconButton from '@core/components/mui/IconButton'
 
 const ProductVariants = () => {
-  // States
-  const [count, setCount] = useState(1)
+  const [rows, setRows] = useState<number[]>([0])
 
-  const deleteForm = (e: SyntheticEvent) => {
-    e.preventDefault()
+  const handleAddRow = () => {
+    setRows(prev => [...prev, (prev[prev.length - 1] ?? 0) + 1])
+  }
 
-    // @ts-ignore
-    e.target.closest('.repeater-item').remove()
+  const handleRemoveRow = (rowId: number) => {
+    setRows(prev => (prev.length > 1 ? prev.filter(id => id !== rowId) : prev))
   }
 
   return (
@@ -35,8 +34,8 @@ const ProductVariants = () => {
       <CardHeader title='Product Variants' />
       <CardContent>
         <Grid container spacing={5}>
-          {Array.from(Array(count).keys()).map((item, index) => (
-            <Grid key={index} size={{ xs: 12 }} className='repeater-item'>
+          {rows.map((rowId, index) => (
+            <Grid key={rowId} size={{ xs: 12 }} className='repeater-item'>
               <Grid container spacing={5}>
                 <Grid size={{ xs: 12, sm: 4 }}>
                   <FormControl fullWidth>
@@ -52,7 +51,7 @@ const ProductVariants = () => {
                 <Grid size={{ xs: 12, sm: 8 }}>
                   <div className='flex items-center gap-5'>
                     <TextField fullWidth label='Variant Value' placeholder='Enter Variant Value' />
-                    <CustomIconButton onClick={deleteForm} className='min-is-fit'>
+                    <CustomIconButton onClick={() => handleRemoveRow(rowId)} className='min-is-fit'>
                       <i className='ri-close-line' />
                     </CustomIconButton>
                   </div>
@@ -61,7 +60,7 @@ const ProductVariants = () => {
             </Grid>
           ))}
           <Grid size={{ xs: 12 }}>
-            <Button variant='contained' onClick={() => setCount(count + 1)} startIcon={<i className='ri-add-line' />}>
+            <Button variant='contained' onClick={handleAddRow} startIcon={<i className='ri-add-line' />}>
               Add Another Option
             </Button>
           </Grid>
