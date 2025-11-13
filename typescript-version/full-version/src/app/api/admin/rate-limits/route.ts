@@ -4,6 +4,7 @@ import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { isSuperadmin, isAdmin } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
+import logger from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,7 +48,9 @@ export async function GET(request: NextRequest) {
       stats: stats.filter((item: any) => Boolean)
     })
   } catch (error) {
-    console.error('Error fetching rate limits:', error)
+    logger.error('Error fetching rate limits', {
+      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
+    })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -76,7 +79,8 @@ export async function PUT(request: NextRequest) {
       windowMs,
       blockMs,
       warnThreshold,
-      typeof isActive === 'boolean' ? isActive : undefined
+      typeof isActive === 'boolean' ? isActive : undefined,
+      mode
     ].some(value => value !== undefined)
 
     if (!fieldsProvided) {
@@ -128,7 +132,9 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error updating rate limits:', error)
+    logger.error('Error updating rate limits', {
+      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
+    })
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal server error' }, { status: 500 })
   }
 }
@@ -157,7 +163,9 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error resetting rate limits:', error)
+    logger.error('Error resetting rate limits', {
+      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
+    })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

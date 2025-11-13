@@ -8,7 +8,7 @@ import { parse } from 'url'
 import next from 'next'
 import { initializeSocketServer } from '../lib/sockets'
 import logger from '../lib/logger'
-import { env, isProduction } from '@/shared/config/env'
+import { env, isProduction } from '../shared/config/env'
 
 declare global {
   // eslint-disable-next-line no-var

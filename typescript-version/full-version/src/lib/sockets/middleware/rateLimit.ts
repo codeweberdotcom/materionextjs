@@ -22,8 +22,11 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
         return next(new Error('Not authenticated'))
       }
 
-      const userId = socket.data.user?.id || socket.handshake.address
-      if (!userId) {
+      const resolvedUserId = socket.data.user?.id
+      const ipAddress = socket.handshake.address
+      const rateKey = resolvedUserId || ipAddress
+
+      if (!rateKey) {
         logger.warn(`[${context}] Unable to resolve user key for rate limiting`, {
           socketId: socket.id,
           ip: socket.handshake.address
@@ -31,7 +34,12 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
         return next()
       }
 
-      const result = await rateLimitService.checkLimit(userId, options.module)
+      const result = await rateLimitService.checkLimit(rateKey, options.module, {
+        userId: resolvedUserId ?? null,
+        email: socket.data.user?.email ?? null,
+        ipAddress: ipAddress ?? null,
+        keyType: resolvedUserId ? 'user' : 'ip'
+      })
 
       if (result.warning && warnEvent) {
         socket.emit(warnEvent, result.warning)
@@ -39,7 +47,7 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
 
       if (result.allowed) {
         rateLimitLogger.limitApplied(
-          userId,
+          rateKey,
           socket.handshake.address,
           result.remaining,
           result.resetTime
@@ -51,7 +59,7 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
       const msBeforeNext = Math.max(0, blockedUntil.getTime() - Date.now())
       const retryAfter = Math.max(1, Math.ceil(msBeforeNext / 1000))
 
-      rateLimitLogger.limitExceeded(userId, socket.handshake.address, socket.id, msBeforeNext)
+      rateLimitLogger.limitExceeded(rateKey, socket.handshake.address, socket.id, msBeforeNext)
 
       if (exceededEvent) {
         socket.emit(exceededEvent, {

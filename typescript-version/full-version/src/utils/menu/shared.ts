@@ -11,6 +11,7 @@ export const MENU_NAVIGATION_KEYS = [
   'smtpSettings',
   'emailTemplates',
   'rateLimitManagement',
+  'rateLimitEvents',
   'references'
 ] as const
 

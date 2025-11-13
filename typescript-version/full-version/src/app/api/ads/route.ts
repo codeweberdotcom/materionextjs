@@ -4,6 +4,7 @@ import { requireAuth } from '@/utils/auth/auth'
 import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { rateLimitService } from '@/lib/rate-limit'
+import { getRequestIp } from '@/utils/http/get-request-ip'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +14,13 @@ export async function POST(request: NextRequest) {
     }
 
     // РџСЂРѕРІРµСЂСЏРµРј rate limit РґР»СЏ РѕР±СЉСЏРІР»РµРЅРёР№
-    const rateLimitResult = await rateLimitService.checkLimit(user.id, 'ads')
+    const clientIp = getRequestIp(request)
+    const rateLimitResult = await rateLimitService.checkLimit(user.id, 'ads', {
+      userId: user.id,
+      email: user.email ?? null,
+      ipAddress: clientIp,
+      keyType: 'user'
+    })
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json({

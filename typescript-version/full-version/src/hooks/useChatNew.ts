@@ -24,6 +24,8 @@ type SendMessageAck = {
   ok: boolean
   message?: ChatMessage
   error?: string
+  retryAfter?: number
+  blockedUntil?: string
 }
 
 const generateClientId = () => {
@@ -82,7 +84,7 @@ export const useChatNew = (otherUserId?: string) => {
     if (warningToastRemaining.current === remaining) return
     warningToastRemaining.current = remaining
 
-    const template = dictionary.navigation.rateLimitWarning || 'You are close to being rate limited. Only ${countdown} messages left.'
+    const template = dictionary.navigation.rateLimitMonitorWarning || dictionary.navigation.rateLimitWarning || 'You are close to being rate limited. Only ${countdown} messages left.'
     const message = template.replace('${countdown}', remaining.toString())
     toast.warning(message)
   }, [dictionary.navigation.rateLimitWarning])
@@ -97,7 +99,7 @@ export const useChatNew = (otherUserId?: string) => {
     writeStoredRateLimit(user.id, undefined)
   }, [user?.id])
 
-  const requestRateLimitStatus = useCallback(async (): Promise<{ blockedUntil?: number; warningRemaining?: number } | null> => {
+  const requestRateLimitStatus = useCallback(async (): Promise<{ blockedUntil?: number; warningRemaining?: number; remaining?: number } | null> => {
     if (!user?.id || !isOnline) {
       return null
     }
@@ -130,13 +132,26 @@ export const useChatNew = (otherUserId?: string) => {
 
       if (response.ok) {
         const warningRemaining = data?.warning?.remaining
+        const remaining = typeof data?.remaining === 'number' ? data.remaining : undefined
+        const resetTimeMs = data?.resetTime ? new Date(data.resetTime).getTime() : undefined
+
+        if (typeof remaining === 'number' && remaining <= 0 && resetTimeMs && resetTimeMs > Date.now()) {
+          const retryAfter = Math.max(1, Math.ceil((resetTimeMs - Date.now()) / 1000))
+          setRateLimitData({
+            retryAfter,
+            blockedUntil: resetTimeMs
+          })
+          writeStoredRateLimit(user.id, resetTimeMs)
+          return { blockedUntil: resetTimeMs, warningRemaining, remaining }
+        }
+
         if (warningRemaining && warningRemaining > 0) {
           showRateLimitWarning(warningRemaining)
         } else {
           warningToastRemaining.current = null
         }
         clearCachedRateLimit()
-        return { blockedUntil: undefined, warningRemaining }
+        return { blockedUntil: undefined, warningRemaining, remaining }
       }
     } catch (error) {
       console.error('Failed to check rate limit:', error)
@@ -242,17 +257,14 @@ export const useChatNew = (otherUserId?: string) => {
   useEffect(() => {
     if (!chatSocket) return
 
-    const handleRoomData = (data: { room: ChatRoom; messages: ChatMessage[] }) => {
+    const handleRoomData = (data: { room: ChatRoom; messages: ChatMessage[]; nextCursor?: string | null }) => {
       setRoom(data.room)
 
-      applyIncomingMessages(data.messages)
+      const incoming = Array.isArray(data.messages) ? data.messages : []
+      applyIncomingMessages(incoming)
 
-      const earliest = data.messages
-        .slice()
-        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())[0]
-
-      setHistoryCursor(earliest ? earliest.createdAt : null)
-      setHasMoreHistory(Boolean(earliest))
+      setHistoryCursor(data.nextCursor ?? null)
+      setHasMoreHistory(Boolean(data.nextCursor))
 
       setLoading(false)
       setIsRoomLoading(false)
@@ -467,7 +479,17 @@ export const useChatNew = (otherUserId?: string) => {
     })
   }
 
+  const removeOptimisticMessage = (clientId: string) => {
+    setMessages(prev => prev.filter(message => message.clientId !== clientId))
+    dispatch(markMessageDelivered({ clientId }))
+  }
+
   const failOptimisticMessage = (clientId: string, errorMessage?: string) => {
+    if (errorMessage === 'RATE_LIMITED') {
+      removeOptimisticMessage(clientId)
+      return
+    }
+
     setMessages(prev => prev.map(msg => (
       msg.clientId === clientId && msg.isOptimistic
         ? { ...msg, deliveryStatus: 'failed' }
@@ -504,7 +526,27 @@ export const useChatNew = (otherUserId?: string) => {
         }
 
         if (!ack || !ack.ok || !ack.message) {
-          reject(new Error(ack?.error || 'Failed to send message'))
+          const errorMessage = ack?.error || 'Failed to send message'
+
+          if (ack?.error === 'RATE_LIMITED') {
+            const retryAfter = ack.retryAfter && Number.isFinite(ack.retryAfter) ? ack.retryAfter : 300
+            const blockedUntil = ack.blockedUntil
+              ? new Date(ack.blockedUntil).getTime()
+              : Date.now() + retryAfter * 1000
+
+            setRateLimitData({
+              retryAfter,
+              blockedUntil
+            })
+            writeStoredRateLimit(user?.id, blockedUntil)
+
+            const rateLimitError = new Error('RATE_LIMITED') as Error & { blockedUntil?: number }
+            rateLimitError.blockedUntil = blockedUntil
+            reject(rateLimitError)
+            return
+          }
+
+          reject(new Error(errorMessage))
           return
         }
 
@@ -536,6 +578,10 @@ export const useChatNew = (otherUserId?: string) => {
           blockedUntil
         })
         writeStoredRateLimit(user?.id, blockedUntil)
+
+        const rateLimitError = new Error('RATE_LIMITED') as Error & { blockedUntil?: number }
+        rateLimitError.blockedUntil = blockedUntil
+        throw rateLimitError
       }
 
       throw new Error(payloadData.error || 'Failed to send message')
@@ -580,6 +626,10 @@ export const useChatNew = (otherUserId?: string) => {
     const latestBlockedUntil = latestStatus?.blockedUntil
 
     if (latestBlockedUntil && latestBlockedUntil > Date.now()) {
+      throwRateLimited(latestBlockedUntil)
+    }
+
+    if (typeof latestStatus?.remaining === 'number' && latestStatus.remaining <= 0) {
       throwRateLimited(latestBlockedUntil)
     }
 

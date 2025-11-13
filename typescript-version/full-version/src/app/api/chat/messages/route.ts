@@ -6,6 +6,7 @@ import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
 import { rateLimitService } from '@/lib/rate-limit'
 import type { ChatMessage } from '@/lib/sockets/types/chat'
+import { getRequestIp } from '@/utils/http/get-request-ip'
 
 const DEFAULT_LIMIT = 30
 const MAX_LIMIT = 30
@@ -95,7 +96,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const rateLimitResult = await rateLimitService.checkLimit(user.id, 'chat')
+    const clientIp = getRequestIp(request)
+    const rateLimitResult = await rateLimitService.checkLimit(user.id, 'chat', {
+      userId: user.id,
+      email: user.email ?? null,
+      ipAddress: clientIp,
+      keyType: 'user'
+    })
 
     if (!rateLimitResult.allowed) {
       return NextResponse.json(

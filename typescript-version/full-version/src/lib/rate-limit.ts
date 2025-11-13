@@ -1,63 +1,63 @@
 import { Prisma, PrismaClient } from '@prisma/client'
 import type { RateLimitState, User, UserBlock } from '@prisma/client'
 
+import logger from '@/lib/logger'
+
+import type {
+  RateLimitConfig,
+  RateLimitResult,
+  RateLimitCheckOptions,
+  RateLimitStats,
+  ListRateLimitStatesParams,
+  RateLimitStateAdminEntry,
+  RateLimitStateListResult
+} from './rate-limit/types'
+export type {
+  RateLimitConfig,
+  RateLimitResult,
+  RateLimitCheckOptions,
+  RateLimitStats,
+  ListRateLimitStatesParams,
+  RateLimitStateAdminEntry,
+  RateLimitStateListResult
+} from './rate-limit/types'
+import { createRateLimitStore } from './rate-limit/stores'
+import type { RateLimitStore } from './rate-limit/stores'
+
 const prisma = new PrismaClient()
 
-export interface RateLimitConfig {
-  maxRequests: number
-  windowMs: number // в миллисекундах
-  blockMs?: number // в миллисекундах (опционально для rate-limiter-flexible)
-  warnThreshold?: number
-  isActive?: boolean
-  mode?: 'monitor' | 'enforce'
-}
-
-export interface RateLimitResult {
-  allowed: boolean
-  remaining: number
-  resetTime: Date
-  blockedUntil?: Date
-  warning?: {
-    remaining: number
-  }
-}
-
-export interface RateLimitCheckOptions {
-  increment?: boolean
-}
-
-export interface RateLimitStats {
-  module: string
-  config: RateLimitConfig
-  totalRequests: number
-  blockedCount: number
-  activeWindows: number
-}
-
-export interface ListRateLimitStatesParams {
-  module?: string
-  limit?: number
-  cursor?: string
-  search?: string
-}
-
-export interface RateLimitStateAdminEntry {
+export interface RateLimitEventAdminEntry {
   id: string
-  key: string
   module: string
+  key: string
+  userId: string | null
+  ipAddress: string | null
+  email: string | null
+  eventType: 'warning' | 'block'
+  mode: 'monitor' | 'enforce'
   count: number
+  maxRequests: number
   windowStart: Date
   windowEnd: Date
   blockedUntil: Date | null
-  remaining: number
-  config: RateLimitConfig
-  source: 'state' | 'manual'
+  createdAt: Date
   user?: Pick<User, 'id' | 'name' | 'email'> | null
-  activeBlock?: Pick<UserBlock, 'id' | 'reason' | 'blockedAt' | 'unblockedAt'> | null
 }
 
-export interface RateLimitStateListResult {
-  items: RateLimitStateAdminEntry[]
+export interface ListRateLimitEventsParams {
+  module?: string
+  eventType?: 'warning' | 'block'
+  mode?: 'monitor' | 'enforce'
+  key?: string
+  search?: string
+  from?: Date
+  to?: Date
+  limit?: number
+  cursor?: string
+}
+
+export interface RateLimitEventListResult {
+  items: RateLimitEventAdminEntry[]
   total: number
   nextCursor?: string
 }
@@ -65,9 +65,15 @@ export interface RateLimitStateListResult {
 class RateLimitService {
   private static instance: RateLimitService
   private configs: Map<string, RateLimitConfig> = new Map()
+  private store: RateLimitStore
+  private configsLoadedAt = 0
+  private configsLoading: Promise<void> | null = null
+  private readonly CONFIG_REFRESH_INTERVAL = 5 * 1000
 
   private constructor() {
-    this.loadConfigs()
+    this.store = createRateLimitStore(prisma)
+    this.setDefaultConfigs()
+    void this.ensureConfigsFresh(true)
   }
 
   static getInstance(): RateLimitService {
@@ -98,7 +104,26 @@ class RateLimitService {
     } catch (error) {
       console.error('Error loading rate limit configs:', error)
       this.setDefaultConfigs()
+    } finally {
+      this.configsLoadedAt = Date.now()
     }
+  }
+
+  private async ensureConfigsFresh(force = false) {
+    const now = Date.now()
+    const needsRefresh = force || !this.configsLoadedAt || now - this.configsLoadedAt > this.CONFIG_REFRESH_INTERVAL
+
+    if (!needsRefresh && !this.configsLoading) {
+      return
+    }
+
+    if (!this.configsLoading) {
+      this.configsLoading = this.loadConfigs().finally(() => {
+        this.configsLoading = null
+      })
+    }
+
+    await this.configsLoading
   }
 
   private setDefaultConfigs() {
@@ -117,86 +142,114 @@ class RateLimitService {
     }
   }
 
-  private async getOrCreateState(key: string, module: string): Promise<RateLimitState | null> {
+  private async recordEvent(params: {
+    module: string
+    key: string
+    userId?: string | null
+    ipAddress?: string | null
+    email?: string | null
+    eventType: 'warning' | 'block'
+    mode: 'monitor' | 'enforce'
+    count: number
+    maxRequests: number
+    windowStart: Date
+    windowEnd: Date
+    blockedUntil?: Date | null
+  }) {
     try {
-      const config = this.configs.get(module)
-      if (!config) return null
-
-      const now = new Date()
-      const windowStart = new Date(now.getTime() - (now.getTime() % config.windowMs))
-      const windowEnd = new Date(windowStart.getTime() + config.windowMs)
-
-      let state = await prisma.rateLimitState.findUnique({
-        where: {
-          key_module: {
-            key,
-            module
-          }
+      await prisma.rateLimitEvent.create({
+        data: {
+          module: params.module,
+          key: params.key,
+          userId: params.userId ?? null,
+          ipAddress: params.ipAddress ?? null,
+          email: params.email ?? null,
+          eventType: params.eventType,
+          mode: params.mode,
+          count: params.count,
+          maxRequests: params.maxRequests,
+          windowStart: params.windowStart,
+          windowEnd: params.windowEnd,
+          blockedUntil: params.blockedUntil ?? null
         }
       })
+    } catch (error) {
+      const shouldRetryWithoutEmail =
+        error instanceof Prisma.PrismaClientValidationError &&
+        typeof error.message === 'string' &&
+        error.message.includes('Unknown argument `email`')
 
-      if (!state || state.windowEnd <= now) {
-        state = await prisma.rateLimitState.upsert({
-          where: {
-            key_module: {
-              key,
-              module
+      if (shouldRetryWithoutEmail) {
+        try {
+          await prisma.rateLimitEvent.create({
+            data: {
+              module: params.module,
+              key: params.key,
+              userId: params.userId ?? null,
+              ipAddress: params.ipAddress ?? null,
+              eventType: params.eventType,
+              mode: params.mode,
+              count: params.count,
+              maxRequests: params.maxRequests,
+              windowStart: params.windowStart,
+              windowEnd: params.windowEnd,
+              blockedUntil: params.blockedUntil ?? null
             }
-          },
-          update: {
-            count: 0,
-            windowStart,
-            windowEnd,
-            blockedUntil: null
-          },
-          create: {
-            key,
-            module,
-            count: 0,
-            windowStart,
-            windowEnd
-          }
-        })
+          })
+          logger.warn(
+            'RateLimitEvent table missing `email` column. Recorded event without email. Run the latest Prisma migrations to add it.'
+          )
+          return
+        } catch (retryError) {
+          logger.error('Error recording rate limit event (retry without email)', {
+            error:
+              retryError instanceof Error
+                ? { name: retryError.name, message: retryError.message, stack: retryError.stack }
+                : retryError
+          })
+          return
+        }
       }
 
-      return state
-    } catch (error) {
-      console.error('Error fetching rate limit state:', error)
-      return null
-    }
-  }
-
-  private async updateState(key: string, module: string, data: Partial<RateLimitState>) {
-    try {
-      await prisma.rateLimitState.update({
-        where: {
-          key_module: {
-            key,
-            module
-          }
-        },
-        data
+      logger.error('Error recording rate limit event', {
+        error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
       })
-    } catch (error) {
-      console.error('Error updating rate limit state:', error)
     }
   }
 
   async checkLimit(key: string, module: string, options?: RateLimitCheckOptions): Promise<RateLimitResult> {
+    await this.ensureConfigsFresh()
     const increment = options?.increment ?? true
+    const now = new Date()
+
+    const blockConditions: Prisma.UserBlockWhereInput[] = []
+    blockConditions.push({ userId: key })
+
+    if (options?.userId && options.userId !== key) {
+      blockConditions.push({ userId: options.userId })
+    }
+
+    if (options?.email) {
+      blockConditions.push({ user: { is: { email: options.email } } })
+    }
+
+    if (options?.ipAddress) {
+      blockConditions.push({ ipAddress: options.ipAddress })
+    }
+
+    if (options?.keyType === 'ip') {
+      blockConditions.push({ ipAddress: key })
+    }
 
     const activeBlock = await prisma.userBlock.findFirst({
       where: {
-        OR: [
-          { userId: key },
-          { ipAddress: key }
-        ],
-        module,
+        OR: blockConditions,
+        module: { in: [module, 'all'] },
         isActive: true,
         AND: {
           OR: [
             { unblockedAt: null },
-            { unblockedAt: { gt: new Date() } }
+            { unblockedAt: { gt: now } }
           ]
         }
       }
@@ -222,79 +275,32 @@ class RateLimitService {
       return { allowed: true, remaining, resetTime: new Date(Date.now() + windowMs) }
     }
 
-    const state = await this.getOrCreateState(key, module)
-    if (!state) {
-      return { allowed: true, remaining: config.maxRequests, resetTime: new Date(Date.now() + config.windowMs) }
-    }
+    const mode: 'monitor' | 'enforce' = config.mode === 'monitor' ? 'monitor' : 'enforce'
+    const keyType: 'user' | 'ip' =
+      options?.keyType ?? (options?.userId ? 'user' : options?.ipAddress ? 'ip' : 'user')
+    const eventUserId = options?.userId ?? (keyType === 'user' ? key : null)
+    const eventIpAddress = options?.ipAddress ?? (keyType === 'ip' ? key : null)
+    const eventEmail = options?.email ?? null
 
-    const now = new Date()
-
-    if (state.blockedUntil && state.blockedUntil > now) {
-      return {
-        allowed: false,
-        remaining: 0,
-        resetTime: state.windowEnd,
-        blockedUntil: state.blockedUntil
-      }
-    }
-
-    let currentState = state
-    if (state.windowEnd <= now) {
-      const windowStart = new Date(now.getTime() - (now.getTime() % config.windowMs))
-      const windowEnd = new Date(windowStart.getTime() + config.windowMs)
-
-      await this.updateState(key, module, {
-        count: 0,
-        windowStart,
-        windowEnd,
-        blockedUntil: null
-      })
-
-      currentState = { ...state, count: 0, windowStart, windowEnd, blockedUntil: null }
-    }
-
-    const remainingBefore = Math.max(0, config.maxRequests - currentState.count)
     const warnThreshold = config.warnThreshold ?? 0
-    const shouldWarnBefore = warnThreshold > 0 && remainingBefore > 0 && remainingBefore <= warnThreshold
 
-    if (!increment) {
-      return {
-        allowed: true,
-        remaining: remainingBefore,
-        resetTime: currentState.windowEnd,
-        warning: shouldWarnBefore ? { remaining: remainingBefore } : undefined
-      }
-    }
-
-    if (currentState.count + 1 > config.maxRequests) {
-      const blockDuration = config.blockMs ?? config.windowMs
-      const blockedUntil = new Date(now.getTime() + blockDuration)
-
-      await this.updateState(key, module, { blockedUntil })
-
-      return {
-        allowed: false,
-        remaining: 0,
-        resetTime: currentState.windowEnd,
-        blockedUntil
-      }
-    }
-
-    const newCount = currentState.count + 1
-    await this.updateState(key, module, { count: newCount })
-
-    const remainingAfter = Math.max(0, config.maxRequests - newCount)
-    const shouldWarnAfter = warnThreshold > 0 && remainingAfter > 0 && remainingAfter <= warnThreshold
-
-    return {
-      allowed: true,
-      remaining: remainingAfter,
-      resetTime: currentState.windowEnd,
-      warning: shouldWarnAfter ? { remaining: remainingAfter } : undefined
-    }
+    return this.store.consume({
+      key,
+      module,
+      config,
+      increment,
+      warnThreshold,
+      mode,
+      now,
+      userId: eventUserId,
+      email: eventEmail,
+      ipAddress: eventIpAddress,
+      recordEvent: payload => this.recordEvent(payload)
+    })
   }
 
   async getStats(module: string): Promise<RateLimitStats | null> {
+    await this.ensureConfigsFresh()
     try {
       const config = this.configs.get(module)
       if (!config) return null
@@ -344,7 +350,8 @@ class RateLimitService {
         windowMs: config.windowMs ?? undefined,
         blockMs: config.blockMs ?? undefined,
         warnThreshold: config.warnThreshold ?? undefined,
-        isActive: typeof config.isActive === 'boolean' ? config.isActive : undefined
+        isActive: typeof config.isActive === 'boolean' ? config.isActive : undefined,
+        mode: config.mode && (config.mode === 'monitor' || config.mode === 'enforce') ? config.mode : undefined
       }
 
       console.info('[rate-limit] Updating config', {
@@ -359,7 +366,8 @@ class RateLimitService {
           ...(payload.windowMs !== undefined ? { windowMs: payload.windowMs } : {}),
           ...(payload.blockMs !== undefined ? { blockMs: payload.blockMs } : {}),
           ...(payload.warnThreshold !== undefined ? { warnThreshold: payload.warnThreshold } : {}),
-          ...(payload.isActive !== undefined ? { isActive: payload.isActive } : {})
+          ...(payload.isActive !== undefined ? { isActive: payload.isActive } : {}),
+          ...(payload.mode ? { mode: payload.mode } : {})
         },
         create: {
           module,
@@ -367,30 +375,69 @@ class RateLimitService {
           windowMs: payload.windowMs || 60000,
           blockMs: payload.blockMs || 900000,
           warnThreshold: payload.warnThreshold ?? 0,
-          isActive: payload.isActive ?? true
+          isActive: payload.isActive ?? true,
+          mode: payload.mode ?? 'enforce'
         }
       })
 
-      await this.loadConfigs()
+      await this.ensureConfigsFresh(true)
     } catch (error) {
-      if (error instanceof Error) {
-        console.error('Error updating rate limit config:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        })
-      } else {
-        console.error('Error updating rate limit config:', error)
+      const formattedSchemaError = this.describeSchemaMismatch(error)
+
+      if (formattedSchemaError) {
+        logger.error(formattedSchemaError.message, { cause: formattedSchemaError.cause })
+        throw new Error(formattedSchemaError.message)
       }
-      throw error
+
+      logger.error('Error updating rate limit config', {
+        error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
+      })
+      throw error instanceof Error ? error : new Error('Failed to update rate limit config')
     }
   }
 
+  private describeSchemaMismatch(error: unknown): { message: string; cause: string } | null {
+    if (error instanceof Prisma.PrismaClientValidationError) {
+      const message = error.message || ''
+      if (message.includes('Unknown argument `mode`')) {
+        return {
+          message:
+            'RateLimitConfig is missing the `mode` column. Run `pnpm prisma migrate deploy` to apply the latest migrations.',
+          cause: message
+        }
+      }
+      if (message.includes('Unknown argument `warnThreshold`')) {
+        return {
+          message:
+            'RateLimitConfig is missing the `warnThreshold` column. Run `pnpm prisma migrate deploy` to update the schema.',
+          cause: message
+        }
+      }
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2021' && typeof error.message === 'string' && error.message.includes('RateLimitEvent')) {
+        return {
+          message:
+            'RateLimitEvent table is missing in the database. Run `pnpm prisma migrate deploy` to create it before using rate limit monitoring.',
+          cause: error.message
+        }
+      }
+    }
+
+    return null
+  }
+
   async getAllConfigs() {
+    await this.ensureConfigsFresh()
     return Array.from(this.configs.entries()).map(([module, config]) => ({
       module,
       ...config
     }))
+  }
+
+  getConfig(module: string): RateLimitConfig | undefined {
+    return this.configs.get(module)
   }
 
   async resetLimits(key?: string, module?: string) {
@@ -432,6 +479,7 @@ class RateLimitService {
         })
       }
 
+      await this.store.resetCache(key, module)
       return true
     } catch (error) {
       console.error('Error resetting rate limits:', error)
@@ -466,6 +514,9 @@ class RateLimitService {
         }
       })
 
+      const cacheKey = manualBlock.userId || manualBlock.ipAddress || undefined
+      await this.store.resetCache(cacheKey, manualBlock.module)
+
       return true
     } catch (error) {
       console.error('Error clearing rate limit state:', error)
@@ -474,6 +525,7 @@ class RateLimitService {
   }
 
   async listStates(params: ListRateLimitStatesParams = {}): Promise<RateLimitStateListResult> {
+    await this.ensureConfigsFresh()
     const limit = Math.min(Math.max(params.limit ?? 20, 1), 100)
 
     const where: Prisma.RateLimitStateWhereInput = {}
@@ -482,8 +534,8 @@ class RateLimitService {
     }
     if (params.search) {
       where.OR = [
-        { key: { contains: params.search, mode: 'insensitive' } },
-        { module: { contains: params.search, mode: 'insensitive' } }
+        { key: { contains: params.search } },
+        { module: { contains: params.search } }
       ]
     }
 
@@ -503,16 +555,18 @@ class RateLimitService {
 
     const manualBlockWhere: Prisma.UserBlockWhereInput = {
       isActive: true,
-      ...(params.module ? { module: params.module } : {})
+      ...(params.module
+        ? { module: { in: [params.module, 'all'] } }
+        : {})
     }
 
     if (params.search) {
       const searchCondition: Prisma.UserBlockWhereInput = {
         OR: [
-          { userId: { contains: params.search, mode: 'insensitive' } },
-          { ipAddress: { contains: params.search, mode: 'insensitive' } },
-          { user: { is: { name: { contains: params.search, mode: 'insensitive' } } } },
-          { user: { is: { email: { contains: params.search, mode: 'insensitive' } } } }
+          { userId: { contains: params.search } },
+          { ipAddress: { contains: params.search } },
+          { user: { is: { name: { contains: params.search } } } },
+          { user: { is: { email: { contains: params.search } } } }
         ]
       }
 
@@ -561,7 +615,8 @@ class RateLimitService {
         windowMs: state.windowEnd.getTime() - state.windowStart.getTime(),
         blockMs: 0,
         warnThreshold: 0,
-        isActive: true
+        isActive: true,
+        mode: 'enforce' as const
       }
 
       const user = userMap.get(state.key) || null
@@ -608,7 +663,8 @@ class RateLimitService {
           windowMs: 0,
           blockMs: 0,
           warnThreshold: 0,
-          isActive: true
+          isActive: true,
+          mode: 'enforce' as const
         }
 
         return {
@@ -647,6 +703,222 @@ class RateLimitService {
       items,
       total: total + manualOnlyEntries.length,
       nextCursor
+    }
+  }
+
+  async listEvents(params: ListRateLimitEventsParams = {}): Promise<RateLimitEventListResult> {
+    await this.ensureConfigsFresh()
+    const limit = Math.min(Math.max(params.limit ?? 20, 1), 200)
+
+    const where: Prisma.RateLimitEventWhereInput = {}
+    const andConditions: Prisma.RateLimitEventWhereInput[] = []
+
+    if (params.module) {
+      where.module = params.module
+    }
+
+    if (params.eventType) {
+      where.eventType = params.eventType
+    }
+
+    if (params.mode) {
+      where.mode = params.mode
+    }
+
+    if (params.key) {
+      where.key = params.key
+    }
+
+    if (params.search) {
+      andConditions.push({
+        OR: [
+          { key: { contains: params.search, mode: 'insensitive' } },
+          { userId: { contains: params.search, mode: 'insensitive' } },
+          { ipAddress: { contains: params.search, mode: 'insensitive' } },
+          { email: { contains: params.search, mode: 'insensitive' } }
+        ]
+      })
+    }
+
+    if (params.from || params.to) {
+      const createdAtFilter: Prisma.DateTimeFilter = {}
+      if (params.from) {
+        createdAtFilter.gte = params.from
+      }
+      if (params.to) {
+        createdAtFilter.lte = params.to
+      }
+      andConditions.push({ createdAt: createdAtFilter })
+    }
+
+    if (andConditions.length) {
+      where.AND = andConditions
+    }
+
+    const [events, total] = await Promise.all([
+      prisma.rateLimitEvent.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: limit + 1,
+        cursor: params.cursor ? { id: params.cursor } : undefined,
+        skip: params.cursor ? 1 : 0
+      }),
+      prisma.rateLimitEvent.count({ where })
+    ])
+
+    const userIds = Array.from(
+      new Set(events.map(event => event.userId).filter((id): id is string => Boolean(id)))
+    )
+
+    const users = userIds.length
+      ? await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, name: true, email: true }
+        })
+      : []
+
+    const userMap = new Map(users.map(user => [user.id, user]))
+
+    const items = events.slice(0, limit).map<RateLimitEventAdminEntry>(event => ({
+      id: event.id,
+      module: event.module,
+      key: event.key,
+      userId: event.userId ?? null,
+      ipAddress: event.ipAddress ?? null,
+      email: event.email ?? null,
+      eventType: event.eventType as 'warning' | 'block',
+      mode: (event.mode === 'monitor' ? 'monitor' : 'enforce') as 'monitor' | 'enforce',
+      count: event.count,
+      maxRequests: event.maxRequests,
+      windowStart: event.windowStart,
+      windowEnd: event.windowEnd,
+      blockedUntil: event.blockedUntil ?? null,
+      createdAt: event.createdAt,
+      user: event.userId ? userMap.get(event.userId) ?? null : null
+    }))
+
+    const hasMore = events.length > limit
+    const nextCursor = hasMore ? events[limit].id : undefined
+
+    return {
+      items,
+      total,
+      nextCursor
+    }
+  }
+
+  async deleteEvent(eventId: string) {
+    try {
+      await prisma.rateLimitEvent.delete({
+        where: { id: eventId }
+      })
+      return true
+    } catch (error) {
+      logger.error('Error deleting rate limit event', {
+        error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
+      })
+      return false
+    }
+  }
+
+  async createManualBlock(params: {
+    module: string
+    reason: string
+    blockedBy: string
+    userId?: string | null
+    email?: string | null
+    ipAddress?: string | null
+    notes?: string | null
+    durationMs?: number
+  }) {
+    if (!params.userId && !params.ipAddress) {
+      throw new Error('User ID or IP address is required for manual block.')
+    }
+
+    try {
+      if (params.userId) {
+        const userExists = await prisma.user.count({ where: { id: params.userId } })
+        if (!userExists) {
+          throw new Error('User not found')
+        }
+      }
+
+      if (params.userId || params.ipAddress) {
+        await prisma.userBlock.updateMany({
+          where: {
+            module: params.module,
+            isActive: true,
+            ...(params.userId ? { userId: params.userId } : {}),
+            ...(params.email ? { email: params.email } : {}),
+            ...(params.ipAddress ? { ipAddress: params.ipAddress } : {})
+          },
+          data: {
+            isActive: false,
+            unblockedAt: new Date()
+          }
+        })
+      }
+
+    const block = await prisma.userBlock.create({
+      data: {
+        module: params.module,
+        userId: params.userId ?? null,
+        email: params.email ?? null,
+        ipAddress: params.ipAddress ?? null,
+          reason: params.reason,
+          blockedBy: params.blockedBy,
+          notes: params.notes ?? null,
+          isActive: true,
+          blockedAt: new Date(),
+          unblockedAt: params.durationMs && params.durationMs > 0 ? new Date(Date.now() + params.durationMs) : null
+        }
+      })
+
+    const cacheKey = params.userId || params.email || params.ipAddress || undefined
+    await this.store.resetCache(cacheKey, params.module === 'all' ? undefined : params.module)
+
+    return block
+    } catch (error) {
+      logger.error('Error creating manual block', {
+        error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
+      })
+      throw error
+    }
+  }
+
+  async deactivateManualBlock(blockId: string) {
+    try {
+      const block = await prisma.userBlock.findUnique({
+        where: { id: blockId }
+      })
+
+      if (!block) {
+        return false
+      }
+
+      if (!block.isActive) {
+        return true
+      }
+
+      await prisma.userBlock.update({
+        where: { id: blockId },
+        data: {
+          isActive: false,
+          unblockedAt: new Date()
+        }
+      })
+
+      const key = block.userId || block.ipAddress
+      if (key) {
+        await this.resetLimits(key, block.module)
+      }
+
+      return true
+    } catch (error) {
+      logger.error('Error deactivating manual block', {
+        error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
+      })
+      return false
     }
   }
 }

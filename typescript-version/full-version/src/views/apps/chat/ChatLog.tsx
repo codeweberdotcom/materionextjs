@@ -22,6 +22,7 @@ import type { ChatMessage, ChatRoom } from '@/lib/sockets/types/chat'
 
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
+import { useTranslation } from '@/contexts/TranslationContext'
 
 // Util Imports
 import { getInitials } from '@/utils/formatting/getInitials'
@@ -54,6 +55,7 @@ const ChatLog = ({
   const { contacts } = chatStore
   const { user, session } = useAuth()
   const { lang: locale } = useParams()
+  const dictionary = useTranslation()
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const lastProcessedMessageId = useRef<string | null>(null)
@@ -246,9 +248,9 @@ const ChatLog = ({
               )
             })
           ) : (
-            <div className='flex flex-col items-center gap-2 py-6'>
-              <Typography variant='body2' color='text.secondary'>
-                Нет сообщений. Начните диалог!
+            <div className='flex flex-col items-center justify-center text-center gap-2 py-12 min-h-[260px] grow'>
+              <Typography variant='body1' color='text.secondary' className='text-center'>
+                {dictionary.navigation?.chatNoMessagesPlaceholder || 'Select a contact to start a conversation.'}
               </Typography>
             </div>
           )}

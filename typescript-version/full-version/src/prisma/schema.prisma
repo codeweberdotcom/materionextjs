@@ -270,6 +270,7 @@ model UserBlock {
   userId      String?
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   ipAddress   String?  // IP адрес для блокировки неавторизованных пользователей
+  email       String?
   reason      String   // 'spam', 'abuse', 'rate_limit_violation', etc.
   module      String   // 'chat', 'auth', 'registration', 'ads', etc.
   blockedBy   String   // ID администратора, который заблокировал
@@ -287,5 +288,26 @@ model UserBlock {
   @@index([module])
   @@index([isActive])
   @@index([unblockedAt])
+}
+
+model RateLimitEvent {
+  id           String   @id @default(cuid())
+  module       String
+  key          String
+  userId       String?
+  ipAddress    String?
+  email        String?
+  eventType    String   // 'warning' | 'block'
+  mode         String   @default("enforce") // 'monitor' | 'enforce'
+  count        Int
+  maxRequests  Int
+  windowStart  DateTime
+  windowEnd    DateTime
+  blockedUntil DateTime?
+  createdAt    DateTime @default(now())
+
+  @@index([module, eventType, createdAt])
+  @@index([key, module])
+  @@index([userId, module])
 }
 

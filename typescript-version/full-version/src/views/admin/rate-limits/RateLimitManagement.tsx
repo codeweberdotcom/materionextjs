@@ -33,9 +33,14 @@ import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
 import DialogActions from '@mui/material/DialogActions'
 import IconButton from '@mui/material/IconButton'
+import ToggleButton from '@mui/material/ToggleButton'
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
 import CustomAvatar from '@core/components/mui/Avatar'
+import Skeleton from '@mui/material/Skeleton'
 
 import { formatDistanceToNow } from 'date-fns'
+import { enUS, fr, ru, ar as arLocale } from 'date-fns/locale'
+import { useParams } from 'next/navigation'
 import { toast } from 'react-toastify'
 
 import { usePermissions } from '@/hooks/usePermissions'
@@ -49,6 +54,7 @@ type RateLimitConfig = {
   blockMs?: number | null
   warnThreshold?: number | null
   isActive?: boolean | null
+  mode?: 'monitor' | 'enforce' | null
 }
 
 type RateLimitStats = {
@@ -94,6 +100,15 @@ type RateLimitStatesResponse = {
   items: RateLimitStateEntry[]
   total: number
   nextCursor?: string
+}
+
+type ConfigFormState = {
+  module: string
+  maxRequests: string
+  windowMinutes: string
+  blockMinutes: string
+  warnThreshold: string
+  mode: 'monitor' | 'enforce'
 }
 
 const formatDateTime = (value?: string | null) => {
@@ -150,8 +165,17 @@ const formatUsagePercentage = (count: number, max: number) => {
 }
 
 const RateLimitManagement = () => {
-  const { checkPermission, isSuperadmin } = usePermissions()
+  const { checkPermission, isSuperadmin, isLoading: permissionsLoading } = usePermissions()
   const dictionary = useTranslation()
+  const params = useParams()
+  const langParam = typeof params?.lang === 'string' ? params.lang : Array.isArray(params?.lang) ? params.lang[0] : undefined
+  const localeMap = {
+    en: enUS,
+    fr,
+    ru,
+    ar: arLocale
+  }
+  const dateFnsLocale = localeMap[(langParam as keyof typeof localeMap) ?? 'en'] ?? enUS
 
   const [states, setStates] = useState<RateLimitStateEntry[]>([])
   const [totalCount, setTotalCount] = useState(0)
@@ -166,15 +190,18 @@ const RateLimitManagement = () => {
   const [error, setError] = useState<string | null>(null)
   const [clearingId, setClearingId] = useState<string | null>(null)
   const [configDialogOpen, setConfigDialogOpen] = useState(false)
-  const [configForm, setConfigForm] = useState({
+  const [configForm, setConfigForm] = useState<ConfigFormState>({
     module: '',
     maxRequests: '',
     windowMinutes: '',
     blockMinutes: '',
-    warnThreshold: ''
+    warnThreshold: '',
+    mode: 'enforce'
   })
   const [savingConfig, setSavingConfig] = useState(false)
   const [statusSavingModule, setStatusSavingModule] = useState<string | null>(null)
+  const [modeSavingModule, setModeSavingModule] = useState<string | null>(null)
+  const [infoConfig, setInfoConfig] = useState<RateLimitConfig | null>(null)
 
   const hasAccess = isSuperadmin || checkPermission('rateLimitManagement', 'read')
   const canModify =
@@ -270,21 +297,21 @@ const RateLimitManagement = () => {
   )
 
   useEffect(() => {
-    if (!hasAccess) {
+    if (permissionsLoading || !hasAccess) {
       return
     }
 
     fetchSummary()
-  }, [fetchSummary, hasAccess])
+  }, [fetchSummary, hasAccess, permissionsLoading])
 
   useEffect(() => {
-    if (!hasAccess) {
+    if (permissionsLoading || !hasAccess) {
       return
     }
 
     setInitialLoading(true)
     fetchStates({ append: false })
-  }, [fetchStates, hasAccess])
+  }, [fetchStates, hasAccess, permissionsLoading])
 
   const visibleStates = useMemo(() => {
     if (!onlyBlocked) {
@@ -325,7 +352,8 @@ const RateLimitManagement = () => {
       maxRequests: config.maxRequests ? String(config.maxRequests) : '',
       windowMinutes: String(Math.max(1, Math.round((config.windowMs || 60000) / 60000))),
       blockMinutes: String(Math.max(1, Math.round(((config.blockMs ?? config.windowMs) || 60000) / 60000))),
-      warnThreshold: config.warnThreshold != null ? String(config.warnThreshold) : ''
+      warnThreshold: config.warnThreshold != null ? String(config.warnThreshold) : '',
+      mode: config.mode === 'monitor' ? 'monitor' : 'enforce'
     })
     setConfigDialogOpen(true)
   }, [canModify])
@@ -405,7 +433,8 @@ const RateLimitManagement = () => {
           maxRequests,
           windowMs: windowMinutes * 60000,
           blockMs: blockMinutes * 60000,
-          warnThreshold: Number.isFinite(warnThreshold) && warnThreshold >= 0 ? warnThreshold : 0
+          warnThreshold: Number.isFinite(warnThreshold) && warnThreshold >= 0 ? warnThreshold : 0,
+          mode: configForm.mode
         })
       })
 
@@ -458,15 +487,125 @@ const RateLimitManagement = () => {
     }
   }
 
-  if (!hasAccess) {
-    return (
-      <Alert severity='warning'>
-        {dictionary.rateLimit?.noAccess ?? 'You do not have access to this section.'}
-      </Alert>
-    )
+  const handleToggleModuleMode = async (moduleName: string, nextMode: 'monitor' | 'enforce') => {
+    if (!canModify) {
+      return
+    }
+
+    setModeSavingModule(moduleName)
+
+    try {
+      const response = await fetch('/api/admin/rate-limits', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          module: moduleName,
+          mode: nextMode
+        })
+      })
+
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(data.error || t.configModeError || 'Failed to update mode')
+      }
+
+      toast.success(t.configModeSuccess || 'Rate limit mode updated')
+      await fetchSummary()
+    } catch (error) {
+      console.error(error)
+      toast.error(error instanceof Error ? error.message : t.configModeError || 'Failed to update mode')
+    } finally {
+      setModeSavingModule(null)
+    }
   }
 
   const t = dictionary.rateLimit ?? {}
+  const formatRelativeTime = useCallback(
+    (value?: string | null) => {
+      if (!value) return null
+      try {
+        return formatDistanceToNow(new Date(value), { addSuffix: true, locale: dateFnsLocale })
+      } catch {
+        return null
+      }
+    },
+    [dateFnsLocale]
+  )
+
+  const renderModuleSkeletons = () => (
+    <Grid size={{ xs: 12 }}>
+      <Grid container spacing={4}>
+        {[0, 1, 2].map(index => (
+          <Grid key={`module-skeleton-${index}`} size={{ xs: 12, md: 4 }}>
+            <Card className='h-full flex flex-col'>
+              <CardHeader
+                title={<Skeleton variant='text' width='60%' />}
+                subheader={<Skeleton variant='text' width='40%' />}
+              />
+              <CardContent className='flex flex-col gap-4 grow'>
+                <div className='flex justify-between gap-4'>
+                  <Skeleton variant='text' width='40%' height={32} />
+                  <Skeleton variant='rectangular' width={90} height={32} />
+                </div>
+                <Skeleton variant='rectangular' height={80} />
+                <div className='flex flex-col gap-2'>
+                  <Skeleton variant='text' width='70%' />
+                  <Skeleton variant='text' width='50%' />
+                </div>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Grid>
+  )
+
+  const renderStatesSkeleton = () => (
+    <div className='overflow-x-auto'>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>{t.columnUser || 'User / Key'}</TableCell>
+            <TableCell>{t.columnModule || 'Module'}</TableCell>
+            <TableCell>{t.columnUsage || 'Usage'}</TableCell>
+            <TableCell>{t.columnWindow || 'Window'}</TableCell>
+            <TableCell>{t.columnStatus || 'Status'}</TableCell>
+            <TableCell align='right'>{t.columnActions || dictionary.navigation.actions || 'Actions'}</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {[0, 1, 2].map(index => (
+            <TableRow key={`state-skeleton-${index}`}>
+              <TableCell>
+                <Skeleton width='60%' />
+                <Skeleton width='40%' />
+              </TableCell>
+              <TableCell>
+                <Skeleton width={80} />
+              </TableCell>
+              <TableCell>
+                <Skeleton width={140} height={20} />
+                <Skeleton variant='rectangular' height={10} width={160} />
+              </TableCell>
+              <TableCell>
+                <Skeleton width={120} />
+                <Skeleton width={100} />
+              </TableCell>
+              <TableCell>
+                <Skeleton width={90} />
+              </TableCell>
+              <TableCell align='right'>
+                <Skeleton width={120} height={36} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  )
 
   return (
     <>
@@ -495,7 +634,9 @@ const RateLimitManagement = () => {
           </Box>
         </Grid>
 
-        {modulesToRender.length ? (
+        {initialLoading ? (
+          renderModuleSkeletons()
+        ) : modulesToRender.length ? (
           <Grid size={{ xs: 12 }}>
             <Grid container spacing={4}>
               {modulesToRender.map(config => {
@@ -507,10 +648,16 @@ const RateLimitManagement = () => {
                 const isActive = config.isActive ?? true
                 const statusLabel = isActive ? (t.configStatusActive || 'Active') : (t.configStatusInactive || 'Inactive')
                 const minutesLabel = t.minutesShort || 'min'
+                const currentMode: 'monitor' | 'enforce' = config.mode === 'monitor' ? 'monitor' : 'enforce'
+                const modeLabel =
+                  currentMode === 'monitor'
+                    ? (t.configModeMonitor || 'Monitoring')
+                    : (t.configModeEnforce || 'Blocking')
                 const warnValue =
                   warnThresholdDisplay > 0
                     ? warnThresholdDisplay.toLocaleString()
                     : t.configWarnDisabled || 'Disabled'
+                const isModePending = modeSavingModule === config.module
 
                 const detailRows: ModuleDetailRow[] = [
                   {
@@ -518,6 +665,12 @@ const RateLimitManagement = () => {
                     value: statusLabel,
                     icon: isActive ? 'ri-checkbox-circle-line' : 'ri-close-circle-line',
                     color: isActive ? 'success' : 'secondary'
+                  },
+                  {
+                    label: t.configModeLabel || 'Mode',
+                    value: modeLabel,
+                    icon: currentMode === 'monitor' ? 'ri-eye-line' : 'ri-shield-check-line',
+                    color: currentMode === 'monitor' ? 'info' : 'warning'
                   },
                   {
                     label: t.configMaxRequests || 'Max requests',
@@ -553,26 +706,59 @@ const RateLimitManagement = () => {
                         subheader={t.summaryHeading || 'Module summary'}
                         action={
                           canModify ? (
-                            <div className='flex items-center gap-1'>
-                              <Tooltip title={statusLabel}>
-                                <Switch
-                                  checked={isActive}
-                                  onChange={(_, checked) => handleToggleModuleStatus(config.module, checked)}
-                                  size='small'
-                                  disabled={statusSavingModule === config.module}
-                                  inputProps={{ 'aria-label': statusLabel }}
-                                />
-                              </Tooltip>
-                              <Tooltip title={t.configEditButton || 'Edit limits'}>
-                                <IconButton
-                                  color='primary'
-                                  size='small'
-                                  onClick={() => openConfigDialog(config)}
-                                  disabled={statusSavingModule === config.module}
-                                >
-                                  <i className='ri-edit-line' />
-                                </IconButton>
-                              </Tooltip>
+                            <div className='flex flex-col items-end gap-2'>
+                              <ToggleButtonGroup
+                                size='small'
+                                color='primary'
+                                exclusive
+                                value={currentMode}
+                                onChange={(_, value) => {
+                                  if (!value || value === currentMode) {
+                                    return
+                                  }
+                                  handleToggleModuleMode(config.module, value)
+                                }}
+                                disabled={isModePending}
+                              >
+                                <ToggleButton value='monitor'>
+                                  {t.configModeMonitorShort || t.configModeMonitor || 'Monitor'}
+                                </ToggleButton>
+                                <ToggleButton value='enforce'>
+                                  {t.configModeEnforceShort || t.configModeEnforce || 'Block'}
+                                </ToggleButton>
+                              </ToggleButtonGroup>
+                              <div className='flex items-center gap-1'>
+                                <Tooltip title={statusLabel}>
+                                  <Switch
+                                    checked={isActive}
+                                    onChange={(_, checked) => handleToggleModuleStatus(config.module, checked)}
+                                    size='small'
+                                    disabled={statusSavingModule === config.module || isModePending}
+                                    inputProps={{ 'aria-label': statusLabel }}
+                                  />
+                                </Tooltip>
+                                <Tooltip title={t.configInfoTooltip || 'How the parameters work'}>
+                                  <IconButton
+                                    color='info'
+                                    size='small'
+                                    aria-label={t.configInfoTooltip || 'How the parameters work'}
+                                    className='text-textSecondary'
+                                    onClick={() => setInfoConfig(config)}
+                                  >
+                                    <i className='ri-information-line' />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={t.configEditButton || 'Edit limits'}>
+                                  <IconButton
+                                    color='primary'
+                                    size='small'
+                                    onClick={() => openConfigDialog(config)}
+                                    disabled={statusSavingModule === config.module || isModePending}
+                                  >
+                                    <i className='ri-edit-line' />
+                                  </IconButton>
+                                </Tooltip>
+                              </div>
                             </div>
                           ) : (
                             <Chip
@@ -685,11 +871,7 @@ const RateLimitManagement = () => {
               <Alert severity='error'>{error}</Alert>
             ) : null}
 
-            {initialLoading && !visibleStates.length ? (
-              <Box className='py-16 flex justify-center'>
-                <CircularProgress />
-              </Box>
-            ) : null}
+            {initialLoading && !visibleStates.length ? renderStatesSkeleton() : null}
 
             {!visibleStates.length && !initialLoading ? (
               <Alert severity='info'>
@@ -773,9 +955,9 @@ const RateLimitManagement = () => {
                                         ? t.statusBlockedWithTimer
                                           ? t.statusBlockedWithTimer.replace(
                                               '${time}',
-                                              formatDistanceToNow(new Date(entry.blockedUntil), { addSuffix: true })
+                                              formatRelativeTime(entry.blockedUntil) ?? ''
                                             )
-                                          : `${t.statusBlocked || 'Blocked'} • ${formatDistanceToNow(new Date(entry.blockedUntil), { addSuffix: true })}`
+                                          : `${t.statusBlocked || 'Blocked'} • ${formatRelativeTime(entry.blockedUntil) ?? ''}`
                                         : t.statusBlocked || 'Blocked'
                                     }
                                   />
@@ -873,6 +1055,34 @@ const RateLimitManagement = () => {
               fullWidth
             />
           </div>
+          <div className='flex flex-col gap-2'>
+            <div>
+              <Typography variant='subtitle2'>
+                {t.configModeLabel || 'Mode'}
+              </Typography>
+              <Typography variant='body2' color='text.secondary'>
+                {t.configModeHelper || 'Monitoring records warnings without blocking, Blocking enforces the limit.'}
+              </Typography>
+            </div>
+            <ToggleButtonGroup
+              exclusive
+              color='primary'
+              value={configForm.mode}
+              onChange={(_, value) => {
+                if (value) {
+                  handleConfigInputChange('mode', value)
+                }
+              }}
+              size='small'
+            >
+              <ToggleButton value='monitor'>
+                {t.configModeMonitor || 'Monitoring'}
+              </ToggleButton>
+              <ToggleButton value='enforce'>
+                {t.configModeEnforce || 'Blocking'}
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </div>
           <TextField
             label={t.configWarnThreshold || 'Warning threshold'}
             type='number'
@@ -890,6 +1100,28 @@ const RateLimitManagement = () => {
           <Button variant='contained' onClick={handleSaveConfig} disabled={savingConfig}>
             {savingConfig ? t.configSaving || 'Saving...' : t.configSave || dictionary.navigation.save || 'Save'}
           </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={Boolean(infoConfig)} onClose={() => setInfoConfig(null)} fullWidth maxWidth='sm'>
+        <DialogTitle>{t.configInfoTitle || 'How rate limit settings work'}</DialogTitle>
+        <DialogContent className='flex flex-col gap-3 pbs-2'>
+          <Typography color='text.secondary'>
+            {t.configInfoDescription ||
+              'Each module tracks how many requests are made inside the selected time window. When the limit is exceeded, the user is blocked for the specified duration.'}
+          </Typography>
+          <ul className='list-disc pli-5 flex flex-col gap-2 text-sm text-textSecondary'>
+            <li>{t.configInfoMaxRequests || 'Max requests — how many actions are allowed per window before throttling starts.'}</li>
+            <li>{t.configInfoWindow || 'Window (minutes) — the length of the sliding window in which requests are counted.'}</li>
+            <li>{t.configInfoBlock || 'Block duration — how long users stay blocked after exceeding the limit.'}</li>
+            <li>{t.configInfoWarn || 'Warning threshold — optional reminder shown when the remaining messages drop below the specified value.'}</li>
+          </ul>
+          <Typography variant='body2' color='text.secondary'>
+            {t.configInfoNote ||
+              'Tip: monitoring mode records warnings only, while blocking mode enforces the limits and stops requests.'}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInfoConfig(null)}>{t.configInfoClose || dictionary.navigation.close || 'Close'}</Button>
         </DialogActions>
       </Dialog>
     </>

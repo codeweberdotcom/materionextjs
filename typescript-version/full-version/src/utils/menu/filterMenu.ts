@@ -122,5 +122,9 @@ const filterAdminSectionChild = (
     return checkPermission(user, 'rateLimitManagement', 'read')
   }
 
+  if (child.label === labels.rateLimitEvents) {
+    return checkPermission(user, 'rateLimitManagement', 'read')
+  }
+
   return true
 }

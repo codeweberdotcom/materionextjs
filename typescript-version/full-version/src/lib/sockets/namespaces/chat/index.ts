@@ -139,11 +139,16 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
   const userId = socket.data.user.id;
 
   // Отправка сообщения
-  socket.on('sendMessage', async (data: { roomId: string; message: string; senderId: string; clientId?: string }, callback?: (response: { ok: boolean; message?: ChatMessage; error?: string }) => void) => {
+  socket.on('sendMessage', async (data: { roomId: string; message: string; senderId: string; clientId?: string }, callback?: (response: { ok: boolean; message?: ChatMessage; error?: string; blockedUntil?: string; retryAfter?: number }) => void) => {
     try {
       logger.info('Processing sendMessage', { userId, roomId: data.roomId, socketId: socket.id, connected: socket.connected });
 
-      const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat')
+      const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat', {
+        userId,
+        email: socket.data.user?.email ?? null,
+        ipAddress: socket.handshake.address,
+        keyType: 'user'
+      })
 
       if (rateLimitResult.warning) {
         socket.emit('rateLimitWarning', rateLimitResult.warning)
@@ -161,6 +166,12 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
 
         socket.emit('rateLimitExceeded', {
           error: 'Rate limit exceeded',
+          retryAfter,
+          blockedUntil: rateLimitResult.blockedUntil?.toISOString()
+        })
+        callback?.({
+          ok: false,
+          error: 'RATE_LIMITED',
           retryAfter,
           blockedUntil: rateLimitResult.blockedUntil?.toISOString()
         })
@@ -283,12 +294,35 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
       }
 
       // Получаем сообщения комнаты
-      const messages = await prisma.message.findMany({
+      const latestMessages = await prisma.message.findMany({
         where: { roomId: room.id },
         include: { sender: true },
-        orderBy: { createdAt: 'asc' },
-        take: 50 // Ограничиваем количество сообщений
-      });
+        orderBy: { createdAt: 'desc' },
+        take: 31
+      })
+
+      const hasMoreHistory = latestMessages.length > 30
+      const trimmedMessages = hasMoreHistory ? latestMessages.slice(0, 30) : latestMessages
+
+      const normalizedMessages = trimmedMessages
+        .map(msg => ({
+          id: msg.id,
+          content: msg.content,
+          senderId: msg.senderId,
+          sender: {
+            id: msg.sender.id,
+            name: msg.sender.name || undefined,
+            email: msg.sender.email
+          },
+          roomId: msg.roomId,
+          readAt: msg.readAt,
+          createdAt: msg.createdAt.toISOString()
+        }))
+        .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+
+      const nextCursor = hasMoreHistory
+        ? normalizedMessages[0]?.createdAt ?? null
+        : null
 
       const roomData = {
         room: {
@@ -298,16 +332,9 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
           createdAt: room.createdAt.toISOString(),
           updatedAt: room.updatedAt.toISOString()
         },
-        messages: messages.map(msg => ({
-          id: msg.id,
-          content: msg.content,
-          senderId: msg.senderId,
-          sender: msg.sender,
-          roomId: msg.roomId,
-          readAt: msg.readAt,
-          createdAt: msg.createdAt.toISOString()
-        }))
-      };
+        messages: normalizedMessages,
+        nextCursor
+      }
 
       socket.emit('roomData', roomData);
 
