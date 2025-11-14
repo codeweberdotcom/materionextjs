@@ -15,7 +15,7 @@ The References system provides comprehensive reference data management for count
 
 ### Key Files
 - `src/app/api/admin/references/` - All reference data API endpoints
-- `src/prisma/schema.prisma` - Database schema for reference entities
+- `prisma/schema.prisma` - Database schema for reference entities
 - `src/types/` - TypeScript interfaces for reference data
 - `src/views/apps/references/` - Admin UI components
 

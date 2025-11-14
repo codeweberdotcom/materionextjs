@@ -146,437 +146,149 @@
                 - group
             - list [ref=e231]:
               - listitem [ref=e232] [cursor=pointer]:
-                - img "Admin User" [ref=e235]
-                - generic [ref=e238]:
-                  - paragraph [ref=e239]: Admin User
-                  - paragraph [ref=e240]: 32 min ago
-                - paragraph [ref=e242]: offline
-              - listitem [ref=e243] [cursor=pointer]:
-                - img "Superadmin User" [ref=e246]
-                - generic [ref=e249]:
-                  - paragraph [ref=e250]: Superadmin User
-                  - paragraph [ref=e251]: just now
-                - paragraph [ref=e253]: online
-              - listitem [ref=e254] [cursor=pointer]:
-                - generic [ref=e256]: ММ
-                - generic [ref=e259]:
-                  - paragraph [ref=e260]: Маргарита Менеджер
-                  - paragraph [ref=e261]: 3 d ago
-                - paragraph [ref=e263]: offline
-              - listitem [ref=e264] [cursor=pointer]:
-                - generic [ref=e266]: ММ
-                - generic [ref=e269]:
-                  - paragraph [ref=e270]: Матвей Модератор
-                  - paragraph [ref=e271]: 3 d ago
-                - paragraph [ref=e273]: offline
-              - listitem [ref=e274] [cursor=pointer]:
-                - generic [ref=e276]: СS
-                - generic [ref=e279]:
-                  - paragraph [ref=e280]: София Support
-                  - paragraph [ref=e281]: 3 d ago
-                - paragraph [ref=e283]: offline
-              - listitem [ref=e284] [cursor=pointer]:
-                - generic [ref=e286]: ЕР
-                - generic [ref=e289]:
-                  - paragraph [ref=e290]: Елена Редактор
-                  - paragraph [ref=e291]: 3 d ago
-                - paragraph [ref=e293]: offline
-              - listitem [ref=e294] [cursor=pointer]:
-                - generic [ref=e296]: ММ
-                - generic [ref=e299]:
-                  - paragraph [ref=e300]: Максим Маркетолог
-                  - paragraph [ref=e301]: 3 d ago
-                - paragraph [ref=e303]: offline
-              - listitem [ref=e304] [cursor=pointer]:
-                - generic [ref=e306]: PU1
-                - generic [ref=e309]:
-                  - paragraph [ref=e310]: Playwright User 1762731474305
-                  - paragraph [ref=e311]: 2 d ago
-                - paragraph [ref=e313]: offline
-              - listitem [ref=e314] [cursor=pointer]:
-                - generic [ref=e316]: PU1
-                - generic [ref=e319]:
-                  - paragraph [ref=e320]: Playwright User 1762732166881
-                  - paragraph [ref=e321]: 2 d ago
-                - paragraph [ref=e323]: offline
-              - listitem [ref=e324] [cursor=pointer]:
-                - generic [ref=e326]: PU1
-                - generic [ref=e329]:
-                  - paragraph [ref=e330]: Playwright User 1762732286179
-                  - paragraph [ref=e331]: 2 d ago
-                - paragraph [ref=e333]: offline
-              - listitem [ref=e334] [cursor=pointer]:
-                - generic [ref=e336]: PU1
-                - generic [ref=e339]:
-                  - paragraph [ref=e340]: Playwright User 1762769731064
-                  - paragraph [ref=e341]: 2 d ago
-                - paragraph [ref=e343]: offline
-              - listitem [ref=e344] [cursor=pointer]:
-                - generic [ref=e346]: PU1
-                - generic [ref=e349]:
-                  - paragraph [ref=e350]: Playwright User 1762769781714
-                  - paragraph [ref=e351]: 2 d ago
-                - paragraph [ref=e353]: offline
-              - listitem [ref=e354] [cursor=pointer]:
-                - generic [ref=e356]: PU1
-                - generic [ref=e359]:
-                  - paragraph [ref=e360]: Playwright User 1762770073888
-                  - paragraph [ref=e361]: 2 d ago
-                - paragraph [ref=e363]: offline
-              - listitem [ref=e364] [cursor=pointer]:
-                - generic [ref=e366]: PU1
-                - generic [ref=e369]:
-                  - paragraph [ref=e370]: Playwright User 1762772052758
-                  - paragraph [ref=e371]: 2 d ago
-                - paragraph [ref=e373]: offline
-              - listitem [ref=e374] [cursor=pointer]:
-                - generic [ref=e376]: PU1
-                - generic [ref=e379]:
-                  - paragraph [ref=e380]: Playwright User 1762772124342
-                  - paragraph [ref=e381]: 2 d ago
-                - paragraph [ref=e383]: offline
-              - listitem [ref=e384] [cursor=pointer]:
-                - generic [ref=e386]: PU1
-                - generic [ref=e389]:
-                  - paragraph [ref=e390]: Playwright User 1762772551430
-                  - paragraph [ref=e391]: 2 d ago
-                - paragraph [ref=e393]: offline
-              - listitem [ref=e394] [cursor=pointer]:
-                - generic [ref=e396]: PU1
-                - generic [ref=e399]:
-                  - paragraph [ref=e400]: Playwright User 1762772783704
-                  - paragraph [ref=e401]: 2 d ago
-                - paragraph [ref=e403]: offline
-              - listitem [ref=e404] [cursor=pointer]:
-                - generic [ref=e406]: PU1
-                - generic [ref=e409]:
-                  - paragraph [ref=e410]: Playwright User 1762772977256
-                  - paragraph [ref=e411]: 2 d ago
-                - paragraph [ref=e413]: offline
-              - listitem [ref=e414] [cursor=pointer]:
-                - generic [ref=e416]: PU1
-                - generic [ref=e419]:
-                  - paragraph [ref=e420]: Playwright User 1762772999081
-                  - paragraph [ref=e421]: 2 d ago
-                - paragraph [ref=e423]: offline
-              - listitem [ref=e424] [cursor=pointer]:
-                - generic [ref=e426]: PU1
-                - generic [ref=e429]:
-                  - paragraph [ref=e430]: Playwright User 1762773057897
-                  - paragraph [ref=e431]: 2 d ago
-                - paragraph [ref=e433]: offline
-              - listitem [ref=e434] [cursor=pointer]:
-                - generic [ref=e436]: PU1
-                - generic [ref=e439]:
-                  - paragraph [ref=e440]: Playwright User 1762773253350
-                  - paragraph [ref=e441]: 2 d ago
-                - paragraph [ref=e443]: offline
-              - listitem [ref=e444] [cursor=pointer]:
-                - generic [ref=e446]: PU1
-                - generic [ref=e449]:
-                  - paragraph [ref=e450]: Playwright User 1762773309682
-                  - paragraph [ref=e451]: 2 d ago
-                - paragraph [ref=e453]: offline
-              - listitem [ref=e454] [cursor=pointer]:
-                - generic [ref=e456]: PU1
-                - generic [ref=e459]:
-                  - paragraph [ref=e460]: Playwright User 1762774321605
-                  - paragraph [ref=e461]: 2 d ago
-                - paragraph [ref=e463]: offline
-              - listitem [ref=e464] [cursor=pointer]:
-                - generic [ref=e466]: PU1
-                - generic [ref=e469]:
-                  - paragraph [ref=e470]: Playwright User 1762793788406
-                  - paragraph [ref=e471]: just now
-                - paragraph [ref=e473]: online
-              - listitem [ref=e474] [cursor=pointer]:
-                - generic [ref=e476]: PU1
-                - generic [ref=e479]:
-                  - paragraph [ref=e480]: Playwright User 1762817010852
-                  - paragraph [ref=e481]: just now
-                - paragraph [ref=e483]: online
-              - listitem [ref=e484] [cursor=pointer]:
-                - generic [ref=e486]: PU1
-                - generic [ref=e489]:
-                  - paragraph [ref=e490]: Playwright User 1762817811226
-                  - paragraph [ref=e491]: 1 d ago
-                - paragraph [ref=e493]: offline
-              - listitem [ref=e494] [cursor=pointer]:
-                - generic [ref=e496]: PU1
-                - generic [ref=e499]:
-                  - paragraph [ref=e500]: Playwright User 1762818174232
-                  - paragraph [ref=e501]: 1 d ago
-                - paragraph [ref=e503]: offline
-              - listitem [ref=e504] [cursor=pointer]:
-                - generic [ref=e506]: PU1
-                - generic [ref=e509]:
-                  - paragraph [ref=e510]: Playwright User 1762818226164
-                  - paragraph [ref=e511]: 1 d ago
-                - paragraph [ref=e513]: offline
-              - listitem [ref=e514] [cursor=pointer]:
-                - generic [ref=e516]: PU1
-                - generic [ref=e519]:
-                  - paragraph [ref=e520]: Playwright User 1762818264590
-                  - paragraph [ref=e521]: 1 d ago
-                - paragraph [ref=e523]: offline
-              - listitem [ref=e524] [cursor=pointer]:
-                - generic [ref=e526]: PU1
-                - generic [ref=e529]:
-                  - paragraph [ref=e530]: Playwright User 1762818836431
-                  - paragraph [ref=e531]: 1 d ago
-                - paragraph [ref=e533]: offline
-              - listitem [ref=e534] [cursor=pointer]:
-                - generic [ref=e536]: PU1
-                - generic [ref=e539]:
-                  - paragraph [ref=e540]: Playwright User 1762818917486
-                  - paragraph [ref=e541]: 1 d ago
-                - paragraph [ref=e543]: offline
-              - listitem [ref=e544] [cursor=pointer]:
-                - generic [ref=e546]: PU1
-                - generic [ref=e549]:
-                  - paragraph [ref=e550]: Playwright User 1762818982145
-                  - paragraph [ref=e551]: 1 d ago
-                - paragraph [ref=e553]: offline
-              - listitem [ref=e554] [cursor=pointer]:
-                - generic [ref=e556]: PU1
-                - generic [ref=e559]:
-                  - paragraph [ref=e560]: Playwright User 1762819059706
-                  - paragraph [ref=e561]: 1 d ago
-                - paragraph [ref=e563]: offline
-              - listitem [ref=e564] [cursor=pointer]:
-                - generic [ref=e566]: PU1
-                - generic [ref=e569]:
-                  - paragraph [ref=e570]: Playwright User 1762819304217
-                  - paragraph [ref=e571]: 1 d ago
-                - paragraph [ref=e573]: offline
-              - listitem [ref=e574] [cursor=pointer]:
-                - generic [ref=e576]: PU1
-                - generic [ref=e579]:
-                  - paragraph [ref=e580]: Playwright User 1762819326845
-                  - paragraph [ref=e581]: 1 d ago
-                - paragraph [ref=e583]: offline
-              - listitem [ref=e584] [cursor=pointer]:
-                - generic [ref=e586]: PU1
-                - generic [ref=e589]:
-                  - paragraph [ref=e590]: Playwright User 1762819347808
-                  - paragraph [ref=e591]: 1 d ago
-                - paragraph [ref=e593]: offline
-              - listitem [ref=e594] [cursor=pointer]:
-                - generic [ref=e596]: PU1
-                - generic [ref=e599]:
-                  - paragraph [ref=e600]: Playwright User 1762819369510
-                  - paragraph [ref=e601]: 1 d ago
-                - paragraph [ref=e603]: offline
-              - listitem [ref=e604] [cursor=pointer]:
-                - generic [ref=e606]: PU1
-                - generic [ref=e609]:
-                  - paragraph [ref=e610]: Playwright User 1762820676239
-                  - paragraph [ref=e611]: just now
-                - paragraph [ref=e613]: online
-              - listitem [ref=e614] [cursor=pointer]:
-                - generic [ref=e616]: PU1
-                - generic [ref=e619]:
-                  - paragraph [ref=e620]: Playwright User 1762820766008
-                  - paragraph [ref=e621]: 1 d ago
-                - paragraph [ref=e623]: offline
-              - listitem [ref=e624] [cursor=pointer]:
-                - generic [ref=e626]: PU1
-                - generic [ref=e629]:
-                  - paragraph [ref=e630]: Playwright User 1762822931568
-                  - paragraph [ref=e631]: 1 d ago
-                - paragraph [ref=e633]: offline
-              - listitem [ref=e634] [cursor=pointer]:
-                - generic [ref=e636]: PU1
-                - generic [ref=e639]:
-                  - paragraph [ref=e640]: Playwright User 1762822968185
-                  - paragraph [ref=e641]: 1 d ago
-                - paragraph [ref=e643]: offline
-              - listitem [ref=e644] [cursor=pointer]:
-                - generic [ref=e646]: PU1
-                - generic [ref=e649]:
-                  - paragraph [ref=e650]: Playwright User 1762823072783
-                  - paragraph [ref=e651]: 1 d ago
-                - paragraph [ref=e653]: offline
-              - listitem [ref=e654] [cursor=pointer]:
-                - generic [ref=e656]: PU1
-                - generic [ref=e659]:
-                  - paragraph [ref=e660]: Playwright User 1762823108285
-                  - paragraph [ref=e661]: 1 d ago
-                - paragraph [ref=e663]: offline
-              - listitem [ref=e664] [cursor=pointer]:
-                - generic [ref=e666]: PU1
-                - generic [ref=e669]:
-                  - paragraph [ref=e670]: Playwright User 1762823137932
-                  - paragraph [ref=e671]: 1 d ago
-                - paragraph [ref=e673]: offline
-              - listitem [ref=e674] [cursor=pointer]:
-                - generic [ref=e676]: PU1
-                - generic [ref=e679]:
-                  - paragraph [ref=e680]: Playwright User 1762823165068
-                  - paragraph [ref=e681]: 1 d ago
-                - paragraph [ref=e683]: offline
-              - listitem [ref=e684] [cursor=pointer]:
-                - generic [ref=e686]: PU1
-                - generic [ref=e689]:
-                  - paragraph [ref=e690]: Playwright User 1762854846280
-                  - paragraph [ref=e691]: just now
-                - paragraph [ref=e693]: online
-              - listitem [ref=e694] [cursor=pointer]:
-                - generic [ref=e696]: PU1
-                - generic [ref=e699]:
-                  - paragraph [ref=e700]: Playwright User 1762854908176
-                  - paragraph [ref=e701]: 1 d ago
-                - paragraph [ref=e703]: offline
-              - listitem [ref=e704] [cursor=pointer]:
-                - generic [ref=e706]: PU1
-                - generic [ref=e709]:
-                  - paragraph [ref=e710]: Playwright User 1762854959539
-                  - paragraph [ref=e711]: 1 d ago
-                - paragraph [ref=e713]: offline
-              - listitem [ref=e714] [cursor=pointer]:
-                - generic [ref=e716]: PU1
-                - generic [ref=e719]:
-                  - paragraph [ref=e720]: Playwright User 1762897689671
-                  - paragraph [ref=e721]: just now
-                - paragraph [ref=e723]: online
-              - listitem [ref=e724] [cursor=pointer]:
-                - generic [ref=e726]: PU1
-                - generic [ref=e729]:
-                  - paragraph [ref=e730]: Playwright User 1762957939063
-                  - paragraph [ref=e731]: just now
-                - paragraph [ref=e733]: online
-              - listitem [ref=e734] [cursor=pointer]:
-                - generic [ref=e736]: PU1
-                - generic [ref=e739]:
-                  - paragraph [ref=e740]: Playwright User 1762958147407
-                  - paragraph [ref=e741]: 7 h ago
-                - paragraph [ref=e743]: offline
-              - listitem [ref=e744] [cursor=pointer]:
-                - generic [ref=e746]: PU1
-                - generic [ref=e749]:
-                  - paragraph [ref=e750]: Playwright User 1762961639961
-                  - paragraph [ref=e751]: just now
-                - paragraph [ref=e753]: online
-              - listitem [ref=e754] [cursor=pointer]:
-                - generic [ref=e756]: PU1
-                - generic [ref=e759]:
-                  - paragraph [ref=e760]: Playwright User 1762983884310
-                  - paragraph [ref=e761]: 6 min ago
-                - paragraph [ref=e763]: offline
-              - listitem [ref=e764] [cursor=pointer]:
-                - generic [ref=e766]: PU1
-                - generic [ref=e769]:
-                  - paragraph [ref=e770]: Playwright User 1762983952880
-                  - paragraph [ref=e771]: 4 min ago
-                - paragraph [ref=e773]: offline
-              - listitem [ref=e774] [cursor=pointer]:
-                - generic [ref=e776]: PU1
-                - generic [ref=e779]:
-                  - paragraph [ref=e780]: Playwright User 1762983994192
-                  - paragraph [ref=e781]: 4 min ago
-                - paragraph [ref=e783]: offline
-              - listitem [ref=e784] [cursor=pointer]:
-                - generic [ref=e786]: PU1
-                - generic [ref=e789]:
-                  - paragraph [ref=e790]: Playwright User 1762984117080
-                  - paragraph [ref=e791]: 2 min ago
-                - paragraph [ref=e793]: offline
-          - generic [ref=e796]:
-            - generic [ref=e797]:
-              - generic [ref=e798] [cursor=pointer]:
-                - img "Superadmin User" [ref=e801]
-                - generic [ref=e804]:
-                  - paragraph [ref=e805]: Superadmin User
-                  - paragraph [ref=e806]: online
-              - button [ref=e808] [cursor=pointer]
-            - paragraph [ref=e814]: Нет сообщений. Начните диалог!
-            - generic [ref=e817]:
-              - textbox "Start typing a message..." [ref=e818]
-              - generic [ref=e819]:
-                - button [ref=e820] [cursor=pointer]
-                - button "Send" [ref=e822] [cursor=pointer]:
-                  - generic [ref=e824]: Send
+                - generic [ref=e234]: AU
+                - generic [ref=e237]:
+                  - paragraph [ref=e238]: Admin User
+                  - paragraph [ref=e239]: just now
+                - paragraph [ref=e241]: online
+              - listitem [ref=e242] [cursor=pointer]:
+                - generic [ref=e244]: SU
+                - generic [ref=e247]:
+                  - paragraph [ref=e248]: Superadmin User
+                  - paragraph [ref=e249]: just now
+                - paragraph [ref=e251]: online
+              - listitem [ref=e252] [cursor=pointer]:
+                - generic [ref=e254]: ММ
+                - generic [ref=e257]:
+                  - paragraph [ref=e258]: Маргарита Менеджер
+                  - paragraph [ref=e259]: 9 h ago
+                - paragraph [ref=e261]: offline
+              - listitem [ref=e262] [cursor=pointer]:
+                - generic [ref=e264]: ММ
+                - generic [ref=e267]:
+                  - paragraph [ref=e268]: Матвей Модератор
+                  - paragraph [ref=e269]: 9 h ago
+                - paragraph [ref=e271]: offline
+              - listitem [ref=e272] [cursor=pointer]:
+                - generic [ref=e274]: СS
+                - generic [ref=e277]:
+                  - paragraph [ref=e278]: София Support
+                  - paragraph [ref=e279]: 9 h ago
+                - paragraph [ref=e281]: offline
+              - listitem [ref=e282] [cursor=pointer]:
+                - generic [ref=e284]: ЕР
+                - generic [ref=e287]:
+                  - paragraph [ref=e288]: Елена Редактор
+                  - paragraph [ref=e289]: 9 h ago
+                - paragraph [ref=e291]: offline
+              - listitem [ref=e292] [cursor=pointer]:
+                - generic [ref=e294]: ММ
+                - generic [ref=e297]:
+                  - paragraph [ref=e298]: Максим Маркетолог
+                  - paragraph [ref=e299]: 10 h ago
+                - paragraph [ref=e301]: offline
+              - listitem [ref=e302] [cursor=pointer]:
+                - generic [ref=e304]: PU1
+                - generic [ref=e307]:
+                  - paragraph [ref=e308]: Playwright User 1763117628279
+                  - paragraph [ref=e309]: 2 min ago
+                - paragraph [ref=e311]: offline
+          - generic [ref=e314]:
+            - generic [ref=e315]:
+              - generic [ref=e316] [cursor=pointer]:
+                - generic [ref=e318]: SU
+                - generic [ref=e321]:
+                  - paragraph [ref=e322]: Superadmin User
+                  - paragraph [ref=e323]: online
+              - button [ref=e325] [cursor=pointer]
+            - paragraph [ref=e331]: Select a contact to start a conversation.
+            - generic [ref=e334]:
+              - textbox "Start typing a message..." [ref=e335]
+              - generic [ref=e336]:
+                - button [ref=e337] [cursor=pointer]
+                - button "Send" [ref=e339] [cursor=pointer]:
+                  - generic [ref=e341]: Send
               - group
-      - contentinfo [ref=e826]:
-        - generic [ref=e828]:
-          - paragraph [ref=e829]:
+      - contentinfo [ref=e343]:
+        - generic [ref=e345]:
+          - paragraph [ref=e346]:
             - text: © 2025, Made with ❤️ by
-            - link "ThemeSelection" [ref=e830] [cursor=pointer]:
+            - link "ThemeSelection" [ref=e347] [cursor=pointer]:
               - /url: https://themeselection.com
-          - generic [ref=e831]:
-            - link "License" [ref=e832] [cursor=pointer]:
+          - generic [ref=e348]:
+            - link "License" [ref=e349] [cursor=pointer]:
               - /url: https://themeselection.com/license
-            - link "More Themes" [ref=e833] [cursor=pointer]:
+            - link "More Themes" [ref=e350] [cursor=pointer]:
               - /url: https://themeselection.com
-            - link "Documentation" [ref=e834] [cursor=pointer]:
+            - link "Documentation" [ref=e351] [cursor=pointer]:
               - /url: https://demos.themeselection.com/materio-mui-nextjs-admin-template/documentation
-            - link "Support" [ref=e835] [cursor=pointer]:
+            - link "Support" [ref=e352] [cursor=pointer]:
               - /url: https://themeselection.com/support
-  - generic [ref=e836]:
-    - generic [ref=e840]:
-      - heading "Theme Customizer" [level=6] [ref=e841]
-      - paragraph [ref=e842]: Customize & Preview in Real Time
-    - generic [ref=e848]:
-      - generic [ref=e849]:
-        - generic [ref=e851]: Theming
-        - paragraph [ref=e853]: Primary Color
-        - generic [ref=e868]:
-          - paragraph [ref=e869]: Mode
-          - generic [ref=e870]:
-            - paragraph [ref=e874] [cursor=pointer]: Light
-            - paragraph [ref=e878] [cursor=pointer]: Dark
-            - paragraph [ref=e882] [cursor=pointer]: System
-        - generic [ref=e883]:
-          - paragraph [ref=e884]: Skin
-          - generic [ref=e885]:
-            - generic [ref=e886]:
-              - img [ref=e888] [cursor=pointer]
-              - paragraph [ref=e904] [cursor=pointer]: Default
-            - generic [ref=e905]:
-              - img [ref=e907] [cursor=pointer]
-              - paragraph [ref=e922] [cursor=pointer]: Bordered
-        - generic [ref=e923]:
-          - generic [ref=e924] [cursor=pointer]: Semi Dark
-          - checkbox "Semi Dark" [ref=e927] [cursor=pointer]
-      - separator [ref=e930]
-      - generic [ref=e931]:
-        - generic [ref=e933]: Layout
-        - generic [ref=e934]:
-          - paragraph [ref=e935]: Layouts
-          - generic [ref=e936]:
-            - generic [ref=e937]:
-              - img [ref=e939] [cursor=pointer]
-              - paragraph [ref=e955] [cursor=pointer]: Vertical
-            - generic [ref=e956]:
-              - img [ref=e958] [cursor=pointer]
-              - paragraph [ref=e974] [cursor=pointer]: Collapsed
-            - generic [ref=e975]:
-              - img [ref=e977] [cursor=pointer]
-              - paragraph [ref=e988] [cursor=pointer]: Horizontal
-        - generic [ref=e989]:
-          - paragraph [ref=e990]: Content
-          - generic [ref=e991]:
-            - generic [ref=e992]:
-              - img [ref=e994] [cursor=pointer]
-              - paragraph [ref=e1004] [cursor=pointer]: Compact
-            - generic [ref=e1005]:
-              - img [ref=e1007] [cursor=pointer]
-              - paragraph [ref=e1017] [cursor=pointer]: Wide
-        - generic [ref=e1018]:
-          - paragraph [ref=e1019]: Direction
-          - generic [ref=e1020]:
-            - link "Left to Right (English)" [ref=e1021] [cursor=pointer]:
+  - generic [ref=e353]:
+    - generic [ref=e357]:
+      - heading "Theme Customizer" [level=6] [ref=e358]
+      - paragraph [ref=e359]: Customize & Preview in Real Time
+    - generic [ref=e365]:
+      - generic [ref=e366]:
+        - generic [ref=e368]: Theming
+        - paragraph [ref=e370]: Primary Color
+        - generic [ref=e385]:
+          - paragraph [ref=e386]: Mode
+          - generic [ref=e387]:
+            - paragraph [ref=e391] [cursor=pointer]: Light
+            - paragraph [ref=e395] [cursor=pointer]: Dark
+            - paragraph [ref=e399] [cursor=pointer]: System
+        - generic [ref=e400]:
+          - paragraph [ref=e401]: Skin
+          - generic [ref=e402]:
+            - generic [ref=e403]:
+              - img [ref=e405] [cursor=pointer]
+              - paragraph [ref=e421] [cursor=pointer]: Default
+            - generic [ref=e422]:
+              - img [ref=e424] [cursor=pointer]
+              - paragraph [ref=e439] [cursor=pointer]: Bordered
+        - generic [ref=e440]:
+          - generic [ref=e441] [cursor=pointer]: Semi Dark
+          - checkbox "Semi Dark" [ref=e444] [cursor=pointer]
+      - separator [ref=e447]
+      - generic [ref=e448]:
+        - generic [ref=e450]: Layout
+        - generic [ref=e451]:
+          - paragraph [ref=e452]: Layouts
+          - generic [ref=e453]:
+            - generic [ref=e454]:
+              - img [ref=e456] [cursor=pointer]
+              - paragraph [ref=e472] [cursor=pointer]: Vertical
+            - generic [ref=e473]:
+              - img [ref=e475] [cursor=pointer]
+              - paragraph [ref=e491] [cursor=pointer]: Collapsed
+            - generic [ref=e492]:
+              - img [ref=e494] [cursor=pointer]
+              - paragraph [ref=e505] [cursor=pointer]: Horizontal
+        - generic [ref=e506]:
+          - paragraph [ref=e507]: Content
+          - generic [ref=e508]:
+            - generic [ref=e509]:
+              - img [ref=e511] [cursor=pointer]
+              - paragraph [ref=e521] [cursor=pointer]: Compact
+            - generic [ref=e522]:
+              - img [ref=e524] [cursor=pointer]
+              - paragraph [ref=e534] [cursor=pointer]: Wide
+        - generic [ref=e535]:
+          - paragraph [ref=e536]: Direction
+          - generic [ref=e537]:
+            - link "Left to Right (English)" [ref=e538] [cursor=pointer]:
               - /url: /en/apps/chat
-              - generic [ref=e1022]:
-                - img [ref=e1024]
-                - paragraph [ref=e1038]:
+              - generic [ref=e539]:
+                - img [ref=e541]
+                - paragraph [ref=e555]:
                   - text: Left to Right
                   - text: (English)
-            - link "Right to Left (Arabic)" [ref=e1039] [cursor=pointer]:
+            - link "Right to Left (Arabic)" [ref=e556] [cursor=pointer]:
               - /url: /ar/apps/chat
-              - generic [ref=e1040]:
-                - img [ref=e1042]
-                - paragraph [ref=e1056]:
+              - generic [ref=e557]:
+                - img [ref=e559]
+                - paragraph [ref=e573]:
                   - text: Right to Left
                   - text: (Arabic)
 ```

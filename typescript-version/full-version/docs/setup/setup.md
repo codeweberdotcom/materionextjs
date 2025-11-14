@@ -47,7 +47,7 @@ Configure the following variables in `.env`:
 
 ```env
 # Database
-DATABASE_URL="file:./src/prisma/dev.db"
+DATABASE_URL="file:./prisma/dev.db"
 
 # NextAuth.js
 NEXTAUTH_URL="http://localhost:3000"
@@ -149,13 +149,13 @@ Environment variables are key-value pairs that configure your application outsid
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DATABASE_URL` | Database connection string | `file:./src/prisma/dev.db` |
+| `DATABASE_URL` | Database connection string | `file:./prisma/dev.db` |
 
 #### Database Variables
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DATABASE_URL` | Database connection string | `file:./src/prisma/dev.db` |
+| `DATABASE_URL` | Database connection string | `file:./prisma/dev.db` |
 
 #### Email Variables (Optional)
 
@@ -197,7 +197,7 @@ Environment variables are key-value pairs that configure your application outsid
 Default configuration uses SQLite:
 
 ```env
-DATABASE_URL="file:./src/prisma/dev.db"
+DATABASE_URL="file:./prisma/dev.db"
 ```
 
 #### PostgreSQL (Production)
@@ -208,7 +208,7 @@ For production, use PostgreSQL:
 DATABASE_URL="postgresql://username:password@localhost:5432/dbname?schema=public"
 ```
 
-Update `src/prisma/schema.prisma`:
+Update `prisma/schema.prisma`:
 
 ```prisma
 datasource db {

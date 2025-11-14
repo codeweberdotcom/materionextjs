@@ -320,14 +320,18 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         href: '/apps/settings/email-templates'
       },
       {
-        label: dictionary['navigation'].rateLimitManagement,
-        icon: 'ri-timer-flash-line',
-        href: '/admin/rate-limits'
-      },
-      {
-        label: dictionary['navigation'].rateLimitEvents,
-        icon: 'ri-line-chart-line',
-        href: '/admin/rate-limits/events'
+        label: dictionary['navigation'].rateLimitCategory,
+        icon: 'ri-shield-keyhole-line',
+        children: [
+          {
+            label: dictionary['navigation'].rateLimitManagement,
+            href: '/admin/rate-limits'
+          },
+          {
+            label: dictionary['navigation'].rateLimitEvents,
+            href: '/admin/rate-limits/events'
+          }
+        ]
       },
       {
         label: 'Metrics',

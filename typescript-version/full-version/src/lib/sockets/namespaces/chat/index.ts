@@ -139,7 +139,7 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
   const userId = socket.data.user.id;
 
   // Отправка сообщения
-  socket.on('sendMessage', async (data: { roomId: string; message: string; senderId: string; clientId?: string }, callback?: (response: { ok: boolean; message?: ChatMessage; error?: string; blockedUntil?: string; retryAfter?: number }) => void) => {
+  socket.on('sendMessage', async (data: { roomId: string; message: string; senderId: string; clientId?: string }, callback?: (response: { ok: boolean; message?: ChatMessage; error?: string; blockedUntil?: number; retryAfter?: number }) => void) => {
     try {
       logger.info('Processing sendMessage', { userId, roomId: data.roomId, socketId: socket.id, connected: socket.connected });
 
@@ -155,25 +155,26 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
       }
 
       if (!rateLimitResult.allowed) {
-        const retryAfter = Math.max(1, Math.ceil((rateLimitResult.blockedUntil!.getTime() - Date.now()) / 1000))
+        const blockTarget = rateLimitResult.blockedUntil ?? rateLimitResult.resetTime
+        const retryAfter = Math.max(1, Math.ceil((blockTarget - Date.now()) / 1000))
 
         logger.warn('Chat rate limit exceeded for sendMessage', {
           userId,
           socketId: socket.id,
           retryAfter,
-          blockedUntil: rateLimitResult.blockedUntil?.toISOString()
+          blockedUntil: blockTarget
         })
 
         socket.emit('rateLimitExceeded', {
           error: 'Rate limit exceeded',
           retryAfter,
-          blockedUntil: rateLimitResult.blockedUntil?.toISOString()
+          blockedUntil: blockTarget
         })
         callback?.({
           ok: false,
           error: 'RATE_LIMITED',
           retryAfter,
-          blockedUntil: rateLimitResult.blockedUntil?.toISOString()
+          blockedUntil: blockTarget
         })
         return
       }

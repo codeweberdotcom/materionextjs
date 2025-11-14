@@ -56,7 +56,7 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
       }
 
       const blockedUntil = result.blockedUntil ?? result.resetTime
-      const msBeforeNext = Math.max(0, blockedUntil.getTime() - Date.now())
+      const msBeforeNext = Math.max(0, blockedUntil - Date.now())
       const retryAfter = Math.max(1, Math.ceil(msBeforeNext / 1000))
 
       rateLimitLogger.limitExceeded(rateKey, socket.handshake.address, socket.id, msBeforeNext)
@@ -65,7 +65,7 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
         socket.emit(exceededEvent, {
           error: 'Rate limit exceeded',
           retryAfter,
-          blockedUntil: blockedUntil.toISOString()
+          blockedUntil
         })
       }
 

@@ -35,7 +35,7 @@ npm run build
       "args": [
         "c:/Users/web/AppData/Roaming/Kilo-Code/MCP/sqlite-server/build/index.js",
         "--db-path",
-        "c:/laragon/www/materionextjs/typescript-version/full-version/src/prisma/dev3.db"
+        "c:/laragon/www/materionextjs/typescript-version/full-version/prisma/dev3.db"
       ],
       "disabled": false,
       "alwaysAllow": []
@@ -50,7 +50,7 @@ npm run build
 
 ```
 SQLite MCP server running on stdio
-Connected to SQLite database at c:/laragon/www/materionextjs/typescript-version/full-version/src/prisma/dev3.db
+Connected to SQLite database at c:/laragon/www/materionextjs/typescript-version/full-version/prisma/dev3.db
 ```
 
 ## Доступные инструменты

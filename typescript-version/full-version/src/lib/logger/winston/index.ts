@@ -90,7 +90,7 @@ export const authLogger = {
 
 // Rate limit logger
 export const rateLimitLogger = {
-  limitApplied: (userId: string, ip: string, remainingPoints: number, resetTime: Date) =>
+  limitApplied: (userId: string, ip: string, remainingPoints: number, resetTime: number) =>
     logger.info('Rate limit applied', { module: 'rateLimit', userId, ip, remainingPoints, resetTime }),
 
   limitExceeded: (userId: string, ip: string, socketId: string, msBeforeNext: number) =>

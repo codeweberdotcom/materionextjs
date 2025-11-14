@@ -1,1 +1,0 @@
-ALTER TABLE "UserBlock" ADD COLUMN "email" TEXT;

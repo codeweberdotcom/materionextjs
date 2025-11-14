@@ -15,6 +15,7 @@ import FormGroup from '@mui/material/FormGroup'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import DialogActions from '@mui/material/DialogActions'
 import Button from '@mui/material/Button'
+import Skeleton from '@mui/material/Skeleton'
 
 // Third-party Imports
 import { toast } from 'react-toastify'
@@ -93,6 +94,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false 
   const [selectedCheckbox, setSelectedCheckbox] = useState<string[]>([])
   const [isIndeterminateCheckbox, setIsIndeterminateCheckbox] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
+  const [isRoleLoading, setIsRoleLoading] = useState<boolean>(false)
   const [isSuperadmin, setIsSuperadmin] = useState<boolean>(false)
   const [isBaseRole, setIsBaseRole] = useState<boolean>(false)
   const [error, setError] = useState<string>('')
@@ -196,6 +198,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false 
 
   useEffect(() => {
     if (open && roleId) {
+      setIsRoleLoading(true)
       const fetchRole = async () => {
         try {
           const response = await fetch(`/api/admin/roles/${roleId}`)
@@ -254,6 +257,8 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false 
           }
         } catch (error) {
           console.error('Error fetching role:', error)
+        } finally {
+          setIsRoleLoading(false)
         }
       }
 
@@ -266,6 +271,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false 
       setIsCurrentUserRole(false)
       setCurrentUserRole('')
       setError('')
+      setIsRoleLoading(false)
     }
   }, [open, roleId])
 
@@ -287,124 +293,137 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false 
           <IconButton onClick={handleClose} className='absolute block-start-4 inline-end-4'>
             <i className='ri-close-line text-textSecondary' />
           </IconButton>
-          <TextField
-            label={t.navigation.roleName}
-            variant='outlined'
-            fullWidth
-            placeholder={t.navigation.roleName}
-            value={roleName}
-            onChange={e => setRoleName(e.target.value)}
-            disabled={readOnly}
-          />
-          <div className='mb-4' />
-          <TextField
-            label={t.navigation.roleDescription}
-            variant='outlined'
-            fullWidth
-            placeholder={t.navigation.roleDescription}
-            value={roleDescription}
-            onChange={e => setRoleDescription(e.target.value)}
-            disabled={readOnly}
-          />
-          <Typography variant='h5' className='plb-6'>
-            {t.navigation.rolesPermissions}
-          </Typography>
-          <div className='flex flex-col overflow-x-auto'>
-            <table className={tableStyles.table}>
-              <tbody>
-                <tr>
-                  <th className='pis-0'>
-                    <Typography className='font-medium whitespace-nowrap flex-grow min-is-[225px]' color='text.primary'>
-                      {t.navigation.adminAccess}
-                    </Typography>
-                  </th>
-                  <th className='!text-end pie-0'>
-                    {!readOnly && (
-                      <FormControlLabel
-                        className='mie-0 capitalize'
-                        control={
-                          <Checkbox
-                            onChange={handleSelectAllCheckbox}
-                            indeterminate={isIndeterminateCheckbox}
-                            checked={selectedCheckbox.length === defaultData.length * 4}
-                          />
-                        }
-                        label={t.navigation.selectAll}
-                      />
-                    )}
-                  </th>
-                </tr>
-                {defaultData.map((item, index) => {
-                  const id = permissionIds[item as keyof typeof permissionIds]
-
-                  return (
-                    <tr key={index}>
-                      <td className='pis-0'>
-                        <Typography
-                          className='font-medium whitespace-nowrap flex-grow min-is-[225px]'
-                          color='text.primary'
-                        >
-                          {t.navigation[item as keyof typeof t.navigation]}
+          {roleId && isRoleLoading ? (
+            <div className='flex flex-col gap-4'>
+              <Skeleton variant='rectangular' height={56} />
+              <Skeleton variant='rectangular' height={56} />
+              <Skeleton variant='text' width='40%' />
+              {[0, 1, 2, 3].map(index => (
+                <Skeleton key={`role-skeleton-${index}`} variant='rectangular' height={64} />
+              ))}
+            </div>
+          ) : (
+            <>
+              <TextField
+                label={t.navigation.roleName}
+                variant='outlined'
+                fullWidth
+                placeholder={t.navigation.roleName}
+                value={roleName}
+                onChange={e => setRoleName(e.target.value)}
+                disabled={readOnly}
+              />
+              <div className='mb-4' />
+              <TextField
+                label={t.navigation.roleDescription}
+                variant='outlined'
+                fullWidth
+                placeholder={t.navigation.roleDescription}
+                value={roleDescription}
+                onChange={e => setRoleDescription(e.target.value)}
+                disabled={readOnly}
+              />
+              <Typography variant='h5' className='plb-6'>
+                {t.navigation.rolesPermissions}
+              </Typography>
+              <div className='flex flex-col overflow-x-auto'>
+                <table className={tableStyles.table}>
+                  <tbody>
+                    <tr>
+                      <th className='pis-0'>
+                        <Typography className='font-medium whitespace-nowrap flex-grow min-is-[225px]' color='text.primary'>
+                          {t.navigation.adminAccess}
                         </Typography>
-                      </td>
-                      <td className='!text-end pie-0'>
-                        <FormGroup className='flex-row gap-4 flex-nowrap justify-end'>
+                      </th>
+                      <th className='!text-end pie-0'>
+                        {!readOnly && (
                           <FormControlLabel
-                            className='mie-0'
+                            className='mie-0 capitalize'
                             control={
                               <Checkbox
-                                id={`${id}-create`}
-                                onChange={() => togglePermission(`${id}-create`)}
-                                checked={selectedCheckbox.includes(`${id}-create`)}
-                                disabled={readOnly}
+                                onChange={handleSelectAllCheckbox}
+                                indeterminate={isIndeterminateCheckbox}
+                                checked={selectedCheckbox.length === defaultData.length * 4}
                               />
                             }
-                            label={t.navigation.create}
+                            label={t.navigation.selectAll}
                           />
-                          <FormControlLabel
-                            className='mie-0'
-                            control={
-                              <Checkbox
-                                id={`${id}-read`}
-                                onChange={() => togglePermission(`${id}-read`)}
-                                checked={selectedCheckbox.includes(`${id}-read`)}
-                                disabled={readOnly}
-                              />
-                            }
-                            label={t.navigation.read}
-                          />
-                          <FormControlLabel
-                            className='mie-0'
-                            control={
-                              <Checkbox
-                                id={`${id}-update`}
-                                onChange={() => togglePermission(`${id}-update`)}
-                                checked={selectedCheckbox.includes(`${id}-update`)}
-                                disabled={readOnly}
-                              />
-                            }
-                            label={t.navigation.update}
-                          />
-                          <FormControlLabel
-                            className='mie-0 text-textPrimary'
-                            control={
-                              <Checkbox
-                                id={`${id}-delete`}
-                                onChange={() => togglePermission(`${id}-delete`)}
-                                checked={selectedCheckbox.includes(`${id}-delete`)}
-                                disabled={readOnly}
-                              />
-                            }
-                            label={t.navigation.delete}
-                          />
-                        </FormGroup>
-                      </td>
+                        )}
+                      </th>
                     </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+                    {defaultData.map((item, index) => {
+                      const id = permissionIds[item as keyof typeof permissionIds]
+
+                      return (
+                        <tr key={index}>
+                          <td className='pis-0'>
+                            <Typography
+                              className='font-medium whitespace-nowrap flex-grow min-is-[225px]'
+                              color='text.primary'
+                            >
+                              {t.navigation[item as keyof typeof t.navigation]}
+                            </Typography>
+                          </td>
+                          <td className='!text-end pie-0'>
+                            <FormGroup className='flex-row gap-4 flex-nowrap justify-end'>
+                              <FormControlLabel
+                                className='mie-0'
+                                control={
+                                  <Checkbox
+                                    id={`${id}-create`}
+                                    onChange={() => togglePermission(`${id}-create`)}
+                                    checked={selectedCheckbox.includes(`${id}-create`)}
+                                    disabled={readOnly}
+                                  />
+                                }
+                                label={t.navigation.create}
+                              />
+                              <FormControlLabel
+                                className='mie-0'
+                                control={
+                                  <Checkbox
+                                    id={`${id}-read`}
+                                    onChange={() => togglePermission(`${id}-read`)}
+                                    checked={selectedCheckbox.includes(`${id}-read`)}
+                                    disabled={readOnly}
+                                  />
+                                }
+                                label={t.navigation.read}
+                              />
+                              <FormControlLabel
+                                className='mie-0'
+                                control={
+                                  <Checkbox
+                                    id={`${id}-update`}
+                                    onChange={() => togglePermission(`${id}-update`)}
+                                    checked={selectedCheckbox.includes(`${id}-update`)}
+                                    disabled={readOnly}
+                                  />
+                                }
+                                label={t.navigation.update}
+                              />
+                              <FormControlLabel
+                                className='mie-0 text-textPrimary'
+                                control={
+                                  <Checkbox
+                                    id={`${id}-delete`}
+                                    onChange={() => togglePermission(`${id}-delete`)}
+                                    checked={selectedCheckbox.includes(`${id}-delete`)}
+                                    disabled={readOnly}
+                                  />
+                                }
+                                label={t.navigation.delete}
+                              />
+                            </FormGroup>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </DialogContent>
         <DialogActions className='justify-center pbs-0 sm:pbe-16 sm:pli-16'>
           {!readOnly && (

@@ -527,6 +527,22 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
     ]
   },
   {
+    label: dictionary['navigation'].rateLimitCategory,
+    icon: 'ri-shield-keyhole-line',
+    children: [
+      {
+        label: dictionary['navigation'].rateLimitManagement,
+        icon: 'ri-timer-flash-line',
+        href: '/admin/rate-limits'
+      },
+      {
+        label: dictionary['navigation'].rateLimitEvents,
+        icon: 'ri-line-chart-line',
+        href: '/admin/rate-limits/events'
+      }
+    ]
+  },
+  {
     label: dictionary['navigation'].others,
     icon: 'ri-more-line',
     children: [

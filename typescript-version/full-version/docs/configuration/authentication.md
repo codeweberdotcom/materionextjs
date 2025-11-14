@@ -350,7 +350,7 @@ const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     - `src/libs/lucia.ts`
     - `src/utils/auth.ts`
     - `src/contexts/AuthProvider.tsx`
-    - `src/prisma`
+    - `prisma`
     - `src/hocs/AuthGuard.tsx`
     - `src/hocs/GuestOnlyRoute.tsx`
     - `src/components/AuthRedirect.tsx`
@@ -445,7 +445,7 @@ Refer to [Securing Page guide](#securing-page) for route details.
 For email/password authentication:
 
 1. **Copy** `src/app/api/auth` folder from full-version
-2. **Copy** `src/prisma/schema.prisma`
+2. **Copy** `prisma/schema.prisma`
 3. **Copy** `src/views/Login.tsx`
 
 4. **Update package.json**:
@@ -455,7 +455,7 @@ For email/password authentication:
   "postinstall": "prisma generate && npm run build:icons"
 },
 "prisma": {
-  "schema": "./src/prisma/schema.prisma"
+  "schema": "./prisma/schema.prisma"
 }
 ```
 

@@ -369,6 +369,16 @@ const HorizontalMenu = ({ dictionary, locale }: { dictionary: Awaited<ReturnType
             {dictionary['navigation'].recharts}
           </MenuItem>
         </SubMenu>
+        {(isSuperadmin || checkPermission('rateLimitManagement', 'read')) && (
+          <SubMenu label={dictionary['navigation'].rateLimitCategory} icon={<i className='ri-shield-keyhole-line' />}>
+            <MenuItem href={`/${locale}/admin/rate-limits`} icon={<i className='ri-timer-flash-line' />}>
+              {dictionary['navigation'].rateLimitManagement}
+            </MenuItem>
+            <MenuItem href={`/${locale}/admin/rate-limits/events`} icon={<i className='ri-line-chart-line' />}>
+              {dictionary['navigation'].rateLimitEvents}
+            </MenuItem>
+          </SubMenu>
+        )}
         <SubMenu label={dictionary['navigation'].others} icon={<i className='ri-more-line' />}>
           <MenuItem
             href={`${process.env.NEXT_PUBLIC_DOCS_URL}/docs/user-interface/foundation`}

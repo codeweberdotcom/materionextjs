@@ -17,7 +17,7 @@ interface SocketLoggerMethods {
 }
 
 interface RateLimitLoggerMethods {
-  limitApplied(userId: string, ip: string, remainingPoints: number, resetTime: Date): void;
+  limitApplied(userId: string, ip: string, remainingPoints: number, resetTime: number): void;
   limitExceeded(userId: string, ip: string, socketId: string, msBeforeNext: number): void;
   error(message: string | LoggerData, meta?: LoggerData): void;
 }
@@ -125,7 +125,7 @@ export const socketLogger: SocketLoggerMethods = {
 };
 
 export const rateLimitLogger: RateLimitLoggerMethods = {
-  limitApplied: (userId: string, ip: string, remainingPoints: number, resetTime: Date) =>
+  limitApplied: (userId: string, ip: string, remainingPoints: number, resetTime: number) =>
     logger.info('Rate limit applied', { userId, ip, remainingPoints, resetTime }),
   limitExceeded: (userId: string, ip: string, socketId: string, msBeforeNext: number) =>
     logger.warn('Rate limit exceeded', { userId, ip, socketId, msBeforeNext }),

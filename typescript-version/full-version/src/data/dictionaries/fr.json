@@ -288,6 +288,8 @@
     "translationManagement": "Gestion des traductions",
     "emailTemplatesManagement": "Gestion des modèles d'e-mail",
     "smtpManagement": "Gestion SMTP",
+    "rateLimitCategory": "Blocages",
+    "registrationModule": "Inscriptions",
     "rateLimitManagement": "Gestion des limites",
     "rateLimitEvents": "Statistiques des limites",
     "verifyEmail": "Vérifier les courriels",

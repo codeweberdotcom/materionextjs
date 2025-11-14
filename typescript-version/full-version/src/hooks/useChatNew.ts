@@ -25,7 +25,7 @@ type SendMessageAck = {
   message?: ChatMessage
   error?: string
   retryAfter?: number
-  blockedUntil?: string
+  blockedUntil?: number
 }
 
 const generateClientId = () => {
@@ -117,9 +117,10 @@ export const useChatNew = (otherUserId?: string) => {
 
       if (response.status === 429) {
         const retryAfter = Number.isFinite(data.retryAfter) ? data.retryAfter : 300
-        const blockedUntil = data.blockedUntil
-          ? new Date(data.blockedUntil).getTime()
-          : Date.now() + retryAfter * 1000
+        const blockedUntil =
+          typeof data.blockedUntil === 'number'
+            ? data.blockedUntil
+            : Date.now() + retryAfter * 1000
 
         setRateLimitData({
           retryAfter,
@@ -133,9 +134,16 @@ export const useChatNew = (otherUserId?: string) => {
       if (response.ok) {
         const warningRemaining = data?.warning?.remaining
         const remaining = typeof data?.remaining === 'number' ? data.remaining : undefined
-        const resetTimeMs = data?.resetTime ? new Date(data.resetTime).getTime() : undefined
+        const resetTimeMs = typeof data?.resetTime === 'number' ? data.resetTime : undefined
 
-        if (typeof remaining === 'number' && remaining <= 0 && resetTimeMs && resetTimeMs > Date.now()) {
+        const isHardBlock =
+          data?.allowed === false &&
+          typeof remaining === 'number' &&
+          remaining <= 0 &&
+          resetTimeMs &&
+          resetTimeMs > Date.now()
+
+        if (isHardBlock) {
           const retryAfter = Math.max(1, Math.ceil((resetTimeMs - Date.now()) / 1000))
           setRateLimitData({
             retryAfter,
@@ -150,8 +158,16 @@ export const useChatNew = (otherUserId?: string) => {
         } else {
           warningToastRemaining.current = null
         }
-        clearCachedRateLimit()
-        return { blockedUntil: undefined, warningRemaining, remaining }
+
+        if (!isHardBlock) {
+          clearCachedRateLimit()
+        }
+
+        return {
+          blockedUntil: isHardBlock ? resetTimeMs : undefined,
+          warningRemaining,
+          remaining
+        }
       }
     } catch (error) {
       console.error('Failed to check rate limit:', error)
@@ -303,9 +319,10 @@ export const useChatNew = (otherUserId?: string) => {
 
     const handleRateLimitExceeded = (data: RateLimitExceededPayload) => {
       const retryAfter = data.retryAfter && Number.isFinite(data.retryAfter) ? data.retryAfter : 300
-      const blockedUntilTimestamp = data.blockedUntil
-        ? new Date(data.blockedUntil).getTime()
-        : Date.now() + retryAfter * 1000
+      const blockedUntilTimestamp =
+        typeof data.blockedUntil === 'number'
+          ? data.blockedUntil
+          : Date.now() + retryAfter * 1000
 
       setRateLimitData({
         retryAfter,
@@ -530,9 +547,10 @@ export const useChatNew = (otherUserId?: string) => {
 
           if (ack?.error === 'RATE_LIMITED') {
             const retryAfter = ack.retryAfter && Number.isFinite(ack.retryAfter) ? ack.retryAfter : 300
-            const blockedUntil = ack.blockedUntil
-              ? new Date(ack.blockedUntil).getTime()
-              : Date.now() + retryAfter * 1000
+            const blockedUntil =
+              typeof ack.blockedUntil === 'number'
+                ? ack.blockedUntil
+                : Date.now() + retryAfter * 1000
 
             setRateLimitData({
               retryAfter,
@@ -569,9 +587,10 @@ export const useChatNew = (otherUserId?: string) => {
     if (!response.ok) {
       if (response.status === 429) {
         const retryAfter = Number.isFinite(payloadData.retryAfter) ? payloadData.retryAfter : 300
-        const blockedUntil = payloadData.blockedUntil
-          ? new Date(payloadData.blockedUntil).getTime()
-          : Date.now() + retryAfter * 1000
+        const blockedUntil =
+          typeof payloadData.blockedUntil === 'number'
+            ? payloadData.blockedUntil
+            : Date.now() + retryAfter * 1000
 
         setRateLimitData({
           retryAfter,
@@ -629,7 +648,7 @@ export const useChatNew = (otherUserId?: string) => {
       throwRateLimited(latestBlockedUntil)
     }
 
-    if (typeof latestStatus?.remaining === 'number' && latestStatus.remaining <= 0) {
+    if (latestStatus?.blockedUntil && typeof latestStatus.remaining === 'number' && latestStatus.remaining <= 0) {
       throwRateLimited(latestBlockedUntil)
     }
 

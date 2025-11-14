@@ -4,6 +4,7 @@ import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { isSuperadmin, isAdmin } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
+import type { RateLimitStats } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
 
 export async function GET(request: NextRequest) {
@@ -39,13 +40,13 @@ export async function GET(request: NextRequest) {
     }
 
     const configs = await rateLimitService.getAllConfigs()
-    const stats = await Promise.all(
-      ['chat', 'ads', 'upload', 'auth'].map((module: any) => rateLimitService.getStats(module))
-    )
+    const modules: Array<'chat' | 'ads' | 'upload' | 'auth'> = ['chat', 'ads', 'upload', 'auth']
+    const stats = await Promise.all(modules.map(module => rateLimitService.getStats(module)))
+    const filteredStats = stats.filter((stat): stat is RateLimitStats => Boolean(stat))
 
     return NextResponse.json({
       configs,
-      stats: stats.filter((item: any) => Boolean)
+      stats: filteredStats
     })
   } catch (error) {
     logger.error('Error fetching rate limits', {
@@ -68,7 +69,17 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { module, maxRequests, windowMs, blockMs, warnThreshold, isActive, mode } = body
+    const {
+      module,
+      maxRequests,
+      windowMs,
+      blockMs,
+      warnThreshold,
+      isActive,
+      mode,
+      storeEmailInEvents,
+      storeIpInEvents
+    } = body
 
     if (!module) {
       return NextResponse.json({ error: 'Module is required' }, { status: 400 })
@@ -80,14 +91,25 @@ export async function PUT(request: NextRequest) {
       blockMs,
       warnThreshold,
       typeof isActive === 'boolean' ? isActive : undefined,
-      mode
+      mode,
+      typeof storeEmailInEvents === 'boolean' ? storeEmailInEvents : undefined,
+      typeof storeIpInEvents === 'boolean' ? storeIpInEvents : undefined
     ].some(value => value !== undefined)
 
     if (!fieldsProvided) {
       return NextResponse.json({ error: 'Nothing to update' }, { status: 400 })
     }
 
-    const updatePayload: Partial<{ maxRequests: number; windowMs: number; blockMs: number; warnThreshold: number; isActive: boolean; mode: 'monitor' | 'enforce' }> = {}
+    const updatePayload: Partial<{
+      maxRequests: number
+      windowMs: number
+      blockMs: number
+      warnThreshold: number
+      isActive: boolean
+      mode: 'monitor' | 'enforce'
+      storeEmailInEvents: boolean
+      storeIpInEvents: boolean
+    }> = {}
 
     if (maxRequests !== undefined) {
       if (typeof maxRequests !== 'number' || maxRequests <= 0) {
@@ -126,6 +148,20 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid mode' }, { status: 400 })
       }
       updatePayload.mode = mode
+    }
+
+    if (storeEmailInEvents !== undefined) {
+      if (typeof storeEmailInEvents !== 'boolean') {
+        return NextResponse.json({ error: 'Invalid storeEmailInEvents' }, { status: 400 })
+      }
+      updatePayload.storeEmailInEvents = storeEmailInEvents
+    }
+
+    if (storeIpInEvents !== undefined) {
+      if (typeof storeIpInEvents !== 'boolean') {
+        return NextResponse.json({ error: 'Invalid storeIpInEvents' }, { status: 400 })
+      }
+      updatePayload.storeIpInEvents = storeIpInEvents
     }
 
     await rateLimitService.updateConfig(module, updatePayload)

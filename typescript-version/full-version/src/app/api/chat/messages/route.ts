@@ -105,22 +105,23 @@ export async function POST(request: NextRequest) {
     })
 
     if (!rateLimitResult.allowed) {
+      const retryAfterSeconds = Math.max(
+        1,
+        Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+      )
+      const blockedUntil = rateLimitResult.blockedUntil ?? rateLimitResult.resetTime
       return NextResponse.json(
         {
           error: 'Rate limit exceeded',
-          retryAfter: Math.ceil(
-            (rateLimitResult.resetTime.getTime() - Date.now()) / 1000
-          ),
-          blockedUntil: rateLimitResult.blockedUntil?.toISOString()
+          retryAfter: retryAfterSeconds,
+          blockedUntil
         },
         {
           status: 429,
           headers: {
-            'Retry-After': Math.ceil(
-              (rateLimitResult.resetTime.getTime() - Date.now()) / 1000
-            ).toString(),
+            'Retry-After': retryAfterSeconds.toString(),
             'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': rateLimitResult.resetTime.getTime().toString()
+            'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
           }
         }
       )
@@ -187,7 +188,7 @@ export async function POST(request: NextRequest) {
       warning: rateLimitResult.warning || null,
       rateLimit: {
         remaining: rateLimitResult.remaining,
-        resetTime: rateLimitResult.resetTime.toISOString()
+        resetTime: rateLimitResult.resetTime
       }
     })
   } catch (error) {

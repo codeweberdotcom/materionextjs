@@ -15,9 +15,15 @@ The rate limiting system provides comprehensive request throttling and spam prot
 ### Key Files
 - `src/lib/rate-limit.ts` - Main rate limiting service
 - `src/app/api/admin/rate-limits/route.ts` - Admin management endpoints
-- `src/prisma/schema.prisma` - Database schema definitions
+- `prisma/schema.prisma` - Database schema definitions
 
 ## 🔌 Rate Limiting Modules
+
+### Режимы enforcement/monitor
+- **Enforce** — стандартный режим. При превышении лимита пользователь получает HTTP 429, блокируется до `blockedUntil`, в `RateLimitEvent` пишется событие `block`, UI скрывает поле ввода.
+- **Monitor** — только наблюдение. Событие `warning` записывается в журнал и выводится админу, но пользователь продолжает отправку (UI видит предупреждение и таймер). Используется, когда нужно собрать статистику до включения жёсткой блокировки.
+- Переключение режима доступно в админке (`/admin/rate-limits`). В monitor-контексте важно не дублировать уведомления о блокировке.
+
 
 ### 1. Chat Messages (`chat`)
 - **Default**: 10 messages per hour
@@ -94,7 +100,10 @@ Update rate limit configuration for a module (admin/superadmin only).
   "module": "chat",
   "maxRequests": 15,
   "windowMs": 3600000,
-  "blockMs": 1800000
+  "blockMs": 1800000,
+  "warnThreshold": 5,
+  "storeEmailInEvents": false,
+  "storeIpInEvents": true
 }
 ```
 
@@ -138,13 +147,15 @@ Check if a request should be allowed for the given key and module.
 - `key`: User ID or IP address
 - `module`: Module name (chat, ads, upload, auth, email)
 
+> ⚠️ **Important:** если передать название модуля, для которого нет записи в `RateLimitConfig`, сервис зафиксирует это в логах, автоматически создаст fallback-конфиг в режиме monitor (лимит включён, но блокировка отключена) и продолжит работу. Такое поведение защищает рабочие сценарии, но всё равно требует внимания: добавьте полноценную конфигурацию через миграцию или админку, иначе модуль останется в «наблюдении».
+
 **Returns:**
 ```typescript
 interface RateLimitResult {
   allowed: boolean
   remaining: number
-  resetTime: Date
-  blockedUntil?: Date
+  resetTime: number // UNIX timestamp (ms)
+  blockedUntil?: number // UNIX timestamp (ms)
 }
 ```
 
@@ -252,8 +263,8 @@ const result = await rateLimitService.checkLimit(userId, 'chat')
 if (!result.allowed) {
   return {
     error: 'Rate limit exceeded',
-    retryAfter: Math.ceil((result.resetTime.getTime() - Date.now()) / 1000),
-    blockedUntil: result.blockedUntil
+    retryAfter: Math.ceil((result.resetTime - Date.now()) / 1000),
+    blockedUntil: result.blockedUntil ?? result.resetTime
   }
 }
 
@@ -311,6 +322,12 @@ SELECT * FROM UserBlock WHERE isActive = true;
 SELECT * FROM RateLimitConfig;
 ```
 
+## 🔒 Privacy & PII considerations
+
+- `RateLimitEvent` сохраняет `userId`, а также опционально `email` и `ipAddress`. Теперь для каждого модуля можно задать флаги `storeEmailInEvents` и `storeIpInEvents` (через `/api/admin/rate-limits` или админку): если значение `false`, соответствующее поле не будет записано в события (оно встанет `null`, даже если сервис получил данные).
+- `UserBlock` (ручные блокировки) тоже содержит `ipAddress` и заметки администратора. Старайтесь хранить только необходимый минимум данных, а по окончании расследований очищайте избыточные записи.
+- Для аналитики используйте агрегаты (`RateLimitState`, `RateLimitEvent` c индексами `createdAt`). Периодически проверяйте retention-политику и удаляйте устаревшие персональные данные.
+
 ## 🤖 AI Agent Integration Guide
 
 ### Core Workflow for AI Agents
@@ -325,7 +342,7 @@ SELECT * FROM RateLimitConfig;
      return new Response('Rate limit exceeded', {
        status: 429,
        headers: {
-         'Retry-After': Math.ceil((rateCheck.resetTime.getTime() - Date.now()) / 1000).toString(),
+         'Retry-After': Math.ceil((rateCheck.resetTime - Date.now()) / 1000).toString(),
          'X-RateLimit-Remaining': rateCheck.remaining.toString()
        }
      })

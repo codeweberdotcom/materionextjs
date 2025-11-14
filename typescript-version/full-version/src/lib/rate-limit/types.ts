@@ -7,13 +7,16 @@ export interface RateLimitConfig {
   warnThreshold?: number
   isActive?: boolean
   mode?: 'monitor' | 'enforce'
+  storeEmailInEvents?: boolean
+  storeIpInEvents?: boolean
+  isFallback?: boolean
 }
 
 export interface RateLimitResult {
   allowed: boolean
   remaining: number
-  resetTime: Date
-  blockedUntil?: Date
+  resetTime: number
+  blockedUntil?: number
   warning?: {
     remaining: number
   }
@@ -59,6 +62,8 @@ export interface RateLimitStateAdminEntry {
 
 export interface RateLimitStateListResult {
   items: RateLimitStateAdminEntry[]
+  totalStates: number
+  totalManual: number
   total: number
   nextCursor?: string
 }

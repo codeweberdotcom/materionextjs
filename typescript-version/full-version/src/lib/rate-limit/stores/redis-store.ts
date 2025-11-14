@@ -32,8 +32,9 @@ const ensureRedisDependency = (): RedisConstructor => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    RedisConstructorRef = require('ioredis')
-    return RedisConstructorRef
+    const RedisLib = require('ioredis') as RedisConstructor
+    RedisConstructorRef = RedisLib
+    return RedisLib
   } catch (error) {
     const message =
       error instanceof Error && error.message.includes("Cannot find module 'ioredis'")
@@ -77,12 +78,11 @@ export class RedisRateLimitStore implements RateLimitStore {
     const blockValue = await this.redis.get(blockKey)
     const blockUntilTs = blockValue ? Number(blockValue) : null
     if (blockUntilTs && blockUntilTs > now.getTime()) {
-      const blockedUntil = new Date(blockUntilTs)
       return {
         allowed: false,
         remaining: 0,
-        resetTime: blockedUntil,
-        blockedUntil
+        resetTime: blockUntilTs,
+        blockedUntil: blockUntilTs
       }
     }
 
@@ -96,7 +96,7 @@ export class RedisRateLimitStore implements RateLimitStore {
       return {
         allowed: true,
         remaining: remainingBefore,
-        resetTime: windowEnd,
+        resetTime: windowEnd.getTime(),
         warning: shouldWarn ? { remaining: remainingBefore } : undefined
       }
     }
@@ -122,26 +122,40 @@ export class RedisRateLimitStore implements RateLimitStore {
         await this.redis.psetex(blockKey, blockDuration, blockedUntil.getTime().toString())
       }
 
-      await recordEvent({
-        module,
-        key,
-        userId,
-        email,
-        ipAddress,
-        eventType: 'block',
-        mode,
-        count: newCount,
-        maxRequests: config.maxRequests,
-        windowStart,
-        windowEnd,
-        blockedUntil: mode === 'enforce' ? blockedUntil : null
-      })
+      const shouldDedupMonitorEvents = mode === 'monitor'
+      const blockMetaKey = shouldDedupMonitorEvents ? this.blockEventMetaKey(module, key, config.windowMs, windowStart) : null
+      const metaTtl = Math.max(1000, Math.min(ttl, config.windowMs))
+      let alreadyLogged = false
+
+      if (blockMetaKey) {
+        alreadyLogged = Boolean(await this.redis.get(blockMetaKey))
+      }
+
+      if (!alreadyLogged) {
+        await recordEvent({
+          module,
+          key,
+          userId,
+          email,
+          ipAddress,
+          eventType: 'block',
+          mode,
+          count: newCount,
+          maxRequests: config.maxRequests,
+          windowStart,
+          windowEnd,
+          blockedUntil: mode === 'enforce' ? blockedUntil : null
+        })
+        if (blockMetaKey) {
+          await this.redis.psetex(blockMetaKey, metaTtl, '1')
+        }
+      }
 
       if (mode === 'monitor') {
         return {
           allowed: true,
           remaining: 0,
-          resetTime: windowEnd,
+          resetTime: windowEnd.getTime(),
           warning: { remaining: 0 }
         }
       }
@@ -149,13 +163,17 @@ export class RedisRateLimitStore implements RateLimitStore {
       return {
         allowed: false,
         remaining: 0,
-        resetTime: windowEnd,
-        blockedUntil
+        resetTime: windowEnd.getTime(),
+        blockedUntil: blockedUntil.getTime()
       }
     }
 
     const remainingAfter = Math.max(0, config.maxRequests - newCount)
-    const shouldWarnAfter = warnThreshold > 0 && remainingAfter > 0 && remainingAfter <= warnThreshold
+    const shouldWarnAfter =
+      warnThreshold > 0 &&
+      remainingAfter > 0 &&
+      remainingAfter <= warnThreshold &&
+      remainingAfter < Math.max(0, config.maxRequests - (newCount - 1))
 
     if (shouldWarnAfter) {
       await recordEvent({
@@ -177,7 +195,7 @@ export class RedisRateLimitStore implements RateLimitStore {
     return {
       allowed: true,
       remaining: remainingAfter,
-      resetTime: windowEnd,
+      resetTime: windowEnd.getTime(),
       warning: shouldWarnAfter ? { remaining: remainingAfter } : undefined
     }
   }
@@ -186,7 +204,11 @@ export class RedisRateLimitStore implements RateLimitStore {
     await this.ensureConnected()
 
     if (key && module) {
-      await this.redis.del(this.countKey(module, key), this.blockKey(module, key))
+      await this.redis.del(
+        this.countKey(module, key),
+        this.blockKey(module, key)
+      )
+      await this.deleteByPattern(this.blockMetaPattern(module, key))
       return
     }
 
@@ -198,7 +220,14 @@ export class RedisRateLimitStore implements RateLimitStore {
     if (module && !key) {
       await this.deleteByPattern(`${KEY_PREFIX}:count:${module}:*`)
       await this.deleteByPattern(`${KEY_PREFIX}:block:${module}:*`)
-      // no meta keys to delete
+      await this.deleteByPattern(this.blockMetaPattern(module))
+      return
+    }
+
+    if (key && !module) {
+      await this.deleteByPattern(`${KEY_PREFIX}:count:*:${key}`)
+      await this.deleteByPattern(`${KEY_PREFIX}:block:*:${key}`)
+      await this.deleteByPattern(`${KEY_PREFIX}:meta:block:*:${key}:*`)
     }
   }
 
@@ -217,6 +246,18 @@ export class RedisRateLimitStore implements RateLimitStore {
 
   private blockKey(module: string, key: string) {
     return `${KEY_PREFIX}:block:${module}:${key}`
+  }
+
+  private blockEventMetaKey(module: string, key: string, windowMs: number, windowStart: Date) {
+    const windowBucket = Math.floor(windowStart.getTime() / windowMs)
+    return `${KEY_PREFIX}:meta:block:${module}:${key}:${windowBucket}`
+  }
+
+  private blockMetaPattern(module: string, key?: string) {
+    if (key) {
+      return `${KEY_PREFIX}:meta:block:${module}:${key}:*`
+    }
+    return `${KEY_PREFIX}:meta:block:${module}:*`
   }
 
   private async deleteByPattern(pattern: string) {

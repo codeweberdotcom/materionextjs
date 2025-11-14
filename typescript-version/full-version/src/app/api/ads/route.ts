@@ -1,19 +1,16 @@
-// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { rateLimitService } from '@/lib/rate-limit'
+import { requireAuth } from '@/utils/auth/auth'
 import { getRequestIp } from '@/utils/http/get-request-ip'
 
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
-    if (!session?.user) {
+    if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // РџСЂРѕРІРµСЂСЏРµРј rate limit РґР»СЏ РѕР±СЉСЏРІР»РµРЅРёР№
     const clientIp = getRequestIp(request)
     const rateLimitResult = await rateLimitService.checkLimit(user.id, 'ads', {
       userId: user.id,
@@ -23,28 +20,31 @@ export async function POST(request: NextRequest) {
     })
 
     if (!rateLimitResult.allowed) {
-      return NextResponse.json({
-        error: 'Rate limit exceeded for ads',
-        retryAfter: Math.ceil((rateLimitResult.resetTime.getTime() - Date.now()) / 1000),
-        blockedUntil: rateLimitResult.blockedUntil?.toISOString()
-      }, {
-        status: 429,
-        headers: {
-          'Retry-After': Math.ceil((rateLimitResult.resetTime.getTime() - Date.now()) / 1000).toString(),
-          'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-          'X-RateLimit-Reset': rateLimitResult.resetTime.getTime().toString()
+      const resetDate = rateLimitResult.resetTime
+      const blockedUntil = rateLimitResult.blockedUntil ?? resetDate
+      const retryAfterSeconds = Math.max(1, Math.ceil((resetDate.getTime() - Date.now()) / 1000))
+
+      return NextResponse.json(
+        {
+          error: 'Ad rate limit exceeded. Please try again later.',
+          retryAfter: retryAfterSeconds,
+          blockedUntil
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': retryAfterSeconds.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': resetDate.toISOString()
+          }
         }
-      })
+      )
     }
 
-    // Р—РґРµСЃСЊ Р±СѓРґРµС‚ Р»РѕРіРёРєР° СЃРѕР·РґР°РЅРёСЏ РѕР±СЉСЏРІР»РµРЅРёСЏ
-    // ...
-
+    // TODO: implement advertisement creation
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error creating ad:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
-

@@ -1,19 +1,16 @@
-import { NextResponse } from 'next/server'
-import { getMetrics } from '@/lib/metrics'
+import { metricsRegistry } from '@/lib/metrics/registry'
 
 export async function GET() {
   try {
-    const metrics = await getMetrics()
+    const body = await metricsRegistry.metrics()
 
-    return new NextResponse(metrics, {
+    return new Response(body, {
+      status: 200,
       headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-      },
+        'Content-Type': metricsRegistry.contentType
+      }
     })
   } catch (error) {
-    return NextResponse.json({
-      error: 'Failed to collect metrics',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    return new Response('Failed to collect metrics', { status: 500 })
   }
 }

@@ -17,7 +17,7 @@ The role management system provides comprehensive role-based access control (RBA
 - `src/app/api/admin/roles/route.ts` - Role collection endpoints
 - `src/app/api/admin/roles/[id]/route.ts` - Individual role endpoints
 - `src/utils/permissions.ts` - Permission checking utilities
-- `src/prisma/schema.prisma` - Database schema
+- `prisma/schema.prisma` - Database schema
 
 ##  Role Management
 

@@ -98,7 +98,7 @@ DateFilterInput.displayName = 'DateFilterInput'
 
 const formatDateParam = (date: Date | null) => (date ? date.toISOString() : undefined)
 
-const DEFAULT_MODULES = ['chat', 'ads', 'upload', 'auth', 'email', 'notifications']
+const DEFAULT_MODULES = ['chat', 'ads', 'upload', 'auth', 'email', 'notifications', 'registration']
 
 const formatDateTime = (value?: string | null) => {
   if (!value) {
@@ -130,7 +130,8 @@ const getModuleLabel = (
     upload: navigation.upload,
     auth: navigation.auth,
     email: navigation.email,
-    notifications: navigation.notifications
+    notifications: navigation.notifications,
+    registration: navigation.registrationModule
   }
 
   return fallbackMap[moduleName] || moduleName
@@ -327,7 +328,9 @@ const RateLimitEvents = () => {
         }
         params.set('limit', '25')
 
-        const response = await fetch(`/api/admin/rate-limits/events?${params.toString()}`)
+        const response = await fetch(`/api/admin/rate-limits/events?${params.toString()}`, {
+          credentials: 'include'
+        })
         if (!response.ok) {
           throw new Error('Failed to load events')
         }
@@ -398,7 +401,8 @@ const RateLimitEvents = () => {
     setDeleteEventId(eventId)
     try {
       const response = await fetch(`/api/admin/rate-limits/events/${eventId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        credentials: 'include'
       })
 
       if (!response.ok) {
@@ -469,6 +473,7 @@ const RateLimitEvents = () => {
         headers: {
           'Content-Type': 'application/json'
         },
+        credentials: 'include',
         body: JSON.stringify({
           module,
           targetType,

@@ -55,6 +55,9 @@ type RateLimitConfig = {
   warnThreshold?: number | null
   isActive?: boolean | null
   mode?: 'monitor' | 'enforce' | null
+  storeEmailInEvents?: boolean | null
+  storeIpInEvents?: boolean | null
+  isFallback?: boolean | null
 }
 
 type RateLimitStats = {
@@ -98,6 +101,8 @@ type ModuleDetailRow = {
 
 type RateLimitStatesResponse = {
   items: RateLimitStateEntry[]
+  totalStates?: number
+  totalManual?: number
   total: number
   nextCursor?: string
 }
@@ -150,9 +155,9 @@ const getModuleLabel = (
     upload: navigation.upload,
     auth: navigation.auth,
     email: navigation.email,
-    notifications: navigation.notifications
+    notifications: navigation.notifications,
+    registration: navigation.registrationModule
   }
-
   return fallbackMap[moduleName] || moduleName
 }
 
@@ -277,7 +282,7 @@ const RateLimitManagement = () => {
 
         const data: RateLimitStatesResponse = await response.json()
         setNextCursor(data.nextCursor)
-        setTotalCount(data.total)
+        setTotalCount(typeof data.total === 'number' ? data.total : data.items.length)
 
         if (options?.append) {
           setStates(prev => [...prev, ...data.items])
@@ -703,7 +708,13 @@ const RateLimitManagement = () => {
                     <Card className='h-full flex flex-col'>
                       <CardHeader
                         title={moduleLabel}
-                        subheader={t.summaryHeading || 'Module summary'}
+                        subheader={
+                          <Typography variant='caption' color='text.secondary'>
+                            {currentMode === 'monitor'
+                              ? (t.modeMonitorHint || 'Monitoring logs warnings without blocking users.')
+                              : (t.modeEnforceHint || 'Blocking enforces the limit and stops further requests.')}
+                          </Typography>
+                        }
                         action={
                           canModify ? (
                             <div className='flex flex-col items-end gap-2'>

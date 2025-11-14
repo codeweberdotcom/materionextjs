@@ -10,6 +10,7 @@ export const MENU_NAVIGATION_KEYS = [
   'permissions',
   'smtpSettings',
   'emailTemplates',
+  'rateLimitCategory',
   'rateLimitManagement',
   'rateLimitEvents',
   'references'

@@ -287,6 +287,8 @@
     "translationManagement": "إدارة الترجمات",
     "emailTemplatesManagement": "إدارة قوالب البريد الإلكتروني",
     "smtpManagement": "إدارة SMTP",
+    "rateLimitCategory": "البلاكات",
+    "registrationModule": "التسجيلات",
     "rateLimitManagement": "إدارة حدود الطلبات",
     "rateLimitEvents": "إحصائيات الحدود",
     "verifyEmail": "التحقق من البريد الإلكتروني",

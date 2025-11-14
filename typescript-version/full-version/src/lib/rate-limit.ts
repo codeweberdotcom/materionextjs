@@ -2,6 +2,7 @@ import { Prisma, PrismaClient } from '@prisma/client'
 import type { RateLimitState, User, UserBlock } from '@prisma/client'
 
 import logger from '@/lib/logger'
+import { incrementUnknownModuleMetric } from '@/lib/metrics/rate-limit'
 
 import type {
   RateLimitConfig,
@@ -62,18 +63,91 @@ export interface RateLimitEventListResult {
   nextCursor?: string
 }
 
+type StatesCursorPayload = {
+  stateCursor?: string
+  lastEntry?: {
+    id: string
+    source: 'state' | 'manual'
+    sortKey: number
+    tieKey: string
+  }
+}
+
+const encodeStatesCursor = (payload: StatesCursorPayload): string | null => {
+  try {
+    return Buffer.from(JSON.stringify(payload)).toString('base64')
+  } catch {
+    return null
+  }
+}
+
+const decodeStatesCursor = (cursor?: string): StatesCursorPayload => {
+  if (!cursor) {
+    return {}
+  }
+
+  try {
+    const decoded = Buffer.from(cursor, 'base64').toString('utf8')
+    const parsed = JSON.parse(decoded) as Partial<StatesCursorPayload> | null
+
+    if (parsed && typeof parsed === 'object') {
+      return {
+        stateCursor: typeof parsed.stateCursor === 'string' ? parsed.stateCursor : undefined,
+        lastEntry:
+          parsed.lastEntry && typeof parsed.lastEntry === 'object'
+            ? {
+                id: typeof parsed.lastEntry.id === 'string' ? parsed.lastEntry.id : '',
+                source:
+                  parsed.lastEntry.source === 'manual' || parsed.lastEntry.source === 'state'
+                    ? parsed.lastEntry.source
+                    : 'state',
+                sortKey: typeof parsed.lastEntry.sortKey === 'number' ? parsed.lastEntry.sortKey : 0,
+                tieKey: typeof parsed.lastEntry.tieKey === 'string' ? parsed.lastEntry.tieKey : ''
+              }
+            : undefined
+      }
+    }
+  } catch {
+    // Legacy cursor that only contained the RateLimitState id
+    return { stateCursor: cursor }
+  }
+
+  return { stateCursor: cursor }
+}
+
 class RateLimitService {
   private static instance: RateLimitService
   private configs: Map<string, RateLimitConfig> = new Map()
   private store: RateLimitStore
   private configsLoadedAt = 0
   private configsLoading: Promise<void> | null = null
+  private configsReady = false
+  private configsReadyPromise: Promise<void>
+  private resolveConfigsReady!: () => void
   private readonly CONFIG_REFRESH_INTERVAL = 5 * 1000
+  private readonly missingConfigModules = new Set<string>()
+  private readonly fallbackConfigTemplate: RateLimitConfig = {
+    maxRequests: 100,
+    windowMs: 60 * 1000,
+    blockMs: 60 * 1000,
+    warnThreshold: 5,
+    isActive: false,
+    mode: 'monitor',
+    storeEmailInEvents: true,
+    storeIpInEvents: false,
+    isFallback: true
+  }
 
   private constructor() {
     this.store = createRateLimitStore(prisma)
     this.setDefaultConfigs()
-    void this.ensureConfigsFresh(true)
+    this.configsReadyPromise = new Promise(resolve => {
+      this.resolveConfigsReady = resolve
+    })
+    void this.ensureConfigsFresh(true).then(() => {
+      this.configsReady = true
+      this.resolveConfigsReady()
+    })
   }
 
   static getInstance(): RateLimitService {
@@ -96,7 +170,10 @@ class RateLimitService {
           blockMs: config.blockMs,
           warnThreshold: config.warnThreshold ?? 0,
           isActive: config.isActive,
-          mode: (config.mode === 'monitor' || config.mode === 'enforce') ? config.mode : 'enforce'
+          mode: (config.mode === 'monitor' || config.mode === 'enforce') ? config.mode : 'enforce',
+          storeEmailInEvents: config.storeEmailInEvents ?? true,
+          storeIpInEvents: config.storeIpInEvents ?? true,
+          isFallback: config.isFallback ?? false
         })
       }
 
@@ -128,11 +205,78 @@ class RateLimitService {
 
   private setDefaultConfigs() {
     const defaults: Record<string, RateLimitConfig> = {
-      chat: { maxRequests: 1000, windowMs: 60 * 60 * 1000, blockMs: 60 * 1000, warnThreshold: 5, isActive: true, mode: 'enforce' },
-      ads: { maxRequests: 5, windowMs: 60 * 60 * 1000, blockMs: 60 * 60 * 1000, isActive: true, mode: 'enforce' },
-      upload: { maxRequests: 20, windowMs: 60 * 60 * 1000, blockMs: 30 * 60 * 1000, isActive: true, mode: 'enforce' },
-      auth: { maxRequests: 5, windowMs: 15 * 60 * 1000, blockMs: 60 * 60 * 1000, isActive: true, mode: 'enforce' },
-      email: { maxRequests: 50, windowMs: 60 * 60 * 1000, blockMs: 60 * 60 * 1000, isActive: true, mode: 'enforce' }
+      chat: {
+        maxRequests: 1000,
+        windowMs: 60 * 60 * 1000,
+        blockMs: 60 * 1000,
+        warnThreshold: 5,
+        isActive: true,
+        mode: 'enforce',
+        storeEmailInEvents: true,
+        storeIpInEvents: true,
+        isFallback: false
+      },
+      ads: {
+        maxRequests: 5,
+        windowMs: 60 * 60 * 1000,
+        blockMs: 60 * 60 * 1000,
+        isActive: true,
+        mode: 'enforce',
+        storeEmailInEvents: true,
+        storeIpInEvents: true,
+        isFallback: false
+      },
+      upload: {
+        maxRequests: 20,
+        windowMs: 60 * 60 * 1000,
+        blockMs: 30 * 60 * 1000,
+        isActive: true,
+        mode: 'enforce',
+        storeEmailInEvents: true,
+        storeIpInEvents: true,
+        isFallback: false
+      },
+      auth: {
+        maxRequests: 5,
+        windowMs: 15 * 60 * 1000,
+        blockMs: 60 * 60 * 1000,
+        isActive: true,
+        mode: 'enforce',
+        storeEmailInEvents: true,
+        storeIpInEvents: true,
+        isFallback: false
+      },
+      email: {
+        maxRequests: 50,
+        windowMs: 60 * 60 * 1000,
+        blockMs: 60 * 60 * 1000,
+        isActive: true,
+        mode: 'enforce',
+        storeEmailInEvents: true,
+        storeIpInEvents: true,
+        isFallback: false
+      },
+      notifications: {
+        maxRequests: 100,
+        windowMs: 60 * 60 * 1000,
+        blockMs: 60 * 60 * 1000,
+        isActive: false,
+        mode: 'monitor',
+        storeEmailInEvents: true,
+        storeIpInEvents: true,
+        isFallback: false
+      },
+      registration: {
+        maxRequests: 3,
+        windowMs: 60 * 60 * 1000,
+        blockMs: 24 * 60 * 60 * 1000,
+        warnThreshold: 1,
+        isActive: true,
+        mode: 'enforce',
+        storeEmailInEvents: true,
+        storeIpInEvents: true,
+        isFallback: false
+      }
     }
 
     for (const [module, config] of Object.entries(defaults)) {
@@ -156,14 +300,20 @@ class RateLimitService {
     windowEnd: Date
     blockedUntil?: Date | null
   }) {
+    const moduleConfig = this.configs.get(params.module)
+    const shouldStoreEmail = moduleConfig?.storeEmailInEvents !== false
+    const shouldStoreIp = moduleConfig?.storeIpInEvents !== false
+    const sanitizedEmail = shouldStoreEmail ? params.email ?? null : null
+    const sanitizedIp = shouldStoreIp ? params.ipAddress ?? null : null
+
     try {
       await prisma.rateLimitEvent.create({
         data: {
           module: params.module,
           key: params.key,
           userId: params.userId ?? null,
-          ipAddress: params.ipAddress ?? null,
-          email: params.email ?? null,
+          ipAddress: sanitizedIp,
+          email: sanitizedEmail,
           eventType: params.eventType,
           mode: params.mode,
           count: params.count,
@@ -186,7 +336,7 @@ class RateLimitService {
               module: params.module,
               key: params.key,
               userId: params.userId ?? null,
-              ipAddress: params.ipAddress ?? null,
+              ipAddress: sanitizedIp,
               eventType: params.eventType,
               mode: params.mode,
               count: params.count,
@@ -217,8 +367,40 @@ class RateLimitService {
     }
   }
 
+  private async ensureFallbackConfig(module: string): Promise<RateLimitConfig> {
+    const fallback = { ...this.fallbackConfigTemplate }
+    fallback.isFallback = true
+    try {
+      await prisma.rateLimitConfig.upsert({
+        where: { module },
+        update: {},
+        create: {
+          module,
+          maxRequests: fallback.maxRequests,
+          windowMs: fallback.windowMs,
+          blockMs: fallback.blockMs ?? fallback.windowMs,
+          warnThreshold: fallback.warnThreshold ?? 0,
+          isActive: fallback.isActive ?? false,
+          mode: fallback.mode ?? 'monitor',
+          storeEmailInEvents: fallback.storeEmailInEvents ?? true,
+          storeIpInEvents: fallback.storeIpInEvents ?? true,
+          isFallback: true
+        }
+      })
+    } catch (error) {
+      logger.error('Failed to persist fallback rate limit config', {
+        module,
+        error: error instanceof Error ? { name: error.name, message: error.message } : error
+      })
+    }
+
+    this.configs.set(module, fallback)
+    return fallback
+  }
+
   async checkLimit(key: string, module: string, options?: RateLimitCheckOptions): Promise<RateLimitResult> {
     await this.ensureConfigsFresh()
+    await this.configsReadyPromise
     const increment = options?.increment ?? true
     const now = new Date()
 
@@ -256,31 +438,40 @@ class RateLimitService {
     })
 
     if (activeBlock) {
+      const blockResetTime = (activeBlock.unblockedAt ?? new Date(Date.now() + 24 * 60 * 60 * 1000)).getTime()
       return {
         allowed: false,
         remaining: 0,
-        resetTime: activeBlock.unblockedAt || new Date(Date.now() + 24 * 60 * 60 * 1000),
-        blockedUntil: activeBlock.unblockedAt || undefined
+        resetTime: blockResetTime,
+        blockedUntil: activeBlock.unblockedAt ? activeBlock.unblockedAt.getTime() : undefined
       }
     }
 
-    const config = this.configs.get(module)
+    let config = this.configs.get(module)
     if (!config) {
-      return { allowed: true, remaining: 999, resetTime: new Date(Date.now() + 60000) }
+      incrementUnknownModuleMetric(module)
+      if (!this.missingConfigModules.has(module)) {
+        this.missingConfigModules.add(module)
+        logger.error('Rate limit config missing for module. Applying fallback monitor defaults.', { module })
+      }
+      config = await this.ensureFallbackConfig(module)
     }
 
     if (config.isActive === false) {
       const windowMs = config.windowMs || 60000
       const remaining = config.maxRequests ?? 999
-      return { allowed: true, remaining, resetTime: new Date(Date.now() + windowMs) }
+      return { allowed: true, remaining, resetTime: Date.now() + windowMs }
     }
 
     const mode: 'monitor' | 'enforce' = config.mode === 'monitor' ? 'monitor' : 'enforce'
     const keyType: 'user' | 'ip' =
       options?.keyType ?? (options?.userId ? 'user' : options?.ipAddress ? 'ip' : 'user')
     const eventUserId = options?.userId ?? (keyType === 'user' ? key : null)
-    const eventIpAddress = options?.ipAddress ?? (keyType === 'ip' ? key : null)
-    const eventEmail = options?.email ?? null
+    const rawIpAddress = options?.ipAddress ?? (keyType === 'ip' ? key : null)
+    const shouldStoreEmail = config.storeEmailInEvents !== false
+    const shouldStoreIp = config.storeIpInEvents !== false
+    const eventIpAddress = shouldStoreIp ? rawIpAddress : null
+    const eventEmail = shouldStoreEmail ? options?.email ?? null : null
 
     const warnThreshold = config.warnThreshold ?? 0
 
@@ -319,7 +510,7 @@ class RateLimitService {
       })
 
       let totalRequests = states.reduce((sum, state) => sum + state.count, 0)
-      let blockedCount = activeStates
+      const blockedCount = activeStates
 
       if (module === 'chat') {
         const oneHourAgo = new Date(Date.now() - config.windowMs)
@@ -351,7 +542,10 @@ class RateLimitService {
         blockMs: config.blockMs ?? undefined,
         warnThreshold: config.warnThreshold ?? undefined,
         isActive: typeof config.isActive === 'boolean' ? config.isActive : undefined,
-        mode: config.mode && (config.mode === 'monitor' || config.mode === 'enforce') ? config.mode : undefined
+        mode: config.mode && (config.mode === 'monitor' || config.mode === 'enforce') ? config.mode : undefined,
+        storeEmailInEvents:
+          typeof config.storeEmailInEvents === 'boolean' ? config.storeEmailInEvents : undefined,
+        storeIpInEvents: typeof config.storeIpInEvents === 'boolean' ? config.storeIpInEvents : undefined
       }
 
       console.info('[rate-limit] Updating config', {
@@ -367,7 +561,10 @@ class RateLimitService {
           ...(payload.blockMs !== undefined ? { blockMs: payload.blockMs } : {}),
           ...(payload.warnThreshold !== undefined ? { warnThreshold: payload.warnThreshold } : {}),
           ...(payload.isActive !== undefined ? { isActive: payload.isActive } : {}),
-          ...(payload.mode ? { mode: payload.mode } : {})
+          ...(payload.mode ? { mode: payload.mode } : {}),
+          ...(payload.storeEmailInEvents !== undefined ? { storeEmailInEvents: payload.storeEmailInEvents } : {}),
+          ...(payload.storeIpInEvents !== undefined ? { storeIpInEvents: payload.storeIpInEvents } : {}),
+          isFallback: false
         },
         create: {
           module,
@@ -376,11 +573,15 @@ class RateLimitService {
           blockMs: payload.blockMs || 900000,
           warnThreshold: payload.warnThreshold ?? 0,
           isActive: payload.isActive ?? true,
-          mode: payload.mode ?? 'enforce'
+          mode: payload.mode ?? 'enforce',
+          storeEmailInEvents: payload.storeEmailInEvents ?? true,
+          storeIpInEvents: payload.storeIpInEvents ?? true,
+          isFallback: false
         }
       })
 
-      await this.ensureConfigsFresh(true)
+    await this.ensureConfigsFresh(true)
+    this.configsReady = true
     } catch (error) {
       const formattedSchemaError = this.describeSchemaMismatch(error)
 
@@ -410,6 +611,27 @@ class RateLimitService {
         return {
           message:
             'RateLimitConfig is missing the `warnThreshold` column. Run `pnpm prisma migrate deploy` to update the schema.',
+          cause: message
+        }
+      }
+      if (message.includes('Unknown argument `storeEmailInEvents`')) {
+        return {
+          message:
+            'RateLimitConfig is missing the `storeEmailInEvents` column. Run `pnpm prisma migrate deploy` to apply the latest migrations.',
+          cause: message
+        }
+      }
+      if (message.includes('Unknown argument `storeIpInEvents`')) {
+        return {
+          message:
+            'RateLimitConfig is missing the `storeIpInEvents` column. Run `pnpm prisma migrate deploy` to apply the latest migrations.',
+          cause: message
+        }
+      }
+      if (message.includes('Unknown argument `isFallback`')) {
+        return {
+          message:
+            'RateLimitConfig is missing the `isFallback` column. Run `pnpm prisma migrate deploy` to apply the latest migrations.',
           cause: message
         }
       }
@@ -527,6 +749,9 @@ class RateLimitService {
   async listStates(params: ListRateLimitStatesParams = {}): Promise<RateLimitStateListResult> {
     await this.ensureConfigsFresh()
     const limit = Math.min(Math.max(params.limit ?? 20, 1), 100)
+    const cursorState = decodeStatesCursor(params.cursor)
+    const stateCursorId = cursorState.stateCursor
+    const cursorSource = cursorState.manualProcessed ? 'state' : 'manual'
 
     const where: Prisma.RateLimitStateWhereInput = {}
     if (params.module) {
@@ -539,7 +764,7 @@ class RateLimitService {
       ]
     }
 
-    const [states, total] = await Promise.all([
+    const [states, totalStates] = await Promise.all([
       prisma.rateLimitState.findMany({
         where,
         orderBy: [
@@ -547,8 +772,8 @@ class RateLimitService {
           { updatedAt: 'desc' }
         ],
         take: limit + 1,
-        cursor: params.cursor ? { id: params.cursor } : undefined,
-        skip: params.cursor ? 1 : 0
+        cursor: stateCursorId && cursorSource === 'state' ? { id: stateCursorId } : undefined,
+        skip: stateCursorId && cursorSource === 'state' ? 1 : 0
       }),
       prisma.rateLimitState.count({ where })
     ])
@@ -570,9 +795,13 @@ class RateLimitService {
         ]
       }
 
-      manualBlockWhere.AND = manualBlockWhere.AND
-        ? [...manualBlockWhere.AND, searchCondition]
-        : [searchCondition]
+      const existingAnd = manualBlockWhere.AND
+        ? Array.isArray(manualBlockWhere.AND)
+          ? manualBlockWhere.AND
+          : [manualBlockWhere.AND]
+        : []
+
+      manualBlockWhere.AND = [...existingAnd, searchCondition]
     }
 
     const manualBlocks = await prisma.userBlock.findMany({
@@ -588,6 +817,44 @@ class RateLimitService {
       }
     })
 
+    const manualMatchingTuples = manualBlocks
+      .map(block => {
+        const blockKey = block.userId || block.ipAddress
+        if (!blockKey || !block.module || block.module === 'all') {
+          return null
+        }
+        return `${blockKey}::${block.module}`
+      })
+      .filter((value): value is string => Boolean(value))
+
+    const uniqueManualTuples = Array.from(new Set(manualMatchingTuples))
+    const manualStateSet =
+      uniqueManualTuples.length > 0
+        ? new Set(
+            (
+              await prisma.rateLimitState.findMany({
+                where: {
+                  OR: uniqueManualTuples.map(tuple => {
+                    const [keyValue, moduleValue] = tuple.split('::')
+                    return {
+                      key: keyValue,
+                      module: moduleValue
+                    }
+                  })
+                },
+                select: { key: true, module: true }
+              })
+            ).map(match => `${match.key}::${match.module}`)
+          )
+        : new Set<string>()
+
+    const manualOnlyBlocks = manualBlocks.filter(block => {
+      const blockKey = block.userId || block.ipAddress
+      if (!blockKey) return false
+      if (!block.module || block.module === 'all') return true
+      return !manualStateSet.has(`${blockKey}::${block.module}`)
+    })
+
     const keys = Array.from(new Set(states.map(state => state.key).filter(Boolean)))
 
     const users = keys.length
@@ -599,14 +866,21 @@ class RateLimitService {
 
     const userMap = new Map(users.map(user => [user.id, user]))
 
-    const blockKeyMap = new Map(
-      manualBlocks
-        .map(block => {
-          const blockKey = block.userId || block.ipAddress
-          if (!blockKey) return null
-          return [`${blockKey}::${block.module}`, block] as const
-        })
-        .filter((entry): entry is [string, (typeof manualBlocks)[number]] => Boolean(entry))
+    const manualBlockEntries = manualBlocks
+      .map(block => {
+        const blockKey = block.userId || block.ipAddress
+        if (!blockKey || !block.module) return null
+        return {
+          key: `${blockKey}::${block.module}`,
+          value: block
+        }
+      })
+      .filter(
+        (entry): entry is { key: string; value: (typeof manualBlocks)[number] } => Boolean(entry)
+      )
+
+    const blockKeyMap = new Map<string, (typeof manualBlocks)[number]>(
+      manualBlockEntries.map(entry => [entry.key, entry.value])
     )
 
     const stateItems = states.slice(0, limit).map<RateLimitStateAdminEntry>(state => {
@@ -646,19 +920,11 @@ class RateLimitService {
       }
     })
 
-    const stateKeySet = new Set(stateItems.map(item => `${item.key}::${item.module}`))
-
-    const manualOnlyEntries: RateLimitStateAdminEntry[] = manualBlocks
-      .filter(block => {
-        const blockKey = block.userId || block.ipAddress
-        if (!blockKey) {
-          return false
-        }
-        return !stateKeySet.has(`${blockKey}::${block.module}`)
-      })
-      .map(block => {
+    const manualEntries = manualOnlyBlocks
+      .map<RateLimitStateAdminEntry>(block => {
         const key = block.userId || block.ipAddress || block.id
-        const config = this.configs.get(block.module) ?? {
+        const moduleName = block.module ?? 'all'
+        const config = this.configs.get(moduleName) ?? {
           maxRequests: 0,
           windowMs: 0,
           blockMs: 0,
@@ -670,14 +936,14 @@ class RateLimitService {
         return {
           id: block.id,
           key,
-          module: block.module,
+          module: moduleName,
           count: 0,
           windowStart: block.blockedAt,
           windowEnd: block.blockedAt,
           blockedUntil: block.unblockedAt ?? null,
           remaining: 0,
           config,
-          source: 'manual',
+          source: 'manual' as const,
           user: block.user
             ? {
                 id: block.user.id,
@@ -693,16 +959,75 @@ class RateLimitService {
           }
         }
       })
+      .sort((a, b) => b.windowStart.getTime() - a.windowStart.getTime())
 
-    const items = [...stateItems, ...manualOnlyEntries]
+    const combinedRecords = [...stateItems, ...manualEntries].map(entry => {
+      const sortKey = entry.blockedUntil?.getTime() ?? entry.windowEnd.getTime()
+      const sourceRank = entry.source === 'state' ? 0 : 1
+      return {
+        entry,
+        sortKey,
+        tieKey: entry.id,
+        source: entry.source,
+        sourceRank
+      }
+    })
 
-    const hasMore = states.length > limit
-    const nextCursor = hasMore ? states[limit].id : undefined
+    const compareRecords = (
+      a: { sortKey: number; sourceRank: number; tieKey: string },
+      b: { sortKey: number; sourceRank: number; tieKey: string }
+    ) => {
+      if (a.sortKey !== b.sortKey) {
+        return b.sortKey - a.sortKey
+      }
+      if (a.sourceRank !== b.sourceRank) {
+        return a.sourceRank - b.sourceRank
+      }
+      return a.tieKey.localeCompare(b.tieKey)
+    }
+
+    const cursorComparable = cursorState.lastEntry
+      ? {
+          sortKey: cursorState.lastEntry.sortKey,
+          sourceRank: cursorState.lastEntry.source === 'state' ? 0 : 1,
+          tieKey: cursorState.lastEntry.tieKey
+        }
+      : undefined
+
+    const sortedRecords = combinedRecords.sort(compareRecords)
+    const filteredRecords = cursorComparable
+      ? sortedRecords.filter(record => compareRecords(record, cursorComparable) > 0)
+      : sortedRecords
+
+    const pageSlice = filteredRecords.slice(0, limit + 1)
+    const hasMore = pageSlice.length > limit
+    const pageRecords = hasMore ? pageSlice.slice(0, limit) : pageSlice
+
+    const lastStateRecord = [...pageRecords].reverse().find(rec => rec.source === 'state')
+    const nextStateCursorId = lastStateRecord?.entry.id ?? cursorState.stateCursor
+
+    const lastReturnedRecord = pageRecords[pageRecords.length - 1]
+    const nextCursorPayload = hasMore && lastReturnedRecord
+      ? encodeStatesCursor({
+          stateCursor: nextStateCursorId,
+          lastEntry: {
+            id: lastReturnedRecord.entry.id,
+            source: lastReturnedRecord.source,
+            sortKey: lastReturnedRecord.sortKey,
+            tieKey: lastReturnedRecord.tieKey
+          }
+        })
+      : null
+
+    const totalManual = manualEntries.length
+    const combinedTotal = totalStates + totalManual
 
     return {
-      items,
-      total: total + manualOnlyEntries.length,
-      nextCursor
+      items: pageRecords.map(record => record.entry),
+      totalStates,
+      totalManual,
+      total: combinedTotal,
+      nextCursor: hasMore ? nextCursorPayload ?? undefined : undefined
     }
   }
 
@@ -732,10 +1057,10 @@ class RateLimitService {
     if (params.search) {
       andConditions.push({
         OR: [
-          { key: { contains: params.search, mode: 'insensitive' } },
-          { userId: { contains: params.search, mode: 'insensitive' } },
-          { ipAddress: { contains: params.search, mode: 'insensitive' } },
-          { email: { contains: params.search, mode: 'insensitive' } }
+          { key: { contains: params.search } },
+          { userId: { contains: params.search } },
+          { ipAddress: { contains: params.search } },
+          { email: { contains: params.search } }
         ]
       })
     }

@@ -2172,11 +2172,11 @@ Follow [NextAuth PrismaAdapter documentation](https://next-auth.js.org/adapters/
 **package.json configuration:**
 ```json
 "prisma": {
-  "schema": "./src/prisma/schema.prisma"
+  "schema": "./prisma/schema.prisma"
 }
 ```
 
-**Schema configuration** (`src/prisma/schema.prisma`):
+**Schema configuration** (`prisma/schema.prisma`):
 ```prisma
 datasource db {
   provider = "sqlite"
@@ -2433,7 +2433,7 @@ const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
 - adapter: PrismaAdapter(prisma) as Adapter,
 ```
 
-2. **Remove** `src/prisma` folder
+2. **Remove** `prisma` folder
 3. **Remove** Google sign-in button from `src/views/Login.tsx`:
 
 ```typescript
@@ -2469,7 +2469,7 @@ pnpm remove @auth/prisma-adapter @prisma/client prisma dotenv-cli
    - `src/app/api/login`
    - `src/libs/auth.ts`
    - `src/contexts/nextAuthProvider.tsx`
-   - `src/prisma`
+   - `prisma`
    - `src/hocs/AuthGuard.tsx`
    - `src/hocs/GuestOnlyRoute.tsx`
    - `src/components/AuthRedirect.tsx`
@@ -2594,7 +2594,7 @@ pnpm install @auth/prisma-adapter @prisma/client prisma dotenv-cli
   "postinstall": "prisma generate && npm run build:icons"
 },
 "prisma": {
-  "schema": "./src/prisma/schema.prisma"
+  "schema": "./prisma/schema.prisma"
 }
 ```
 
@@ -2606,7 +2606,7 @@ pnpm install @auth/prisma-adapter @prisma/client prisma dotenv-cli
 4. **Copy files**:
    - `src/libs/auth.ts` (remove CredentialsProvider if not needed)
    - `src/views/Login.tsx` (remove email/password code if not needed)
-   - `src/prisma/schema.prisma`
+   - `prisma/schema.prisma`
 
 5. **Run commands**:
 ```bash

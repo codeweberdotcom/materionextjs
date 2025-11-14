@@ -89,7 +89,7 @@ export interface MessagesReadData {
 export interface RateLimitExceededData {
   error: string;
   retryAfter: number;
-  blockedUntil: string;
+  blockedUntil: number;
 }
 
 export interface RateLimitWarningData {

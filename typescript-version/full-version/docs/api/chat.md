@@ -133,7 +133,7 @@ Check if user can send messages (rate limit validation).
 {
   "allowed": true,
   "remaining": 4,
-  "resetTime": "2024-01-01T10:05:00Z"
+  "resetTime": 1704103500000
 }
 ```
 
@@ -142,7 +142,7 @@ Check if user can send messages (rate limit validation).
 {
   "error": "Rate limit exceeded",
   "retryAfter": 30,
-  "blockedUntil": "2024-01-01T10:05:00Z"
+  "blockedUntil": 1704103500000
 }
 ```
 

@@ -331,6 +331,20 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
       )
     }
 
+    const rateLimitChildren = []
+    if (checkPermission('rateLimitManagement', 'read')) {
+      rateLimitChildren.push(
+        <MenuItem key="rateLimitManagement" href={`/${locale}/admin/rate-limits`} icon={<i className='ri-timer-flash-line' />}>
+          {dictionary['navigation'].rateLimitManagement}
+        </MenuItem>
+      )
+      rateLimitChildren.push(
+        <MenuItem key="rateLimitEvents" href={`/${locale}/admin/rate-limits/events`} icon={<i className='ri-line-chart-line' />}>
+          {dictionary['navigation'].rateLimitEvents}
+        </MenuItem>
+      )
+    }
+
     // Communications section (only show if user has at least one communication permission)
     const communicationsChildren = []
 
@@ -424,6 +438,14 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
       menuItems.push(
         <MenuSection key="adminAndSettings" label={dictionary['navigation'].adminAndSettings}>
           {adminSettingsChildren}
+        </MenuSection>
+      )
+    }
+
+    if (rateLimitChildren.length > 0) {
+      menuItems.push(
+        <MenuSection key="rateLimitCategory" label={dictionary['navigation'].rateLimitCategory}>
+          {rateLimitChildren}
         </MenuSection>
       )
     }

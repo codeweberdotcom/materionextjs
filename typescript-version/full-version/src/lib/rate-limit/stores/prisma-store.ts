@@ -66,7 +66,7 @@ export class PrismaRateLimitStore implements RateLimitStore {
           result: {
             allowed: true,
             remaining: config.maxRequests,
-            resetTime: new Date(now.getTime() + config.windowMs)
+            resetTime: now.getTime() + config.windowMs
           }
         } as TransactionOutcome
       }
@@ -93,8 +93,8 @@ export class PrismaRateLimitStore implements RateLimitStore {
             result: {
               allowed: false,
               remaining: 0,
-              resetTime: state.windowEnd,
-              blockedUntil: state.blockedUntil
+              resetTime: state.windowEnd.getTime(),
+              blockedUntil: state.blockedUntil?.getTime()
             }
           } as TransactionOutcome
         }
@@ -108,7 +108,7 @@ export class PrismaRateLimitStore implements RateLimitStore {
           result: {
             allowed: true,
             remaining: remainingBefore,
-            resetTime: state.windowEnd,
+            resetTime: state.windowEnd.getTime(),
             warning: warnPreview ? { remaining: remainingBefore } : undefined
           }
         } as TransactionOutcome
@@ -127,7 +127,8 @@ export class PrismaRateLimitStore implements RateLimitStore {
         select: {
           count: true,
           windowStart: true,
-          windowEnd: true
+          windowEnd: true,
+          blockedUntil: true
         }
       })
 
@@ -135,10 +136,14 @@ export class PrismaRateLimitStore implements RateLimitStore {
       const remainingAfter = Math.max(0, config.maxRequests - newCount)
 
       const warnTriggered =
-        warnThreshold > 0 && remainingBefore > warnThreshold && remainingAfter <= warnThreshold && remainingAfter > 0
+        warnThreshold > 0 &&
+        remainingBefore > warnThreshold &&
+        remainingAfter <= warnThreshold &&
+        remainingBefore > remainingAfter &&
+        remainingAfter > 0
 
       const blockTriggered = newCount > config.maxRequests
-      const crossedLimitFirstTime = blockTriggered && state.count <= config.maxRequests
+      const crossedLimitFirstTime = blockTriggered && remainingBefore >= 0 && remainingBefore <= config.maxRequests
 
       if (blockTriggered) {
         const blockDuration = config.blockMs ?? config.windowMs
@@ -181,14 +186,14 @@ export class PrismaRateLimitStore implements RateLimitStore {
               ? {
                   allowed: true,
                   remaining: 0,
-                  resetTime: updatedState.windowEnd,
+                  resetTime: updatedState.windowEnd.getTime(),
                   warning: { remaining: 0 }
                 }
               : {
                   allowed: false,
                   remaining: 0,
-                  resetTime: updatedState.windowEnd,
-                  blockedUntil
+                  resetTime: updatedState.windowEnd.getTime(),
+                  blockedUntil: blockedUntil.getTime()
                 }
         } as TransactionOutcome
       }
@@ -215,7 +220,7 @@ export class PrismaRateLimitStore implements RateLimitStore {
         result: {
           allowed: true,
           remaining: remainingAfter,
-          resetTime: updatedState.windowEnd,
+          resetTime: updatedState.windowEnd.getTime(),
           warning: showWarningAfter ? { remaining: remainingAfter } : undefined
         }
       } as TransactionOutcome

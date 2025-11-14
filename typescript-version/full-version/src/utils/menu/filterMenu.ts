@@ -118,6 +118,10 @@ const filterAdminSectionChild = (
     return checkPermission(user, 'emailTemplatesManagement', 'read')
   }
 
+  if (child.label === labels.rateLimitCategory) {
+    return checkPermission(user, 'rateLimitManagement', 'read')
+  }
+
   if (child.label === labels.rateLimitManagement) {
     return checkPermission(user, 'rateLimitManagement', 'read')
   }
