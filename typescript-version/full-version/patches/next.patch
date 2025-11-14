@@ -1,0 +1,24 @@
+diff --git a/dist/server/patch-error-inspect.js b/dist/server/patch-error-inspect.js
+index fefdc18cd9779c4f41512a83fb0de69d3fb44761..62af5b40543c632e7d6a4a7a9a872e7598401d95 100644
+--- a/dist/server/patch-error-inspect.js
++++ b/dist/server/patch-error-inspect.js
+@@ -160,7 +160,18 @@ function shouldIgnoreListOriginalFrame(file) {
+         if (sourceURL.startsWith('/')) {
+             sourceURL = _url.pathToFileURL(frame.file).toString();
+         }
+-        const maybeSourceMapPayload = ((_nativeFindSourceMap = (0, _module.findSourceMap)(sourceURL)) == null ? void 0 : _nativeFindSourceMap.payload) ?? bundlerFindSourceMapPayload(sourceURL);
++        let maybeSourceMapPayload = undefined;
++        try {
++            _nativeFindSourceMap = (0, _module.findSourceMap)(sourceURL);
++            maybeSourceMapPayload = _nativeFindSourceMap == null ? void 0 : _nativeFindSourceMap.payload;
++        } catch (error) {
++            if ((error == null ? void 0 : error.code) !== 'ERR_INVALID_ARG_TYPE') {
++                throw error;
++            }
++        }
++        if (maybeSourceMapPayload === undefined) {
++            maybeSourceMapPayload = bundlerFindSourceMapPayload(sourceURL);
++        }
+         if (maybeSourceMapPayload === undefined) {
+             return {
+                 stack: {

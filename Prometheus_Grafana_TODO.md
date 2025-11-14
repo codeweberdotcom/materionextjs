@@ -4,9 +4,9 @@
 Поднять локальный стек Prometheus/Grafana, который будет снимать метрики с Next.js приложения по эндпоинту `/api/metrics` и отображать их в дашборде/алертах.
 
 ## Директория
-В корне репозитория создать папку `monitoring/` со следующей структурой:
+В корне репозитория создать папку `typescript-version/full-version/monitoring/` со следующей структурой:
 ```
-monitoring/
+typescript-version/full-version/monitoring/
 ├── docker-compose.yml
 ├── prometheus/
 │   └── prometheus.yml
@@ -24,7 +24,7 @@ monitoring/
   - порты: `9090:9090`
   - volume: `./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml`
 - Сервис `grafana` (образ `grafana/grafana:latest`):
-  - порты: `3001:3000`
+  - порты: `9091:3000`
   - volumes: `./grafana:/etc/grafana`
   - зависит от `prometheus`.
 
@@ -58,10 +58,10 @@ datasources:
 
 ## Запуск
 1. Убедиться, что Next.js сервер доступен локально (например, `pnpm run dev`).
-2. В корне репозитория: `cd monitoring && docker compose up -d`.
+2. В корне репозитория: `cd typescript-version/full-version/monitoring && docker compose up -d`.
 3. Проверить:
    - Prometheus: http://localhost:9090 — в Targets должен быть `materio-nextjs` со статусом UP.
-   - Grafana: http://localhost:3001 — логин `admin/admin` (по умолчанию), настроить дашборд.
+   - Grafana: http://localhost:9091 — логин `admin/admin` (по умолчанию), настроить дашборд.
 
 ## Алерты (опционально)
 - В `prometheus.yml` можно добавить `rule_files` с выражениями из Junie Metrics Plan (RateLimitUnknownModule, RateLimitFallbackTooLong).

@@ -4745,3 +4745,1015 @@
 {"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T14:24:06.064Z","userId":"cmhy723xl000dktev29kqz5dc"}
 {"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":10,"resetTime":1763130300000,"service":"materio-nextjs","timestamp":"2025-11-14T14:24:06.067Z"}
 {"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T14:24:06.067Z"}
+{"level":"info","message":"Received SIGINT, shutting down Socket.IO server gracefully","service":"materio-nextjs","timestamp":"2025-11-14T16:56:26.436Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T16:56:29.513Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T16:56:29.701Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T16:56:34.660Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T16:56:34.660Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T16:56:34.661Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T16:56:34.662Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T16:56:34.662Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T16:56:34.664Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"Y3A_mlv7gqAvJibvAAAB","timestamp":"2025-11-14T16:56:34.805Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"Y3A_mlv7gqAvJibvAAAB","timestamp":"2025-11-14T16:56:34.805Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"BriH7poF-kt_ZxZxAAAC","timestamp":"2025-11-14T16:56:34.807Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"BriH7poF-kt_ZxZxAAAC","timestamp":"2025-11-14T16:56:34.808Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"Y3A_mlv7gqAvJibvAAAB","timestamp":"2025-11-14T16:56:34.811Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"Y3A_mlv7gqAvJibvAAAB","timestamp":"2025-11-14T16:56:34.811Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"Y3A_mlv7gqAvJibvAAAB","timestamp":"2025-11-14T16:56:34.812Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"BriH7poF-kt_ZxZxAAAC","timestamp":"2025-11-14T16:56:34.814Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"BriH7poF-kt_ZxZxAAAC","timestamp":"2025-11-14T16:56:34.814Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Rate limit applied","remainingPoints":10,"resetTime":1763139454818,"service":"materio-nextjs","timestamp":"2025-11-14T16:56:34.819Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"BriH7poF-kt_ZxZxAAAC","timestamp":"2025-11-14T16:56:34.820Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"2EqmCHnTd4-lc3ZhAAAE","timestamp":"2025-11-14T16:56:34.821Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"2EqmCHnTd4-lc3ZhAAAE","timestamp":"2025-11-14T16:56:34.822Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"q5VKhKjP_cIE4ByFAAAF","timestamp":"2025-11-14T16:56:34.822Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"q5VKhKjP_cIE4ByFAAAF","timestamp":"2025-11-14T16:56:34.822Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"2EqmCHnTd4-lc3ZhAAAE","timestamp":"2025-11-14T16:56:34.825Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"2EqmCHnTd4-lc3ZhAAAE","timestamp":"2025-11-14T16:56:34.826Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"q5VKhKjP_cIE4ByFAAAF","timestamp":"2025-11-14T16:56:34.826Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"q5VKhKjP_cIE4ByFAAAF","timestamp":"2025-11-14T16:56:34.826Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"2EqmCHnTd4-lc3ZhAAAE","timestamp":"2025-11-14T16:56:34.828Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":4,"rooms":["cmhy74c1d0001h45wjob7epba","cmhy81ewh0032z5g8toptoldz","cmhyqqaue007rz5g81icuvdvs","cmhyqtanz007vz5g8uk53ydia"],"service":"materio-nextjs","timestamp":"2025-11-14T16:56:34.830Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"ip":"::1","level":"info","message":"Rate limit applied","remainingPoints":10,"resetTime":1763139454830,"service":"materio-nextjs","timestamp":"2025-11-14T16:56:34.830Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"q5VKhKjP_cIE4ByFAAAF","timestamp":"2025-11-14T16:56:34.831Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":4,"rooms":["cmhy74c1d0001h45wjob7epba","cmhy81ewh0032z5g8toptoldz","cmhyqqaue007rz5g81icuvdvs","cmhyqtanz007vz5g8uk53ydia"],"service":"materio-nextjs","timestamp":"2025-11-14T16:56:34.835Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T16:56:43.406Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T16:56:43.433Z"}
+{"level":"info","message":"Received SIGINT, shutting down Socket.IO server gracefully","service":"materio-nextjs","timestamp":"2025-11-14T16:57:38.292Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T16:58:14.812Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T16:58:14.870Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:01:01.966Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:01:02.022Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:01:31.676Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:01:31.734Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:02:19.456Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:02:19.512Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:04:51.648Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:04:51.736Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:06:34.581Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:06:34.644Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:08:17.043Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:08:17.120Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T17:08:22.630Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T17:08:22.631Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:08:22.632Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:08:22.632Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T17:08:22.633Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T17:08:22.634Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:09:19.789Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:09:19.808Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:12:43.287Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:12:43.365Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:15:32.765Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:15:32.835Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T17:15:38.030Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T17:15:38.031Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:15:38.032Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:15:38.032Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T17:15:38.033Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T17:15:38.036Z"}
+{"level":"info","message":"Received SIGINT, shutting down Socket.IO server gracefully","service":"materio-nextjs","timestamp":"2025-11-14T17:16:14.384Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:16:17.226Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:16:17.291Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T17:16:22.418Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T17:16:22.419Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:16:22.419Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:16:22.420Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T17:16:22.420Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T17:16:22.422Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:17:01.087Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:17:01.089Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:17:01.885Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:17:01.885Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:17:02.782Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:17:02.783Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:17:02.980Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:17:02.982Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:17:03.147Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:17:03.148Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:17:03.352Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:17:03.355Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:17:17.678Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:17:17.735Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:18:10.777Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:18:10.861Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T17:18:15.992Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T17:18:15.993Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:18:15.993Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:18:15.994Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T17:18:15.994Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T17:18:15.996Z"}
+{"level":"info","message":"Received SIGINT, shutting down Socket.IO server gracefully","service":"materio-nextjs","timestamp":"2025-11-14T17:21:01.509Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:21:04.285Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:21:04.353Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T17:21:09.571Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T17:21:09.572Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:21:09.573Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:21:09.574Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T17:21:09.574Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T17:21:09.576Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:21:34.587Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:21:34.650Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:24:10.713Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:24:10.783Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T17:24:16.116Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T17:24:16.118Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:24:16.119Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:24:16.119Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T17:24:16.120Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T17:24:16.121Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:24:28.672Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:24:28.768Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:24:31.147Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:24:31.241Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:25:44.182Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:25:44.260Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T17:25:49.619Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T17:25:49.623Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:25:49.624Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:25:49.624Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T17:25:49.625Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T17:25:49.627Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:26:36.400Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:26:36.403Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T17:26:36.431Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T17:26:36.442Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:26:36.520Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:26:36.521Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T17:26:36.718Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T17:26:36.728Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-14T17:26:41.114Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:26:41.259Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:26:41.290Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-14T17:26:41.318Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"iw0eqUxRszJDgayAAAAB","timestamp":"2025-11-14T17:26:41.506Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"iw0eqUxRszJDgayAAAAB","timestamp":"2025-11-14T17:26:41.510Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"A3mEltbohCxlD-ZSAAAC","timestamp":"2025-11-14T17:26:41.514Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"A3mEltbohCxlD-ZSAAAC","timestamp":"2025-11-14T17:26:41.514Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"iw0eqUxRszJDgayAAAAB","timestamp":"2025-11-14T17:26:41.517Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"iw0eqUxRszJDgayAAAAB","timestamp":"2025-11-14T17:26:41.518Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"iw0eqUxRszJDgayAAAAB","timestamp":"2025-11-14T17:26:41.520Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"A3mEltbohCxlD-ZSAAAC","timestamp":"2025-11-14T17:26:41.523Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"A3mEltbohCxlD-ZSAAAC","timestamp":"2025-11-14T17:26:41.524Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User joined rooms","roomCount":4,"rooms":["cmhy74c1d0001h45wjob7epba","cmhy81ewh0032z5g8toptoldz","cmhyqqaue007rz5g81icuvdvs","cmhyqtanz007vz5g8uk53ydia"],"service":"materio-nextjs","timestamp":"2025-11-14T17:26:41.543Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"ip":"::1","level":"info","message":"Rate limit applied","remainingPoints":10,"resetTime":1763141261545,"service":"materio-nextjs","timestamp":"2025-11-14T17:26:41.545Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"A3mEltbohCxlD-ZSAAAC","timestamp":"2025-11-14T17:26:41.547Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:26:55.281Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:26:55.299Z"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T17:26:56.743Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T17:26:56.754Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:26:58.182Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:26:58.194Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":10,"resetTime":1763141220000,"service":"materio-nextjs","timestamp":"2025-11-14T17:26:58.219Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T17:26:58.220Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:27:08.378Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:27:08.379Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T17:27:08.384Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T17:27:08.386Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:27:08.414Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:27:08.415Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T17:27:08.417Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T17:27:08.419Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:27:11.367Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:27:11.384Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-14T17:27:11.396Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-14T17:27:11.462Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"1JN6znI1qEOd1kU0AAAE","timestamp":"2025-11-14T17:27:11.534Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"1JN6znI1qEOd1kU0AAAE","timestamp":"2025-11-14T17:27:11.537Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"XvaMTwOIhvIz-3B2AAAF","timestamp":"2025-11-14T17:27:11.540Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"XvaMTwOIhvIz-3B2AAAF","timestamp":"2025-11-14T17:27:11.540Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"1JN6znI1qEOd1kU0AAAE","timestamp":"2025-11-14T17:27:11.543Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"1JN6znI1qEOd1kU0AAAE","timestamp":"2025-11-14T17:27:11.545Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"1JN6znI1qEOd1kU0AAAE","timestamp":"2025-11-14T17:27:11.547Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"XvaMTwOIhvIz-3B2AAAF","timestamp":"2025-11-14T17:27:11.548Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"XvaMTwOIhvIz-3B2AAAF","timestamp":"2025-11-14T17:27:11.549Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User joined rooms","roomCount":4,"rooms":["cmhy74c1d0001h45wjob7epba","cmhy81ewh0032z5g8toptoldz","cmhyqqaue007rz5g81icuvdvs","cmhyqtanz007vz5g8uk53ydia"],"service":"materio-nextjs","timestamp":"2025-11-14T17:27:11.574Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"ip":"::1","level":"info","message":"Rate limit applied","remainingPoints":10,"resetTime":1763141291582,"service":"materio-nextjs","timestamp":"2025-11-14T17:27:11.583Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"XvaMTwOIhvIz-3B2AAAF","timestamp":"2025-11-14T17:27:11.584Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:27:56.060Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:27:56.076Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:29:58.137Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:29:58.187Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:30:59.103Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:30:59.123Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:34:20.169Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:35:03.002Z"}
+{"level":"info","message":"Received SIGINT, shutting down Socket.IO server gracefully","service":"materio-nextjs","timestamp":"2025-11-14T17:35:35.741Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:35:38.890Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:35:38.954Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T17:35:43.418Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T17:35:43.419Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:35:43.420Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T17:35:43.420Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T17:35:43.421Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T17:35:43.423Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:35:43.475Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:35:43.476Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"X7Ol99L95ybNodseAAAC","timestamp":"2025-11-14T17:35:43.477Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"X7Ol99L95ybNodseAAAC","timestamp":"2025-11-14T17:35:43.478Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"X7Ol99L95ybNodseAAAC","timestamp":"2025-11-14T17:35:43.481Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"X7Ol99L95ybNodseAAAC","timestamp":"2025-11-14T17:35:43.482Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:35:43.483Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:35:43.484Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:35:43.485Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"ip":"::1","level":"info","message":"Rate limit applied","remainingPoints":10,"resetTime":1763141803486,"service":"materio-nextjs","timestamp":"2025-11-14T17:35:43.486Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"X7Ol99L95ybNodseAAAC","timestamp":"2025-11-14T17:35:43.487Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":4,"rooms":["cmhy74c1d0001h45wjob7epba","cmhy81ewh0032z5g8toptoldz","cmhyqqaue007rz5g81icuvdvs","cmhyqtanz007vz5g8uk53ydia"],"service":"materio-nextjs","timestamp":"2025-11-14T17:35:43.497Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"6NeXy6QhV0ZbgunkAAAE","timestamp":"2025-11-14T17:35:44.966Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"6NeXy6QhV0ZbgunkAAAE","timestamp":"2025-11-14T17:35:44.967Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"i7wx1T_D4rsY_QA-AAAF","timestamp":"2025-11-14T17:35:44.968Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"i7wx1T_D4rsY_QA-AAAF","timestamp":"2025-11-14T17:35:44.968Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"6NeXy6QhV0ZbgunkAAAE","timestamp":"2025-11-14T17:35:44.971Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"6NeXy6QhV0ZbgunkAAAE","timestamp":"2025-11-14T17:35:44.971Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"i7wx1T_D4rsY_QA-AAAF","timestamp":"2025-11-14T17:35:44.972Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"i7wx1T_D4rsY_QA-AAAF","timestamp":"2025-11-14T17:35:44.972Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"6NeXy6QhV0ZbgunkAAAE","timestamp":"2025-11-14T17:35:44.972Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"ip":"::1","level":"info","message":"Rate limit applied","remainingPoints":10,"resetTime":1763141804976,"service":"materio-nextjs","timestamp":"2025-11-14T17:35:44.976Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"i7wx1T_D4rsY_QA-AAAF","timestamp":"2025-11-14T17:35:44.977Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":4,"rooms":["cmhy74c1d0001h45wjob7epba","cmhy81ewh0032z5g8toptoldz","cmhyqqaue007rz5g81icuvdvs","cmhyqtanz007vz5g8uk53ydia"],"service":"materio-nextjs","timestamp":"2025-11-14T17:35:44.996Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:36:08.358Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:36:08.383Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:49:25.345Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:25.360Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":10,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:25.409Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T17:49:25.410Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:25.415Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5k6dr0003p3f8wjzlxakw","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:25.481Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:49:25.569Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:49:26.464Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:26.472Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":9,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:26.478Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T17:49:26.479Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:26.483Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5k77m0007p3f8qv7l6036","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:26.535Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:49:26.641Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:27.092Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":8,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:27.096Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T17:49:27.097Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:27.103Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5k7p1000bp3f8q683fm0i","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:27.190Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:28.240Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":7,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:28.243Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T17:49:28.243Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:28.249Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5k8o0000fp3f85bwsty22","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:28.444Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:28.674Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":6,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:28.680Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T17:49:28.681Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:28.694Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5k8wr000jp3f8u6z90hef","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:28.751Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:29.163Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":5,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:29.166Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T17:49:29.167Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:29.170Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5k9a0000np3f8iyft8zu2","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:29.238Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:29.582Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":4,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:29.586Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T17:49:29.587Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:29.590Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5k9mf000rp3f8ewudvmh2","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:29.678Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:29.977Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":3,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:29.982Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T17:49:29.983Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:29.985Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5k9wo000vp3f8w1ah5l7a","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:30.053Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:30.414Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":2,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:30.420Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T17:49:30.420Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:30.423Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5ka90000zp3f8qrf8lerm","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:30.496Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:30.820Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":1,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:30.823Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T17:49:30.824Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:30.826Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kak00013p3f899o4zkbd","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:30.892Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.199Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.206Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.207Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.240Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:31.246Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kaw5001ap3f87in3dezm","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.323Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.587Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.590Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.592Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.637Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:31.642Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kb7b001hp3f88wknfgac","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.731Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.954Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.958Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:31.959Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:32.003Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:32.006Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kbh7001op3f86qcanvj3","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:32.063Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:32.623Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:32.629Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:32.630Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:32.688Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:32.692Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kbzo001vp3f8mt501bbg","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:32.747Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:33.329Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:33.332Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:33.333Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:33.388Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:33.391Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kcjs0022p3f8w96l0hoe","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:33.471Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:33.639Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:33.645Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:33.645Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:33.806Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:33.809Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kcv00029p3f8mgxm7dqq","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:33.878Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:34.239Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:34.242Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:34.242Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:34.308Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:34.312Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kd9a002gp3f8k6wpfk5f","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:34.390Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:34.900Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:34.905Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:34.905Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:34.932Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:34.936Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kdre002np3f8h9tfcid1","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:35.042Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:35.254Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:35.257Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:35.258Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:35.313Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:35.316Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5ke1b002up3f8v2x8h0b7","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:35.394Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:35.914Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:35.919Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:35.919Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:35.996Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:36.004Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kel20031p3f8lxjdeobh","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:36.119Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:36.510Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:36.516Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:36.516Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:36.607Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:36.612Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kf1u0038p3f8s8dhcevn","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:36.694Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.052Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.055Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.056Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.085Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:37.088Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kfdk003fp3f8jzavd1cs","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.117Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.350Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.355Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.355Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.367Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:37.420Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kfmj003mp3f8ej91uj5g","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.439Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.921Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.928Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.928Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.943Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:37.948Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kg15003tp3f8gkw3s588","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:37.965Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:38.271Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:38.274Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:38.274Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:38.287Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:38.290Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kgao0040p3f8vj0o9a9m","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:38.308Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:38.884Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:38.887Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:38.888Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:38.898Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:38.904Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kgrp0047p3f8qowu1ktg","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:38.923Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:39.431Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:39.434Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:39.435Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:39.447Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:39.453Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5kh6z004ep3f8jppbuxha","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:39.471Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:39.981Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:39.983Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"monitor","service":"materio-nextjs","timestamp":"2025-11-14T17:49:39.983Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Monitor mode — returning warning only","resetTimeMs":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:39.996Z","warningRemaining":0}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","socketId":"CAWE2RsexvNPwnCXAAAB","timestamp":"2025-11-14T17:49:40.000Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz5khm7004lp3f8y6iuezmt","roomId":"cmhy81ewh0032z5g8toptoldz","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T17:49:40.020Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:49:45.173Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:49:46.038Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:49:47.966Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142600000,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:47.971Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"enforce","service":"materio-nextjs","timestamp":"2025-11-14T17:49:47.972Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":900,"service":"materio-nextjs","timestamp":"2025-11-14T17:49:47.986Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:50:18.367Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:50:18.381Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:50:18.382Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142660000,"service":"materio-nextjs","timestamp":"2025-11-14T17:50:18.701Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":870,"service":"materio-nextjs","timestamp":"2025-11-14T17:50:18.701Z"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142660000,"service":"materio-nextjs","timestamp":"2025-11-14T17:50:18.706Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":870,"service":"materio-nextjs","timestamp":"2025-11-14T17:50:18.706Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission","module":"roleManagement","role":"admin","service":"materio-nextjs","timestamp":"2025-11-14T17:50:20.466Z"}
+{"action":"read","hasPermission":true,"level":"info","message":"🔍 [PERMISSIONS] Result","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-14T17:50:20.467Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.272Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.282Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.283Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.284Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T17:50:25.314Z","user":true}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T17:50:25.315Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.319Z"}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.320Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission","module":"roleManagement","role":"admin","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.328Z"}
+{"action":"read","hasPermission":true,"level":"info","message":"🔍 [PERMISSIONS] Result","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.330Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission","module":"roleManagement","role":"admin","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.331Z"}
+{"action":"read","hasPermission":true,"level":"info","message":"🔍 [PERMISSIONS] Result","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.332Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission","module":"userManagement","role":"admin","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.335Z"}
+{"action":"read","hasPermission":true,"level":"info","message":"🔍 [PERMISSIONS] Result","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.335Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.354Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.378Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission","module":"roleManagement","role":"admin","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.466Z"}
+{"action":"read","hasPermission":true,"level":"info","message":"🔍 [PERMISSIONS] Result","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.468Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission","module":"userManagement","role":"admin","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.510Z"}
+{"action":"read","hasPermission":true,"level":"info","message":"🔍 [PERMISSIONS] Result","module":"userManagement","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.512Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission","module":"roleManagement","role":"admin","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.516Z"}
+{"action":"read","hasPermission":true,"level":"info","message":"🔍 [PERMISSIONS] Result","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.517Z"}
+{"action":"read","level":"info","message":"🔍 [PERMISSIONS] Checking permission","module":"roleManagement","role":"admin","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.719Z"}
+{"action":"read","hasPermission":true,"level":"info","message":"🔍 [PERMISSIONS] Result","module":"roleManagement","service":"materio-nextjs","timestamp":"2025-11-14T17:50:25.720Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-14T17:50:27.756Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T17:50:27.866Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T17:50:27.878Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-14T17:50:27.889Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"Z052sWXePwbmFlkqAAAH","timestamp":"2025-11-14T17:50:27.931Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"Z052sWXePwbmFlkqAAAH","timestamp":"2025-11-14T17:50:27.932Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"dKSwByD5oK09-nxMAAAI","timestamp":"2025-11-14T17:50:27.933Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"dKSwByD5oK09-nxMAAAI","timestamp":"2025-11-14T17:50:27.934Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"Z052sWXePwbmFlkqAAAH","timestamp":"2025-11-14T17:50:27.935Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"Z052sWXePwbmFlkqAAAH","timestamp":"2025-11-14T17:50:27.935Z","userId":"cmhy723vw000bktevmd35hj00"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"Z052sWXePwbmFlkqAAAH","timestamp":"2025-11-14T17:50:27.937Z","userId":"cmhy723vw000bktevmd35hj00","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"dKSwByD5oK09-nxMAAAI","timestamp":"2025-11-14T17:50:27.938Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"dKSwByD5oK09-nxMAAAI","timestamp":"2025-11-14T17:50:27.938Z","userId":"cmhy723vw000bktevmd35hj00"}
+{"level":"info","message":"User joined rooms","roomCount":1,"rooms":["cmhy74c1d0001h45wjob7epba"],"service":"materio-nextjs","timestamp":"2025-11-14T17:50:27.943Z","userId":"cmhy723vw000bktevmd35hj00"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Rate limit applied","remainingPoints":10,"resetTime":1763142687951,"service":"materio-nextjs","timestamp":"2025-11-14T17:50:27.952Z","userId":"cmhy723vw000bktevmd35hj00"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"dKSwByD5oK09-nxMAAAI","timestamp":"2025-11-14T17:50:27.953Z","userId":"cmhy723vw000bktevmd35hj00","userRole":"user"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:50:28.981Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142660000,"service":"materio-nextjs","timestamp":"2025-11-14T17:50:28.987Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":859,"service":"materio-nextjs","timestamp":"2025-11-14T17:50:28.988Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:50:39.968Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142660000,"service":"materio-nextjs","timestamp":"2025-11-14T17:50:39.973Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":848,"service":"materio-nextjs","timestamp":"2025-11-14T17:50:39.973Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:50:50.979Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142660000,"service":"materio-nextjs","timestamp":"2025-11-14T17:50:50.983Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":837,"service":"materio-nextjs","timestamp":"2025-11-14T17:50:50.984Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:51:01.978Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142720000,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:01.989Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":826,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:01.989Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:51:12.991Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142720000,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:12.994Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":815,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:12.994Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:51:23.999Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142720000,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:24.002Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":804,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:24.002Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:51:34.986Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142720000,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:34.990Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":793,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:34.990Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:51:45.975Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142720000,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:45.980Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":782,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:45.981Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:51:56.979Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142720000,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:56.981Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":771,"service":"materio-nextjs","timestamp":"2025-11-14T17:51:56.982Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:52:07.983Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142780000,"service":"materio-nextjs","timestamp":"2025-11-14T17:52:07.993Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":760,"service":"materio-nextjs","timestamp":"2025-11-14T17:52:07.994Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:52:18.999Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142780000,"service":"materio-nextjs","timestamp":"2025-11-14T17:52:19.002Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":749,"service":"materio-nextjs","timestamp":"2025-11-14T17:52:19.003Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T17:52:29.984Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763143487972,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763142780000,"service":"materio-nextjs","timestamp":"2025-11-14T17:52:29.989Z"}
+{"blockedUntil":1763143487972,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":738,"service":"materio-nextjs","timestamp":"2025-11-14T17:52:29.990Z"}
+{"level":"info","message":"Received SIGINT, shutting down Socket.IO server gracefully","service":"materio-nextjs","timestamp":"2025-11-14T17:52:37.533Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:00:57.807Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:01:19.026Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T18:03:35.149Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T18:03:35.152Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T18:03:35.153Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T18:03:35.153Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T18:03:35.154Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T18:03:35.156Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:03:45.558Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:03:45.565Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:05:51.811Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:05:51.819Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.592Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.594Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T18:05:57.598Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.601Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.663Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.664Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T18:05:57.666Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.670Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.698Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.699Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T18:05:57.702Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.705Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.759Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.759Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T18:05:57.763Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T18:05:57.767Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-14T18:06:00.440Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:06:00.530Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:06:00.556Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-14T18:06:00.609Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:06:00.749Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:06:00.752Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"BXvqg3ZdMcuVev56AAAC","timestamp":"2025-11-14T18:06:00.753Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"BXvqg3ZdMcuVev56AAAC","timestamp":"2025-11-14T18:06:00.753Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:06:00.759Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:06:00.760Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"BXvqg3ZdMcuVev56AAAC","timestamp":"2025-11-14T18:06:00.761Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"BXvqg3ZdMcuVev56AAAC","timestamp":"2025-11-14T18:06:00.761Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:06:00.765Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"ip":"::1","level":"info","message":"Rate limit applied","remainingPoints":10,"resetTime":1763143620782,"service":"materio-nextjs","timestamp":"2025-11-14T18:06:00.782Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"BXvqg3ZdMcuVev56AAAC","timestamp":"2025-11-14T18:06:00.784Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":4,"rooms":["cmhy74c1d0001h45wjob7epba","cmhy81ewh0032z5g8toptoldz","cmhyqqaue007rz5g81icuvdvs","cmhyqtanz007vz5g8uk53ydia"],"service":"materio-nextjs","timestamp":"2025-11-14T18:06:00.813Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-14T18:06:00.831Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-14T18:06:00.838Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"Qj5V7r1SUkdvQD6gAAAE","timestamp":"2025-11-14T18:06:01.189Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"Qj5V7r1SUkdvQD6gAAAE","timestamp":"2025-11-14T18:06:01.190Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"T9g5iyoc8Cs78Zb-AAAF","timestamp":"2025-11-14T18:06:01.191Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"T9g5iyoc8Cs78Zb-AAAF","timestamp":"2025-11-14T18:06:01.191Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"Qj5V7r1SUkdvQD6gAAAE","timestamp":"2025-11-14T18:06:01.192Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"Qj5V7r1SUkdvQD6gAAAE","timestamp":"2025-11-14T18:06:01.192Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"Qj5V7r1SUkdvQD6gAAAE","timestamp":"2025-11-14T18:06:01.193Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"T9g5iyoc8Cs78Zb-AAAF","timestamp":"2025-11-14T18:06:01.194Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"T9g5iyoc8Cs78Zb-AAAF","timestamp":"2025-11-14T18:06:01.194Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User joined rooms","roomCount":4,"rooms":["cmhy74c1d0001h45wjob7epba","cmhy81ewh0032z5g8toptoldz","cmhyqqaue007rz5g81icuvdvs","cmhyqtanz007vz5g8uk53ydia"],"service":"materio-nextjs","timestamp":"2025-11-14T18:06:01.200Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"ip":"::1","level":"info","message":"Rate limit applied","remainingPoints":10,"resetTime":1763143621203,"service":"materio-nextjs","timestamp":"2025-11-14T18:06:01.203Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"T9g5iyoc8Cs78Zb-AAAF","timestamp":"2025-11-14T18:06:01.204Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:06:46.819Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:06:46.828Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:06:50.382Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:06:50.392Z"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:06:58.934Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:06:58.936Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:07:02.055Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:02.068Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:02.069Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":10,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:02.102Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T18:07:02.103Z"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":10,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:02.109Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:07:02.114Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T18:07:02.110Z"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz66tq40004ii5t5tjzrylp","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T18:07:02.159Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:07:02.287Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:07:03.609Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:03.628Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":9,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:03.633Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T18:07:03.634Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:07:03.638Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz66uwf0008ii5tio7ocuwy","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T18:07:03.669Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:07:03.789Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:04.255Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":8,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:04.258Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T18:07:04.258Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:07:04.261Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz66vdj000cii5tu9tc7j5i","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T18:07:04.322Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:04.775Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":7,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:04.778Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T18:07:04.778Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:07:04.781Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz66vro000gii5t8y78c1sa","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T18:07:04.800Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:05.161Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":6,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:05.166Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T18:07:05.167Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:07:05.172Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz66w2v000kii5twd1ln1m3","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T18:07:05.203Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:05.811Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":5,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:05.815Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T18:07:05.815Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:07:05.818Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz66wkj000oii5tbzb1z2jj","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T18:07:05.840Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:06.392Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":4,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:06.396Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T18:07:06.396Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:07:06.400Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz66x0q000sii5tm9okdcg2","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T18:07:06.429Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:06.961Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":3,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:06.966Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T18:07:06.967Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:07:06.970Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz66xgp000wii5tf79pgpzr","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T18:07:07.071Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:07.528Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":2,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:07.531Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T18:07:07.531Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:07:07.535Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz66xw90010ii5tk4am0q6u","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T18:07:07.557Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:08.136Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":1,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:08.139Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T18:07:08.140Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"HAb8zF8igjb3Cub9AAAB","timestamp":"2025-11-14T18:07:08.142Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz66yd20014ii5ttnvtw217","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T18:07:08.162Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:08.712Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:08.716Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"enforce","service":"materio-nextjs","timestamp":"2025-11-14T18:07:08.717Z"}
+{"blockedUntil":1763144528717,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":900,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:08.738Z"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:15.718Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:15.753Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:15.817Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:15.824Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:16.657Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:16.697Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:16.757Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:16.757Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:17.974Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:17.985Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:18.047Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:18.062Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:18.709Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:18.710Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:18.819Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:18.819Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:18.902Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763144528717,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:18.907Z"}
+{"blockedUntil":1763144528717,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":890,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:18.907Z"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:20.112Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:20.141Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:20.198Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:20.199Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:20.862Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy81ewh0032z5g8toptoldz","service":"materio-nextjs","timestamp":"2025-11-14T18:07:20.862Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:20.949Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T18:07:20.950Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:07:29.783Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T18:07:29.795Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763144528717,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763143680000,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:29.804Z"}
+{"blockedUntil":1763144528717,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":879,"service":"materio-nextjs","timestamp":"2025-11-14T18:07:29.805Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:07:29.817Z"}
+{"level":"info","message":"Received SIGINT, shutting down Socket.IO server gracefully","service":"materio-nextjs","timestamp":"2025-11-14T18:10:19.570Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:11:02.513Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:11:02.630Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T18:11:08.786Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T18:11:08.787Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T18:11:08.788Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T18:11:08.788Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T18:11:08.789Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T18:11:08.791Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T18:11:44.171Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T18:11:44.173Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T18:11:44.179Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T18:11:44.182Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Getting ({} as any)...","service":"materio-nextjs","timestamp":"2025-11-14T18:11:44.232Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session ID from cookie:","service":"materio-nextjs","timestamp":"2025-11-14T18:11:44.233Z"}
+{"level":"info","message":"рџ”Ќ [SESSION] Session validation result:","service":"materio-nextjs","session":true,"timestamp":"2025-11-14T18:11:44.246Z","user":true}
+{"level":"info","message":"вњ… [SESSION] Session found for user:","service":"materio-nextjs","timestamp":"2025-11-14T18:11:44.274Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:11:46.158Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:11:46.177Z"}
+{"level":"info","message":"🔑 [SESSION-TOKEN] Getting session token for Socket.IO","service":"materio-nextjs","timestamp":"2025-11-14T18:11:46.201Z"}
+{"level":"info","message":"✅ [SESSION-TOKEN] Session token retrieved for user:","service":"materio-nextjs","timestamp":"2025-11-14T18:11:46.226Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"YbFNRrO7o9r-1a1mAAAB","timestamp":"2025-11-14T18:11:46.273Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"YbFNRrO7o9r-1a1mAAAB","timestamp":"2025-11-14T18:11:46.275Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"EmPwstEMRzeuGcK9AAAC","timestamp":"2025-11-14T18:11:46.278Z"}
+{"ip":"::1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"EmPwstEMRzeuGcK9AAAC","timestamp":"2025-11-14T18:11:46.278Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"YbFNRrO7o9r-1a1mAAAB","timestamp":"2025-11-14T18:11:46.281Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"YbFNRrO7o9r-1a1mAAAB","timestamp":"2025-11-14T18:11:46.282Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"YbFNRrO7o9r-1a1mAAAB","timestamp":"2025-11-14T18:11:46.283Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"hasSession":true,"hasUser":true,"ip":"::1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"EmPwstEMRzeuGcK9AAAC","timestamp":"2025-11-14T18:11:46.284Z"}
+{"ip":"::1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"EmPwstEMRzeuGcK9AAAC","timestamp":"2025-11-14T18:11:46.285Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User joined rooms","roomCount":4,"rooms":["cmhy74c1d0001h45wjob7epba","cmhy81ewh0032z5g8toptoldz","cmhyqqaue007rz5g81icuvdvs","cmhyqtanz007vz5g8uk53ydia"],"service":"materio-nextjs","timestamp":"2025-11-14T18:11:46.298Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"ip":"::1","level":"info","message":"Rate limit applied","remainingPoints":10,"resetTime":1763143966300,"service":"materio-nextjs","timestamp":"2025-11-14T18:11:46.300Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"EmPwstEMRzeuGcK9AAAC","timestamp":"2025-11-14T18:11:46.302Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"level":"info","message":"Received SIGINT, shutting down Socket.IO server gracefully","service":"materio-nextjs","timestamp":"2025-11-14T18:12:22.870Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T18:12:25.934Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T18:12:26.000Z"}
+{"cors":{"credentials":true,"methods":["GET","POST"],"origin":["http://localhost:3000"]},"level":"info","message":"Socket.IO server initialized","pingInterval":25000,"pingTimeout":60000,"service":"materio-nextjs","timestamp":"2025-11-14T18:12:31.035Z"}
+{"level":"info","message":"Global middleware configured","service":"materio-nextjs","timestamp":"2025-11-14T18:12:31.036Z"}
+{"level":"info","message":"Initializing chat namespace","service":"materio-nextjs","timestamp":"2025-11-14T18:12:31.036Z"}
+{"level":"info","message":"Initializing notification namespace","service":"materio-nextjs","timestamp":"2025-11-14T18:12:31.037Z"}
+{"level":"info","message":"Namespaces initialized successfully","service":"materio-nextjs","timestamp":"2025-11-14T18:12:31.037Z"}
+{"environment":"development","level":"info","message":"🚀 Next.js server with Socket.IO running on port 3000","port":3000,"service":"materio-nextjs","socketNamespaces":["/chat","/notifications"],"timestamp":"2025-11-14T18:12:31.039Z"}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T18:12:31.296Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T18:12:31.296Z","tokenLength":40}
+{"hasAuthToken":true,"hasQueryToken":false,"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authentication attempt","service":"materio-nextjs","socketId":"ujSmQRS0JLYKjguKAAAC","timestamp":"2025-11-14T18:12:31.298Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Token received for Lucia validation","service":"materio-nextjs","socketId":"ujSmQRS0JLYKjguKAAAC","timestamp":"2025-11-14T18:12:31.298Z","tokenLength":40}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T18:12:31.302Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T18:12:31.303Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"hasSession":true,"hasUser":true,"ip":"::ffff:127.0.0.1","level":"info","message":"Lucia session validation result","service":"materio-nextjs","socketId":"ujSmQRS0JLYKjguKAAAC","timestamp":"2025-11-14T18:12:31.303Z"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Socket authenticated successfully with Lucia","role":"user","service":"materio-nextjs","socketId":"ujSmQRS0JLYKjguKAAAC","timestamp":"2025-11-14T18:12:31.304Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to chat namespace","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T18:12:31.306Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"ip":"::ffff:127.0.0.1","level":"info","message":"Rate limit applied","remainingPoints":10,"resetTime":1763144011308,"service":"materio-nextjs","timestamp":"2025-11-14T18:12:31.308Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"User connected to notification namespace","service":"materio-nextjs","socketId":"ujSmQRS0JLYKjguKAAAC","timestamp":"2025-11-14T18:12:31.309Z","userId":"cmhy723xl000dktev29kqz5dc","userRole":"user"}
+{"level":"info","message":"User joined rooms","roomCount":4,"rooms":["cmhy74c1d0001h45wjob7epba","cmhy81ewh0032z5g8toptoldz","cmhyqqaue007rz5g81icuvdvs","cmhyqtanz007vz5g8uk53ydia"],"service":"materio-nextjs","timestamp":"2025-11-14T18:12:31.317Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T19:02:46.766Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T19:03:26.106Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T19:03:26.125Z"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T19:03:26.812Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"count":0,"level":"info","message":"Messages marked as read","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","timestamp":"2025-11-14T19:03:26.814Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T19:03:27.832Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:27.846Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":10,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:27.862Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:03:27.862Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:28.815Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":10,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:28.818Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:03:28.819Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T19:03:28.825Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz87exe0004y06jigmrm3lt","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T19:03:28.876Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T19:03:28.971Z"}
+{"level":"info","message":"[rate-limit] Redis URL not provided. Using Prisma backend for rate limiting.","service":"materio-nextjs","timestamp":"2025-11-14T19:03:30.357Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:30.372Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":9,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:30.376Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:03:30.376Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T19:03:30.380Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz87g4l0008y06jd91e82qo","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T19:03:30.410Z"}
+{"level":"info","message":"Lucia auth configured for Socket.IO middleware","service":"materio-nextjs","timestamp":"2025-11-14T19:03:30.512Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.003Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":8,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.006Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.006Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T19:03:31.010Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz87glr000cy06j3xqgugjl","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.032Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.391Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":7,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.395Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.395Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T19:03:31.399Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz87gwq000gy06jlsu70rtp","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.432Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.809Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":6,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.812Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.812Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T19:03:31.815Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz87h89000ky06j5we7xo8e","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T19:03:31.837Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.023Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":5,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.026Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.026Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T19:03:32.077Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz87hfe000oy06jswo2ru80","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.099Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.387Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":4,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.392Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.392Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T19:03:32.395Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz87hod000sy06j3su97uhm","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.418Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.590Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":3,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.594Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.594Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T19:03:32.644Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz87hv8000wy06j2d6zd8ae","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.672Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.961Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":2,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.967Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:03:32.967Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T19:03:32.976Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz87i4j0010y06jw6y735fr","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T19:03:33.007Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:33.517Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":1,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:33.519Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:03:33.519Z"}
+{"connected":true,"level":"info","message":"Processing sendMessage","roomId":"cmhy74c1d0001h45wjob7epba","service":"materio-nextjs","socketId":"FqOf09O6Mwg6axYVAAAB","timestamp":"2025-11-14T19:03:33.524Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"level":"info","message":"Message sent successfully","messageId":"cmhz87ijs0014y06jvfrmatoe","roomId":"cmhy74c1d0001h45wjob7epba","senderId":"cmhy723xl000dktev29kqz5dc","service":"materio-nextjs","timestamp":"2025-11-14T19:03:33.549Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:33.913Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:33.917Z"}
+{"level":"info","message":"⚠️ [API DEBUG] Rate limit exhausted, mode check","mode":"enforce","service":"materio-nextjs","timestamp":"2025-11-14T19:03:33.918Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":900,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:33.942Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:44.026Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:44.029Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":890,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:44.029Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:03:54.106Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147040000,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:54.110Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":880,"service":"materio-nextjs","timestamp":"2025-11-14T19:03:54.110Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:04:04.218Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147100000,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:04.250Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":870,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:04.250Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:04:14.988Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147100000,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:14.991Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":859,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:14.992Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:04:25.986Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147100000,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:25.989Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":848,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:25.989Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:04:36.998Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147100000,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:37.004Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":837,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:37.005Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:04:47.975Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147100000,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:47.980Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":826,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:47.980Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:04:58.984Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147100000,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:58.989Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":815,"service":"materio-nextjs","timestamp":"2025-11-14T19:04:58.990Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:05:09.988Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147160000,"service":"materio-nextjs","timestamp":"2025-11-14T19:05:10.000Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":804,"service":"materio-nextjs","timestamp":"2025-11-14T19:05:10.001Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:05:20.990Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147160000,"service":"materio-nextjs","timestamp":"2025-11-14T19:05:20.993Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":793,"service":"materio-nextjs","timestamp":"2025-11-14T19:05:20.993Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:05:32.012Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147160000,"service":"materio-nextjs","timestamp":"2025-11-14T19:05:32.018Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":782,"service":"materio-nextjs","timestamp":"2025-11-14T19:05:32.019Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:05:42.989Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147160000,"service":"materio-nextjs","timestamp":"2025-11-14T19:05:42.992Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":771,"service":"materio-nextjs","timestamp":"2025-11-14T19:05:42.993Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:05:53.989Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147160000,"service":"materio-nextjs","timestamp":"2025-11-14T19:05:53.992Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":760,"service":"materio-nextjs","timestamp":"2025-11-14T19:05:53.993Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:06:04.979Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147220000,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:04.988Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":749,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:04.989Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:06:15.993Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147220000,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:16.001Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":738,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:16.001Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:06:26.978Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147220000,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:26.983Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":727,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:26.983Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:06:37.998Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147220000,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:38.002Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":716,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:38.002Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:06:48.985Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147220000,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:48.989Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":705,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:48.990Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:06:59.992Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147220000,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:59.997Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":694,"service":"materio-nextjs","timestamp":"2025-11-14T19:06:59.998Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:07:10.996Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147280000,"service":"materio-nextjs","timestamp":"2025-11-14T19:07:11.002Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":683,"service":"materio-nextjs","timestamp":"2025-11-14T19:07:11.002Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:07:22.009Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147280000,"service":"materio-nextjs","timestamp":"2025-11-14T19:07:22.018Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":672,"service":"materio-nextjs","timestamp":"2025-11-14T19:07:22.019Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:07:32.981Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147280000,"service":"materio-nextjs","timestamp":"2025-11-14T19:07:32.985Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":661,"service":"materio-nextjs","timestamp":"2025-11-14T19:07:32.985Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:07:43.980Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147280000,"service":"materio-nextjs","timestamp":"2025-11-14T19:07:43.984Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":650,"service":"materio-nextjs","timestamp":"2025-11-14T19:07:43.984Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:07:54.989Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147280000,"service":"materio-nextjs","timestamp":"2025-11-14T19:07:54.994Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":639,"service":"materio-nextjs","timestamp":"2025-11-14T19:07:54.994Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:08:05.994Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147340000,"service":"materio-nextjs","timestamp":"2025-11-14T19:08:06.002Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":628,"service":"materio-nextjs","timestamp":"2025-11-14T19:08:06.002Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:08:16.980Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147340000,"service":"materio-nextjs","timestamp":"2025-11-14T19:08:16.983Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":617,"service":"materio-nextjs","timestamp":"2025-11-14T19:08:16.984Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:08:27.980Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147340000,"service":"materio-nextjs","timestamp":"2025-11-14T19:08:27.985Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":606,"service":"materio-nextjs","timestamp":"2025-11-14T19:08:27.986Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:08:38.983Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147340000,"service":"materio-nextjs","timestamp":"2025-11-14T19:08:38.987Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":595,"service":"materio-nextjs","timestamp":"2025-11-14T19:08:38.987Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:08:49.990Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147340000,"service":"materio-nextjs","timestamp":"2025-11-14T19:08:49.994Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":584,"service":"materio-nextjs","timestamp":"2025-11-14T19:08:49.995Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:09:00.985Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147400000,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:00.992Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":573,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:00.993Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:09:11.985Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147400000,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:11.988Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":562,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:11.989Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:09:22.985Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147400000,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:22.992Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":551,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:22.993Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:09:33.978Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147400000,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:33.984Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":540,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:33.985Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:09:44.981Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147400000,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:44.985Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":529,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:44.985Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:09:55.995Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147400000,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:55.998Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":518,"service":"materio-nextjs","timestamp":"2025-11-14T19:09:55.999Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:10:06.998Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147460000,"service":"materio-nextjs","timestamp":"2025-11-14T19:10:07.004Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":507,"service":"materio-nextjs","timestamp":"2025-11-14T19:10:07.004Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:10:17.991Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147460000,"service":"materio-nextjs","timestamp":"2025-11-14T19:10:17.997Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":496,"service":"materio-nextjs","timestamp":"2025-11-14T19:10:17.997Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:10:28.984Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147460000,"service":"materio-nextjs","timestamp":"2025-11-14T19:10:28.987Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":485,"service":"materio-nextjs","timestamp":"2025-11-14T19:10:28.988Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:10:40.017Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147460000,"service":"materio-nextjs","timestamp":"2025-11-14T19:10:40.020Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":474,"service":"materio-nextjs","timestamp":"2025-11-14T19:10:40.020Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:10:50.986Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147460000,"service":"materio-nextjs","timestamp":"2025-11-14T19:10:50.988Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":463,"service":"materio-nextjs","timestamp":"2025-11-14T19:10:50.989Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:11:01.992Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147520000,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:01.999Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":452,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:01.999Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:11:12.994Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147520000,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:12.997Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":441,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:12.997Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:11:23.994Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147520000,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:24.001Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":430,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:24.002Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:11:34.991Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147520000,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:34.993Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":419,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:34.994Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:11:45.999Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147520000,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:46.005Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":408,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:46.006Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:11:56.997Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147520000,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:57.000Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":397,"service":"materio-nextjs","timestamp":"2025-11-14T19:11:57.000Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:12:07.979Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147580000,"service":"materio-nextjs","timestamp":"2025-11-14T19:12:07.986Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":386,"service":"materio-nextjs","timestamp":"2025-11-14T19:12:07.987Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:12:18.975Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147580000,"service":"materio-nextjs","timestamp":"2025-11-14T19:12:18.978Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":375,"service":"materio-nextjs","timestamp":"2025-11-14T19:12:18.979Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:12:29.980Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147580000,"service":"materio-nextjs","timestamp":"2025-11-14T19:12:29.984Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":364,"service":"materio-nextjs","timestamp":"2025-11-14T19:12:29.985Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:12:40.993Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147580000,"service":"materio-nextjs","timestamp":"2025-11-14T19:12:40.998Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":353,"service":"materio-nextjs","timestamp":"2025-11-14T19:12:40.998Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:12:51.979Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147580000,"service":"materio-nextjs","timestamp":"2025-11-14T19:12:51.981Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":342,"service":"materio-nextjs","timestamp":"2025-11-14T19:12:51.982Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:13:02.985Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147640000,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:02.992Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":331,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:02.993Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:13:13.994Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147640000,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:13.997Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":320,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:13.997Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:13:24.987Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147640000,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:24.990Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":309,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:24.990Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:13:35.998Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147640000,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:36.002Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":298,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:36.002Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:13:47.009Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147640000,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:47.021Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":287,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:47.021Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:13:57.987Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147640000,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:57.991Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":276,"service":"materio-nextjs","timestamp":"2025-11-14T19:13:57.991Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:14:08.981Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147700000,"service":"materio-nextjs","timestamp":"2025-11-14T19:14:08.988Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":265,"service":"materio-nextjs","timestamp":"2025-11-14T19:14:08.988Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:14:19.987Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147700000,"service":"materio-nextjs","timestamp":"2025-11-14T19:14:19.990Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":254,"service":"materio-nextjs","timestamp":"2025-11-14T19:14:19.990Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:14:30.980Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147700000,"service":"materio-nextjs","timestamp":"2025-11-14T19:14:30.986Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":243,"service":"materio-nextjs","timestamp":"2025-11-14T19:14:30.986Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:14:41.988Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147700000,"service":"materio-nextjs","timestamp":"2025-11-14T19:14:41.992Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":232,"service":"materio-nextjs","timestamp":"2025-11-14T19:14:41.993Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:14:52.972Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147700000,"service":"materio-nextjs","timestamp":"2025-11-14T19:14:52.975Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":221,"service":"materio-nextjs","timestamp":"2025-11-14T19:14:52.975Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:15:03.985Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147760000,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:03.992Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":210,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:03.993Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:15:14.983Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147760000,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:14.985Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":199,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:14.985Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:15:26.004Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147760000,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:26.007Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":188,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:26.007Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:15:36.983Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147760000,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:36.987Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":177,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:36.988Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:15:48.008Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147760000,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:48.012Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":166,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:48.012Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:15:58.993Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147760000,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:58.997Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":155,"service":"materio-nextjs","timestamp":"2025-11-14T19:15:58.997Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:16:09.994Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147820000,"service":"materio-nextjs","timestamp":"2025-11-14T19:16:10.001Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":144,"service":"materio-nextjs","timestamp":"2025-11-14T19:16:10.001Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:16:21.003Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147820000,"service":"materio-nextjs","timestamp":"2025-11-14T19:16:21.006Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":133,"service":"materio-nextjs","timestamp":"2025-11-14T19:16:21.006Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:16:31.996Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147820000,"service":"materio-nextjs","timestamp":"2025-11-14T19:16:32.000Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":122,"service":"materio-nextjs","timestamp":"2025-11-14T19:16:32.000Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:16:42.994Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147820000,"service":"materio-nextjs","timestamp":"2025-11-14T19:16:42.998Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":111,"service":"materio-nextjs","timestamp":"2025-11-14T19:16:42.998Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:16:53.981Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147820000,"service":"materio-nextjs","timestamp":"2025-11-14T19:16:53.985Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":100,"service":"materio-nextjs","timestamp":"2025-11-14T19:16:53.985Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:17:04.995Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147880000,"service":"materio-nextjs","timestamp":"2025-11-14T19:17:05.018Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":89,"service":"materio-nextjs","timestamp":"2025-11-14T19:17:05.019Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:17:15.979Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147880000,"service":"materio-nextjs","timestamp":"2025-11-14T19:17:15.982Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":78,"service":"materio-nextjs","timestamp":"2025-11-14T19:17:15.983Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:17:27.004Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147880000,"service":"materio-nextjs","timestamp":"2025-11-14T19:17:27.007Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":67,"service":"materio-nextjs","timestamp":"2025-11-14T19:17:27.007Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:17:37.987Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147880000,"service":"materio-nextjs","timestamp":"2025-11-14T19:17:37.992Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":56,"service":"materio-nextjs","timestamp":"2025-11-14T19:17:37.992Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:17:48.986Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147880000,"service":"materio-nextjs","timestamp":"2025-11-14T19:17:48.990Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":45,"service":"materio-nextjs","timestamp":"2025-11-14T19:17:48.990Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:18:00.001Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147940000,"service":"materio-nextjs","timestamp":"2025-11-14T19:18:00.009Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":34,"service":"materio-nextjs","timestamp":"2025-11-14T19:18:00.010Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:18:10.991Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147940000,"service":"materio-nextjs","timestamp":"2025-11-14T19:18:10.995Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":23,"service":"materio-nextjs","timestamp":"2025-11-14T19:18:10.995Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:18:21.990Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147940000,"service":"materio-nextjs","timestamp":"2025-11-14T19:18:21.993Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":12,"service":"materio-nextjs","timestamp":"2025-11-14T19:18:21.993Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:18:33.020Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":false,"blockedUntil":1763147913918,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":0,"resetTime":1763147940000,"service":"materio-nextjs","timestamp":"2025-11-14T19:18:33.028Z"}
+{"blockedUntil":1763147913918,"level":"info","message":"рџљ« [API DEBUG] Rate limit exceeded:","retryAfter":1,"service":"materio-nextjs","timestamp":"2025-11-14T19:18:33.029Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:18:43.988Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":10,"resetTime":1763147940000,"service":"materio-nextjs","timestamp":"2025-11-14T19:18:43.991Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:18:43.992Z"}
+{"level":"info","message":"рџ”Ќ [API DEBUG] Check rate limit request:","service":"materio-nextjs","timestamp":"2025-11-14T19:18:44.074Z","userId":"cmhy723xl000dktev29kqz5dc"}
+{"allowed":true,"level":"info","message":"рџ“Љ [API DEBUG] Rate limit result:","remaining":10,"resetTime":1763147940000,"service":"materio-nextjs","timestamp":"2025-11-14T19:18:44.076Z"}
+{"level":"info","message":"вњ… [API DEBUG] Rate limit check passed","service":"materio-nextjs","timestamp":"2025-11-14T19:18:44.077Z"}
