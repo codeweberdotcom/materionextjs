@@ -201,6 +201,8 @@ model Message {
   readAt    DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
 }
 
 model Notification {
@@ -266,6 +268,8 @@ model RateLimitState {
   updatedAt   DateTime @updatedAt
 
   @@unique([key, module])
+  @@index([module, updatedAt])
+  @@index([blockedUntil])
 }
 
 model UserBlock {
@@ -310,6 +314,7 @@ model RateLimitEvent {
   createdAt    DateTime @default(now())
 
   @@index([module, eventType, createdAt])
+  @@index([module, key, eventType, mode, windowStart])
   @@index([key, module])
   @@index([userId, module])
 }

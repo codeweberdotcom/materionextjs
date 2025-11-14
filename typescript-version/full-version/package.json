@@ -19,9 +19,11 @@
     "postinstall": "prisma generate && npm run build:icons",
     "socket": "tsx src/server/websocket-server.ts",
     "removeI18n": "tsx src/remove-translation-scripts/index.ts",
-    "test": "jest",
+    "test": "pnpm test:unit && pnpm test:integration",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:unit": "jest --runInBand --testPathPattern=tests/unit",
+    "test:integration": "jest --runInBand --testPathPattern=tests/integration",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

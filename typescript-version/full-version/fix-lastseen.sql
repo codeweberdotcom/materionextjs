@@ -1,1 +1,0 @@
-UPDATE User SET lastSeen = datetime('now') WHERE lastSeen IS NULL;

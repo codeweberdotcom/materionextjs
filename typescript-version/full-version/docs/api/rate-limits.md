@@ -191,6 +191,35 @@ Update configuration for a module.
 - A/B testing different limits
 - Automated scaling based on load
 
+## 📊 Monitoring & Metrics
+
+- Эндпоинт `/api/metrics` отдаёт метрики Prometheus с префиксом `materio_` и `rate_limit_*`.
+- Ключевые серии:
+  - `rate_limit_store_backend{backend="redis"|"prisma"}` — gauge активного стора (подходит для алерта «долго работаем в fallback»).
+  - `rate_limit_fallback_switch_total{from,to}` — количество переключений между Redis и Prisma.
+  - `rate_limit_redis_failures_total` — сколько ошибок Redis привели к fallback.
+  - `rate_limit_consume_duration_seconds{backend,module,mode}` — латентность операций `store.consume()`.
+  - `rate_limit_unknown_module_total{module}` — fail-fast на вызовы `checkLimit` без конфигурации (используйте как сигнал misconfig).
+- Пример правила Prometheus:
+
+```yaml
+- alert: RateLimitFallbackTooLong
+  expr: rate_limit_store_backend{backend="prisma"} == 1
+  for: 5m
+  labels: { severity: warning }
+  annotations:
+    summary: "Rate limit fallback активен"
+    description: "Приложение >5 минут работает на Prisma вместо Redis."
+```
+
+## 🧹 Retention и PII
+
+- Таблица `RateLimitEvent` и журнал состояний могут разрастаться. Рекомендуемый TTL:
+  - `rate_limit` события — 30 дней для мониторинга, 90 дней для аудита.
+  - ручные блокировки (`UserBlock`) — активные до `unblockedAt`, архивируем после 180 дней.
+- Настройте cron/скрипт, который удаляет события старше TTL и деактивирует просроченные блокировки.
+- Флаги `storeEmailInEvents` / `storeIpInEvents` позволяют ограничить PII в событиях. Для production рекомендуется хранить userId, ipHash/ipPrefix и маскировать «сырые» данные в ответах API.
+
 ## 🗄️ Database Schema
 
 ### RateLimitConfig

@@ -4,8 +4,7 @@ import path from 'path'
 
 export async function GET() {
   try {
-    // Путь к файлу с результатами тестов
-    const filePath = path.join(process.cwd(), 'test-results.json')
+    const filePath = path.join(process.cwd(), 'reports', 'e2e', 'test-results.json')
 
     // Проверяем, существует ли файл
     if (!fs.existsSync(filePath)) {
@@ -15,12 +14,8 @@ export async function GET() {
       })
     }
 
-    // Читаем файл
     const fileContents = fs.readFileSync(filePath, 'utf8')
-
-    // Парсим JSON
     const testResults = JSON.parse(fileContents)
-
     return NextResponse.json(testResults)
   } catch (error) {
     console.error('Error reading test results:', error)

@@ -59,6 +59,18 @@ Comprehensive documentation for AI agents and developers is available in the `do
 - **Email System:** Template-based email system with SMTP
 - **Permissions:** Granular role-based access control
 - **Theming:** Comprehensive theming system with CSS variables
+- **Monitoring:** Prometheus + Grafana dashboards for rate-limit, sockets и API
+
+## 🔭 Monitoring (Prometheus/Grafana)
+- Конфигурация находится в `monitoring/` (docker-compose, промо конфиг, Grafana provisioning).
+- Запуск локально:
+  ```bash
+  cd monitoring && docker compose up -d
+  ```
+- Приложение отдаёт метрики на `http://localhost:3000/api/metrics` (`prom-client`).
+- В Grafana развернут источник Prometheus и дашборд для Rate Limit (см. `docs/monitoring/rate-limit-operations.md`).
+- Основные метрики: `rate_limit_store_backend`, `rate_limit_fallback_switch_total`, `rate_limit_unknown_module_total`.
+- При алертах см. инструкции в `docs/monitoring.md` и операционном гайде.
 
 ## 📚 Documentation
 

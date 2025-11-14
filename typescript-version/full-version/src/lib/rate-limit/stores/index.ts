@@ -14,7 +14,7 @@ import type { RateLimitStore } from './types'
 import { PrismaRateLimitStore } from './prisma-store'
 import { RedisRateLimitStore } from './redis-store'
 
-class ResilientRateLimitStore implements RateLimitStore {
+export class ResilientRateLimitStore implements RateLimitStore {
   private usingPrimary = true
   private lastFailure = 0
   private readonly RETRY_INTERVAL_MS = 60 * 1000
@@ -59,7 +59,7 @@ class ResilientRateLimitStore implements RateLimitStore {
           this.usingPrimary = true
           this.lastFailure = 0
           recordBackendSwitch('prisma', 'redis')
-          if (this.fallbackActiveSince) {
+          if (this.fallbackActiveSince !== null) {
             recordFallbackDuration(Date.now() - this.fallbackActiveSince)
             this.fallbackActiveSince = null
           }
@@ -84,7 +84,7 @@ class ResilientRateLimitStore implements RateLimitStore {
       this.lastFailure = Date.now()
       recordRedisFailure()
       recordBackendSwitch('redis', 'prisma')
-      if (!this.fallbackActiveSince) {
+      if (this.fallbackActiveSince === null) {
         this.fallbackActiveSince = this.lastFailure
       }
       logger.error('[rate-limit] Redis store failed. Falling back to Prisma store for rate limiting.', {

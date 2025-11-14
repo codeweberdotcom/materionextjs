@@ -8,6 +8,8 @@ import { getPlaywrightTestById, playwrightTestScripts } from '@/data/testing/tes
 
 const execAsync = promisify(exec)
 const ARTIFACTS_BASE = path.join(process.cwd(), 'artifacts', 'playwright', 'runs')
+const PLAYWRIGHT_REPORT_DIR = path.join(process.cwd(), 'reports', 'e2e', 'html')
+const PLAYWRIGHT_RESULTS_FILE = path.join(process.cwd(), 'reports', 'e2e', 'test-results.json')
 
 type ScriptSummary = {
   runId: string
@@ -111,8 +113,8 @@ async function persistRunArtifacts({
     const sanitizedSegment = requestedTestId.replace(/[^a-zA-Z0-9-_]/g, '_')
     const runId = `${new Date().toISOString().replace(/[:.]/g, '-')}_${sanitizedSegment}`
     const runDir = path.join(ARTIFACTS_BASE, runId)
-    const reportSrc = path.join(process.cwd(), 'playwright-report')
-    const testResultsPath = path.join(process.cwd(), 'test-results.json')
+    const reportSrc = PLAYWRIGHT_REPORT_DIR
+    const testResultsPath = PLAYWRIGHT_RESULTS_FILE
 
     await fs.mkdir(runDir, { recursive: true })
 
@@ -174,7 +176,7 @@ async function buildRunSummary({
     scripts: []
   }
 
-  const testResultsPath = path.join(process.cwd(), 'test-results.json')
+  const testResultsPath = PLAYWRIGHT_RESULTS_FILE
   if (!existsSync(testResultsPath)) {
     return baseSummary
   }
