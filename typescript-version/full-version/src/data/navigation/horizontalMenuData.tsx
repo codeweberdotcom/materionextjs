@@ -539,6 +539,11 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
         label: dictionary['navigation'].rateLimitEvents,
         icon: 'ri-line-chart-line',
         href: '/admin/rate-limits/events'
+      },
+      {
+        label: dictionary['navigation'].eventsJournal,
+        icon: 'ri-history-line',
+        href: '/admin/events'
       }
     ]
   },

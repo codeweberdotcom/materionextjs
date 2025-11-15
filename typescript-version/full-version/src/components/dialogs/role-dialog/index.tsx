@@ -388,7 +388,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false 
                                     disabled={readOnly}
                                   />
                                 }
-                                label={t.navigation.read}
+                                label={t.navigation.readPermission}
                               />
                               <FormControlLabel
                                 className='mie-0'

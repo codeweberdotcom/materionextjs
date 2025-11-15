@@ -319,3 +319,27 @@ model RateLimitEvent {
   @@index([userId, module])
 }
 
+model Event {
+  id            String   @id @default(cuid())
+  source        String
+  module        String
+  type          String
+  severity      String
+  actorType     String?
+  actorId       String?
+  subjectType   String?
+  subjectId     String?
+  key           String?
+  message       String
+  payload       String   @default("{}")
+  correlationId String?
+  metadata      String?  @default("{}")
+  createdAt     DateTime @default(now())
+
+  @@index([source, createdAt])
+  @@index([module, type, createdAt])
+  @@index([key])
+  @@index([actorType, actorId])
+  @@index([subjectType, subjectId])
+}
+

@@ -330,6 +330,10 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
           {
             label: dictionary['navigation'].rateLimitEvents,
             href: '/admin/rate-limits/events'
+          },
+          {
+            label: dictionary['navigation'].eventsJournal,
+            href: '/admin/events'
           }
         ]
       },

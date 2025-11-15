@@ -1,155 +1,231 @@
-# ТЗ: Модуль “Events” (единый журнал событий и сигналов)
+# ТЗ: Модуль «Events» (единый журнал событий)
 
-## 1. Цель и назначение
-Создать единый модуль событий (Events) для сборa, хранения, просмотра и экспорта системных сигналов из разных подсистем: rate limit, блокировки/модерация, аутентификация, объявления (ads), чат, уведомления и системные события. Модуль предназначен для:
-- Оперативного мониторинга (админ‑UI + фильтры + live‑обновления),
-- Расследований (поиск/фильтрация/экспорт),
-- Триггеров эскалаций (например, авто‑блок по порогам),
-- Аналитики (метрики, дашборды, ретеншн).
+## 1. Цель
+Создать централизованный журнал событий для ключевых подсистем (rate limit, модерация, блокировки, аутентификация, регистрация, чат, объявления, уведомления, системные процессы). Модуль должен обеспечивать сбор, хранение, фильтрацию, экспорт и live‑просмотр событий, служить инструментом аудита, расследований и автоматических триггеров.
 
-## 2. Термины и охват
-- Event (событие) — запись факта с минимальным набором полей, унифицированная для всех источников.
-- Source (источник) — подсистема, породившая событие: `rate_limit | moderation | block | auth | ads | chat | notifications | system`.
-- Module (модуль) — бизнес‑сегмент: `chat | ads | upload | auth | email | notifications | all | ...`.
-- Type (тип события) — деталь внутри источника (например, для rate_limit: `warning | block`).
-
-В первую итерацию включить источники: `rate_limit`, `moderation` (ручные действия админов), `block` (создание/деактивация блоков), `auth` (неудачные логины/регистрации), `chat`, `ads`, `system`.
+## 2. Охват и терминология
+- **Source** — система‑источник: `rate_limit`, `moderation`, `block`, `auth`, `registration`, `chat`, `ads`, `notifications`, `system`.
+- **Module** — бизнес‑сегмент: `chat`, `ads`, `upload`, `auth`, `registration`, `email`, `notifications`, `all`, и т.д.
+- **Type** — детализированное событие внутри источника (например, `rate_limit.warning`, `auth.login_failed`, `registration.signup_attempt`, `block.created`).
+- **Severity** — уровень важности: `info | warning | error | critical`.
+- **Actor** — инициатор события (тип + ID: `user`, `admin`, `system`, `service`).
+- **Subject** — объект воздействия (user, ip, email, room, ad, notification, блок и т.п.).
+- **Key** — дополнительный идентификатор (rate‑limit key, correlation ID, business key).
 
 ## 3. Функциональные требования
-### 3.1. Создание событий
-- Унифицированный сервис `EventService.record(event)` для записи события из любого места кода.
-- Адаптеры для существующих источников:
-  - RateLimitService/Stores → шлют события `rate_limit.warning` и `rate_limit.block` через EventService (сейчас прямой вызов `recordEvent` → заменить/обернуть).
-  - Админ‑действия (создание/снятие блоков) → события `moderation.action`, `block.created`, `block.deactivated`.
-  - Auth → `auth.login_failed`, `auth.signup_attempt`, `auth.lockout`.
-  - Ads/Chat/System — по мере необходимости.
-- Дедупликация на уровне источника при необходимости (например, уже реализована для rate_limit monitor в RedisStore).
+### 3.1. Запись событий
+- Реализовать `EventService.record` (синхронный API + поддержка асинхронной очереди). Аргументы: `source`, `module`, `type`, `severity`, `message`, `actor`, `subject`, `key`, `payload`, `correlationId`.
+- Валидировать данные, нормализовать поля (проверка enum, обязательные значения, дефолты). При отсутствии `module` подставлять значение по `source`.
+- Маскирование PII: до записи и перед выдачей редактировать payload согласно профилю источника.
+- Подключить адаптеры:
+  - **Rate limit** — заменить прямые вставки в `RateLimitEvent` dual-write’ом через EventService (`source=rate_limit`).
+  - **Moderation/Block** — CRUD по `UserBlock` и действия админов записывать как `moderation.action`, `block.created`, `block.deactivated`, `block.note_updated`.
+  - **Auth & Registration** — логировать `auth.login_failed`, `auth.lockout`, `auth.password_reset_attempt`, а также `registration.signup_attempt`, `registration.signup_failed`, `registration.signup_completed` (module=`registration`).
+  - **Chat/Ads/Notifications/System** — определить базовый набор триггеров (отправка сообщения, публикация объявления, смена статуса уведомления, системные ошибки) и вызывать EventService в соответствующих сервисах/сокетах.
+- EventService должен поддерживать внутренний pub/sub для live‑стрима и будущих триггеров.
 
-### 3.2. Хранение и поиск
-- Единая таблица `Event` с нормализованными полями (см. схему в п. 6) + JSON‑поле `payload` для специфики источника.
-- Фильтрация по ключевым полям: `source`, `module`, `type`, `key`, периоду времени, `actor`, `subject`, `severity`.
-- Пагинация курсором (стабильная по `createdAt DESC, id DESC`).
+### 3.2. Хранение
+- Добавить модель Prisma `Event`:
+  ```
+  model Event {
+    id            String   @id @default(cuid())
+    source        String
+    module        String
+    type          String
+    severity      String
+    actorType     String?
+    actorId       String?
+    subjectType   String?
+    subjectId     String?
+    key           String?
+    message       String
+    payload       Json
+    correlationId String?
+    metadata      Json?
+    createdAt     DateTime @default(now())
 
-### 3.3. Админ‑интерфейс
-- Раздел Admin → Events:
-  - Фильтры (source/module/type/period/text search по `message` и ключам из `payload` где возможно).
-  - Таблица с колонками: `time`, `source`, `module`, `type`, `severity`, `key`, `actor`, `subject`, краткое `message`.
-  - Детальная карточка события (раскрытие JSON `payload`, метаданные, `correlationId`).
-  - Экспорт (CSV/JSON) текущей выборки.
-  - Live‑стрим (опционально через SSE/WebSocket) с дебаунсом.
+    @@index([source, createdAt])
+    @@index([module, type, createdAt])
+    @@index([key])
+    @@index([actorType, actorId])
+    @@index([subjectType, subjectId])
+  }
+  ```
+- Payload хранить в JSON/JSONB с ограничением размера ≤10 KB; логировать превышения.
+- Сохранить модель `RateLimitEvent` до завершения миграции (dual-write, чтение для старого UI).
 
-### 3.4. Интеграции и триггеры
-- Поддержка подписчиков: хуки/шины сообщений (опционально) для эскалаций (например, авто temp‑ban при N блок‑событиях RL за M минут).
-- Связь с BlockService: события `block.*` как аудит действий и входные сигналы для аналитики.
+### 3.3. Поиск и фильтры
+- API `GET /api/admin/events` с фильтрами по `source`, `module`, `type`, `severity`, `actor`, `subject`, `key`, диапазону дат и строковому поиску по `message`/разрешённым ключам payload (ip/email/hash). Пагинация курсором (`createdAt desc, id desc`).
+- Для SQLite использовать ILIKE и отдельные поля; для Postgres предусмотреть FTS/GiN индексы.
+- Ответ возвращает payload после маскировки.
 
-### 3.5. Удаление/ретеншн
-- Политика хранения по источникам (конфиг): например, `rate_limit` — 7–30 дней, `auth` — 30–90, `moderation` — 180–365.
-- Фоновые задачи очистки по TTL/ретеншн.
+### 3.4. Экспорт
+- `GET /api/admin/events/export.{csv|json}` экспортирует текущую выборку (лимит ≤10k записей или ≤5 MB), требует permission `events.export`.
+- Экспорт соблюдает маскирование PII и создаёт событие `system.export_performed`.
+
+### 3.5. Live stream
+- Реализовать SSE или Socket.IO namespace `/events` с фильтрами по источнику/модулю/минимальной severity, дебаунсом и авторизацией. Включать через feature flag после стабилизации.
+
+### 3.6. Админ‑интерфейс
+- Новый раздел Admin → Events:
+  - Фильтры (source/module/type/severity/actor/subject/period/поиск, отдельное значение module=`registration`).
+  - Таблица: `time`, `source`, `module`, `type`, `severity`, `key`, `actor`, `subject`, `message`.
+  - Детальный просмотр: payload (форматированный JSON), correlationId, metadata, кнопки копирования.
+  - Кнопки экспорта и переключатель live stream, счётчик результатов.
+  - Отображение информации о маскировании.
+- RBAC: permissions `events.read`, `events.export`, опционально `events.view_sensitive`. Обновить seed, UI редактирования ролей и переводы.
 
 ## 4. Нефункциональные требования
-- Производительность: запись событий не должна блокировать критические пути (использовать неблокирующий вызов/батч/очередь, где нужно).
-- Надёжность: при ошибке записи в БД — деградация без прерывания основной операции (логировать, ретраить фоном).
-- Безопасность и приватность: минимизировать PII, опционально маскировать/хешировать IP/email, соблюдать политику хранения.
-- Масштабирование: индексы, пагинация курсором, возможность шардирования по времени в будущем.
+- **Производительность**: запись события ≤5 мс p99; для высоконагруженных источников разрешить асинхронную очередь.
+- **Масштабируемость**: ≥1 млн событий/сутки, поддержка retention 7–365 дней. План миграции на Postgres/шардирование при росте нагрузки.
+- **Надёжность**: graceful degradation (буферизация при недоступности хранилища, retries). Мониторинг отказов EventService.
+- **Безопасность**: все API защищены аутентификацией, проверкой прав; payload очищается от PII по профилю.
+- **Совместимость**: поддержка `RateLimitEvent` до завершения перехода, dual-write + план отключения.
 
-## 5. RBAC и доступы
-- Чтение: `isSuperadmin(user) || checkPermission(user, 'events', 'read')`.
-- Экспорт: `isSuperadmin(user) || checkPermission(user, 'events', 'export')`.
-- Удаление (если предусмотрено): `isSuperadmin(user) || checkPermission(user, 'events', 'delete')`.
-- Live‑просмотр: как `read`.
+## 5. PII и ретеншн
+- Конфигурация `EventRetention`: `source`, `ttlDays`, `exportPolicy`, `maskingProfile`. Значения:
+  - `rate_limit`: ttl 7–30 дней; mask ip/email (оставить 2 символа), хранить hash.
+  - `auth`: ttl 30–90 дней; mask ip/email, запрет raw данных.
+  - `registration`: ttl 30–90 дней; хранить email в хэшах, mask ip.
+  - `moderation/block`: ttl 180–365 дней; доступ к PII только для ролей с `events.view_sensitive`.
+  - `chat/ads/notifications/system`: ttl ≥90 дней; payload без PII.
+- Фоновый job удаляет записи старше TTL батчами по `createdAt`, логирует метрики и событие `system.retention_cleaned`.
+- Экспорт подчиняется тем же профилям маскировки.
 
-## 6. Схема данных (предложение)
-Новая таблица `Event` (унифицированная), сохранить текущую `RateLimitEvent` до миграции. Поля `Event`:
-- `id` (string/uuid)
-- `source` (string, enum‑like): `rate_limit | moderation | block | auth | ads | chat | notifications | system`
-- `module` (string): `chat | ads | upload | auth | email | notifications | all | ...`
-- `type` (string): напр. `warning | block | action | login_failed | ...`
-- `severity` (string enum): `info | warning | error | critical` (по источнику).
-- `key` (string | nullable): ключ субъекта в контексте модуля (например, userId или ip/ device/ listingId — зависит от события)
-- `actorId` (string | nullable): кто инициировал (пользователь/система)
-- `subjectId` (string | nullable): над кем/чем действие (user/listing/…)
-- `ipAddress` (string | nullable)
-- `email` (string | nullable, опционально — флажок на хранение PII)
-- `correlationId` (string | nullable): сквозной ID для склеивания цепочек событий
-- `message` (string | nullable): короткое описательное сообщение
-- `payload` (JSON): специфичные поля, например:
-  - для `rate_limit`: `{ count, maxRequests, windowStart, windowEnd, blockedUntil, mode }`
-  - для `auth`: `{ reason: 'invalid_password' | 'too_many_attempts', userAgent, ... }`
-  - для `block`: `{ blockId, blockType, durationMs, reasonCode }`
-- `createdAt` (datetime, default now)
-- Индексы: `(createdAt DESC)`, `(source)`, `(module)`, `(type)`, `(key)`, `(actorId)`, `(subjectId)`, составные по частым фильтрам (`source,module,type,createdAt`).
+## 6. Интеграции и триггеры
+- EventService предоставляет API подписок (`on(filter, handler)`), используемый live‑стримом и будущими авто‑триггерами.
+- BlockService должен уметь реагировать на события `rate_limit.block` (подготовить интерфейс, реализацию триггеров — в следующих итерациях).
 
-Миграционный путь:
-- Этап 1: в `RateLimitService` и сторах писать события параллельно в новую `Event` (source=`rate_limit`) и старую `RateLimitEvent`.
-- Этап 2: UI/админка начинает читать из новой `Event`.
-- Этап 3: остановить запись в `RateLimitEvent`, оставить только чтение для бэк‑филла/архива или удалить позже.
+## 7. Тестирование
+- **Unit**: EventService (валидация, маскирование, сериализация), фильтры API, retention job, broadcaster.
+- **Integration**: dual-write из RateLimitService, генерация auth/registration/moderation событий, экспорт, подписки.
+- **E2E**: UI (фильтры, деталка, экспорт, права), сценарии регистрации (успех/ошибка), проверка masкинга.
+- **Нагрузочные**: запись rate_limit + регистрация при 1k rps, оценка задержек и размера таблицы.
 
-## 7. Backend API
-Эндпоинты (Next.js App Router):
-- `GET /api/admin/events`
-  - query: `source?`, `module?`, `type?`, `key?`, `actorId?`, `subjectId?`, `severity?`, `search?`, `from?`, `to?`, `limit?`, `cursor?`
-  - ответ: `{ items: EventDTO[], total?: number, nextCursor?: string }`
-- `GET /api/admin/events/:id` — детально
-- `DELETE /api/admin/events/:id` — опционально (только суперадмин или спец‑право)
-- `POST /api/admin/events/export` — экспорт CSV/JSON по текущему фильтру (асинхронная задача с ссылкой на файл)
-- `GET /api/admin/events/stream` — SSE/WebSocket для live‑обновлений (опционально)
+## 8. Мониторинг
+- Метрики Prometheus: `events_written_total`, `event_write_duration_ms`, `event_queue_depth`, `events_stream_clients`, `event_retention_deleted_total`, `events_export_total`.
+- Алерты: задержка записи >порога, очередь >лимита, неработающий retention job, ошибки экспорта, отключенный live stream.
 
-Авторизация: `requireAuth` + `isSuperadmin || checkPermission(user, 'events', 'read'|'export'|'delete')`.
+## 9. План внедрения
+- **Итерация 1**: модель `Event`, EventService, интеграция rate_limit, API `/api/admin/events`, базовый UI.
+- **Итерация 2**: интеграция moderation/block, auth, registration; экспорт; retention job; permissions + UI.
+- **Итерация 3**: подключение chat/ads/notifications/system, live stream, pub/sub интерфейс, расширенные фильтры.
+- **Итерация 4**: миграция UI rate_limit events → новый модуль, отключение `RateLimitEvent`, настройка триггеров.
 
-DTO Event (ответ API):
-- Отражает поля схемы (п.6), `payload` может быть частично отфильтрован от чувствительных данных (в зависимости от ролей).
+## 10. Риски
+- Рост объёма данных может превысить возможности SQLite — подготовить переход на Postgres.
+- PII политика должна быть согласована до запуска, иначе риск утечек.
+- Dual-write может увеличить задержки — нужен мониторинг и план отката.
+- Отсутствие строгой схемы payload усложнит UI — необходимо документировать payload для каждого источника/модуля (включая регистрацию).
 
-## 8. Frontend (Admin UI)
-- Раздел: Admin → Events
-  - Панель фильтров
-  - Таблица событий (виртуализация для производительности)
-  - Детальный просмотр (drawer/modal)
-  - Экспорт текущей выборки
-  - Live‑mode переключатель (при SSE/WS)
-- Роли/права управляют видимостью раздела и действий.
-- UX: сохранять последний фильтр в URL/локальном состоянии.
+## 11. Предложение по миграции на Postgres
+Цель: обеспечить масштабируемость и производительность для ≥1 млн событий/сутки, продвинутый поиск по JSONB и надёжные индексы.
 
-## 9. Интеграция с Rate Limit / BlockService
-- Rate Limit: заменить текущий `recordEvent` на обёртку над `EventService.record({ source:'rate_limit', type: 'warning'|'block', ... })`.
-- BlockService (когда появится):
-  - На `block.create/deactivate` писать события `source='block'`, `type='created'|'deactivated'`.
-  - Эскалации: подписаться на `rate_limit.block`/`auth.login_failed` и применять правила.
+11.1. Целевой стек
+- Postgres 14+ (рекомендуется 15/16), отдельный инстанс/кластер.
+- Пул соединений: pgBouncer (transaction pooling) для сервисов и фоновых задач.
+- Prisma: перевод datasource на `provider = "postgresql"`.
 
-## 10. Конфигурация и политика PII
-- В `.env`/конфиге флаги:
-  - `EVENTS_STORE_EMAIL=false` (по умолчанию)
-  - `EVENTS_REDACT_IP=true` (хешировать/маскировать в payload для экспорта/логов)
-  - `EVENTS_RETENTION_DAYS_RATE_LIMIT=30`, и т.п. per source
-- Гранулярная фильтрация `payload` и полей по ролям (например, обычному админу скрывать часть PII, суперадмину — показывать).
+11.2. Схемные изменения (миграция Prisma)
+- Event.payload: Json (в PG — JSONB).
+- Event.metadata: Json (в PG — JSONB).
+- Индексы:
+  - btree: `(source, createdAt)`, `(module, type, createdAt)`, `(key)`, `(actorType, actorId)`, `(subjectType, subjectId)`.
+  - Дополнительно: `(createdAt DESC, id DESC)` для ускорения пагинации курсором.
+  - GIN по JSONB (опционально, если требуется поиск по ключам): `USING GIN (payload jsonb_path_ops)`.
+- Партиционирование по времени (рекомендовано для ≥1 млн/сутки): `PARTITION BY RANGE (createdAt)` с месячными партициями.
 
-## 11. Наблюдаемость/Метрики
-- Счётчики: количество событий по `source/module/type/severity`.
-- Латентность записи события.
-- Ошибки записи/ретраев.
-- Нагрузка/скорость стрима (если live‑mode).
+11.3. Процедура миграции (низкий простой)
+1) Подготовка:
+   - Развернуть Postgres, настроить бэкапы, мониторинг (pg_stat_statements), алерты.
+   - Добавить .env переменные: `DATABASE_URL_PG` (новая БД), `EVENTS_DB_USE_PG` (feature flag).
+   - Подготовить миграции Prisma для Postgres (без удаления SQLite схемы).
+2) Двойной запуск (dual-run):
+   - Включить двойную запись (уже есть dual-write для RateLimitEvent; добавить для Event при необходимости).
+   - Сервис на dev/stage пишет в SQLite (текущая), читает из SQLite; параллельно пишет в Postgres в фоне (ETL/репликация).
+3) Перенос исторических данных:
+   - Одноразовый backfill из SQLite→Postgres батчами по createdAt, с контролем размера JSON (≤10KB) и маскированием.
+   - Сверка контрольных сумм: количество записей, агрегации по source/module/type/severity.
+4) Переключение чтения:
+   - Переключить читателя API `/api/admin/events` на Postgres через флаг.
+   - Наблюдать метрики и нагрузку, сравнить выборки (A/B).
+5) Переключение записи:
+   - Переключить EventService.record на Postgres, временно оставить dual-write.
+6) Отключение SQLite и очистка:
+   - После стабилизации отключить dual-write, оставить только Postgres.
+   - Задокументировать откат: переключение флага обратно, переиндексация.
 
-## 12. Тестирование
-- Unit: сериализация/валидация DTO, фильтры/пагинация, маскирование PII.
-- Integration: запись событий из RateLimitService/Stores, выборки по фильтрам, экспорт.
-- E2E: UI фильтры, просмотр детали, экспорт, права доступа.
+11.4. Эксплуатационные практики
+- Автообслуживание: autovacuum, регулярный REINDEX при росте JSONB, контроль bloating.
+- План партиций: создавать партицию на следующий месяц заранее; архивировать/удалять старые по TTL.
+- Резервное копирование: ежедневные полные бэкапы + WAL архивирование.
+- Наблюдаемость: метрики (connections, xact_commit, deadlocks), логи медленных запросов.
 
-## 13. План работ (итерации)
-Итерация 1:
-- Модель `Event`, миграция.
-- `EventService.record` + обёртка в RateLimitService/Stores.
-- `GET /api/admin/events` (фильтры/курсоры).
-- Базовый UI список + детали.
+## 12. Масштабирование под 1 млн событий/сутки
+12.1. Профиль нагрузки
+- Средняя скорость ~11,6 событий/сек, пиковая — до 200–500 событий/сек (спайки при rate_limit/auth/registration).
 
-Итерация 2:
-- Экспорт, индексы, ретеншн job.
-- Live‑stream (SSE/WS) — опционально.
-- PII‑политика/редактирование в ответах API (редакция `payload`).
+12.2. Путь записи (write path)
+- Асинхронизация: неблокирующая очередь для EventService (in-memory + резерв в Redis/встроенная DB-таблица очереди).
+- Батч-вставки: вставка пачками 100–500 записей, тайм-аут 50–200 мс.
+- Ограничения: тайм-аут записи ≤1000 мс, ретраи с backoff, счётчик очереди и алерты при глубине >N.
 
-Итерация 3:
-- Интеграция с будущим `BlockService` (создание/деактивация блоков → события).
-- Триггеры/эскалации (по порогам событий).
+12.3. Хранение и индексация
+- Postgres JSONB для payload/metadata, GIN индекс по payload (по согласованным ключам: emailHash, ip, userId).
+- Партиционирование Event по месяцам; отдельные индексы на каждой партиции.
+- Retention job (батчи по createdAt) + метрики удаления.
 
-## 14. Риски и допущения
-- Объём событий может быть существенным (особенно rate_limit) — обязательно индексы + ретеншн.
-- PII — согласовать политику хранения до запуска.
-- Совместимость: на переходный период поддерживаем старую `RateLimitEvent`.
+12.4. Путь чтения (read path)
+- Курсорная пагинация по `(createdAt DESC, id DESC)`; лимиты 25–100 на страницу.
+- Поиск: строго по разрешённым ключам (message/key/emailHash/ip/userId), FTS при необходимости на message.
+- Экспорт: лимит 10k строк или 5MB, серверные timeouts, потоковая выдача.
+- Кэширование «горячих» фильтров (опционально) на 30–120 секунд.
+
+12.5. Ёмкостное планирование
+- Оценка размера записи: 300–1000 байт средний payload → 0,3–1,0 GB/день на 1 млн событий.
+- Стратегия хранения: TTL 30–180 дней в зависимости от source, далее выгрузка/архив.
+- Инфраструктура: 2–4 vCPU, 8–16 GB RAM, быстрые диски (NVMe), резерв по IO для GIN.
+
+## 13. RBAC по Events и переводы
+13.1. Разрешения (permissions) модуля Events
+- `events.read` — просмотр списка событий и деталей.
+- `events.export` — экспорт csv/json.
+- `events.view_sensitive` — доступ к не маскированным PII (email/ip и др.).
+- `events.stream` (опционально) — доступ к live‑стриму (SSE/WebSocket).
+
+13.2. Рекомендации по назначению прав для ролей (пример)
+- Роль Admin: `events.read`, `events.export`, `events.view_sensitive`, `events.stream`.
+- Роль Moderator/Security: `events.read`, `events.view_sensitive` (по согласованию), `events.stream`.
+- Роль Support/Analyst: `events.read`, `events.export` (без `view_sensitive`).
+- Обычный пользователь: нет прав модуля Events.
+
+13.3. Представление прав в модели проекта
+- Поле Role.permissions — JSON-строка. Рекомендуемый формат:
+  ```json
+  {
+    "events": ["read", "export", "view_sensitive", "stream"],
+    "users": ["read", "update"]
+  }
+  ```
+- UI редактирования ролей (role-dialog): добавить переключатели для указанных действий Events.
+
+13.4. Ключи переводов (i18n)
+- Пространство `permissions`:
+  - `permissions.events.read`: «Просмотр событий» | EN: "View events" | AR: "عرض الأحداث"
+  - `permissions.events.export`: «Экспорт событий» | EN: "Export events" | AR: "تصدير الأحداث"
+  - `permissions.events.view_sensitive`: «Просмотр чувствительных данных» | EN: "View sensitive data" | AR: "عرض البيانات الحساسة"
+  - `permissions.events.stream`: «Live‑стрим событий» | EN: "Events live stream" | AR: "بث مباشر للأحداث"
+- Пространство `navigation`/`admin` (при добавлении раздела):
+  - `navigation.admin.events`: «Журнал событий» | EN: "Events" | AR: "الأحداث"
+  - `events.export.button`: «Экспорт» | EN: "Export" | AR: "تصدير"
+  - `events.stream.toggle`: «Live‑стрим» | EN: "Live stream" | AR: "بث مباشر"
+
+13.5. Правила маскирования и связь с RBAC
+- По умолчанию API отдаёт замаскированные PII.
+- При наличии `events.view_sensitive` API возвращает исходные payload/metadata (или меньше маскирования), что уже отражено в эндпоинте `/api/admin/events`.
+- Экспорт всегда учитывает маскирование и проверяет `events.export`.
+
+13.6. Чек‑лист внедрения RBAC/переводов
+- Добавить ключи переводов в en/ru/ar словари.
+- Проверить `checkPermission(user, 'events', '...')` в API: `read`, `export`, `view_sensitive`.
+- Расширить UI редактирования ролей: чекбоксы для действий Events и их локализация.

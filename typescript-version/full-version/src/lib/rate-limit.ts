@@ -3,6 +3,7 @@ import type { RateLimitState, User, UserBlock } from '@prisma/client'
 
 import logger from '@/lib/logger'
 import { incrementUnknownModuleMetric } from '@/lib/metrics/rate-limit'
+import { eventService } from '@/services/events'
 
 import type {
   RateLimitConfig,
@@ -305,6 +306,31 @@ class RateLimitService {
     const shouldStoreIp = moduleConfig?.storeIpInEvents !== false
     const sanitizedEmail = shouldStoreEmail ? params.email ?? null : null
     const sanitizedIp = shouldStoreIp ? params.ipAddress ?? null : null
+
+    void eventService.record({
+      source: 'rate_limit',
+      module: params.module,
+      type: `rate_limit.${params.eventType}`,
+      severity: params.eventType === 'block' ? 'error' : 'warning',
+      message: `Rate limit ${params.eventType} for key ${params.key}`,
+      actor: params.userId ? { type: 'user', id: params.userId } : undefined,
+      subject: { type: 'rate_limit', id: params.key },
+      key: params.key,
+      payload: {
+        module: params.module,
+        key: params.key,
+        userId: params.userId ?? null,
+        ipAddress: sanitizedIp,
+        email: sanitizedEmail,
+        eventType: params.eventType,
+        mode: params.mode,
+        count: params.count,
+        maxRequests: params.maxRequests,
+        windowStart: params.windowStart,
+        windowEnd: params.windowEnd,
+        blockedUntil: params.blockedUntil ?? null
+      }
+    })
 
     try {
       await prisma.rateLimitEvent.create({
