@@ -8,6 +8,7 @@ import { SettingsProvider } from '@core/contexts/settingsContext'
 import ThemeProvider from '@components/theme'
 import ReduxProvider from '@/redux-store/ReduxProvider'
 import { SocketProvider } from '@/contexts/SocketProvider'
+import { PresenceProvider } from '@/contexts/PresenceProvider'
 import NotificationsInitializer from '@/components/NotificationsInitializer'
 
 // Styled Component Imports
@@ -32,17 +33,19 @@ const Providers = async (props: Props) => {
   return (
     <NextAuthProvider>
       <SocketProvider>
-        <ReduxProvider>
-          <NotificationsInitializer />
-          <VerticalNavProvider>
-            <SettingsProvider settingsCookie={settingsCookie} mode={mode}>
-              <ThemeProvider direction={direction} systemMode={systemMode}>
-                {children}
-                <AppReactToastify direction={direction} hideProgressBar />
-              </ThemeProvider>
-            </SettingsProvider>
-          </VerticalNavProvider>
-        </ReduxProvider>
+        <PresenceProvider>
+          <ReduxProvider>
+            <NotificationsInitializer />
+            <VerticalNavProvider>
+              <SettingsProvider settingsCookie={settingsCookie} mode={mode}>
+                <ThemeProvider direction={direction} systemMode={systemMode}>
+                  {children}
+                  <AppReactToastify direction={direction} hideProgressBar />
+                </ThemeProvider>
+              </SettingsProvider>
+            </VerticalNavProvider>
+          </ReduxProvider>
+        </PresenceProvider>
       </SocketProvider>
     </NextAuthProvider>
   )

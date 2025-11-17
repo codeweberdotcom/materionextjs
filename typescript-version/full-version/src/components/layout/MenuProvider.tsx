@@ -2,17 +2,13 @@ import menuData from '@/data/navigation/verticalMenuData'
 import type { getDictionary } from '@/utils/formatting/getDictionary'
 import type { VerticalMenuDataType } from '@/types/menuTypes'
 import type { UserWithRole } from '@/utils/permissions/permissions'
-import { filterMenuDataByPermissions } from '@/utils/menu/filterMenu'
 
 export const getFilteredMenuDataClient = (
   dictionary: Awaited<ReturnType<typeof getDictionary>>,
   user: UserWithRole | null
 ): VerticalMenuDataType[] => {
-  const fullMenuData = menuData(dictionary)
+  // User param is kept for API-compatibility but menu is no longer filtered by permissions
+  void user
 
-  return filterMenuDataByPermissions({
-    items: fullMenuData,
-    dictionary,
-    user
-  })
+  return menuData(dictionary)
 }

@@ -145,8 +145,8 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
       setNotificationSocket(nextNotificationSocket)
 
       pingRef.current = setInterval(() => {
-        if (nextChatSocket.connected) {
-          nextChatSocket.emit('ping')
+        if (nextNotificationSocket.connected) {
+          nextNotificationSocket.emit('ping')
         }
       }, 30000)
     }

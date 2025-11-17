@@ -31,6 +31,50 @@ The chat system is a real-time messaging platform built with Next.js, WebSocket 
 - `receiveMessage` - New message received
 - `messagesRead` - Messages marked as read confirmation
 
+### Presence (статусы online/offline)
+- 30-секундный `ping` отправляется в namespace `/notifications` и обновляет `lastSeen` в БД.
+- Событие `presence:sync` в `/notifications` возвращает карту `{ userId: { isOnline, lastSeen } }`, расчёт по `lastSeen` (порог ~30 сек).
+- Клиент: `PresenceProvider`/`usePresence` опрашивает `/notifications` раз в 30 сек, хранит статусы in-memory и раздаёт их чатовым компонентам; пока кэш пуст — чат может использовать fallback из `useUnreadByContact` (старый источник статусов).
+- Чат-сокет `/chat` пинг не использует; он только для сообщений/acks.
+
+
+## 🌐 Socket Architecture
+
+### Namespaces
+- `/chat` — сообщения; события: `sendMessage`, `receiveMessage`, `getOrCreateRoom`, `markMessagesRead`; разрешение: `send_message`.
+- `/notifications` — уведомления и presence; события: `newNotification`, `markAsRead`, `markAllAsRead`, `deleteNotification`, `presence:sync` (карта `{ userId: { isOnline, lastSeen } }`), `ping` (обновляет `lastSeen`, клиентский интервал 30 сек); разрешение: `send_notification`.
+
+### Роли и разрешения
+- Роли: `admin`, `moderator`, `user`, `guest`.
+- Разрешения: `send_message`, `send_notification`, `moderate_chat`, `view_admin_panel`.
+
+### Аутентификация
+JWT (Lucia) передаётся в `auth.token` при подключении:
+```javascript
+const socket = io('http://localhost:3000', { auth: { token: 'jwt-token-here' } })
+```
+
+### Rate limiting
+- Чат: 10 сообщений в час
+- Уведомления: 30 уведомлений в час
+
+### Масштабирование (опционально)
+Redis adapter:
+```bash
+npm install @socket.io/redis-adapter redis
+```
+```typescript
+import { RedisAdapter } from '@socket.io/redis-adapter'
+import { createClient } from 'redis'
+const pubClient = createClient({ host: 'localhost', port: 6379 })
+const subClient = pubClient.duplicate()
+io.adapter(new RedisAdapter(pubClient, subClient))
+```
+
+### Troubleshooting (кратко)
+- Проверить JWT/права, CORS, namespace.
+- При rate limit — смотреть конфиг/логи.
+
 ## 📡 API Endpoints
 
 ### GET `/api/chat/last-messages`

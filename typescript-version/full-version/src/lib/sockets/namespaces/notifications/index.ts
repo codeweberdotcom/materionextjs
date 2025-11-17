@@ -12,6 +12,7 @@ import { authenticateSocket, requirePermission } from '../../middleware/auth'
 import { rateLimitNotification } from '../../middleware/rateLimit'
 import { parseNotificationMetadata, serializeNotificationMetadata } from '@/utils/notifications/metadata'
 import { prisma } from '@/libs/prisma'
+import { getOnlineUsers } from '../chat'
 
 // Хранилище активных пользователей (in-memory)
 const activeUsers = new Map<string, string>() // userId -> socketId
@@ -295,9 +296,37 @@ const registerNotificationEventHandlers = (socket: TypedSocket) => {
     }
   });
 
-  // Ping для поддержания соединения
-  socket.on('ping', (_data, callback) => {
-    callback?.({ pong: true, timestamp: Date.now() })
+  // Ping для поддержания соединения + обновление lastSeen
+  socket.on('ping', async (_data, callback) => {
+    try {
+      if (socket.userId) {
+        await prisma.user.update({
+          where: { id: socket.userId },
+          data: { lastSeen: new Date() }
+        })
+      }
+      callback?.({ pong: true, timestamp: Date.now() })
+    } catch (error) {
+      logger.error('Failed to update lastSeen on notifications ping', {
+        userId: socket.userId,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+      callback?.({ pong: false, error: 'Failed to update status' })
+    }
+  })
+
+  // Синхронизация статусов онлайн через notifications namespace
+  socket.on('presence:sync', async (_data, callback) => {
+    try {
+      const userStatuses = await getOnlineUsers()
+      callback?.(userStatuses)
+    } catch (error) {
+      logger.error('Failed to sync presence via notifications', {
+        userId: socket.userId,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      })
+      callback?.(undefined)
+    }
   })
 };
 

@@ -74,155 +74,8 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
 
   // This is how you will normally render menu section
   {
-    label: dictionary['navigation'].appsPages,
-    isSection: true,
-    children: [
-      {
-        label: dictionary['navigation'].eCommerce,
-        icon: 'ri-shopping-bag-3-line',
-        children: [
-          {
-            label: dictionary['navigation'].dashboard,
-            href: '/apps/ecommerce/dashboard'
-          },
-          {
-            label: dictionary['navigation'].products,
-            children: [
-              {
-                label: dictionary['navigation'].list,
-                href: '/apps/ecommerce/products/list'
-              },
-              {
-                label: dictionary['navigation'].add,
-                href: '/apps/ecommerce/products/add'
-              },
-              {
-                label: dictionary['navigation'].category,
-                href: '/apps/ecommerce/products/category'
-              }
-            ]
-          },
-          {
-            label: dictionary['navigation'].orders,
-            children: [
-              {
-                label: dictionary['navigation'].list,
-                href: '/apps/ecommerce/orders/list'
-              },
-              {
-                label: dictionary['navigation'].details,
-                href: '/apps/ecommerce/orders/details/5434',
-                exactMatch: false,
-                activeUrl: '/apps/ecommerce/orders/details'
-              }
-            ]
-          },
-          {
-            label: dictionary['navigation'].customers,
-            children: [
-              {
-                label: dictionary['navigation'].list,
-                href: '/apps/ecommerce/customers/list'
-              },
-              {
-                label: dictionary['navigation'].details,
-                href: '/apps/ecommerce/customers/details/879861',
-                exactMatch: false,
-                activeUrl: '/apps/ecommerce/customers/details'
-              }
-            ]
-          },
-          {
-            label: dictionary['navigation'].manageReviews,
-            href: '/apps/ecommerce/manage-reviews'
-          },
-          {
-            label: dictionary['navigation'].referrals,
-            href: '/apps/ecommerce/referrals'
-          },
-          {
-            label: dictionary['navigation'].settings,
-            href: '/apps/ecommerce/settings'
-          }
-        ]
-      },
-      {
-        label: dictionary['navigation'].academy,
-        icon: 'ri-graduation-cap-line',
-        children: [
-          {
-            label: dictionary['navigation'].dashboard,
-            href: '/apps/academy/dashboard'
-          },
-          {
-            label: dictionary['navigation'].myCourses,
-            href: '/apps/academy/my-courses'
-          },
-          {
-            label: dictionary['navigation'].courseDetails,
-            href: '/apps/academy/course-details'
-          }
-        ]
-      },
-      {
-        label: dictionary['navigation'].logistics,
-        icon: 'ri-car-line',
-        children: [
-          {
-            label: dictionary['navigation'].dashboard,
-            href: '/apps/logistics/dashboard'
-          },
-          {
-            label: dictionary['navigation'].fleet,
-            href: '/apps/logistics/fleet'
-          }
-        ]
-      },
-      {
-        label: dictionary['navigation'].email,
-        icon: 'ri-mail-open-line',
-        href: '/apps/email',
-        exactMatch: false,
-        activeUrl: '/apps/email'
-      },
-      {
-        label: dictionary['navigation'].calendar,
-        icon: 'ri-calendar-line',
-        href: '/apps/calendar'
-      },
-      {
-        label: dictionary['navigation'].kanban,
-        icon: 'ri-drag-drop-line',
-        href: '/apps/kanban'
-      },
-      {
-        label: dictionary['navigation'].invoice,
-        icon: 'ri-bill-line',
-        children: [
-          {
-            label: dictionary['navigation'].list,
-            href: '/apps/invoice/list'
-          },
-          {
-            label: dictionary['navigation'].preview,
-            href: '/apps/invoice/preview/4987',
-            exactMatch: false,
-            activeUrl: '/apps/invoice/preview'
-          },
-          {
-            label: dictionary['navigation'].edit,
-            href: '/apps/invoice/edit/4987',
-            exactMatch: false,
-            activeUrl: '/apps/invoice/edit'
-          },
-          {
-            label: dictionary['navigation'].add,
-            href: '/apps/invoice/add'
-          }
-        ]
-      },
-  {
     label: dictionary['navigation'].communications,
+    icon: 'ri-customer-service-2-line',
     isSection: true,
     children: [
       {
@@ -236,9 +89,9 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         href: '/apps/notifications'
       }
     ]
-  },
-  {
+  },  {
     label: dictionary['navigation'].adminAndSettings,
+    icon: 'ri-settings-5-line',
     isSection: true,
     children: [
       {
@@ -306,7 +159,7 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
             label: dictionary['navigation'].translations,
             icon: 'ri-global-line',
             href: '/apps/references/translations'
-          },
+          }
         ]
       },
       {
@@ -318,55 +171,69 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         label: dictionary['navigation'].emailTemplates,
         icon: 'ri-file-text-line',
         href: '/apps/settings/email-templates'
+      }
+    ]
+  },  {
+    label: dictionary['navigation'].monitoring,
+    icon: 'ri-bar-chart-line',
+    isSection: true,
+    children: [
+      {
+        label: dictionary['navigation'].monitoringOverview,
+        icon: 'ri-eye-line',
+        href: '/admin/monitoring/overview'
       },
       {
-        label: dictionary['navigation'].rateLimitCategory,
-        icon: 'ri-shield-keyhole-line',
-        children: [
-          {
-            label: dictionary['navigation'].rateLimitManagement,
-            href: '/admin/rate-limits'
-          },
-          {
-            label: dictionary['navigation'].rateLimitEvents,
-            href: '/admin/rate-limits/events'
-          },
-          {
-            label: dictionary['navigation'].blocking || 'Blocking',
-            href: '/admin/blocks'
-          },
-          {
-            label: dictionary['navigation'].eventsJournal,
-            href: '/admin/events'
-          }
-        ]
+        label: dictionary['navigation'].monitoringMetrics,
+        icon: 'ri-bar-chart-2-line',
+        href: '/admin/monitoring/metrics'
       },
       {
-        label: dictionary['navigation'].monitoring,
-        icon: 'ri-bar-chart-line',
-        children: [
-          {
-            label: dictionary['navigation'].monitoringOverview || 'Overview',
-            href: '/admin/monitoring'
-          },
-          {
-            label: dictionary['navigation'].monitoringMetrics || 'Metrics',
-            href: '/admin/monitoring/metrics'
-          },
-          {
-            label: dictionary['navigation'].monitoringErrorTracking || 'Error Tracking',
-            href: '/admin/monitoring/errors'
-          },
-          {
-            label: dictionary['navigation'].monitoringApplicationInsights || 'Application Insights',
-            href: '/admin/monitoring/insights'
-          },
-          {
-            label: dictionary['navigation'].maintenance || 'Maintenance',
-            href: '/admin/maintenance'
-          }
-        ]
+        label: dictionary['navigation'].monitoringErrorTracking,
+        icon: 'ri-error-warning-line',
+        href: '/admin/monitoring/error-tracking'
       },
+      {
+        label: dictionary['navigation'].monitoringApplicationInsights,
+        icon: 'ri-lightbulb-line',
+        href: '/admin/monitoring/application-insights'
+      },
+      {
+        label: dictionary['navigation'].monitoringTesting || dictionary['navigation'].testingConnection || 'Testing',
+        icon: 'ri-test-tube-line',
+        href: '/admin/monitoring/testing'
+      },
+      {
+        label: dictionary['navigation'].maintenance || 'Maintenance',
+        icon: 'ri-tools-line',
+        href: '/admin/maintenance'
+      }
+    ]
+  },  {
+    label: dictionary['navigation'].blocking,
+    icon: 'ri-shield-check-line',
+    isSection: true,
+    children: [
+      {
+        label: dictionary['navigation'].rateLimitManagement,
+        icon: 'ri-timer-flash-line',
+        href: '/admin/rate-limits'
+      },
+      {
+        label: dictionary['navigation'].rateLimitEvents,
+        icon: 'ri-line-chart-line',
+        href: '/admin/rate-limits/events'
+      },
+      {
+        label: dictionary['navigation'].blocking,
+        icon: 'ri-shield-check-line',
+        href: '/admin/blocks'
+      },
+      {
+        label: dictionary['navigation'].eventsJournal,
+        icon: 'ri-history-line',
+        href: '/admin/events'
+      }
     ]
   },
       {
@@ -571,8 +438,187 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         ]
       }
     ]
-  },
-  {
+  },  {
+    label: dictionary['navigation'].appsPages,
+    isSection: true,
+    children: [
+      {
+        label: dictionary['navigation'].eCommerce,
+        icon: 'ri-shopping-bag-3-line',
+        children: [
+          {
+            label: dictionary['navigation'].dashboard,
+            href: '/apps/ecommerce/dashboard'
+          },
+          {
+            label: dictionary['navigation'].products,
+            children: [
+              {
+                label: dictionary['navigation'].list,
+                href: '/apps/ecommerce/products/list'
+              },
+              {
+                label: dictionary['navigation'].add,
+                href: '/apps/ecommerce/products/add'
+              },
+              {
+                label: dictionary['navigation'].category,
+                href: '/apps/ecommerce/products/category'
+              }
+            ]
+          },
+          {
+            label: dictionary['navigation'].orders,
+            children: [
+              {
+                label: dictionary['navigation'].list,
+                href: '/apps/ecommerce/orders/list'
+              },
+              {
+                label: dictionary['navigation'].details,
+                href: '/apps/ecommerce/orders/details/5434',
+                exactMatch: false,
+                activeUrl: '/apps/ecommerce/orders/details'
+              }
+            ]
+          },
+          {
+            label: dictionary['navigation'].customers,
+            children: [
+              {
+                label: dictionary['navigation'].list,
+                href: '/apps/ecommerce/customers/list'
+              },
+              {
+                label: dictionary['navigation'].details,
+                href: '/apps/ecommerce/customers/details/879861',
+                exactMatch: false,
+                activeUrl: '/apps/ecommerce/customers/details'
+              }
+            ]
+          },
+          {
+            label: dictionary['navigation'].manageReviews,
+            href: '/apps/ecommerce/manage-reviews'
+          },
+          {
+            label: dictionary['navigation'].referrals,
+            href: '/apps/ecommerce/referrals'
+          },
+          {
+            label: dictionary['navigation'].settings,
+            href: '/apps/ecommerce/settings'
+          }
+        ]
+      },
+      {
+        label: dictionary['navigation'].academy,
+        icon: 'ri-graduation-cap-line',
+        children: [
+          {
+            label: dictionary['navigation'].dashboard,
+            href: '/apps/academy/dashboard'
+          },
+          {
+            label: dictionary['navigation'].myCourses,
+            href: '/apps/academy/my-courses'
+          },
+          {
+            label: dictionary['navigation'].courseDetails,
+            href: '/apps/academy/course-details'
+          }
+        ]
+      },
+      {
+        label: dictionary['navigation'].logistics,
+        icon: 'ri-car-line',
+        children: [
+          {
+            label: dictionary['navigation'].dashboard,
+            href: '/apps/logistics/dashboard'
+          },
+          {
+            label: dictionary['navigation'].fleet,
+            href: '/apps/logistics/fleet'
+          }
+        ]
+      },
+      {
+        label: dictionary['navigation'].email,
+        icon: 'ri-mail-open-line',
+        href: '/apps/email',
+        exactMatch: false,
+        activeUrl: '/apps/email'
+      },
+      {
+        label: dictionary['navigation'].chat,
+        icon: 'ri-wechat-line',
+        href: '/apps/chat'
+      },
+      {
+        label: dictionary['navigation'].calendar,
+        icon: 'ri-calendar-line',
+        href: '/apps/calendar'
+      },
+      {
+        label: dictionary['navigation'].kanban,
+        icon: 'ri-drag-drop-line',
+        href: '/apps/kanban'
+      },
+      {
+        label: dictionary['navigation'].invoice,
+        icon: 'ri-bill-line',
+        children: [
+          {
+            label: dictionary['navigation'].list,
+            href: '/apps/invoice/list'
+          },
+          {
+            label: dictionary['navigation'].preview,
+            href: '/apps/invoice/preview/4987',
+            exactMatch: false,
+            activeUrl: '/apps/invoice/preview'
+          },
+          {
+            label: dictionary['navigation'].edit,
+            href: '/apps/invoice/edit/4987',
+            exactMatch: false,
+            activeUrl: '/apps/invoice/edit'
+          },
+          {
+            label: dictionary['navigation'].add,
+            href: '/apps/invoice/add'
+          }
+        ]
+      },
+      {
+        label: dictionary['navigation'].user,
+        icon: 'ri-user-line',
+        children: [
+          {
+            label: dictionary['navigation'].list,
+            href: '/apps/user/list'
+          },
+          {
+            label: dictionary['navigation'].view,
+            href: '/apps/user/view'
+          }
+        ]
+      },
+      {
+        label: dictionary['navigation'].rolesPermissions,
+        icon: 'ri-lock-2-line',
+        children: [
+          {
+            label: dictionary['navigation'].roles,
+            href: '/apps/roles'
+          },
+          {
+            label: dictionary['navigation'].permissions,
+            href: '/apps/permissions'
+          }
+        ]
+      },  {
     label: dictionary['navigation'].formsAndTables,
     isSection: true,
     children: [
@@ -611,8 +657,7 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         target: '_blank'
       }
     ]
-  },
-  {
+  },  {
     label: dictionary['navigation'].chartsMisc,
 
     isSection: true,

@@ -37,6 +37,164 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
     ]
   },
   {
+    label: dictionary['navigation'].communications,
+    icon: 'ri-customer-service-2-line',
+    children: [
+      {
+        label: dictionary['navigation'].chat,
+        icon: 'ri-wechat-line',
+        href: '/apps/chat'
+      },
+      {
+        label: dictionary['navigation'].notifications,
+        icon: 'ri-notification-2-line',
+        href: '/apps/notifications'
+      }
+    ]
+  },  {
+    label: dictionary['navigation'].adminAndSettings,
+    icon: 'ri-settings-5-line',
+    children: [
+      {
+        label: dictionary['navigation'].userSettings,
+        icon: 'ri-user-settings-line',
+        children: [
+          {
+            label: dictionary['navigation'].userList,
+            href: '/apps/user/list'
+          },
+          {
+            label: dictionary['navigation'].view,
+            href: '/apps/user/view'
+          },
+          {
+            label: dictionary['navigation'].roles,
+            href: '/apps/roles'
+          },
+          {
+            label: dictionary['navigation'].permissions,
+            href: '/apps/permissions'
+          }
+        ]
+      },
+      {
+        label: dictionary['navigation'].references,
+        icon: 'ri-database-2-line',
+        children: [
+          {
+            label: dictionary['navigation'].languages,
+            icon: 'ri-translate-2',
+            href: '/apps/references/languages'
+          },
+          {
+            label: dictionary['navigation'].countriesAndStates,
+            icon: 'ri-flag-line',
+            children: [
+              {
+                label: dictionary['navigation'].countries,
+                href: '/apps/references/countries'
+              },
+              {
+                label: dictionary['navigation'].states,
+                icon: 'ri-map-pin-2-line',
+                href: '/apps/references/states'
+              },
+              {
+                label: dictionary['navigation'].cities,
+                icon: 'ri-map-pin-4-line',
+                href: '/apps/references/cities'
+              },
+              {
+                label: dictionary['navigation'].districts,
+                icon: 'ri-map-pin-5-line',
+                href: '/apps/references/districts'
+              }
+            ]
+          },
+          {
+            label: dictionary['navigation'].currencies,
+            icon: 'ri-money-dollar-circle-line',
+            href: '/apps/references/currencies'
+          },
+          {
+            label: dictionary['navigation'].translations,
+            icon: 'ri-global-line',
+            href: '/apps/references/translations'
+          }
+        ]
+      },
+      {
+        label: dictionary['navigation'].smtpSettings,
+        icon: 'ri-mail-settings-line',
+        href: '/apps/settings/smtp'
+      },
+      {
+        label: dictionary['navigation'].emailTemplates,
+        icon: 'ri-file-text-line',
+        href: '/apps/settings/email-templates'
+      }
+    ]
+  },  {
+    label: dictionary['navigation'].monitoring,
+    icon: 'ri-bar-chart-line',
+    children: [
+      {
+        label: dictionary['navigation'].monitoringOverview,
+        icon: 'ri-eye-line',
+        href: '/admin/monitoring/overview'
+      },
+      {
+        label: dictionary['navigation'].monitoringMetrics,
+        icon: 'ri-bar-chart-2-line',
+        href: '/admin/monitoring/metrics'
+      },
+      {
+        label: dictionary['navigation'].monitoringErrorTracking,
+        icon: 'ri-error-warning-line',
+        href: '/admin/monitoring/error-tracking'
+      },
+      {
+        label: dictionary['navigation'].monitoringApplicationInsights,
+        icon: 'ri-lightbulb-line',
+        href: '/admin/monitoring/application-insights'
+      },
+      {
+        label: dictionary['navigation'].monitoringTesting || dictionary['navigation'].testingConnection || 'Testing',
+        icon: 'ri-test-tube-line',
+        href: '/admin/monitoring/testing'
+      },
+      {
+        label: dictionary['navigation'].maintenance || 'Maintenance',
+        icon: 'ri-tools-line',
+        href: '/admin/maintenance'
+      }
+    ]
+  },  {
+    label: dictionary['navigation'].blocking,
+    icon: 'ri-shield-check-line',
+    children: [
+      {
+        label: dictionary['navigation'].rateLimitManagement,
+        icon: 'ri-timer-flash-line',
+        href: '/admin/rate-limits'
+      },
+      {
+        label: dictionary['navigation'].rateLimitEvents,
+        icon: 'ri-line-chart-line',
+        href: '/admin/rate-limits/events'
+      },
+      {
+        label: dictionary['navigation'].blocking,
+        icon: 'ri-shield-check-line',
+        href: '/admin/blocks'
+      },
+      {
+        label: dictionary['navigation'].eventsJournal,
+        icon: 'ri-history-line',
+        href: '/admin/events'
+      }
+    ]
+  },  {
     label: dictionary['navigation'].apps,
     icon: 'ri-mail-open-line',
     children: [
@@ -189,21 +347,24 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
           }
         ]
       },
-  {
-    label: dictionary['navigation'].adminAndSettings,
-    children: [
       {
-        label: dictionary['navigation'].userSettings,
-        icon: 'ri-user-settings-line',
+        label: dictionary['navigation'].user,
+        icon: 'ri-user-line',
         children: [
           {
-            label: dictionary['navigation'].userList,
+            label: dictionary['navigation'].list,
             href: '/apps/user/list'
           },
           {
             label: dictionary['navigation'].view,
             href: '/apps/user/view'
-          },
+          }
+        ]
+      },
+      {
+        label: dictionary['navigation'].rolesPermissions,
+        icon: 'ri-lock-line',
+        children: [
           {
             label: dictionary['navigation'].roles,
             href: '/apps/roles'
@@ -213,212 +374,48 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
             href: '/apps/permissions'
           }
         ]
-      },
-      {
-        label: dictionary['navigation'].smtpSettings,
-        icon: 'ri-mail-settings-line',
-        href: '/apps/settings/smtp'
-      },
-      {
-        label: dictionary['navigation'].emailTemplates,
-        icon: 'ri-file-text-line',
-        href: '/apps/settings/email-templates'
       }
     ]
-  },
-    ]
-  },
-  {
-    label: dictionary['navigation'].pages,
-    icon: 'ri-file-list-2-line',
+  },  {
+    label: dictionary['navigation'].formsAndTables,
+    icon: 'ri-pages-line',
     children: [
       {
-        label: dictionary['navigation'].userProfile,
-        icon: 'ri-user-3-line',
-        href: '/pages/user-profile'
+        label: dictionary['navigation'].formLayouts,
+        icon: 'ri-layout-4-line',
+        href: '/forms/form-layouts'
       },
       {
-        label: dictionary['navigation'].accountSettings,
-        icon: 'ri-user-settings-line',
-        href: '/pages/account-settings'
+        label: dictionary['navigation'].formValidation,
+        icon: 'ri-checkbox-multiple-line',
+        href: '/forms/form-validation'
       },
       {
-        label: dictionary['navigation'].faq,
-        icon: 'ri-question-line',
-        href: '/pages/faq'
-      },
-      {
-        label: dictionary['navigation'].pricing,
-        icon: 'ri-money-dollar-circle-line',
-        href: '/pages/pricing'
-      },
-      {
-        label: dictionary['navigation'].miscellaneous,
-        icon: 'ri-file-info-line',
-        children: [
-          {
-            label: dictionary['navigation'].comingSoon,
-            href: '/pages/misc/coming-soon',
-            target: '_blank'
-          },
-          {
-            label: dictionary['navigation'].underMaintenance,
-            href: '/pages/misc/under-maintenance',
-            target: '_blank'
-          },
-          {
-            label: dictionary['navigation'].pageNotFound404,
-            href: '/pages/misc/404-not-found',
-            target: '_blank'
-          },
-          {
-            label: dictionary['navigation'].notAuthorized401,
-            href: '/pages/misc/401-not-authorized',
-            target: '_blank'
-          }
-        ]
-      },
-      {
-        label: dictionary['navigation'].authPages,
-        icon: 'ri-shield-keyhole-line',
-        children: [
-          {
-            label: dictionary['navigation'].login,
-            children: [
-              {
-                label: dictionary['navigation'].loginV1,
-                href: '/pages/auth/login-v1',
-                target: '_blank'
-              },
-              {
-                label: dictionary['navigation'].loginV2,
-                href: '/pages/auth/login-v2',
-                target: '_blank'
-              }
-            ]
-          },
-          {
-            label: dictionary['navigation'].register,
-            children: [
-              {
-                label: dictionary['navigation'].registerV1,
-                href: '/pages/auth/register-v1',
-                target: '_blank'
-              },
-              {
-                label: dictionary['navigation'].registerV2,
-                href: '/pages/auth/register-v2',
-                target: '_blank'
-              },
-              {
-                label: dictionary['navigation'].registerMultiSteps,
-                href: '/pages/auth/register-multi-steps',
-                target: '_blank'
-              }
-            ]
-          },
-          {
-            label: dictionary['navigation'].verifyEmail,
-            children: [
-              {
-                label: dictionary['navigation'].verifyEmailV1,
-                href: '/pages/auth/verify-email-v1',
-                target: '_blank'
-              },
-              {
-                label: dictionary['navigation'].verifyEmailV2,
-                href: '/pages/auth/verify-email-v2',
-                target: '_blank'
-              }
-            ]
-          },
-          {
-            label: dictionary['navigation'].forgotPassword,
-            children: [
-              {
-                label: dictionary['navigation'].forgotPasswordV1,
-                href: '/pages/auth/forgot-password-v1',
-                target: '_blank'
-              },
-              {
-                label: dictionary['navigation'].forgotPasswordV2,
-                href: '/pages/auth/forgot-password-v2',
-                target: '_blank'
-              }
-            ]
-          },
-          {
-            label: dictionary['navigation'].resetPassword,
-            children: [
-              {
-                label: dictionary['navigation'].resetPasswordV1,
-                href: '/pages/auth/reset-password-v1',
-                target: '_blank'
-              },
-              {
-                label: dictionary['navigation'].resetPasswordV2,
-                href: '/pages/auth/reset-password-v2',
-                target: '_blank'
-              }
-            ]
-          },
-          {
-            label: dictionary['navigation'].twoSteps,
-            children: [
-              {
-                label: dictionary['navigation'].twoStepsV1,
-                href: '/pages/auth/two-steps-v1',
-                target: '_blank'
-              },
-              {
-                label: dictionary['navigation'].twoStepsV2,
-                href: '/pages/auth/two-steps-v2',
-                target: '_blank'
-              }
-            ]
-          }
-        ]
-      },
-      {
-        label: dictionary['navigation'].wizardExamples,
+        label: dictionary['navigation'].formWizard,
         icon: 'ri-git-commit-line',
-        children: [
-          {
-            label: dictionary['navigation'].checkout,
-            href: '/pages/wizard-examples/checkout'
-          },
-          {
-            label: dictionary['navigation'].propertyListing,
-            href: '/pages/wizard-examples/property-listing'
-          },
-          {
-            label: dictionary['navigation'].createDeal,
-            href: '/pages/wizard-examples/create-deal'
-          }
-        ]
+        href: '/forms/form-wizard'
       },
       {
-        label: dictionary['navigation'].dialogExamples,
-        icon: 'ri-tv-2-line',
-        href: '/pages/dialog-examples'
+        label: dictionary['navigation'].reactTable,
+        icon: 'ri-table-alt-line',
+        href: '/react-table'
       },
       {
-        label: dictionary['navigation'].widgetExamples,
-        icon: 'ri-bar-chart-box-line',
-        children: [
-          {
-            label: dictionary['navigation'].basic,
-            href: '/pages/widget-examples/basic'
-          },
-          {
-            label: dictionary['navigation'].advanced,
-            href: '/pages/widget-examples/advanced'
-          },
-          {
-            label: dictionary['navigation'].statistics,
-            href: '/pages/widget-examples/statistics'
-          },
-          {
+        label: dictionary['navigation'].formELements,
+        icon: 'ri-radio-button-line',
+        suffix: <i className='ri-external-link-line text-xl' />,
+        href: `${process.env.NEXT_PUBLIC_DOCS_URL}/docs/user-interface/form-elements`,
+        target: '_blank'
+      },
+      {
+        label: dictionary['navigation'].muiTables,
+        icon: 'ri-table-2',
+        href: `${process.env.NEXT_PUBLIC_DOCS_URL}/docs/user-interface/mui-table`,
+        suffix: <i className='ri-external-link-line text-xl' />,
+        target: '_blank'
+      }
+    ]
+  },  {
             label: dictionary['navigation'].charts,
             href: '/pages/widget-examples/charts'
           },
@@ -471,46 +468,6 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
     ]
   },
   {
-    label: dictionary['navigation'].formsAndTables,
-    icon: 'ri-pages-line',
-    children: [
-      {
-        label: dictionary['navigation'].formLayouts,
-        icon: 'ri-layout-4-line',
-        href: '/forms/form-layouts'
-      },
-      {
-        label: dictionary['navigation'].formValidation,
-        icon: 'ri-checkbox-multiple-line',
-        href: '/forms/form-validation'
-      },
-      {
-        label: dictionary['navigation'].formWizard,
-        icon: 'ri-git-commit-line',
-        href: '/forms/form-wizard'
-      },
-      {
-        label: dictionary['navigation'].reactTable,
-        icon: 'ri-table-alt-line',
-        href: '/react-table'
-      },
-      {
-        label: dictionary['navigation'].formELements,
-        icon: 'ri-radio-button-line',
-        suffix: <i className='ri-external-link-line text-xl' />,
-        href: `${process.env.NEXT_PUBLIC_DOCS_URL}/docs/user-interface/form-elements`,
-        target: '_blank'
-      },
-      {
-        label: dictionary['navigation'].muiTables,
-        icon: 'ri-table-2',
-        href: `${process.env.NEXT_PUBLIC_DOCS_URL}/docs/user-interface/mui-table`,
-        suffix: <i className='ri-external-link-line text-xl' />,
-        target: '_blank'
-      }
-    ]
-  },
-  {
     label: dictionary['navigation'].charts,
     icon: 'ri-bar-chart-2-line',
     children: [
@@ -523,32 +480,6 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
         label: dictionary['navigation'].recharts,
         icon: 'ri-bar-chart-line',
         href: '/charts/recharts'
-      }
-    ]
-  },
-  {
-    label: dictionary['navigation'].rateLimitCategory,
-    icon: 'ri-shield-keyhole-line',
-    children: [
-      {
-        label: dictionary['navigation'].rateLimitManagement,
-        icon: 'ri-timer-flash-line',
-        href: '/admin/rate-limits'
-      },
-      {
-        label: dictionary['navigation'].rateLimitEvents,
-        icon: 'ri-line-chart-line',
-        href: '/admin/rate-limits/events'
-      },
-      {
-        label: dictionary['navigation'].blocking || 'Blocking',
-        icon: 'ri-shield-keyhole-line',
-        href: '/admin/blocks'
-      },
-      {
-        label: dictionary['navigation'].eventsJournal,
-        icon: 'ri-history-line',
-        href: '/admin/events'
       }
     ]
   },

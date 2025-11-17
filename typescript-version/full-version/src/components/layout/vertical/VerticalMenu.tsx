@@ -18,13 +18,6 @@ import { Menu, SubMenu, MenuItem, MenuSection } from '@menu/vertical-menu'
 
 // Hook Imports
 import useVerticalNav from '@menu/hooks/useVerticalNav'
-import { usePermissions } from '@/hooks/usePermissions'
-import { useUnreadMessages } from '@/hooks/useUnreadMessages'
-import { useNotifications } from '@/hooks/useNotifications'
-
-// Redux Imports
-import { useSelector } from 'react-redux'
-import type { RootState } from '@/redux-store'
 
 // Styled Component Imports
 import StyledVerticalNavExpandIcon from '@menu/styles/vertical/StyledVerticalNavExpandIcon'
@@ -54,17 +47,6 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
   const theme = useTheme()
   const verticalNavOptions = useVerticalNav()
   const params = useParams()
-  const { checkPermission, isAuthenticated, user } = usePermissions()
-  const { unreadCount } = useUnreadMessages()
-  const { unreadCount: notificationsUnreadCount } = useNotifications()
-
-  console.log('🔍 [MENU] User authenticated:', isAuthenticated)
-  console.log('🔍 [MENU] User role:', user?.role?.name)
-  console.log('🔍 [MENU] User role permissions:', user?.role?.permissions)
-
-  // Redux
-  const notifications = useSelector((state: RootState) => state.notificationsReducer.notifications)
-  const notificationsUnreadCountFromRedux = notifications.filter(notification => notification.status === 'unread').length
 
   // Vars
   const { isBreakpointReached, transitionDuration } = verticalNavOptions
@@ -72,469 +54,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
 
   const ScrollWrapper = isBreakpointReached ? 'div' : PerfectScrollbar
 
-  // Create filtered menu structure
-  const getFilteredMenuJSX = () => {
-    const menuItems = []
-
-    // Always include dashboards
-    menuItems.push(
-      <SubMenu
-        key="dashboards"
-        label={dictionary['navigation'].dashboards}
-        icon={<i className='ri-home-smile-line' />}
-        suffix={<Chip label='5' size='small' color='error' />}
-      >
-        <MenuItem href={`/${locale}/dashboards/crm`}>{dictionary['navigation'].crm}</MenuItem>
-        <MenuItem href={`/${locale}/dashboards/analytics`}>{dictionary['navigation'].analytics}</MenuItem>
-        <MenuItem href={`/${locale}/dashboards/ecommerce`}>{dictionary['navigation'].eCommerce}</MenuItem>
-        <MenuItem href={`/${locale}/dashboards/academy`}>{dictionary['navigation'].academy}</MenuItem>
-        <MenuItem href={`/${locale}/dashboards/logistics`}>{dictionary['navigation'].logistics}</MenuItem>
-      </SubMenu>
-    )
-
-    // Always include front pages
-    menuItems.push(
-      <SubMenu key="frontPages" label={dictionary['navigation'].frontPages} icon={<i className='ri-file-copy-line' />}>
-        <MenuItem href='/front-pages/landing-page' target='_blank'>
-          {dictionary['navigation'].landing}
-        </MenuItem>
-        <MenuItem href='/front-pages/pricing' target='_blank'>
-          {dictionary['navigation'].pricing}
-        </MenuItem>
-        <MenuItem href='/front-pages/payment' target='_blank'>
-          {dictionary['navigation'].payment}
-        </MenuItem>
-        <MenuItem href='/front-pages/checkout' target='_blank'>
-          {dictionary['navigation'].checkout}
-        </MenuItem>
-        <MenuItem href='/front-pages/help-center' target='_blank'>
-          {dictionary['navigation'].helpCenter}
-        </MenuItem>
-      </SubMenu>
-    )
-
-    // Apps & Pages section
-    const appsPagesChildren = []
-
-    // Always include eCommerce
-    appsPagesChildren.push(
-      <SubMenu key="ecommerce" label={dictionary['navigation'].eCommerce} icon={<i className='ri-shopping-bag-3-line' />}>
-        <MenuItem href={`/${locale}/apps/ecommerce/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
-        <SubMenu label={dictionary['navigation'].products}>
-          <MenuItem href={`/${locale}/apps/ecommerce/products/list`}>{dictionary['navigation'].list}</MenuItem>
-          <MenuItem href={`/${locale}/apps/ecommerce/products/add`}>{dictionary['navigation'].add}</MenuItem>
-          <MenuItem href={`/${locale}/apps/ecommerce/products/category`}>
-            {dictionary['navigation'].category}
-          </MenuItem>
-        </SubMenu>
-        <SubMenu label={dictionary['navigation'].orders}>
-          <MenuItem href={`/${locale}/apps/ecommerce/orders/list`}>{dictionary['navigation'].list}</MenuItem>
-          <MenuItem
-            href={`/${locale}/apps/ecommerce/orders/details/5434`}
-            exactMatch={false}
-            activeUrl='/apps/ecommerce/orders/details'
-          >
-            {dictionary['navigation'].details}
-          </MenuItem>
-        </SubMenu>
-        <SubMenu label={dictionary['navigation'].customers}>
-          <MenuItem href={`/${locale}/apps/ecommerce/customers/list`}>{dictionary['navigation'].list}</MenuItem>
-          <MenuItem
-            href={`/${locale}/apps/ecommerce/customers/details/879861`}
-            exactMatch={false}
-            activeUrl='/apps/ecommerce/customers/details'
-          >
-            {dictionary['navigation'].details}
-          </MenuItem>
-        </SubMenu>
-        <MenuItem href={`/${locale}/apps/ecommerce/manage-reviews`}>
-          {dictionary['navigation'].manageReviews}
-        </MenuItem>
-        <MenuItem href={`/${locale}/apps/ecommerce/referrals`}>{dictionary['navigation'].referrals}</MenuItem>
-        <MenuItem href={`/${locale}/apps/ecommerce/settings`}>{dictionary['navigation'].settings}</MenuItem>
-      </SubMenu>
-    )
-
-    // Always include academy
-    appsPagesChildren.push(
-      <SubMenu key="academy" label={dictionary['navigation'].academy} icon={<i className='ri-graduation-cap-line' />}>
-        <MenuItem href={`/${locale}/apps/academy/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
-        <MenuItem href={`/${locale}/apps/academy/my-courses`}>{dictionary['navigation'].myCourses}</MenuItem>
-        <MenuItem href={`/${locale}/apps/academy/course-details`}>
-          {dictionary['navigation'].courseDetails}
-        </MenuItem>
-      </SubMenu>
-    )
-
-    // Always include logistics
-    appsPagesChildren.push(
-      <SubMenu key="logistics" label={dictionary['navigation'].logistics} icon={<i className='ri-car-line' />}>
-        <MenuItem href={`/${locale}/apps/logistics/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
-        <MenuItem href={`/${locale}/apps/logistics/fleet`}>{dictionary['navigation'].fleet}</MenuItem>
-      </SubMenu>
-    )
-
-    // Always include email, chat, calendar, kanban
-    appsPagesChildren.push(
-      <MenuItem
-        key="email"
-        href={`/${locale}/apps/email`}
-        exactMatch={false}
-        activeUrl='/apps/email'
-        icon={<i className='ri-mail-open-line' />}
-      >
-        {dictionary['navigation'].email}
-      </MenuItem>
-    )
-    appsPagesChildren.push(
-      <MenuItem key="calendar" href={`/${locale}/apps/calendar`} icon={<i className='ri-calendar-line' />}>
-        {dictionary['navigation'].calendar}
-      </MenuItem>
-    )
-    appsPagesChildren.push(
-      <MenuItem key="kanban" href={`/${locale}/apps/kanban`} icon={<i className='ri-drag-drop-line' />}>
-        {dictionary['navigation'].kanban}
-      </MenuItem>
-    )
-
-    // Always include invoice
-    appsPagesChildren.push(
-      <SubMenu key="invoice" label={dictionary['navigation'].invoice} icon={<i className='ri-bill-line' />}>
-        <MenuItem href={`/${locale}/apps/invoice/list`}>{dictionary['navigation'].list}</MenuItem>
-        <MenuItem
-          href={`/${locale}/apps/invoice/preview/4987`}
-          exactMatch={false}
-          activeUrl='/apps/invoice/preview'
-        >
-          {dictionary['navigation'].preview}
-        </MenuItem>
-        <MenuItem href={`/${locale}/apps/invoice/edit/4987`} exactMatch={false} activeUrl='/apps/invoice/edit'>
-          {dictionary['navigation'].edit}
-        </MenuItem>
-        <MenuItem href={`/${locale}/apps/invoice/add`}>{dictionary['navigation'].add}</MenuItem>
-      </SubMenu>
-    )
-
-
-    // Admin & Settings section (always visible)
-    const adminSettingsChildren = []
-
-    // User Settings
-    const userSettingsChildren = []
-    if (checkPermission('userManagement', 'read')) {
-      userSettingsChildren.push(
-        <MenuItem key="userList" href={`/${locale}/apps/user/list`}>{dictionary['navigation'].userList}</MenuItem>
-      )
-    }
-    if (checkPermission('roleManagement', 'read') || checkPermission('permissionsManagement', 'read')) {
-      userSettingsChildren.push(
-        <MenuItem key="roles" href={`/${locale}/apps/roles`}>{dictionary['navigation'].roles}</MenuItem>
-      )
-    }
-    // Permissions menu item removed as requested
-
-    if (userSettingsChildren.length > 0) {
-      adminSettingsChildren.push(
-        <SubMenu key="userSettings" label={dictionary['navigation'].userSettings} icon={<i className='ri-user-settings-line' />}>
-          {userSettingsChildren}
-        </SubMenu>
-      )
-    }
-
-    // References (only show if user has at least one reference permission)
-    const referencesChildren = []
-    if (checkPermission('languageManagement', 'read')) {
-      referencesChildren.push(
-        <MenuItem key="languages" href={`/${locale}/apps/references/languages`} icon={<i className='ri-translate-2' />}>
-          {dictionary['navigation'].languages}
-        </MenuItem>
-      )
-    }
-
-    // Countries
-    if (checkPermission('countryManagement', 'read')) {
-      referencesChildren.push(
-        <MenuItem key="countries" href={`/${locale}/apps/references/countries`} icon={<i className='ri-earth-line' />}>
-          {dictionary['navigation'].countries}
-        </MenuItem>
-      )
-    }
-
-    // States
-    if (checkPermission('stateManagement', 'read')) {
-      referencesChildren.push(
-        <MenuItem key="states" href={`/${locale}/apps/references/states`} icon={<i className='ri-map-pin-2-line' />}>
-          {dictionary['navigation'].states}
-        </MenuItem>
-      )
-    }
-
-    // Cities
-    if (checkPermission('cityManagement', 'read')) {
-      referencesChildren.push(
-        <MenuItem key="cities" href={`/${locale}/apps/references/cities`} icon={<i className='ri-map-pin-4-line' />}>
-          {dictionary['navigation'].cities}
-        </MenuItem>
-      )
-    }
-
-    // Districts
-    if (checkPermission('districtManagement', 'read')) {
-      referencesChildren.push(
-        <MenuItem key="districts" href={`/${locale}/apps/references/districts`} icon={<i className='ri-map-pin-5-line' />}>
-          {dictionary['navigation'].districts}
-        </MenuItem>
-      )
-    }
-
-    if (checkPermission('currencyManagement', 'read')) {
-      referencesChildren.push(
-        <MenuItem key="currencies" href={`/${locale}/apps/references/currencies`} icon={<i className='ri-money-dollar-circle-line' />}>
-          {dictionary['navigation'].currencies}
-        </MenuItem>
-      )
-    }
-    // Translations moved to admin settings section
-
-    if (referencesChildren.length > 0) {
-      adminSettingsChildren.push(
-        <SubMenu key="references" label={dictionary['navigation'].references} icon={<i className='ri-database-2-line' />}>
-          {referencesChildren}
-        </SubMenu>
-      )
-    }
-
-    // SMTP Settings
-    if (checkPermission('smtpManagement', 'read')) {
-      adminSettingsChildren.push(
-        <MenuItem key="smtpSettings" href={`/${locale}/apps/settings/smtp`} icon={<i className='ri-mail-settings-line' />}>
-          {dictionary['navigation'].smtpSettings}
-        </MenuItem>
-      )
-    }
-
-    // Email Templates
-    if (checkPermission('emailTemplatesManagement', 'read')) {
-      adminSettingsChildren.push(
-        <MenuItem key="emailTemplates" href={`/${locale}/apps/settings/email-templates`} icon={<i className='ri-file-text-line' />}>
-          {dictionary['navigation'].emailTemplates}
-        </MenuItem>
-      )
-    }
-
-    // Translations (moved from references section)
-    if (checkPermission('translationManagement', 'read')) {
-      adminSettingsChildren.push(
-        <MenuItem key="translations" href={`/${locale}/apps/references/translations`} icon={<i className='ri-global-line' />}>
-          {dictionary['navigation'].translations}
-        </MenuItem>
-      )
-    }
-
-    const rateLimitChildren = []
-    if (checkPermission('rateLimitManagement', 'read')) {
-      rateLimitChildren.push(
-        <MenuItem key="rateLimitManagement" href={`/${locale}/admin/rate-limits`} icon={<i className='ri-timer-flash-line' />}>
-          {dictionary['navigation'].rateLimitManagement}
-        </MenuItem>
-      )
-      rateLimitChildren.push(
-        <MenuItem key="rateLimitEvents" href={`/${locale}/admin/rate-limits/events`} icon={<i className='ri-line-chart-line' />}>
-          {dictionary['navigation'].rateLimitEvents}
-        </MenuItem>
-      )
-      rateLimitChildren.push(
-        <MenuItem key="rateLimitBlocking" href={`/${locale}/admin/blocks`} icon={<i className='ri-shield-keyhole-line' />}>
-          {dictionary['navigation'].blocking || 'Blocking'}
-        </MenuItem>
-      )
-    }
-
-    // Communications section (only show if user has at least one communication permission)
-    const communicationsChildren = []
-
-    // Only show chat if user has read permission
-    if (checkPermission('chat', 'read')) {
-      communicationsChildren.push(
-        <MenuItem
-          key="chat"
-          href={`/${locale}/apps/chat`}
-          icon={<i className='ri-wechat-line' />}
-          suffix={unreadCount > 0 ? (
-            <Chip label={unreadCount > 99 ? '99+' : unreadCount} size='small' color='error' />
-          ) : undefined}
-        >
-          {dictionary['navigation'].chat}
-        </MenuItem>
-      )
-    }
-
-    // Only show notifications if user has read permission
-    if (checkPermission('notifications', 'read')) {
-      communicationsChildren.push(
-        <MenuItem
-          key="notifications"
-          href={`/${locale}/apps/notifications`}
-          icon={<i className='ri-notification-2-line' />}
-          suffix={notificationsUnreadCountFromRedux > 0 ? (
-            <Chip label={notificationsUnreadCountFromRedux > 99 ? '99+' : notificationsUnreadCountFromRedux} size='small' color='error' />
-          ) : undefined}
-        >
-          {dictionary['navigation'].notifications || 'Notifications'}
-        </MenuItem>
-      )
-    }
-
-    if (communicationsChildren.length > 0) {
-      menuItems.push(
-        <MenuSection key="communications" label={dictionary['navigation'].communications}>
-          {communicationsChildren}
-        </MenuSection>
-      )
-    }
-
-    // Monitoring section (only show if user has at least one monitoring permission)
-    const monitoringChildren = []
-
-    // Overview - always visible for monitoring access
-    monitoringChildren.push(
-      <MenuItem key="monitoringOverview" href={`/${locale}/admin/monitoring/overview`} icon={<i className='ri-eye-line' />}>
-        {dictionary['navigation'].monitoringOverview}
-      </MenuItem>
-    )
-
-    // Metrics
-    monitoringChildren.push(
-      <MenuItem key="monitoringMetrics" href={`/${locale}/admin/monitoring/metrics`} icon={<i className='ri-bar-chart-2-line' />}>
-        {dictionary['navigation'].monitoringMetrics}
-      </MenuItem>
-    )
-
-    // Error Tracking
-    monitoringChildren.push(
-      <MenuItem key="monitoringErrorTracking" href={`/${locale}/admin/monitoring/error-tracking`} icon={<i className='ri-error-warning-line' />}>
-        {dictionary['navigation'].monitoringErrorTracking}
-      </MenuItem>
-    )
-
-    // Application Insights
-    monitoringChildren.push(
-      <MenuItem key="monitoringApplicationInsights" href={`/${locale}/admin/monitoring/application-insights`} icon={<i className='ri-lightbulb-line' />}>
-        {dictionary['navigation'].monitoringApplicationInsights}
-      </MenuItem>
-    )
-
-    // Testing
-    monitoringChildren.push(
-      <MenuItem key="monitoringTesting" href={`/${locale}/admin/monitoring/testing`} icon={<i className='ri-test-tube-line' />} >
-        {dictionary['navigation'].monitoringTesting || dictionary['navigation'].testingConnection || 'Testing'}
-      </MenuItem>
-    )
-
-    if (monitoringChildren.length > 0) {
-      menuItems.push(
-        <MenuSection key="monitoring" label={dictionary['navigation'].monitoring}>
-          {monitoringChildren}
-        </MenuSection>
-      )
-    }
-
-    if (adminSettingsChildren.length > 0) {
-      menuItems.push(
-        <MenuSection key="adminAndSettings" label={dictionary['navigation'].adminAndSettings}>
-          {adminSettingsChildren}
-        </MenuSection>
-      )
-    }
-
-    if (rateLimitChildren.length > 0) {
-      menuItems.push(
-        <MenuSection key="rateLimitCategory" label={dictionary['navigation'].rateLimitCategory}>
-          {rateLimitChildren}
-        </MenuSection>
-      )
-    }
-
-    menuItems.push(
-      <MenuSection key="appsPages" label={dictionary['navigation'].appsPages}>
-        {appsPagesChildren}
-      </MenuSection>
-    )
-
-    // Forms & Tables section
-    const formsTablesChildren = []
-    formsTablesChildren.push(
-      <MenuItem key="formLayouts" href={`/${locale}/forms/form-layouts`} icon={<i className='ri-layout-4-line' />}>
-        {dictionary['navigation'].formLayouts}
-      </MenuItem>
-    )
-    formsTablesChildren.push(
-      <MenuItem key="formValidation" href={`/${locale}/forms/form-validation`} icon={<i className='ri-checkbox-multiple-line' />}>
-        {dictionary['navigation'].formValidation}
-      </MenuItem>
-    )
-    formsTablesChildren.push(
-      <MenuItem key="formWizard" href={`/${locale}/forms/form-wizard`} icon={<i className='ri-git-commit-line' />}>
-        {dictionary['navigation'].formWizard}
-      </MenuItem>
-    )
-    formsTablesChildren.push(
-      <MenuItem key="reactTable" href={`/${locale}/react-table`} icon={<i className='ri-table-alt-line' />}>
-        {dictionary['navigation'].reactTable}
-      </MenuItem>
-    )
-
-    menuItems.push(
-      <MenuSection key="formsTables" label={dictionary['navigation'].formsAndTables}>
-        {formsTablesChildren}
-      </MenuSection>
-    )
-
-    // Widget Examples section
-    const widgetExamplesChildren = []
-    widgetExamplesChildren.push(
-      <MenuItem key="basicWidgets" href={`/${locale}/pages/widget-examples/basic`}>
-        {dictionary['navigation'].basic}
-      </MenuItem>
-    )
-    widgetExamplesChildren.push(
-      <MenuItem key="advancedWidgets" href={`/${locale}/pages/widget-examples/advanced`}>
-        {dictionary['navigation'].advanced}
-      </MenuItem>
-    )
-    widgetExamplesChildren.push(
-      <MenuItem key="statisticsWidgets" href={`/${locale}/pages/widget-examples/statistics`}>
-        {dictionary['navigation'].statistics}
-      </MenuItem>
-    )
-    widgetExamplesChildren.push(
-      <MenuItem key="chartsWidgets" href={`/${locale}/pages/widget-examples/charts`}>
-        {dictionary['navigation'].charts}
-      </MenuItem>
-    )
-    widgetExamplesChildren.push(
-      <MenuItem key="gamificationWidgets" href={`/${locale}/pages/widget-examples/gamification`}>
-        {dictionary['navigation'].gamification}
-      </MenuItem>
-    )
-    widgetExamplesChildren.push(
-      <MenuItem key="actionsWidgets" href={`/${locale}/pages/widget-examples/actions`}>
-        {dictionary['navigation'].actions}
-      </MenuItem>
-    )
-
-    menuItems.push(
-      <MenuSection key="widgetExamples" label={dictionary['navigation'].widgetExamples}>
-        {widgetExamplesChildren}
-      </MenuSection>
-    )
-
-    return menuItems
-  }
-
   return (
-    // eslint-disable-next-line lines-around-comment
-    /* Custom scrollbar instead of browser scroll, remove if you want browser scroll only */
     <ScrollWrapper
       {...(isBreakpointReached
         ? {
@@ -546,8 +66,6 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
             onScrollY: container => scrollMenu(container, true)
           })}
     >
-      {/* Incase you also want to scroll NavHeader to scroll with Vertical Menu, remove NavHeader from above and paste it below this comment */}
-      {/* Vertical Menu */}
       <Menu
         popoutMenuOffset={{ mainAxis: 10 }}
         menuItemStyles={menuItemStyles(verticalNavOptions, theme)}
@@ -555,7 +73,416 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
         renderExpandedMenuItemIcon={{ icon: <i className='ri-circle-line' /> }}
         menuSectionStyles={menuSectionStyles(verticalNavOptions, theme)}
       >
-        {getFilteredMenuJSX()}
+        <SubMenu
+          label={dictionary['navigation'].dashboards}
+          icon={<i className='ri-home-smile-line' />}
+          suffix={<Chip label='5' size='small' color='error' />}
+        >
+          <MenuItem href={`/${locale}/dashboards/crm`}>{dictionary['navigation'].crm}</MenuItem>
+          <MenuItem href={`/${locale}/dashboards/analytics`}>{dictionary['navigation'].analytics}</MenuItem>
+          <MenuItem href={`/${locale}/dashboards/ecommerce`}>{dictionary['navigation'].eCommerce}</MenuItem>
+          <MenuItem href={`/${locale}/dashboards/academy`}>{dictionary['navigation'].academy}</MenuItem>
+          <MenuItem href={`/${locale}/dashboards/logistics`}>{dictionary['navigation'].logistics}</MenuItem>
+        </SubMenu>
+
+        <SubMenu label={dictionary['navigation'].frontPages} icon={<i className='ri-file-copy-line' />}>
+          <MenuItem href='/front-pages/landing-page' target='_blank'>
+            {dictionary['navigation'].landing}
+          </MenuItem>
+          <MenuItem href='/front-pages/pricing' target='_blank'>
+            {dictionary['navigation'].pricing}
+          </MenuItem>
+          <MenuItem href='/front-pages/payment' target='_blank'>
+            {dictionary['navigation'].payment}
+          </MenuItem>
+          <MenuItem href='/front-pages/checkout' target='_blank'>
+            {dictionary['navigation'].checkout}
+          </MenuItem>
+          <MenuItem href='/front-pages/help-center' target='_blank'>
+            {dictionary['navigation'].helpCenter}
+          </MenuItem>
+        </SubMenu>
+
+        <MenuSection label={dictionary['navigation'].communications}>
+          <MenuItem href={`/${locale}/apps/chat`} icon={<i className='ri-wechat-line' />}>
+            {dictionary['navigation'].chat}
+          </MenuItem>
+          <MenuItem href={`/${locale}/apps/notifications`} icon={<i className='ri-notification-2-line' />}>
+            {dictionary['navigation'].notifications}
+          </MenuItem>
+        </MenuSection>
+<MenuSection label={dictionary['navigation'].adminAndSettings}>
+          <SubMenu label={dictionary['navigation'].userSettings} icon={<i className='ri-user-settings-line' />}>
+            <MenuItem href={`/${locale}/apps/user/list`}>{dictionary['navigation'].userList}</MenuItem>
+            <MenuItem href={`/${locale}/apps/user/view`}>{dictionary['navigation'].view}</MenuItem>
+            <MenuItem href={`/${locale}/apps/roles`}>{dictionary['navigation'].roles}</MenuItem>
+            <MenuItem href={`/${locale}/apps/permissions`}>{dictionary['navigation'].permissions}</MenuItem>
+          </SubMenu>
+
+          <SubMenu label={dictionary['navigation'].references} icon={<i className='ri-database-2-line' />}>
+            <MenuItem href={`/${locale}/apps/references/languages`} icon={<i className='ri-translate-2' />}>
+              {dictionary['navigation'].languages}
+            </MenuItem>
+            <SubMenu label={dictionary['navigation'].countriesAndStates} icon={<i className='ri-flag-line' />}>
+              <MenuItem href={`/${locale}/apps/references/countries`}>
+                {dictionary['navigation'].countries}
+              </MenuItem>
+              <MenuItem href={`/${locale}/apps/references/states`} icon={<i className='ri-map-pin-2-line' />}>
+                {dictionary['navigation'].states}
+              </MenuItem>
+              <MenuItem href={`/${locale}/apps/references/cities`} icon={<i className='ri-map-pin-4-line' />}>
+                {dictionary['navigation'].cities}
+              </MenuItem>
+              <MenuItem href={`/${locale}/apps/references/districts`} icon={<i className='ri-map-pin-5-line' />}>
+                {dictionary['navigation'].districts}
+              </MenuItem>
+            </SubMenu>
+            <MenuItem href={`/${locale}/apps/references/currencies`} icon={<i className='ri-money-dollar-circle-line' />}>
+              {dictionary['navigation'].currencies}
+            </MenuItem>
+            <MenuItem href={`/${locale}/apps/references/translations`} icon={<i className='ri-global-line' />}>
+              {dictionary['navigation'].translations}
+            </MenuItem>
+          </SubMenu>
+
+          <MenuItem href={`/${locale}/apps/settings/smtp`} icon={<i className='ri-mail-settings-line' />}>
+            {dictionary['navigation'].smtpSettings}
+          </MenuItem>
+          <MenuItem href={`/${locale}/apps/settings/email-templates`} icon={<i className='ri-file-text-line' />}>
+            {dictionary['navigation'].emailTemplates}
+          </MenuItem>
+        </MenuSection>
+<MenuSection label={dictionary['navigation'].monitoring}>
+          <MenuItem href={`/${locale}/admin/monitoring/overview`} icon={<i className='ri-eye-line' />}>
+            {dictionary['navigation'].monitoringOverview}
+          </MenuItem>
+          <MenuItem href={`/${locale}/admin/monitoring/metrics`} icon={<i className='ri-bar-chart-2-line' />}>
+            {dictionary['navigation'].monitoringMetrics}
+          </MenuItem>
+          <MenuItem href={`/${locale}/admin/monitoring/error-tracking`} icon={<i className='ri-error-warning-line' />}>
+            {dictionary['navigation'].monitoringErrorTracking}
+          </MenuItem>
+          <MenuItem
+            href={`/${locale}/admin/monitoring/application-insights`}
+            icon={<i className='ri-lightbulb-line' />}
+          >
+            {dictionary['navigation'].monitoringApplicationInsights}
+          </MenuItem>
+          <MenuItem href={`/${locale}/admin/monitoring/testing`} icon={<i className='ri-test-tube-line' />}>
+            {dictionary['navigation'].monitoringTesting || dictionary['navigation'].testingConnection || 'Testing'}
+          </MenuItem>
+          <MenuItem href={`/${locale}/admin/maintenance`} icon={<i className='ri-tools-line' />}>
+            {dictionary['navigation'].maintenance || 'Maintenance'}
+          </MenuItem>
+        </MenuSection>
+<MenuSection label={dictionary['navigation'].blocking}>
+          <MenuItem href={`/${locale}/admin/rate-limits`} icon={<i className='ri-timer-flash-line' />}>
+            {dictionary['navigation'].rateLimitManagement}
+          </MenuItem>
+          <MenuItem href={`/${locale}/admin/rate-limits/events`} icon={<i className='ri-line-chart-line' />}>
+            {dictionary['navigation'].rateLimitEvents}
+          </MenuItem>
+          <MenuItem href={`/${locale}/admin/blocks`} icon={<i className='ri-shield-check-line' />}>
+            {dictionary['navigation'].blocking}
+          </MenuItem>
+          <MenuItem href={`/${locale}/admin/events`} icon={<i className='ri-history-line' />}>
+            {dictionary['navigation'].eventsJournal}
+          </MenuItem>
+        </MenuSection>
+<MenuSection label={dictionary['navigation'].appsPages}>
+          <SubMenu label={dictionary['navigation'].eCommerce} icon={<i className='ri-shopping-bag-3-line' />}>
+            <MenuItem href={`/${locale}/apps/ecommerce/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
+            <SubMenu label={dictionary['navigation'].products}>
+              <MenuItem href={`/${locale}/apps/ecommerce/products/list`}>{dictionary['navigation'].list}</MenuItem>
+              <MenuItem href={`/${locale}/apps/ecommerce/products/add`}>{dictionary['navigation'].add}</MenuItem>
+              <MenuItem href={`/${locale}/apps/ecommerce/products/category`}>
+                {dictionary['navigation'].category}
+              </MenuItem>
+            </SubMenu>
+            <SubMenu label={dictionary['navigation'].orders}>
+              <MenuItem href={`/${locale}/apps/ecommerce/orders/list`}>{dictionary['navigation'].list}</MenuItem>
+              <MenuItem
+                href={`/${locale}/apps/ecommerce/orders/details/5434`}
+                exactMatch={false}
+                activeUrl='/apps/ecommerce/orders/details'
+              >
+                {dictionary['navigation'].details}
+              </MenuItem>
+            </SubMenu>
+            <SubMenu label={dictionary['navigation'].customers}>
+              <MenuItem href={`/${locale}/apps/ecommerce/customers/list`}>{dictionary['navigation'].list}</MenuItem>
+              <MenuItem
+                href={`/${locale}/apps/ecommerce/customers/details/879861`}
+                exactMatch={false}
+                activeUrl='/apps/ecommerce/customers/details'
+              >
+                {dictionary['navigation'].details}
+              </MenuItem>
+            </SubMenu>
+            <MenuItem href={`/${locale}/apps/ecommerce/manage-reviews`}>
+              {dictionary['navigation'].manageReviews}
+            </MenuItem>
+            <MenuItem href={`/${locale}/apps/ecommerce/referrals`}>{dictionary['navigation'].referrals}</MenuItem>
+            <MenuItem href={`/${locale}/apps/ecommerce/settings`}>{dictionary['navigation'].settings}</MenuItem>
+          </SubMenu>
+
+          <SubMenu label={dictionary['navigation'].academy} icon={<i className='ri-graduation-cap-line' />}>
+            <MenuItem href={`/${locale}/apps/academy/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
+            <MenuItem href={`/${locale}/apps/academy/my-courses`}>{dictionary['navigation'].myCourses}</MenuItem>
+            <MenuItem href={`/${locale}/apps/academy/course-details`}>
+              {dictionary['navigation'].courseDetails}
+            </MenuItem>
+          </SubMenu>
+
+          <SubMenu label={dictionary['navigation'].logistics} icon={<i className='ri-car-line' />}>
+            <MenuItem href={`/${locale}/apps/logistics/dashboard`}>{dictionary['navigation'].dashboard}</MenuItem>
+            <MenuItem href={`/${locale}/apps/logistics/fleet`}>{dictionary['navigation'].fleet}</MenuItem>
+          </SubMenu>
+
+          <MenuItem
+            href={`/${locale}/apps/email`}
+            exactMatch={false}
+            activeUrl='/apps/email'
+            icon={<i className='ri-mail-open-line' />}
+          >
+            {dictionary['navigation'].email}
+          </MenuItem>
+          <MenuItem href={`/${locale}/apps/chat`} icon={<i className='ri-wechat-line' />}>
+            {dictionary['navigation'].chat}
+          </MenuItem>
+          <MenuItem href={`/${locale}/apps/calendar`} icon={<i className='ri-calendar-line' />}>
+            {dictionary['navigation'].calendar}
+          </MenuItem>
+          <MenuItem href={`/${locale}/apps/kanban`} icon={<i className='ri-drag-drop-line' />}>
+            {dictionary['navigation'].kanban}
+          </MenuItem>
+
+          <SubMenu label={dictionary['navigation'].invoice} icon={<i className='ri-bill-line' />}>
+            <MenuItem href={`/${locale}/apps/invoice/list`}>{dictionary['navigation'].list}</MenuItem>
+            <MenuItem
+              href={`/${locale}/apps/invoice/preview/4987`}
+              exactMatch={false}
+              activeUrl='/apps/invoice/preview'
+            >
+              {dictionary['navigation'].preview}
+            </MenuItem>
+            <MenuItem href={`/${locale}/apps/invoice/edit/4987`} exactMatch={false} activeUrl='/apps/invoice/edit'>
+              {dictionary['navigation'].edit}
+            </MenuItem>
+            <MenuItem href={`/${locale}/apps/invoice/add`}>{dictionary['navigation'].add}</MenuItem>
+          </SubMenu>
+
+          <SubMenu label={dictionary['navigation'].user} icon={<i className='ri-user-line' />}>
+            <MenuItem href={`/${locale}/apps/user/list`}>{dictionary['navigation'].list}</MenuItem>
+            <MenuItem href={`/${locale}/apps/user/view`}>{dictionary['navigation'].view}</MenuItem>
+          </SubMenu>
+
+          <SubMenu label={dictionary['navigation'].rolesPermissions} icon={<i className='ri-lock-2-line' />}>
+            <MenuItem href={`/${locale}/apps/roles`}>{dictionary['navigation'].roles}</MenuItem>
+            <MenuItem href={`/${locale}/apps/permissions`}>{dictionary['navigation'].permissions}</MenuItem>
+          </SubMenu>
+
+          <SubMenu label={dictionary['navigation'].pages} icon={<i className='ri-layout-left-line' />}>
+            <MenuItem href={`/${locale}/pages/user-profile`}>{dictionary['navigation'].userProfile}</MenuItem>
+            <MenuItem href={`/${locale}/pages/account-settings`}>{dictionary['navigation'].accountSettings}</MenuItem>
+            <MenuItem href={`/${locale}/pages/faq`}>{dictionary['navigation'].faq}</MenuItem>
+            <MenuItem href={`/${locale}/pages/pricing`}>{dictionary['navigation'].pricing}</MenuItem>
+            <SubMenu label={dictionary['navigation'].miscellaneous}>
+              <MenuItem href={`/${locale}/pages/misc/coming-soon`} target='_blank'>
+                {dictionary['navigation'].comingSoon}
+              </MenuItem>
+              <MenuItem href={`/${locale}/pages/misc/under-maintenance`} target='_blank'>
+                {dictionary['navigation'].underMaintenance}
+              </MenuItem>
+              <MenuItem href={`/${locale}/pages/misc/404-not-found`} target='_blank'>
+                {dictionary['navigation'].pageNotFound404}
+              </MenuItem>
+              <MenuItem href={`/${locale}/pages/misc/401-not-authorized`} target='_blank'>
+                {dictionary['navigation'].notAuthorized401}
+              </MenuItem>
+            </SubMenu>
+          </SubMenu>
+
+          <SubMenu label={dictionary['navigation'].authPages} icon={<i className='ri-shield-keyhole-line' />}>
+            <SubMenu label={dictionary['navigation'].login}>
+              <MenuItem href={`/${locale}/pages/auth/login-v1`} target='_blank'>
+                {dictionary['navigation'].loginV1}
+              </MenuItem>
+              <MenuItem href={`/${locale}/pages/auth/login-v2`} target='_blank'>
+                {dictionary['navigation'].loginV2}
+              </MenuItem>
+            </SubMenu>
+            <SubMenu label={dictionary['navigation'].register}>
+              <MenuItem href={`/${locale}/pages/auth/register-v1`} target='_blank'>
+                {dictionary['navigation'].registerV1}
+              </MenuItem>
+              <MenuItem href={`/${locale}/pages/auth/register-v2`} target='_blank'>
+                {dictionary['navigation'].registerV2}
+              </MenuItem>
+              <MenuItem href={`/${locale}/pages/auth/register-multi-steps`} target='_blank'>
+                {dictionary['navigation'].registerMultiSteps}
+              </MenuItem>
+            </SubMenu>
+            <SubMenu label={dictionary['navigation'].verifyEmail}>
+              <MenuItem href={`/${locale}/pages/auth/verify-email-v1`} target='_blank'>
+                {dictionary['navigation'].verifyEmailV1}
+              </MenuItem>
+              <MenuItem href={`/${locale}/pages/auth/verify-email-v2`} target='_blank'>
+                {dictionary['navigation'].verifyEmailV2}
+              </MenuItem>
+            </SubMenu>
+            <SubMenu label={dictionary['navigation'].forgotPassword}>
+              <MenuItem href={`/${locale}/pages/auth/forgot-password-v1`} target='_blank'>
+                {dictionary['navigation'].forgotPasswordV1}
+              </MenuItem>
+              <MenuItem href={`/${locale}/pages/auth/forgot-password-v2`} target='_blank'>
+                {dictionary['navigation'].forgotPasswordV2}
+              </MenuItem>
+            </SubMenu>
+            <SubMenu label={dictionary['navigation'].resetPassword}>
+              <MenuItem href={`/${locale}/pages/auth/reset-password-v1`} target='_blank'>
+                {dictionary['navigation'].resetPasswordV1}
+              </MenuItem>
+              <MenuItem href={`/${locale}/pages/auth/reset-password-v2`} target='_blank'>
+                {dictionary['navigation'].resetPasswordV2}
+              </MenuItem>
+            </SubMenu>
+            <SubMenu label={dictionary['navigation'].twoSteps}>
+              <MenuItem href={`/${locale}/pages/auth/two-steps-v1`} target='_blank'>
+                {dictionary['navigation'].twoStepsV1}
+              </MenuItem>
+              <MenuItem href={`/${locale}/pages/auth/two-steps-v2`} target='_blank'>
+                {dictionary['navigation'].twoStepsV2}
+              </MenuItem>
+            </SubMenu>
+          </SubMenu>
+
+          <SubMenu label={dictionary['navigation'].wizardExamples} icon={<i className='ri-git-commit-line' />}>
+            <MenuItem href={`/${locale}/pages/wizard-examples/checkout`}>
+              {dictionary['navigation'].checkout}
+            </MenuItem>
+            <MenuItem href={`/${locale}/pages/wizard-examples/property-listing`}>
+              {dictionary['navigation'].propertyListing}
+            </MenuItem>
+            <MenuItem href={`/${locale}/pages/wizard-examples/create-deal`}>
+              {dictionary['navigation'].createDeal}
+            </MenuItem>
+          </SubMenu>
+
+          <MenuItem href={`/${locale}/pages/dialog-examples`} icon={<i className='ri-tv-2-line' />}>
+            {dictionary['navigation'].dialogExamples}
+          </MenuItem>
+
+          <SubMenu label={dictionary['navigation'].widgetExamples} icon={<i className='ri-bar-chart-box-line' />}>
+            <MenuItem href={`/${locale}/pages/widget-examples/basic`}>{dictionary['navigation'].basic}</MenuItem>
+            <MenuItem href={`/${locale}/pages/widget-examples/advanced`}>{dictionary['navigation'].advanced}</MenuItem>
+            <MenuItem href={`/${locale}/pages/widget-examples/statistics`}>
+              {dictionary['navigation'].statistics}
+            </MenuItem>
+            <MenuItem href={`/${locale}/pages/widget-examples/charts`}>{dictionary['navigation'].charts}</MenuItem>
+            <MenuItem href={`/${locale}/pages/widget-examples/gamification`}>
+              {dictionary['navigation'].gamification}
+            </MenuItem>
+            <MenuItem href={`/${locale}/pages/widget-examples/actions`}>{dictionary['navigation'].actions}</MenuItem>
+          </SubMenu>
+        </MenuSection>
+<MenuSection label={dictionary['navigation'].formsAndTables}>
+          <MenuItem href={`/${locale}/forms/form-layouts`} icon={<i className='ri-layout-4-line' />}>
+            {dictionary['navigation'].formLayouts}
+          </MenuItem>
+          <MenuItem href={`/${locale}/forms/form-validation`} icon={<i className='ri-checkbox-multiple-line' />}>
+            {dictionary['navigation'].formValidation}
+          </MenuItem>
+          <MenuItem href={`/${locale}/forms/form-wizard`} icon={<i className='ri-git-commit-line' />}>
+            {dictionary['navigation'].formWizard}
+          </MenuItem>
+          <MenuItem href={`/${locale}/react-table`} icon={<i className='ri-table-alt-line' />}>
+            {dictionary['navigation'].reactTable}
+          </MenuItem>
+          <MenuItem
+            href={`${process.env.NEXT_PUBLIC_DOCS_URL}/docs/user-interface/form-elements`}
+            icon={<i className='ri-radio-button-line' />}
+            suffix={<i className='ri-external-link-line text-xl' />}
+            target='_blank'
+          >
+            {dictionary['navigation'].formELements}
+          </MenuItem>
+          <MenuItem
+            href={`${process.env.NEXT_PUBLIC_DOCS_URL}/docs/user-interface/mui-table`}
+            icon={<i className='ri-table-2' />}
+            suffix={<i className='ri-external-link-line text-xl' />}
+            target='_blank'
+          >
+            {dictionary['navigation'].muiTables}
+          </MenuItem>
+        </MenuSection>
+<MenuSection label={dictionary['navigation'].chartsMisc}>
+          <SubMenu label={dictionary['navigation'].charts} icon={<i className='ri-bar-chart-2-line' />}>
+            <MenuItem href={`/${locale}/charts/apex-charts`}>{dictionary['navigation'].apex}</MenuItem>
+            <MenuItem href={`/${locale}/charts/recharts`}>{dictionary['navigation'].recharts}</MenuItem>
+          </SubMenu>
+          <MenuItem
+            href={`${process.env.NEXT_PUBLIC_DOCS_URL}/docs/user-interface/foundation`}
+            icon={<i className='ri-pantone-line' />}
+            suffix={<i className='ri-external-link-line text-xl' />}
+            target='_blank'
+          >
+            {dictionary['navigation'].foundation}
+          </MenuItem>
+          <MenuItem
+            href={`${process.env.NEXT_PUBLIC_DOCS_URL}/docs/user-interface/components`}
+            icon={<i className='ri-toggle-line' />}
+            suffix={<i className='ri-external-link-line text-xl' />}
+            target='_blank'
+          >
+            {dictionary['navigation'].components}
+          </MenuItem>
+          <MenuItem
+            href={`${process.env.NEXT_PUBLIC_DOCS_URL}/docs/menu-examples/overview`}
+            icon={<i className='ri-menu-search-line' />}
+            suffix={<i className='ri-external-link-line text-xl' />}
+            target='_blank'
+          >
+            {dictionary['navigation'].menuExamples}
+          </MenuItem>
+          <MenuItem
+            href='https://themeselection.com/support'
+            icon={<i className='ri-lifebuoy-line' />}
+            suffix={<i className='ri-external-link-line text-xl' />}
+            target='_blank'
+          >
+            {dictionary['navigation'].raiseSupport}
+          </MenuItem>
+          <MenuItem
+            href={`${process.env.NEXT_PUBLIC_DOCS_URL}`}
+            icon={<i className='ri-book-line' />}
+            suffix={<i className='ri-external-link-line text-xl' />}
+            target='_blank'
+          >
+            {dictionary['navigation'].documentation}
+          </MenuItem>
+          <SubMenu label={dictionary['navigation'].others} icon={<i className='ri-more-line' />}>
+            <MenuItem suffix={<Chip label='New' size='small' color='info' />} icon={<i className='ri-notification-badge-line' />}>
+              {dictionary['navigation'].itemWithBadge}
+            </MenuItem>
+            <MenuItem
+              href='https://themeselection.com'
+              icon={<i className='ri-link' />}
+              target='_blank'
+              suffix={<i className='ri-external-link-line text-xl' />}
+            >
+              {dictionary['navigation'].externalLink}
+            </MenuItem>
+            <SubMenu label={dictionary['navigation'].menuLevels} icon={<i className='ri-menu-2-line' />}>
+              <MenuItem>{dictionary['navigation'].menuLevel2}</MenuItem>
+              <SubMenu label={dictionary['navigation'].menuLevel2}>
+                <MenuItem>{dictionary['navigation'].menuLevel3}</MenuItem>
+                <MenuItem>{dictionary['navigation'].menuLevel3}</MenuItem>
+              </SubMenu>
+            </SubMenu>
+            <MenuItem disabled>{dictionary['navigation'].disabledMenu}</MenuItem>
+          </SubMenu>
+        </MenuSection>
       </Menu>
     </ScrollWrapper>
   )

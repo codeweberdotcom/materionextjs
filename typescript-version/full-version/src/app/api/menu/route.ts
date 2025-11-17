@@ -8,7 +8,6 @@ import { requireAuth } from '@/utils/auth/auth'
 import { getDictionary } from '@/utils/formatting/getDictionary'
 import menuData from '@/data/navigation/verticalMenuData'
 import logger from '@/lib/logger'
-import { filterMenuDataByPermissions } from '@/utils/menu/filterMenu'
 import { hasMenuChildren } from '@/utils/menu/shared'
 import { problemJson } from '@/shared/http/problem-details'
 
@@ -50,11 +49,7 @@ export const GET = async (request: NextRequest) => {
     const locale = (url.searchParams.get('locale') ?? 'en') as Locale
     const dictionary = await getDictionary(locale)
 
-    const filteredMenuData = filterMenuDataByPermissions({
-      items: menuData(dictionary),
-      dictionary,
-      user
-    }).map(serializeMenuItem)
+    const filteredMenuData = menuData(dictionary).map(serializeMenuItem)
 
     logger.info('API MENU: Final filtered menu length:', filteredMenuData.length)
 

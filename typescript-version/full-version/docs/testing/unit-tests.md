@@ -1,5 +1,29 @@
 # 🧪 Unit тесты
 
+## Обновление 2025-11-16: rate-limit unit tests (актуальное)
+
+### Структура
+Актуальные unit-тесты по rate-limit лежат в `tests/unit/rate-limit`:
+
+```
+tests/unit/
+└── rate-limit/
+    └── resilient-store.test.ts  # проверяет ResilientRateLimitStore
+```
+
+### Текущие сценарии
+
+`resilient-store.test.ts` покрывает резервный store (`src/lib/rate-limit/stores/index.ts`):
+- uses primary store when available — при нормальной работе все операции идут через Redis и метрики помечаются backend=`redis`.
+- falls back to prisma store after redis failure and retries after interval — моделируется падение Redis, стор переключается на Prisma, вызывает `recordRedisFailure`, затем после retry-интервала возвращается к Redis и пишет `recordFallbackDuration`.
+
+Используются jest-моки для метрик (`startConsumeDurationTimer`, `recordBackendSwitch`) и ручная фиксация `Date.now()` для симуляции retry-интервала.
+
+### Команды запуска для rate-limit юнитов
+- Все unit-тесты: `pnpm test:unit`
+- Watch по unit-пакету: `pnpm test:watch -- --testPathPattern=tests/unit`
+- Покрытие: `pnpm test:coverage`
+
 ## 📋 Обзор
 
 Unit тесты проверяют отдельные функции и модули в изоляции. Они быстрые, надежные и помогают поймать регрессии на ранних этапах.

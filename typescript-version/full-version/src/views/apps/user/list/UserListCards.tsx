@@ -1,6 +1,6 @@
 // React Imports
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 // MUI Imports
 import Grid from '@mui/material/Grid2'
@@ -13,6 +13,8 @@ import type { UserDataType } from '@components/card-statistics/HorizontalWithSub
 
 // Component Imports
 import HorizontalWithSubtitle from '@components/card-statistics/HorizontalWithSubtitle'
+import { usePresence } from '@/contexts/PresenceProvider'
+import { useUnreadByContact } from '@/hooks/useUnreadByContact'
 
 // Vars
 const staticData: UserDataType[] = [
@@ -48,29 +50,31 @@ const staticData: UserDataType[] = [
 const UserListCards = () => {
   const [activeUsers, setActiveUsers] = useState<number>(0)
   const [loading, setLoading] = useState(true)
+  const { statuses: presenceStatuses } = usePresence()
+  const { userStatuses: unreadStatuses } = useUnreadByContact()
+
+  const onlineCount = useMemo(() => {
+    const ids = new Set<string>([...Object.keys(presenceStatuses || {}), ...Object.keys(unreadStatuses || {})])
+
+    let count = 0
+
+    ids.forEach(id => {
+      let isOnline = presenceStatuses?.[id]?.isOnline
+
+      if (isOnline === undefined) {
+        isOnline = unreadStatuses?.[id]?.isOnline
+      }
+
+      if (isOnline) count += 1
+    })
+
+    return count
+  }, [presenceStatuses, unreadStatuses])
 
   useEffect(() => {
-    const fetchActiveUsers = async () => {
-      try {
-        const response = await fetch('/api/admin/users/active')
-        if (response.ok) {
-          const data = await response.json()
-          setActiveUsers(data.activeUsers)
-        }
-      } catch (error) {
-        console.error('Error fetching active users:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchActiveUsers()
-
-    // Update every 30 seconds
-    const interval = setInterval(fetchActiveUsers, 30000)
-
-    return () => clearInterval(interval)
-  }, [])
+    setActiveUsers(onlineCount)
+    setLoading(false)
+  }, [onlineCount])
 
   const data: UserDataType[] = [
     {

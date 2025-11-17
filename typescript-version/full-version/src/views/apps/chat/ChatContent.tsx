@@ -29,6 +29,7 @@ import { useTranslation } from '@/contexts/TranslationContext'
 
 // Custom Hooks
 import { useUnreadByContact } from '@/hooks/useUnreadByContact'
+import { usePresence } from '@/contexts/PresenceProvider'
 
 import type { ChatMessage } from '@/lib/sockets/types/chat'
 
@@ -163,7 +164,11 @@ const ChatContent = (props: Props) => {
   const router = useRouter()
   const { lang } = useParams()
   const { navigation } = useTranslation()
-  const { userStatuses } = useUnreadByContact()
+  const { userStatuses: unreadStatuses } = useUnreadByContact()
+  const { statuses: presenceStatuses } = usePresence()
+
+  const mergedStatuses =
+    presenceStatuses && Object.keys(presenceStatuses).length > 0 ? presenceStatuses : unreadStatuses
 
   // States
   const [userProfileRightOpen, setUserProfileRightOpen] = useState(false)
@@ -217,23 +222,23 @@ const ChatContent = (props: Props) => {
                 >
                   <i className='ri-menu-line text-textSecondary' />
                 </IconButton>
-                <UserAvatar
-                  activeUser={activeUser}
-                  setBackdropOpen={setBackdropOpen}
-                  setUserProfileLeftOpen={setUserProfileRightOpen}
-                  navigation={navigation}
-                  userStatuses={userStatuses}
-                />
-              </div>
-            ) : (
               <UserAvatar
                 activeUser={activeUser}
                 setBackdropOpen={setBackdropOpen}
                 setUserProfileLeftOpen={setUserProfileRightOpen}
                 navigation={navigation}
-                userStatuses={userStatuses}
+                userStatuses={mergedStatuses}
               />
-            )}
+            </div>
+          ) : (
+            <UserAvatar
+              activeUser={activeUser}
+              setBackdropOpen={setBackdropOpen}
+              setUserProfileLeftOpen={setUserProfileRightOpen}
+              navigation={navigation}
+              userStatuses={mergedStatuses}
+            />
+          )}
             {isBelowMdScreen ? null : (
               <div className='flex items-center gap-1'>
                 <IconButton size='small'>

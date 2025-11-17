@@ -15,7 +15,6 @@ import TextField from '@mui/material/TextField'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
 import FormControl from '@mui/material/FormControl'
-import InputLabel from '@mui/material/InputLabel'
 import Chip from '@mui/material/Chip'
 import Typography from '@mui/material/Typography'
 import Checkbox from '@mui/material/Checkbox'
@@ -40,12 +39,14 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-  getFilteredRowModel,
   getFacetedRowModel,
   getFacetedUniqueValues,
   getFacetedMinMaxValues,
+  getFilteredRowModel,
   getPaginationRowModel,
-  getSortedRowModel
+  getSortedRowModel,
+  type ColumnFiltersState,
+  type Column
 } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
@@ -58,16 +59,20 @@ import type { Locale } from '@configs/i18n'
 
 // Component Imports
 import CustomAvatar from '@core/components/mui/Avatar'
+import AvatarWithBadge from '@views/apps/chat/AvatarWithBadge'
 import OptionMenu from '@core/components/option-menu'
 import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 import AddUserDrawer from '@views/apps/user/list/AddUserDrawer'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
+import { usePresence } from '@/contexts/PresenceProvider'
+import { useUnreadByContact } from '@/hooks/useUnreadByContact'
 
 // Util Imports
 import { getInitials } from '@/utils/formatting/getInitials'
 import { getLocalizedUrl } from '@/utils/formatting/i18n'
+import { statusObj } from '@/utils/status'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -75,6 +80,9 @@ import tableStyles from '@core/styles/table.module.css'
 declare module '@tanstack/react-table' {
   interface FilterFns {
     fuzzy: FilterFn<unknown>
+    statusFilter: FilterFn<unknown>
+    roleFilter: FilterFn<unknown>
+    planFilter: FilterFn<unknown>
   }
   interface FilterMeta {
     itemRank: RankingInfo
@@ -118,6 +126,24 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   return itemRank.passed
 }
 
+const statusFilterFn: FilterFn<UsersTypeWithAction> = (row, columnId, value) => {
+  if (!value) return true
+
+  return row.getValue(columnId) === value
+}
+
+const roleFilterFn: FilterFn<UsersTypeWithAction> = (row, columnId, value) => {
+  if (!value) return true
+
+  return row.getValue(columnId) === value
+}
+
+const planFilterFn: FilterFn<UsersTypeWithAction> = (row, columnId, value) => {
+  if (!value) return true
+
+  return row.getValue(columnId) === value
+}
+
 const DebouncedInput = ({
   value: initialValue,
   onChange,
@@ -147,6 +173,24 @@ const DebouncedInput = ({
   return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
 }
 
+const FilterSelect = styled(Select)(({ theme }) => ({
+  minWidth: 150,
+  '& .MuiSelect-select': {
+    padding: theme.spacing(1.75, 2),
+    textTransform: 'none',
+    color: 'var(--mui-palette-text-disabled)'
+  },
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: 'var(--mui-palette-divider)'
+  },
+  '&:hover .MuiOutlinedInput-notchedOutline': {
+    borderColor: 'var(--mui-palette-text-secondary)'
+  },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    borderColor: 'var(--mui-palette-primary-main)'
+  }
+}))
+
 // Vars
 const userRoleObj: UserRoleType = {
   superadmin: { icon: 'ri-vip-crown-line', color: 'warning' },
@@ -169,9 +213,11 @@ const columnHelper = createColumnHelper<UsersTypeWithAction>()
 const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
   // Hooks
   const dictionary = useTranslation()
+  const { statuses: presenceStatuses } = usePresence()
+  const { userStatuses: unreadStatuses } = useUnreadByContact()
 
   // States
-  const [role, setRole] = useState<UsersType['role']>('')
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState({})
   const [data, setData] = useState(tableData || [])
   const [filteredData, setFilteredData] = useState(data)
@@ -216,13 +262,21 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
               onChange: row.getToggleSelectedHandler()
             }}
           />
-        )
+        ),
+        enableColumnFilter: false
       },
       columnHelper.accessor('fullName', {
         header: dictionary.navigation.user,
+        filterFn: 'fuzzy',
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
-            {getAvatar({ avatar: row.original.avatar, fullName: row.original.fullName })}
+            {getAvatar({
+              avatar: row.original.avatar,
+              fullName: row.original.fullName,
+              isOnline: row.original.isOnline,
+              lastSeen: row.original.lastSeen,
+              id: row.original.id as string | number
+            })}
             <div className='flex flex-col'>
               <Typography className='font-medium' color='text.primary'>
                 {row.original.fullName}
@@ -234,10 +288,13 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
       }),
       columnHelper.accessor('email', {
         header: dictionary.navigation.email,
+        filterFn: 'fuzzy',
         cell: ({ row }) => <Typography>{row.original.email}</Typography>
       }),
       columnHelper.accessor('role', {
         header: dictionary.navigation.role,
+        filterFn: 'roleFilter',
+        size: 170,
         cell: ({ row }) => {
           const roleInfo = userRoleObj[row.original.role] || userRoleObj.subscriber
 
@@ -260,26 +317,52 @@ return (
       }),
       columnHelper.accessor('currentPlan', {
         header: dictionary.navigation.plan,
+        filterFn: 'planFilter',
         cell: ({ row }) => (
           <Typography className='capitalize' color='text.primary'>
             {row.original.currentPlan}
           </Typography>
         )
       }),
-      columnHelper.accessor('isActive', {
-        header: dictionary.navigation.status,
-        cell: ({ row }) => (
-          <div className='flex items-center gap-3'>
-            <Chip
-              variant='tonal'
-              label={row.original.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
-              size='small'
-              color={row.original.isActive ? 'success' : 'secondary'}
-              className='capitalize'
-            />
-          </div>
-        )
-      }),
+      columnHelper.accessor(
+        row => (row as UsersTypeWithAction).status ?? ((row as UsersTypeWithAction).isActive ? 'active' : 'inactive'),
+        {
+          id: 'status',
+          header: dictionary.navigation.status,
+          filterFn: 'statusFilter',
+          cell: ({ row }) => {
+            const statusValue = (row.original as UsersTypeWithAction).status ?? (row.original.isActive ? 'active' : 'inactive')
+
+            return (
+              <div className='flex items-center gap-3'>
+                <Chip
+                  variant='tonal'
+                  label={
+                    statusValue === 'active'
+                      ? dictionary.navigation.active
+                      : statusValue === 'pending'
+                        ? 'Pending'
+                        : statusValue === 'block'
+                          ? 'Block'
+                          : dictionary.navigation.inactive
+                  }
+                  size='small'
+                  color={
+                    statusValue === 'active'
+                      ? 'success'
+                      : statusValue === 'pending'
+                        ? 'warning'
+                        : statusValue === 'block'
+                          ? 'error'
+                          : 'secondary'
+                  }
+                  className='capitalize'
+                />
+              </div>
+            )
+          }
+        }
+      ),
       columnHelper.accessor('action', {
         header: dictionary.navigation.actions,
         cell: ({ row }) => (
@@ -331,22 +414,27 @@ return (
             />
           </div>
         ),
-        enableSorting: false
+        enableSorting: false,
+        enableColumnFilter: false
       })
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, filteredData]
+    [data, filteredData, dictionary, presenceStatuses, unreadStatuses]
   )
 
   const table = useReactTable({
     data: filteredData as UsersType[],
     columns,
     filterFns: {
-      fuzzy: fuzzyFilter
+      fuzzy: fuzzyFilter,
+      statusFilter: statusFilterFn,
+      roleFilter: roleFilterFn,
+      planFilter: planFilterFn
     },
     state: {
       rowSelection,
-      globalFilter
+      globalFilter,
+      columnFilters
     },
     initialState: {
       pagination: {
@@ -359,6 +447,7 @@ return (
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     onGlobalFilterChange: setGlobalFilter,
+    onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -367,29 +456,52 @@ return (
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
-  const getAvatar = (params: Pick<UsersType, 'avatar' | 'fullName'>) => {
-    const { avatar, fullName } = params
+  const getOnlineStatus = (user: UsersTypeWithAction) => {
+    const presenceEntry = presenceStatuses?.[String(user.id)]
+    const fallbackEntry = unreadStatuses?.[String(user.id)]
+
+    let resolvedOnline = presenceEntry?.isOnline
+
+    if (resolvedOnline === undefined && fallbackEntry) {
+      resolvedOnline = fallbackEntry.isOnline
+    }
+
+    if (resolvedOnline === undefined) {
+      if (user.lastSeen) {
+        const lastSeenDate = new Date(user.lastSeen as string)
+        resolvedOnline = Date.now() - lastSeenDate.getTime() < 30_000
+      } else {
+        resolvedOnline = user.isOnline ?? false
+      }
+    }
+
+    return resolvedOnline
+  }
+
+  const getAvatar = (params: Pick<UsersType, 'id' | 'avatar' | 'fullName' | 'isOnline' | 'lastSeen'>) => {
+    const { id, avatar, fullName, isOnline, lastSeen } = params
+    const resolvedOnline = getOnlineStatus({ id, avatar, fullName, isOnline, lastSeen } as UsersTypeWithAction)
+    const badgeColor = resolvedOnline ? statusObj.online : statusObj.offline
 
     if (avatar) {
-      return <CustomAvatar src={avatar} skin='light' size={34} />
+      return <AvatarWithBadge src={avatar} badgeColor={badgeColor} alt={fullName} badgeSize={10} size={34} />
     } else {
       return (
-        <CustomAvatar skin='light' size={34}>
-          {getInitials(fullName as string)}
-        </CustomAvatar>
+        <AvatarWithBadge
+          badgeColor={badgeColor}
+          alt={fullName}
+          badgeSize={10}
+          size={34}
+          className='flex items-center justify-center'
+          fallbackInitials={getInitials(fullName as string)}
+        />
       )
     }
   }
 
   useEffect(() => {
-    const filteredData = data?.filter(user => {
-      if (role && user.role !== role) return false
-
-      return true
-    }) || []
-
-    setFilteredData(filteredData)
-  }, [role, data])
+    setFilteredData(data || [])
+  }, [data])
 
   // Fetch roles from API
   useEffect(() => {
@@ -554,24 +666,6 @@ return (
             onChange={value => setGlobalFilter(String(value))}
             placeholder={dictionary.navigation.searchUser}
           />
-          <FormControl size='small' className='max-sm:is-full'>
-            <InputLabel id='roles-app-role-select-label'>{dictionary.navigation.selectRoleFilter}</InputLabel>
-            <Select
-              value={role}
-              onChange={e => setRole(e.target.value)}
-              label={dictionary.navigation.selectRoleFilter}
-              id='roles-app-role-select'
-              labelId='roles-app-role-select-label'
-              className='min-is-[150px]'
-            >
-              <MenuItem value=''>{dictionary.navigation.selectRoleFilter}</MenuItem>
-              {roles.map(roleOption => (
-                <MenuItem key={roleOption.id} value={roleOption.name}>
-                  {roleOption.name.charAt(0).toUpperCase() + roleOption.name.slice(1)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
         </div>
       </CardContent>
       <TableContainer className='overflow-x-auto'>
@@ -580,27 +674,36 @@ return (
             {table.getHeaderGroups().map(headerGroup => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <TableCell key={header.id}>
-                    {header.isPlaceholder ? null : (
-                      <>
-                        <div
-                          className={classnames({
-                            'flex items-center': header.column.getIsSorted(),
-                            'cursor-pointer select-none': header.column.getCanSort()
-                          })}
-                          onClick={header.column.getToggleSortingHandler()}
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                          {{
-                            asc: <i className='ri-arrow-up-s-line text-xl' />,
-                            desc: <i className='ri-arrow-down-s-line text-xl' />
-                          }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
-                        </div>
-                      </>
-                    )}
-                  </TableCell>
-                ))}
-              </TableRow>
+                    <TableCell key={header.id}>
+                      {header.isPlaceholder ? null : (
+                        <>
+                          <div
+                            className={classnames({
+                              'flex items-center': header.column.getIsSorted(),
+                              'cursor-pointer select-none': header.column.getCanSort()
+                            })}
+                            onClick={header.column.getToggleSortingHandler()}
+                          >
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {{
+                              asc: <i className='ri-arrow-up-s-line text-xl' />,
+                              desc: <i className='ri-arrow-down-s-line text-xl' />
+                            }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
+                          </div>
+                          {header.column.getCanFilter() && (
+                            <div className='mt-3'>
+                              <ColumnFilter
+                                column={header.column}
+                                placeholder={typeof header.column.columnDef.header === 'string' ? header.column.columnDef.header : dictionary.navigation.searchUser}
+                                roles={roles}
+                              />
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
             ))}
           </TableHead>
           {table.getFilteredRowModel().rows.length === 0 ? (
@@ -672,3 +775,116 @@ return (
 }
 
 export default RolesTable
+const ColumnFilter = ({
+  column,
+  placeholder,
+  roles
+}: {
+  column: Column<UsersTypeWithAction, unknown>
+  placeholder: string
+  roles: Role[]
+}) => {
+  const columnFilterValue = column.getFilterValue()
+
+  if (column.id === 'status') {
+    return (
+      <FormControl fullWidth size='small' sx={{ '& .MuiSelect-select': { py: 1.75 } }}>
+        <FilterSelect
+          value={(columnFilterValue ?? '') as string}
+          onChange={e => column.setFilterValue(e.target.value)}
+          displayEmpty
+          renderValue={selected => {
+            if (!selected) return <span className='text-textSecondary'>{placeholder}</span>
+
+            const value = selected as string
+
+            return value.charAt(0).toUpperCase() + value.slice(1)
+          }}
+        >
+          <MenuItem value='' sx={{ textTransform: 'none' }}>
+            <span className='text-textSecondary'>{placeholder}</span>
+          </MenuItem>
+          {['pending', 'active', 'inactive', 'block'].map(status => (
+            <MenuItem key={status} value={status} sx={{ textTransform: 'none', color: 'var(--mui-palette-text-primary)' }}>
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </MenuItem>
+          ))}
+        </FilterSelect>
+      </FormControl>
+    )
+  }
+
+  if (column.id === 'role') {
+    return (
+      <FormControl fullWidth size='small' sx={{ '& .MuiSelect-select': { py: 1.75 } }}>
+        <FilterSelect
+          value={(columnFilterValue ?? '') as string}
+          onChange={e => column.setFilterValue(e.target.value)}
+          displayEmpty
+          renderValue={selected => {
+            if (!selected) return <span className='text-textSecondary'>{placeholder}</span>
+
+            return selected as string
+          }}
+        >
+          <MenuItem value='' sx={{ textTransform: 'none' }}>
+            <span className='text-textSecondary'>{placeholder}</span>
+          </MenuItem>
+          {roles.map(roleItem => (
+            <MenuItem
+              key={roleItem.id}
+              value={roleItem.name}
+              sx={{ textTransform: 'none', color: 'var(--mui-palette-text-primary)' }}
+            >
+              {roleItem.name}
+            </MenuItem>
+          ))}
+        </FilterSelect>
+      </FormControl>
+    )
+  }
+
+  if (column.id === 'currentPlan') {
+    const planOptions = ['basic', 'team', 'company', 'enterprise']
+
+    return (
+      <FormControl fullWidth size='small' sx={{ '& .MuiSelect-select': { py: 1.75 } }}>
+        <FilterSelect
+          value={(columnFilterValue ?? '') as string}
+          onChange={e => column.setFilterValue(e.target.value)}
+          displayEmpty
+          renderValue={selected => {
+            if (!selected) return <span className='text-textSecondary'>{placeholder}</span>
+
+            const value = selected as string
+
+            return value.charAt(0).toUpperCase() + value.slice(1)
+          }}
+        >
+          <MenuItem value='' sx={{ textTransform: 'none' }}>
+            <span className='text-textSecondary'>{placeholder}</span>
+          </MenuItem>
+          {planOptions.map(plan => (
+            <MenuItem
+              key={plan}
+              value={plan}
+              sx={{ textTransform: 'none', color: 'var(--mui-palette-text-primary)' }}
+            >
+              {plan.charAt(0).toUpperCase() + plan.slice(1)}
+            </MenuItem>
+          ))}
+        </FilterSelect>
+      </FormControl>
+    )
+  }
+
+  return (
+    <TextField
+      fullWidth
+      size='small'
+      value={(columnFilterValue ?? '') as string}
+      onChange={e => column.setFilterValue(e.target.value)}
+      placeholder={placeholder}
+    />
+  )
+}

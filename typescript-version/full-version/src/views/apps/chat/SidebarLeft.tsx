@@ -39,6 +39,7 @@ import { statusObj } from '@/utils/status'
 
 // Custom Hooks
 import { useUnreadByContact } from '@/hooks/useUnreadByContact'
+import { usePresence } from '@/contexts/PresenceProvider'
 
 type Props = {
   chatStore: ChatDataType
@@ -206,8 +207,10 @@ const SidebarLeft = (props: Props) => {
 
   // Hooks
   const { user, session } = useAuth()
-  const { unreadByContact, userStatuses } = useUnreadByContact()
+  const { unreadByContact, userStatuses: unreadStatuses } = useUnreadByContact()
+  const { statuses: presenceStatuses } = usePresence()
   const { navigation } = useTranslation()
+  const userStatuses = presenceStatuses && Object.keys(presenceStatuses).length > 0 ? presenceStatuses : unreadStatuses
 
   // Make session available in renderContacts function
   const currentSession = session
