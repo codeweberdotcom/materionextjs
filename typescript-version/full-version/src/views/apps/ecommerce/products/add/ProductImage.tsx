@@ -25,12 +25,6 @@ import CustomAvatar from '@core/components/mui/Avatar'
 // Styled Component Imports
 import AppReactDropzone from '@/libs/styles/AppReactDropzone'
 
-type FileProp = {
-  name: string
-  type: string
-  size: number
-}
-
 // Styled Dropzone Component
 const Dropzone = styled(AppReactDropzone)<BoxProps>(({ theme }) => ({
   '& .dropzone': {
@@ -52,26 +46,26 @@ const ProductImage = () => {
   // Hooks
   const { getRootProps, getInputProps } = useDropzone({
     onDrop: (acceptedFiles: File[]) => {
-      setFiles(acceptedFiles.map((file: File) => Object.assign(file)))
+      setFiles(acceptedFiles)
     }
   })
 
-  const renderFilePreview = (file: FileProp) => {
+  const renderFilePreview = (file: File) => {
     if (file.type.startsWith('image')) {
-      return <img width={38} height={38} alt={file.name} src={URL.createObjectURL(file as any)} />
+      return <img width={38} height={38} alt={file.name} src={URL.createObjectURL(file)} />
     } else {
       return <i className='ri-file-text-line' />
     }
   }
 
-  const handleRemoveFile = (file: FileProp) => {
+  const handleRemoveFile = (file: File) => {
     const uploadedFiles = files
-    const filtered = uploadedFiles.filter((i: FileProp) => i.name !== file.name)
+    const filtered = uploadedFiles.filter(i => i.name !== file.name)
 
     setFiles([...filtered])
   }
 
-  const fileList = files.map((file: FileProp) => (
+  const fileList = files.map((file: File) => (
     <ListItem key={file.name} className='pis-4 plb-3'>
       <div className='file-details'>
         <div className='file-preview'>{renderFilePreview(file)}</div>

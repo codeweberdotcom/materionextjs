@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
 import { isAdmin, isSuperadmin } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
@@ -14,7 +13,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(user as UserWithRole) || isAdmin(user as UserWithRole)
+    const hasPermission = isSuperadmin(user) || isAdmin(user)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -33,7 +32,8 @@ export async function POST(request: NextRequest) {
       ipAddress,
       reason,
       durationMinutes,
-      notes
+      notes,
+      overwrite
     } = body as {
       module?: string
       targetType?: 'user' | 'ip' | 'email'
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       reason?: string
       durationMinutes?: number
       notes?: string
+      overwrite?: boolean
     }
 
     if (!module) {
@@ -83,11 +84,15 @@ export async function POST(request: NextRequest) {
       email: normalizedTargetType === 'email' ? trimmedEmail : undefined,
       ipAddress: normalizedTargetType === 'ip' ? trimmedIp : undefined,
       notes: typeof notes === 'string' && notes.trim() ? notes.trim() : undefined,
-      durationMs: duration
+      durationMs: duration,
+      overwrite: overwrite === true
     })
 
     return NextResponse.json({ success: true, block })
   } catch (error) {
+    if (error instanceof Error && (error as any).code === 'BLOCK_EXISTS') {
+      return NextResponse.json({ error: 'Block already exists for this target', code: 'block_exists' }, { status: 409 })
+    }
     logger.error('Error creating manual block', {
       error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
     })

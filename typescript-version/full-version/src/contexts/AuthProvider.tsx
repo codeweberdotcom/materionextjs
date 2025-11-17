@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null)
       }
     } catch (error) {
-      console.error('❌ [AUTH] Auth check failed:', error)
+      logger.error('❌ [AUTH] Auth check failed:', { error: error, file: 'src/contexts/AuthProvider.tsx' })
       setUser(null)
       setSession(null)
     } finally {
@@ -80,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!response.ok) {
       const error = await response.json()
-      console.error('❌ [AUTH] Login failed:', error.error)
+      logger.error('❌ [AUTH] Login failed:', { error: error.error, file: 'src/contexts/AuthProvider.tsx' })
       throw new Error(error.error || 'Login failed')
     }
 
@@ -103,10 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         logger.info('✅ [AUTH] Logout successful')
       } else {
-        console.error('❌ [AUTH] Logout failed with status:', response.status)
+        logger.error('❌ [AUTH] Logout failed with status:', { error: response.status, file: 'src/contexts/AuthProvider.tsx' })
       }
     } catch (error) {
-      console.error('❌ [AUTH] Logout request failed:', error)
+      logger.error('❌ [AUTH] Logout request failed:', { error: error, file: 'src/contexts/AuthProvider.tsx' })
     }
 
     // Всегда очищаем локальное состояние, независимо от ответа сервера

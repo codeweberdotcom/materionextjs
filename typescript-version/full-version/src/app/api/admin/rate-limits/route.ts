@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
 import { isSuperadmin, isAdmin } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 import type { RateLimitStats } from '@/lib/rate-limit'
@@ -14,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(user as UserWithRole) || isAdmin(user as UserWithRole)
+    const hasPermission = isSuperadmin(user) || isAdmin(user)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -37,6 +35,25 @@ export async function GET(request: NextRequest) {
       })
 
       return NextResponse.json(states)
+    }
+    if (view === 'events') {
+      const moduleName = searchParams.get('module') || undefined
+      const key = searchParams.get('key') || undefined
+      const limitParam = searchParams.get('limit')
+      const limit = limitParam ? Number.parseInt(limitParam, 10) : undefined
+
+      if (!moduleName || !key) {
+        return NextResponse.json({ error: 'module and key are required for events view' }, { status: 400 })
+      }
+
+      const events = await rateLimitService.listEvents({
+        module: moduleName,
+        key,
+        eventType: 'block',
+        limit: Number.isFinite(limit) ? limit : 20
+      })
+
+      return NextResponse.json(events)
     }
 
     const configs = await rateLimitService.getAllConfigs()
@@ -63,7 +80,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(user as UserWithRole) || isAdmin(user as UserWithRole)
+    const hasPermission = isSuperadmin(user) || isAdmin(user)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -182,7 +199,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(user as UserWithRole) || isAdmin(user as UserWithRole)
+    const hasPermission = isSuperadmin(user) || isAdmin(user)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

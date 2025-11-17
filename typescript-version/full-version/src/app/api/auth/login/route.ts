@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     logger.info('вњ… [LOGIN] Login successful for:', email)
     return response
   } catch (error) {
-    console.error('вќЊ [LOGIN] Login error:', error instanceof Error ? error.message : error)
+    logger.error('Login error', { error: error instanceof Error ? error.message : error, route: 'login' })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

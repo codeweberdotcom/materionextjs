@@ -35,19 +35,29 @@ export type NotificationStatus = 'unread' | 'read' | 'archived' | 'deleted';
 
 // События уведомлений (входящие)
 export interface NotificationEvents {
-  markAsRead: (data: MarkAsReadData) => void;
-  markAllAsRead: (userId: string) => void;
-  deleteNotification: (data: DeleteNotificationData) => void;
-  ping: (callback: (response: { pong: boolean; timestamp: number }) => void) => void;
+  markAsRead: (data: MarkAsReadData) => void
+  markAllAsRead: (userId: string) => void
+  deleteNotification: (data: DeleteNotificationData) => void
+  ping: (
+    data: { timestamp?: number },
+    callback?: (response: { pong: boolean; timestamp?: number; error?: string }) => void
+  ) => void
 }
 
 // События уведомлений (исходящие)
 export interface NotificationEmitEvents {
-  newNotification: (notification: Notification) => void;
-  notificationUpdate: (data: NotificationUpdateData) => void;
-  notificationsRead: (data: NotificationsReadData) => void;
-  notificationDeleted: (data: NotificationDeletedData) => void;
-  error: (error: ErrorData) => void;
+  newNotification: (notification: Notification) => void
+  notificationUpdate: (data: NotificationUpdateData) => void
+  notificationsRead: (data: NotificationsReadData) => void
+  notificationDeleted: (data: NotificationDeletedData) => void
+  error: (error: ErrorData) => void
+}
+
+export interface NotificationLegacyEmitEvents {
+  'new-notification': NotificationEmitEvents['newNotification']
+  'notification-update': NotificationEmitEvents['notificationUpdate']
+  'notifications-read': NotificationEmitEvents['notificationsRead']
+  'notification-deleted': NotificationEmitEvents['notificationDeleted']
 }
 
 // Данные для отметки прочитанным
@@ -84,8 +94,9 @@ export interface NotificationDeletedData {
 
 // Общие данные ошибки
 export interface ErrorData {
-  message: string;
-  code?: string;
+  message: string
+  code?: string
+  timestamp?: string
 }
 
 // Состояние уведомлений для клиента

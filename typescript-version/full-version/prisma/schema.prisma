@@ -257,19 +257,20 @@ model RateLimitConfig {
 }
 
 model RateLimitState {
-  id          String   @id @default(cuid())
-  key         String   // IP или userId
-  module      String   // 'chat', 'ads', 'upload', 'auth'
-  count       Int      @default(0) // Текущее количество запросов в окне
-  windowStart DateTime @default(now()) // Начало текущего окна
-  windowEnd   DateTime // Конец текущего окна
+  id           String   @id @default(cuid())
+  key          String   // IP или userId
+  module       String   // 'chat', 'ads', 'upload', 'auth'
+  count        Int      @default(0) // Текущее количество запросов в окне
+  windowStart  DateTime @default(now()) // Начало текущего окна
+  windowEnd    DateTime // Конец текущего окна
   blockedUntil DateTime? // Время окончания блокировки (если заблокирован)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@unique([key, module])
   @@index([module, updatedAt])
   @@index([blockedUntil])
+  @@index([module, blockedUntil])
 }
 
 model UserBlock {
@@ -277,7 +278,11 @@ model UserBlock {
   userId      String?
   user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   ipAddress   String?  // IP адрес для блокировки неавторизованных пользователей
+  ipHash      String?
+  ipPrefix    String?
+  hashVersion Int      @default(1)
   email       String?
+  emailHash   String?
   reason      String   // 'spam', 'abuse', 'rate_limit_violation', etc.
   module      String   // 'chat', 'auth', 'registration', 'ads', etc.
   blockedBy   String   // ID администратора, который заблокировал
@@ -285,6 +290,8 @@ model UserBlock {
   unblockedAt DateTime? // Время разблокировки (null = permanent)
   isActive    Boolean  @default(true)
   notes       String?  // Дополнительные заметки администратора
+  cidr        String?
+  asn         String?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -292,9 +299,25 @@ model UserBlock {
   // Индексы для быстрого поиска
   @@index([userId])
   @@index([ipAddress])
+  @@index([ipHash])
+  @@index([ipPrefix])
+  @@index([emailHash])
   @@index([module])
   @@index([isActive])
+  @@index([module, isActive])
   @@index([unblockedAt])
+  @@index([asn])
+}
+
+model CronJobStatus {
+  id            String   @id @default(cuid())
+  name          String   @unique
+  lastRunAt     DateTime?
+  lastSuccessAt DateTime?
+  lastResult    String?
+  lastCount     Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model RateLimitEvent {
@@ -303,7 +326,11 @@ model RateLimitEvent {
   key          String
   userId       String?
   ipAddress    String?
+  ipHash       String?
+  ipPrefix     String?
+  hashVersion  Int      @default(1)
   email        String?
+  emailHash    String?
   eventType    String   // 'warning' | 'block'
   mode         String   @default("enforce") // 'monitor' | 'enforce'
   count        Int
@@ -317,6 +344,13 @@ model RateLimitEvent {
   @@index([module, key, eventType, mode, windowStart])
   @@index([key, module])
   @@index([userId, module])
+  @@index([module])
+  @@index([eventType])
+  @@index([mode])
+  @@index([key])
+  @@index([ipHash])
+  @@index([ipPrefix])
+  @@index([emailHash])
 }
 
 model Event {

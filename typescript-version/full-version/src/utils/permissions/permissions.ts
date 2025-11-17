@@ -1,4 +1,6 @@
 import logger from '@/lib/logger'
+import type { AuthenticatedUser } from '@/utils/auth/auth'
+import type { UserWithRoleRecord } from '@/types/prisma'
 
 export interface Role {
   id: string
@@ -19,6 +21,8 @@ export interface BaseUser {
 export interface UserWithRole extends BaseUser {
   role?: Role | null
 }
+
+export type UserWithRoleLike = UserWithRole | UserWithRoleRecord | AuthenticatedUser | null
 
 export interface ModulePermission {
   module: string
@@ -85,15 +89,18 @@ const parsePermissions = (permissions: string | null | undefined): Permissions =
   return {}
 }
 
-export const getUserPermissions = (user: UserWithRole | null): Permissions => {
+export const getUserPermissions = (user: UserWithRoleLike): Permissions => {
   if (!user) {
     return {}
   }
 
-  return parsePermissions(user.role?.permissions ?? user.permissions)
+  const permissionsValue =
+    'permissions' in user ? (user as { permissions?: string | null }).permissions : undefined
+
+  return parsePermissions(user.role?.permissions ?? permissionsValue)
 }
 
-export const checkPermission = (user: UserWithRole | null, module: string, action: string): boolean => {
+export const checkPermission = (user: UserWithRoleLike, module: string, action: string): boolean => {
   logger.info('🔍 [PERMISSIONS] Checking permission', { module, action, role: user?.role?.name })
 
   if (!user?.role) {

@@ -2,12 +2,12 @@ import { ExtendedError } from 'socket.io'
 
 import { rateLimitService } from '@/lib/rate-limit'
 import logger, { rateLimitLogger } from '../../logger'
-import type { TypedSocket } from '../types/common'
+import type { ServerToClientEvents, TypedSocket } from '../types/common'
 
 type SocketRateLimitOptions = {
   module: string
-  warnEvent?: string
-  exceededEvent?: string
+  warnEvent?: keyof ServerToClientEvents
+  exceededEvent?: keyof ServerToClientEvents
   context?: string
 }
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 // React Imports
@@ -223,7 +222,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       }
     } catch (error) {
       console.error('Error deleting user:', error)
-      toast.error((error as Error).message || dictionary.navigation.deleteUser + ' failed')
+      toast.error(error instanceof Error ? error.message : dictionary.navigation.deleteUser + ' failed')
     }
   }
 
@@ -251,7 +250,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       }
     } catch (error) {
       console.error('Error toggling user status:', error)
-      toast.error(error.message || 'Failed to toggle user status')
+      toast.error(error instanceof Error ? error.message : 'Failed to toggle user status')
     }
   }
 
@@ -443,6 +442,7 @@ return (
           src={avatar}
           badgeColor={badgeColor}
           alt={fullName}
+          badgeSize={10}
           size={34}
         />
       )
@@ -451,10 +451,11 @@ return (
         <AvatarWithBadge
           badgeColor={badgeColor}
           alt={fullName}
+          badgeSize={10}
           size={34}
-        >
-          {getInitials(fullName as string)}
-        </AvatarWithBadge>
+          className='flex items-center justify-center'
+          fallbackInitials={fullName || ''}
+        />
       )
     }
   }

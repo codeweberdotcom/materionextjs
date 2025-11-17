@@ -5,6 +5,7 @@ import { maskPayloadForSource } from '@/services/events'
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
 import logger from '@/lib/logger'
+import type { EventSeverity } from '@/services/events/EventService'
 
 const parseDateParam = (value: string | null) => {
   if (!value) {
@@ -25,7 +26,10 @@ const parseLimit = (value: string | null) => {
   return Number.isFinite(parsed) ? parsed : undefined
 }
 
-const validSeverities = new Set(['info', 'warning', 'error', 'critical'])
+const validSeverities: ReadonlySet<EventSeverity> = new Set(['info', 'warning', 'error', 'critical'])
+
+const isEventSeverity = (value: string | null): value is EventSeverity =>
+  !!value && validSeverities.has(value as EventSeverity)
 
 const safeParseJson = (value: string | null | undefined) => {
   if (!value) {
@@ -58,7 +62,7 @@ export async function GET(request: NextRequest) {
     const source = searchParams.get('source') || undefined
     const moduleParam = searchParams.get('module') || undefined
     const type = searchParams.get('type') || undefined
-    const severity = searchParams.get('severity')
+    const severityParam = searchParams.get('severity')
     const actorType = searchParams.get('actorType') || undefined
     const actorId = searchParams.get('actorId') || undefined
     const subjectType = searchParams.get('subjectType') || undefined
@@ -71,7 +75,7 @@ export async function GET(request: NextRequest) {
       source,
       module: moduleParam,
       type,
-      severity: severity && validSeverities.has(severity) ? (severity as any) : undefined,
+      severity: isEventSeverity(severityParam) ? severityParam : undefined,
       actorType,
       actorId,
       subjectType,

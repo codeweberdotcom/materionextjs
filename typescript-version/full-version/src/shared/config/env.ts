@@ -40,6 +40,8 @@ const envSchema = z.object({
   NEXT_PUBLIC_SOCKET_URL: optionalUrlish,
   NEXT_PUBLIC_SOCKET_PATH: z.string().optional(),
   NEXT_PUBLIC_ENABLE_SOCKET_IO: booleanFromEnv,
+  AUTH_BASE_URL: optionalUrlish,
+  AUTH_JWT_SECRET: z.string().optional(),
   NEXTAUTH_URL: optionalUrlish,
   NEXTAUTH_SECRET: z.string().optional(),
   API_URL: optionalUrlish,
@@ -71,6 +73,16 @@ if (!parsedEnv.success) {
 }
 
 export const env = parsedEnv.data
+
+export const authBaseUrl =
+  env.AUTH_BASE_URL ??
+  env.NEXTAUTH_URL ??
+  env.API_URL ??
+  env.FRONTEND_URL ??
+  (env.NEXT_PUBLIC_API_URL ? env.NEXT_PUBLIC_API_URL.replace(/\/api$/, '') : undefined) ??
+  'http://localhost:3000'
+
+export const authJwtSecret = env.AUTH_JWT_SECRET ?? env.NEXTAUTH_SECRET ?? ''
 
 export const publicEnv = {
   NEXT_PUBLIC_API_URL: env.NEXT_PUBLIC_API_URL,

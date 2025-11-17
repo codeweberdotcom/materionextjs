@@ -1,13 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-import { PrismaClient } from '@prisma/client'
-
-
-
-const prisma = new PrismaClient()
+import { prisma } from '@/libs/prisma'
 
 // GET - Fetch current user profile data
 export async function GET(request: NextRequest) {

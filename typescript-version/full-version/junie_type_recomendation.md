@@ -23,7 +23,7 @@
   - // @ts-expect-error: только в тестах (целевое использование, норм).
 - Принудительные приведения к any: минимум 79 в src/ (в том числе в критичных местах):
   - WebSocket слой: `(socket as any)`, `(global as any).io`, декодирование JWT как any.
-  - NextAuth/Session: `(session.user as any)` для role/permissions.
+  - Lucia Auth/User: `(user as any).role` для доступа к role/permissions.
   - Prisma: `(prisma as any).model.method(...)` вместо типизированного клиента.
   - API-роуты: чтение тела через `({} as any).json()` — индикатор неправильно типизированного Next.js Request.
   - Доступ к window: `(window as any)` в клиентском коде.
@@ -76,22 +76,32 @@
   ```
 - Убрать `(global as any).io` и дать проекту однотипный глобал с корректной типизацией.
 
-3) NextAuth Session — модульная аугментация вместо any
-- Расширить `next-auth` типы для `Session.user` (role, permissions, name, email):
+3) Lucia Auth User — расширение типов вместо any
+- Расширить Lucia `DatabaseUserAttributes` и создать тип `UserWithRole`:
   ```ts
-  // src/types/next-auth.d.ts
-  import NextAuth, { DefaultSession } from 'next-auth'
-
-  declare module 'next-auth' {
-    interface Session {
-      user?: DefaultSession['user'] & {
-        role: Role
-        permissions: string[]
+  // src/libs/lucia.ts
+  declare module 'lucia' {
+    interface Register {
+      Lucia: typeof lucia
+      DatabaseUserAttributes: {
+        id: string
+        email: string
+        name: string | null
+        roleId: string
+        permissions: string | null
       }
     }
   }
+
+  // src/types/auth.ts
+  import type { User as LuciaUser } from 'lucia'
+  import type { Role } from '@prisma/client'
+  
+  export type UserWithRole = LuciaUser & {
+    role?: Role | null
+  }
   ```
-- После этого заменить `(session.user as any)` на `session.user?.role` и т. д.
+- После этого заменить `(user as any).role` на типизированный `user.role` через `requireAuth`.
 
 4) Prisma — использовать сгенерированные типы @prisma/client
 - Импортировать `PrismaClient` и типы моделей, отказаться от `(prisma as any)`.

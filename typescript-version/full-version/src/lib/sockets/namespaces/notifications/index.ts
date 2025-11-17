@@ -1,39 +1,34 @@
-import { Server, Namespace } from 'socket.io'
+import type { Namespace } from 'socket.io'
 import logger from '../../../logger'
-import { TypedSocket } from '../../types/common'
+import type { TypedIOServer, TypedSocket } from '../../types/common'
 import {
   NotificationEvents,
   NotificationEmitEvents,
+  NotificationLegacyEmitEvents,
   Notification,
   NotificationMetadata
 } from '../../types/notifications'
 import { authenticateSocket, requirePermission } from '../../middleware/auth'
 import { rateLimitNotification } from '../../middleware/rateLimit'
-import { PrismaClient } from '@prisma/client'
 import { parseNotificationMetadata, serializeNotificationMetadata } from '@/utils/notifications/metadata'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/libs/prisma'
 
 // Хранилище активных пользователей (in-memory)
 const activeUsers = new Map<string, string>() // userId -> socketId
 
-const legacyEventMap: Partial<Record<keyof NotificationEmitEvents, string>> = {
+const legacyEventMap: Partial<Record<keyof NotificationEmitEvents, keyof NotificationLegacyEmitEvents>> = {
   newNotification: 'new-notification',
   notificationUpdate: 'notification-update',
   notificationDeleted: 'notification-deleted',
   notificationsRead: 'notifications-read'
 }
 
-type NotificationEventPayload<T extends keyof NotificationEmitEvents> = Parameters<
-  NotificationEmitEvents[T]
->[0]
-
 const emitNotificationEvent = <T extends keyof NotificationEmitEvents>(
   userId: string,
   event: T,
-  payload: NotificationEventPayload<T>
+  ...args: Parameters<NotificationEmitEvents[T]>
 ) => {
-  const io = (global as typeof globalThis & { io?: Server }).io
+  const io = globalThis.io
 
   if (!io) {
     logger.warn('Socket.IO server not initialized when emitting notification event', {
@@ -44,11 +39,13 @@ const emitNotificationEvent = <T extends keyof NotificationEmitEvents>(
   }
 
   const namespace = io.of('/notifications')
-  namespace.to(`user_${userId}`).emit(event, payload)
+  namespace.to(`user_${userId}`).emit(event, ...args)
 
   const legacyEvent = legacyEventMap[event]
   if (legacyEvent) {
-    namespace.to(`user_${userId}`).emit(legacyEvent, payload)
+    namespace
+      .to(`user_${userId}`)
+      .emit(legacyEvent, ...(args as Parameters<NotificationLegacyEmitEvents[typeof legacyEvent]>))
   }
 }
 
@@ -89,7 +86,7 @@ const toNotificationPayload = (notification: {
 /**
  * Инициализация namespace для уведомлений
  */
-export const initializeNotificationNamespace = (io: Server): Namespace => {
+export const initializeNotificationNamespace = (io: TypedIOServer): Namespace => {
   const notificationNamespace = io.of('/notifications');
 
   logger.info('Initializing notification namespace');
@@ -299,11 +296,9 @@ const registerNotificationEventHandlers = (socket: TypedSocket) => {
   });
 
   // Ping для поддержания соединения
-  socket.on('ping', (data, callback) => {
-    if (callback) {
-      callback({ pong: true, timestamp: Date.now() });
-    }
-  });
+  socket.on('ping', (_data, callback) => {
+    callback?.({ pong: true, timestamp: Date.now() })
+  })
 };
 
 /**

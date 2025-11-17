@@ -1,118 +1,191 @@
-// @ts-nocheck
-import { ExtendedError } from 'socket.io';
-import { authLogger } from '../../logger';
-import { User, TypedSocket, Permission } from '../types/common';
-import { lucia } from '../../../libs/lucia';
+import type { ExtendedError } from 'socket.io'
+import { authLogger } from '../../logger'
+import type { Permission, TypedSocket, User, UserRole } from '../types/common'
+import { lucia } from '../../../libs/lucia'
+import { prisma } from '@/libs/prisma'
 
-authLogger.info('Lucia auth configured for Socket.IO middleware');
+type LuciaValidationResult = Awaited<ReturnType<typeof lucia.validateSession>>
+type LuciaUser = NonNullable<LuciaValidationResult['user']>
 
-// Расширенный интерфейс для Socket.IO handshake
-interface HandshakeAuth {
-  token?: string;
-  userId?: string;
-}
+authLogger.info('Lucia auth configured for Socket.IO middleware')
 
 // Middleware аутентификации для Socket.IO с Lucia
-export const authenticateSocket = async (
-  socket: TypedSocket,
-  next: (err?: ExtendedError) => void
-) => {
+export const authenticateSocket = async (socket: TypedSocket, next: (err?: ExtendedError) => void) => {
   try {
-    const token = socket.handshake.auth?.token as string ||
-                   (socket.handshake.query as any)?.token as string;
+    const token = extractToken(socket)
 
     authLogger.info('Socket authentication attempt', {
       socketId: socket.id,
       hasAuthToken: !!socket.handshake.auth?.token,
-      hasQueryToken: !!(socket.handshake.query as any)?.token,
+      hasQueryToken: hasQueryToken(socket),
       ip: socket.handshake.address
-    });
+    })
 
     if (!token) {
       authLogger.warn('Socket connection attempt without token', {
         socketId: socket.id,
         ip: socket.handshake.address
-      });
-      return next(new Error('Authentication token required'));
+      })
+      return next(new Error('Authentication token required'))
     }
 
     authLogger.info('Token received for Lucia validation', {
       socketId: socket.id,
       tokenLength: token.length,
       ip: socket.handshake.address
-    });
+    })
 
-    // Валидация сессии через Lucia
-    const session = await lucia.validateSession(token);
+    const { session, user } = await lucia.validateSession(token)
 
     authLogger.info('Lucia session validation result', {
       socketId: socket.id,
       hasSession: !!session,
-      hasUser: !!session?.user,
+      hasUser: !!user,
       ip: socket.handshake.address
-    });
+    })
 
-    if (!session || !session.user) {
+    if (!session || !user) {
       authLogger.warn('Invalid Lucia session', {
         socketId: socket.id,
         ip: socket.handshake.address
-      });
-      return next(new Error('Invalid session'));
+      })
+      return next(new Error('Invalid session'))
     }
 
-    // Создаем объект пользователя
-    const user: User = {
-      id: session.user.id,
-      role: (session.user as any).role || 'user',
-      permissions: (session.user as any).permissions || getDefaultPermissions((session.user as any).role || 'user'),
-      name: (session.user as any).name,
-      email: (session.user as any).email
-    };
+    const socketUser = await buildSocketUser(user)
 
-    // Добавляем receive_notifications к permissions, если его нет
-    if (!user.permissions.includes('receive_notifications')) {
-      user.permissions.push('receive_notifications');
-    }
-
-    // Сохраняем данные пользователя в сокете
     socket.data = {
-      user,
+      user: socketUser,
       authenticated: true,
       connectedAt: new Date(),
       lastActivity: new Date()
-    };
+    }
 
-    socket.userId = user.id;
+    socket.userId = socketUser.id
 
     authLogger.info('Socket authenticated successfully with Lucia', {
       socketId: socket.id,
-      userId: user.id,
-      role: user.role,
+      userId: socketUser.id,
+      role: socketUser.role,
       ip: socket.handshake.address
-    });
+    })
 
-    next();
+    next()
   } catch (error) {
     authLogger.error('Socket authentication failed', {
       socketId: socket.id,
       error: error instanceof Error ? error.message : 'Unknown error',
       ip: socket.handshake.address
-    });
+    })
 
-    next(new Error('Authentication failed'));
+    next(new Error('Authentication failed'))
   }
-};
+}
 
-// Получение разрешений по умолчанию для роли
-function getDefaultPermissions(role: string): string[] {
-  const rolePermissions: Record<string, string[]> = {
+const hasQueryToken = (socket: TypedSocket): boolean => {
+  const queryToken = (socket.handshake.query as Record<string, unknown> | undefined)?.token
+  if (typeof queryToken === 'string') {
+    return true
+  }
+
+  return Array.isArray(queryToken) && queryToken.some(val => typeof val === 'string')
+}
+
+const normalizeTokenValue = (value: unknown): string | null => {
+  if (typeof value === 'string') {
+    return value
+  }
+
+  if (Array.isArray(value)) {
+    const found = value.find((entry): entry is string => typeof entry === 'string')
+    return found ?? null
+  }
+
+  return null
+}
+
+const extractToken = (socket: TypedSocket): string | null => {
+  const authToken = normalizeTokenValue(socket.handshake.auth?.token)
+  if (authToken) {
+    return authToken
+  }
+
+  const queryToken = normalizeTokenValue((socket.handshake.query as Record<string, unknown> | undefined)?.token)
+  if (queryToken) {
+    return queryToken
+  }
+
+  const headerToken = socket.handshake.headers?.authorization
+  if (typeof headerToken === 'string' && headerToken.startsWith('Bearer ')) {
+    return headerToken.slice('Bearer '.length)
+  }
+
+  return null
+}
+
+const ROLE_MAP: Record<string, UserRole> = {
+  admin: 'admin',
+  moderator: 'moderator',
+  user: 'user',
+  guest: 'guest'
+}
+
+const mapRoleName = (roleName?: string | null): UserRole => {
+  if (!roleName) {
+    return 'user'
+  }
+
+  const normalized = roleName.toLowerCase()
+  return ROLE_MAP[normalized] ?? 'user'
+}
+
+const getDefaultPermissions = (role: UserRole): Permission[] => {
+  const rolePermissions: Record<UserRole, Permission[]> = {
     admin: ['send_message', 'receive_notifications', 'send_notification', 'moderate_chat', 'view_admin_panel'],
     moderator: ['send_message', 'receive_notifications', 'send_notification', 'moderate_chat'],
     user: ['send_message', 'receive_notifications', 'send_notification'],
-    guest: ['receive_notifications', 'send_notification'] // Только получение уведомлений
-  };
+    guest: ['receive_notifications', 'send_notification']
+  }
 
-  return rolePermissions[role] || [];
+  return rolePermissions[role] ?? []
+}
+
+const ensureReceivePermission = (permissions: Permission[]): Permission[] => {
+  return permissions.includes('receive_notifications') ? permissions : [...permissions, 'receive_notifications']
+}
+
+const resolveUserRole = async (roleId?: string | null): Promise<UserRole> => {
+  if (!roleId) {
+    return 'user'
+  }
+
+  try {
+    const role = await prisma.role.findUnique({
+      where: { id: roleId },
+      select: { name: true }
+    })
+
+    return mapRoleName(role?.name)
+  } catch (error) {
+    authLogger.error('Failed to resolve role for socket user', {
+      roleId,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    })
+    return 'user'
+  }
+}
+
+const buildSocketUser = async (user: LuciaUser): Promise<User> => {
+  const role = await resolveUserRole(user.roleId)
+  const permissions = ensureReceivePermission(getDefaultPermissions(role))
+
+  return {
+    id: user.id,
+    role,
+    permissions,
+    name: user.name ?? undefined,
+    email: user.email ?? undefined
+  }
 }
 
 // Middleware для проверки разрешений
@@ -122,13 +195,13 @@ export const requirePermission = (permission: string) => {
       authLogger.warn('Permission check failed: not authenticated', {
         socketId: socket.id,
         userId: socket.userId
-      });
-      return next(new Error('Not authenticated'));
+      })
+      return next(new Error('Not authenticated'))
     }
 
-    const userPermissions = socket.data.user.permissions;
-    // Check if user has 'all' permissions or the specific permission
-    const hasPermission = userPermissions === 'all' || userPermissions.includes(permission as Permission);
+    const userPermissions = socket.data.user.permissions
+    const hasPermission =
+      userPermissions === 'all' || (Array.isArray(userPermissions) && userPermissions.includes(permission as Permission))
 
     if (!hasPermission) {
       authLogger.warn('Permission check failed: insufficient permissions', {
@@ -136,16 +209,15 @@ export const requirePermission = (permission: string) => {
         userId: socket.userId,
         requiredPermission: permission,
         userPermissions
-      });
-      return next(new Error(`Permission denied: ${permission}`));
+      })
+      return next(new Error(`Permission denied: ${permission}`))
     }
 
-    // Обновляем время последней активности
-    socket.data.lastActivity = new Date();
+    socket.data.lastActivity = new Date()
 
-    next();
-  };
-};
+    next()
+  }
+}
 
 // Middleware для проверки роли
 export const requireRole = (requiredRole: string) => {

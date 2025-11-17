@@ -25,7 +25,8 @@
     "test:unit": "jest --runInBand --testPathPattern=tests/unit",
     "test:integration": "jest --runInBand --testPathPattern=tests/integration",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "retention:cleanup": "node scripts/cleanup-retention.js"
   },
   "dependencies": {
     "@emoji-mart/data": "1.2.1",
@@ -114,7 +115,9 @@
     "socket.io-prometheus": "^0.4.0",
     "valibot": "0.42.1",
     "winston": "^3.18.3",
-    "winston-daily-rotate-file": "^5.0.0"
+    "winston-daily-rotate-file": "^5.0.0",
+    "winston-loki": "^6.1.2",
+    "winston-sentry": "^1.0.0"
   },
   "devDependencies": {
     "@iconify/json": "2.2.286",

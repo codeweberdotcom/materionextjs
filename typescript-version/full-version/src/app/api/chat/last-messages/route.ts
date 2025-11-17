@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/libs/prisma'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,7 +10,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get user's chat rooms
-    const userRooms = await (prisma as any).chatRoom.findMany({
+    const userRooms = await prisma.chatRoom.findMany({
       where: {
         OR: [
           { user1Id: user.id },
@@ -31,7 +27,7 @@ export async function GET(request: NextRequest) {
     const lastMessages = []
 
     for (const room of userRooms) {
-      const message = await (prisma as any).message.findFirst({
+      const message = await prisma.message.findFirst({
         where: { roomId: room.id },
         include: { sender: true },
         orderBy: { createdAt: 'desc' }

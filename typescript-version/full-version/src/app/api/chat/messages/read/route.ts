@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error marking messages as read:', error)
+    logger.error('Error marking messages as read:', { error: error, file: 'src/app/api/chat/messages/read/route.ts' })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -13,6 +13,13 @@ export const MENU_NAVIGATION_KEYS = [
   'rateLimitCategory',
   'rateLimitManagement',
   'rateLimitEvents',
+  'blocking',
+  'monitoring',
+  'monitoringOverview',
+  'monitoringMetrics',
+  'monitoringErrorTracking',
+  'monitoringApplicationInsights',
+  'maintenance',
   'references'
 ] as const
 

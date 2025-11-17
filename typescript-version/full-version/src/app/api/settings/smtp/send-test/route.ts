@@ -1,29 +1,35 @@
-// @ts-nocheck
 import logger from '@/lib/logger'
-
-﻿// Next Imports
-
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-import { sendEmail } from '@/utils/email'
-
 import { checkPermission } from '@/utils/permissions/permissions'
+import { sendEmail } from '@/utils/email'
+import fs from 'fs'
+import path from 'path'
+
+type SendTestPayload = {
+  host?: string
+  port?: string
+  username?: string
+  password?: string
+  encryption?: string
+  fromEmail?: string
+  fromName?: string
+  recipientEmail?: string
+}
 
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!session || !checkPermission(user, 'smtpManagement', 'update')) {
+    if (!user || !checkPermission(user, 'smtpManagement', 'update')) {
       return NextResponse.json(
         { success: false, message: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    const body = await ({} as any).json()
-    const { host, port, username, password, encryption, fromEmail, fromName, recipientEmail } = body
+    const body = (await request.json()) as SendTestPayload
+    const { host, port, username, password, encryption, fromEmail, fromName, recipientEmail } = body ?? {}
 
     logger.info('SMTP send test request body:', {
       host,
@@ -45,8 +51,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Temporarily save settings for testing
-    const fs = require('fs')
-    const path = require('path')
     const SETTINGS_FILE = path.join(process.cwd(), 'smtp-settings.json')
 
     const testSettings = {
@@ -71,7 +75,7 @@ export async function POST(request: NextRequest) {
       fs.writeFileSync(SETTINGS_FILE, JSON.stringify(testSettings, null, 2))
       logger.info('Testing with provided settings:', { ...testSettings, password: '***hidden***' })
     } catch (error) {
-      console.error('Error saving test settings:', error)
+      logger.error('Error saving test settings:', { error: error, file: 'src/app/api/settings/smtp/send-test/route.ts' })
 
       return NextResponse.json(
         {
@@ -128,7 +132,7 @@ Sent at: ${new Date().toLocaleString()}
         message: 'Test email sent successfully'
       })
     } catch (emailError) {
-      console.error('Error sending test email:', emailError)
+      logger.error('Error sending test email:', { error: emailError, file: 'src/app/api/settings/smtp/send-test/route.ts' })
 
       return NextResponse.json(
         {
@@ -139,7 +143,7 @@ Sent at: ${new Date().toLocaleString()}
       )
     }
   } catch (error) {
-    console.error('SMTP send test error:', error)
+    logger.error('SMTP send test error:', { error: error, file: 'src/app/api/settings/smtp/send-test/route.ts' })
 
     return NextResponse.json(
       {

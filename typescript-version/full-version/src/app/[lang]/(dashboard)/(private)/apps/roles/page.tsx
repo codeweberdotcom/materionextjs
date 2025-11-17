@@ -40,8 +40,7 @@ const RolesApp = async () => {
     redirect('/login')
   }
 
-  // If user is superadmin, allow access
-  if (!isSuperadmin(user as any) && !checkPermission(user as any, 'roleManagement', 'read')) {
+  if (!isSuperadmin(user) && !checkPermission(user, 'roleManagement', 'read')) {
     redirect('/not-authorized')
   }
 

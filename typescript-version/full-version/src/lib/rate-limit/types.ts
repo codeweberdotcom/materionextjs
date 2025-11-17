@@ -54,10 +54,18 @@ export interface RateLimitStateAdminEntry {
   windowEnd: Date
   blockedUntil: Date | null
   remaining: number
+  reason?: string | null
+  violationNumber?: number | null
+  targetIp?: string | null
+  targetEmail?: string | null
+  targetCidr?: string | null
+  targetAsn?: string | null
+  blockedBy?: string | null
+  blockedByUser?: Pick<User, 'id' | 'email'> | null
   config: RateLimitConfig
   source: 'state' | 'manual'
   user?: Pick<User, 'id' | 'name' | 'email'> | null
-  activeBlock?: Pick<UserBlock, 'id' | 'reason' | 'blockedAt' | 'unblockedAt'> | null
+  activeBlock?: Pick<UserBlock, 'id' | 'reason' | 'blockedAt' | 'unblockedAt' | 'blockedBy' | 'notes'> | null
 }
 
 export interface RateLimitStateListResult {

@@ -137,7 +137,7 @@ export const useNotifications = () => {
 
         dispatch(updateNotification(payload))
       } catch (error) {
-        console.error('Error marking notification as read:', error)
+        logger.error('Error marking notification as read:', { error: error, file: 'src/hooks/useNotifications.ts' })
       }
     },
     [dispatch, notificationSocket, user?.id]
@@ -161,7 +161,7 @@ export const useNotifications = () => {
 
       dispatch(markAllAsReadAction())
     } catch (error) {
-      console.error('Error marking all notifications as read:', error)
+      logger.error('Error marking all notifications as read:', { error: error, file: 'src/hooks/useNotifications.ts' })
     }
   }, [dispatch, notificationSocket, user?.id])
 
@@ -180,7 +180,7 @@ export const useNotifications = () => {
 
         dispatch(updateNotification({ notificationId, updates: { status } }))
       } catch (error) {
-        console.error('Error updating notification status:', error)
+        logger.error('Error updating notification status:', { error: error, file: 'src/hooks/useNotifications.ts' })
       }
     },
     [dispatch, user?.id]
@@ -204,7 +204,7 @@ export const useNotifications = () => {
 
         dispatch(deleteNotificationAction({ notificationId }))
       } catch (error) {
-        console.error('Error deleting notification:', error)
+        logger.error('Error deleting notification:', { error: error, file: 'src/hooks/useNotifications.ts' })
       }
     },
     [dispatch, notificationSocket, user?.id]
@@ -219,7 +219,7 @@ export const useNotifications = () => {
       })
       await refresh('clear-all')
     } catch (error) {
-      console.error('Error clearing notifications:', error)
+      logger.error('Error clearing notifications:', { error: error, file: 'src/hooks/useNotifications.ts' })
     }
   }, [refresh, user?.id])
 

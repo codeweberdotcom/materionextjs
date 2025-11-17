@@ -1,43 +1,58 @@
-// @ts-nocheck
 import logger from '@/lib/logger'
-
-﻿// Next Imports
 import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 
-
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-import { testSmtpConnection } from '@/utils/email'
-
-
 import { checkPermission } from '@/utils/permissions/permissions'
+import { testSmtpConnection } from '@/utils/email'
 
 // Simple settings storage (in production, use database)
 const SETTINGS_FILE = path.join(process.cwd(), 'smtp-settings.json')
 
-const getStoredSettings = () => {
+type SmtpSettingsPayload = {
+  host: string
+  port: string
+  username: string
+  password: string
+  encryption: string
+  fromEmail: string
+  fromName: string
+  updatedAt?: string
+}
+
+const isSmtpSettings = (data: unknown): data is SmtpSettingsPayload => {
+  if (typeof data !== 'object' || data === null) return false
+  const obj = data as Record<string, unknown>
+  return (
+    typeof obj.host === 'string' &&
+    typeof obj.port === 'string' &&
+    typeof obj.username === 'string' &&
+    typeof obj.password === 'string' &&
+    typeof obj.encryption === 'string' &&
+    typeof obj.fromEmail === 'string' &&
+    typeof obj.fromName === 'string'
+  )
+}
+
+const getStoredSettings = (): Partial<SmtpSettingsPayload> => {
   try {
     if (fs.existsSync(SETTINGS_FILE)) {
       const data = fs.readFileSync(SETTINGS_FILE, 'utf8')
       const settings = JSON.parse(data)
 
-      // Validate that settings have required fields
-      if (settings.username && settings.password && settings.host) {
+      if (isSmtpSettings(settings)) {
         return settings
       }
     }
   } catch (error) {
-    console.error('Error reading SMTP settings file:', error)
+    logger.error('Error reading SMTP settings file:', { error: error, file: 'src/app/api/settings/smtp/route.ts' })
   }
 
-  
-return {}
+  return {}
 }
 
-const saveStoredSettings = (settings: any) => {
+const saveStoredSettings = (settings: SmtpSettingsPayload) => {
   try {
     // Ensure directory exists
     const dir = path.dirname(SETTINGS_FILE)
@@ -49,7 +64,7 @@ const saveStoredSettings = (settings: any) => {
     fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2))
     logger.info('SMTP settings saved to file')
   } catch (error) {
-    console.error('Error saving SMTP settings file:', error)
+    logger.error('Error saving SMTP settings file:', { error: error, file: 'src/app/api/settings/smtp/route.ts' })
     throw new Error('Failed to save settings')
   }
 }
@@ -66,7 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { host, port, username, password, encryption, fromEmail, fromName } = body
+    const { host, port, username, password, encryption, fromEmail, fromName } = body as Partial<SmtpSettingsPayload>
 
     // Validate required fields
     if (!host || !port || !username || !password || !fromEmail || !fromName) {
@@ -80,14 +95,14 @@ export async function POST(request: NextRequest) {
     // Users can test connection separately using the test endpoint
 
     // Save settings to file for demo purposes
-    const settingsToSave = {
-      host,
-      port,
-      username,
-      password,
-      encryption,
-      fromEmail,
-      fromName,
+    const settingsToSave: SmtpSettingsPayload = {
+      host: host ?? '',
+      port: port ?? '',
+      username: username ?? '',
+      password: password ?? '',
+      encryption: encryption ?? '',
+      fromEmail: fromEmail ?? '',
+      fromName: fromName ?? '',
       updatedAt: new Date().toISOString()
     }
 
@@ -100,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ message: 'SMTP settings saved successfully' })
   } catch (error) {
-    console.error('Error saving SMTP settings:', error)
+    logger.error('Error saving SMTP settings:', { error: error, file: 'src/app/api/settings/smtp/route.ts' })
     
 return NextResponse.json(
       { message: 'Failed to save SMTP settings' },
@@ -141,7 +156,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(settings)
   } catch (error) {
-    console.error('Error fetching SMTP settings:', error)
+    logger.error('Error fetching SMTP settings:', { error: error, file: 'src/app/api/settings/smtp/route.ts' })
     
 return NextResponse.json(
       { message: 'Failed to fetch SMTP settings' },

@@ -1,14 +1,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-import { PrismaClient } from '@prisma/client'
-
-
+import { prisma } from '@/libs/prisma'
 import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
-
-const prisma = new PrismaClient()
+import { authBaseUrl } from '@/shared/config/env'
 
 // PUT - Update a role (admin only)
 export async function PUT(
@@ -68,7 +64,7 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating role:', error)
 
-    if ((error as any).code === 'P2002' && (error as any).meta?.target?.includes('name')) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002' && Array.isArray(error.meta?.target) && error.meta?.target.includes('name')) {
       return NextResponse.json(
         { message: 'Role name already exists' },
         { status: 400 }
@@ -207,7 +203,7 @@ export async function DELETE(
     // Очищаем кеш после удаления роли
     // Используем простой HTTP запрос для очистки кеша
     try {
-      await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/roles?clearCache=true`, {
+      await fetch(`${authBaseUrl}/api/admin/roles?clearCache=true`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'

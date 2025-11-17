@@ -1,15 +1,14 @@
-import { Server as HTTPServer } from 'http';
-import { Server, Socket } from 'socket.io';
-import logger from '../logger';
-import { authenticateSocket } from './middleware/auth';
-import { errorHandler, handleDisconnect, heartbeat } from './middleware/errorHandler';
-
-// Импорты namespaces
-import { initializeChatNamespace } from './namespaces/chat';
-import { initializeNotificationNamespace } from './namespaces/notifications';
+import { Server as HTTPServer } from 'http'
+import { Server } from 'socket.io'
+import logger from '../logger'
+import { authenticateSocket } from './middleware/auth'
+import { errorHandler, handleDisconnect, heartbeat } from './middleware/errorHandler'
+import { initializeChatNamespace } from './namespaces/chat'
+import { initializeNotificationNamespace } from './namespaces/notifications'
+import type { ClientToServerEvents, ServerToClientEvents, TypedIOServer, TypedSocket } from './types/common'
 
 // Глобальная переменная для хранения io instance
-let io: Server | null = null;
+let io: TypedIOServer | null = null
 
 // Активные пользователи (in-memory cache)
 type ActiveUserInfo = {
@@ -19,7 +18,7 @@ type ActiveUserInfo = {
   role?: string
 };
 
-const activeUsers = new Map<string, ActiveUserInfo>();
+const activeUsers = new Map<string, ActiveUserInfo>()
 
 // Метрики для мониторинга
 const metrics = {
@@ -35,14 +34,13 @@ const metrics = {
 /**
  * Инициализация Socket.IO сервера
  */
-export const initializeSocketServer = (httpServer: HTTPServer): Server => {
+export const initializeSocketServer = (httpServer: HTTPServer): TypedIOServer => {
   if (io) {
-    logger.warn('Socket.IO server already initialized');
-    return io;
+    logger.warn('Socket.IO server already initialized')
+    return io
   }
 
-  // Создаем Socket.IO сервер
-  io = new Server(httpServer, {
+  io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
     cors: {
       origin: process.env.NODE_ENV === 'production'
         ? process.env.FRONTEND_URL || false
@@ -57,13 +55,15 @@ export const initializeSocketServer = (httpServer: HTTPServer): Server => {
     maxHttpBufferSize: 1e6, // 1MB
     allowEIO3: true,       // Поддержка Socket.IO v2 клиентов
     transports: ['websocket', 'polling']
-  });
+  })
+
+  globalThis.io = io
 
   logger.info('Socket.IO server initialized', {
     cors: io._opts?.cors,
     pingTimeout: io._opts?.pingTimeout,
     pingInterval: io._opts?.pingInterval
-  });
+  })
 
   // Глобальные middleware
   setupGlobalMiddleware();
@@ -75,10 +75,10 @@ export const initializeSocketServer = (httpServer: HTTPServer): Server => {
   io.on('connection', handleConnection);
 
   // Graceful shutdown
-  setupGracefulShutdown();
+  setupGracefulShutdown()
 
-  return io;
-};
+  return io!
+}
 
 /**
  * Настройка глобального middleware
@@ -123,12 +123,12 @@ const initializeNamespaces = () => {
 /**
  * Обработка нового подключения
  */
-const handleConnection = (socket: Socket) => {
-  metrics.activeConnections++;
-  metrics.totalConnections++;
+const handleConnection = (socket: TypedSocket) => {
+  metrics.activeConnections++
+  metrics.totalConnections++
 
-  const userId = (socket.data as { user?: { id?: string } }).user?.id ?? (socket as Socket & { userId?: string }).userId
-  const userRole = (socket.data as { user?: { role?: string } }).user?.role
+  const userId = socket.data.user?.id ?? socket.userId
+  const userRole = socket.data.user?.role
 
   logger.info('New socket connection', {
     socketId: socket.id,
@@ -146,27 +146,25 @@ const handleConnection = (socket: Socket) => {
       connectedAt: new Date(),
       lastActivity: new Date(),
       role: userRole
-    });
+    })
   }
 
   // Обработка отключения
-  socket.on('disconnect', (reason) => {
-    metrics.activeConnections = Math.max(0, metrics.activeConnections - 1);
+  socket.on('disconnect', reason => {
+    metrics.activeConnections = Math.max(0, metrics.activeConnections - 1)
 
     if (userId) {
-      activeUsers.delete(userId);
+      activeUsers.delete(userId)
     }
 
-    handleDisconnect(reason, socket as Socket & { userId?: string });
-  });
+    handleDisconnect(reason, socket)
+  })
 
   // Ping для поддержания соединения
-  socket.on('ping', (data, callback) => {
-    if (callback) {
-      callback({ pong: true, timestamp: Date.now() });
-    }
-  });
-};
+  socket.on('ping', (_data, callback) => {
+    callback?.({ pong: true, timestamp: Date.now() })
+  })
+}
 
 /**
  * Graceful shutdown
@@ -199,7 +197,7 @@ const setupGracefulShutdown = () => {
  * Получение экземпляра Socket.IO
  */
 export const getSocketServer = (): Server | null => {
-  return io;
+  return io
 };
 
 /**
@@ -227,7 +225,11 @@ export const getSocketMetrics = () => {
 /**
  * Отправка уведомления пользователю
  */
-export const sendNotificationToUser = <TPayload>(userId: string, event: string, data: TPayload) => {
+export const sendNotificationToUser = <TEvent extends keyof ServerToClientEvents>(
+  userId: string,
+  event: TEvent,
+  ...args: Parameters<ServerToClientEvents[TEvent]>
+) => {
   if (!io) {
     logger.warn('Socket.IO server not initialized');
     return false;
@@ -240,8 +242,8 @@ export const sendNotificationToUser = <TPayload>(userId: string, event: string, 
   }
 
   try {
-    io.to(userData.socketId).emit(event, data);
-    logger.debug('Notification sent to user', { userId, event, socketId: userData.socketId });
+    io.to(userData.socketId).emit(event, ...args)
+    logger.debug('Notification sent to user', { userId, event, socketId: userData.socketId })
     return true;
   } catch (error) {
     logger.error('Failed to send notification to user', {
@@ -256,14 +258,18 @@ export const sendNotificationToUser = <TPayload>(userId: string, event: string, 
 /**
  * Отправка сообщения в комнату
  */
-export const sendMessageToRoom = <TPayload>(roomId: string, event: string, data: TPayload) => {
+export const sendMessageToRoom = <TEvent extends keyof ServerToClientEvents>(
+  roomId: string,
+  event: TEvent,
+  ...args: Parameters<ServerToClientEvents[TEvent]>
+) => {
   if (!io) {
     logger.warn('Socket.IO server not initialized');
     return false;
   }
 
   try {
-    io.to(`room_${roomId}`).emit(event, data);
+    io.to(`room_${roomId}`).emit(event, ...args)
     metrics.totalMessages++;
     logger.debug('Message sent to room', { roomId, event });
     return true;

@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
-
 import { prisma } from '../src/libs/prisma'
 
 // Country data

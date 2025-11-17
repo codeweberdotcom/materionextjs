@@ -10,6 +10,29 @@ services:
     networks:
       - monitoring-net
 
+  loki:
+    image: grafana/loki:latest
+    container_name: materio-loki
+    restart: unless-stopped
+    ports:
+      - '3100:3100'
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - monitoring-net
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: materio-promtail
+    restart: unless-stopped
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      - ../logs:/var/log/materio:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - monitoring-net
+
   grafana:
     image: grafana/grafana:latest
     container_name: materio-grafana
@@ -24,6 +47,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     depends_on:
       - prometheus
+      - loki
     networks:
       - monitoring-net
 

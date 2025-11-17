@@ -1,16 +1,8 @@
 import logger from '@/lib/logger'
-
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-
+import { prisma } from '@/libs/prisma'
 import { checkPermission } from '@/utils/permissions/permissions'
-
-// Create Prisma client instance
-const { PrismaClient } = require('@prisma/client')
-
-const prisma = new PrismaClient()
 
 // PUT - Update country (admin only)
 export async function PUT(
@@ -26,7 +18,7 @@ export async function PUT(
     try {
       body = await request.json()
     } catch (error) {
-      console.error('Failed to parse request body:', error)
+      logger.error('Failed to parse request body:', { error: error, file: 'src/app/api/admin/references/countries/[id]/route.ts' })
       
 return NextResponse.json(
         { message: 'Invalid JSON in request body' },
@@ -49,7 +41,7 @@ return NextResponse.json(
     }
 
     // Check permission for updating countries
-    if (!checkPermission(user as UserWithRole, 'countryManagement', 'update')) {
+    if (!checkPermission(user, 'countryManagement', 'update')) {
       return NextResponse.json(
         { message: 'Insufficient permissions' },
         { status: 403 }
@@ -126,7 +118,7 @@ return NextResponse.json(
       throw error
     }
   } catch (error) {
-    console.error('Error updating country:', error)
+    logger.error('Error updating country:', { error: error, file: 'src/app/api/admin/references/countries/[id]/route.ts' })
     
 return NextResponse.json(
       { message: 'Internal server error' },
@@ -151,7 +143,7 @@ export async function PATCH(
     }
 
     // Check permission for updating countries (status toggle)
-    if (!checkPermission(user as UserWithRole, 'countryManagement', 'update')) {
+    if (!checkPermission(user, 'countryManagement', 'update')) {
       return NextResponse.json(
         { message: 'Insufficient permissions' },
         { status: 403 }
@@ -182,7 +174,7 @@ export async function PATCH(
 
     return NextResponse.json(updatedCountry)
   } catch (error) {
-    console.error('Error toggling country status:', error)
+    logger.error('Error toggling country status:', { error: error, file: 'src/app/api/admin/references/countries/[id]/route.ts' })
     
 return NextResponse.json(
       { message: 'Internal server error' },
@@ -207,7 +199,7 @@ export async function DELETE(
     }
 
     // Check permission for deleting countries
-    if (!checkPermission(user as UserWithRole, 'countryManagement', 'delete')) {
+    if (!checkPermission(user, 'countryManagement', 'delete')) {
       return NextResponse.json(
         { message: 'Insufficient permissions' },
         { status: 403 }
@@ -237,7 +229,7 @@ export async function DELETE(
       throw error
     }
   } catch (error) {
-    console.error('Error deleting country:', error)
+    logger.error('Error deleting country:', { error: error, file: 'src/app/api/admin/references/countries/[id]/route.ts' })
     
 return NextResponse.json(
       { message: 'Internal server error' },

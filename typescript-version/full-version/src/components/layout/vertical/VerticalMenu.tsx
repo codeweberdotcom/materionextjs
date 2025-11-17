@@ -343,6 +343,11 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           {dictionary['navigation'].rateLimitEvents}
         </MenuItem>
       )
+      rateLimitChildren.push(
+        <MenuItem key="rateLimitBlocking" href={`/${locale}/admin/blocks`} icon={<i className='ri-shield-keyhole-line' />}>
+          {dictionary['navigation'].blocking || 'Blocking'}
+        </MenuItem>
+      )
     }
 
     // Communications section (only show if user has at least one communication permission)
@@ -422,7 +427,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
     // Testing
     monitoringChildren.push(
       <MenuItem key="monitoringTesting" href={`/${locale}/admin/monitoring/testing`} icon={<i className='ri-test-tube-line' />} >
-        Testing
+        {dictionary['navigation'].monitoringTesting || dictionary['navigation'].testingConnection || 'Testing'}
       </MenuItem>
     )
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 'use client'
 
 // React Imports
@@ -18,7 +17,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useAuth } from '@/contexts/AuthProvider'
 
 // Type Imports
-import type { RootState } from '@/redux-store'
+import type { RootState, AppDispatch } from '@/redux-store'
 
 // Slice Imports
 import { getActiveUserData, fetchUsers, sendMsg } from '@/redux-store/slices/chat'
@@ -34,15 +33,20 @@ import { useChatNew } from '@/hooks/useChatNew'
 // Util Imports
 import { commonLayoutClasses } from '@layouts/utils/layoutClasses'
 
+type NotificationsManager = {
+  unreadCount: number
+}
+
 const ChatWrapper = () => {
   // Hooks
   const { settings } = useSettings()
-  const dispatch = useDispatch()
+  const dispatch = useDispatch<AppDispatch>()
   const chatStore = useSelector((state: RootState) => state.chatReducer)
   const { user, session } = useAuth()
-  const unreadCount = (typeof window !== 'undefined' && (window as any).notificationsManager)
-    ? (window as any).notificationsManager.unreadCount
-    : 0
+  const unreadCount =
+    typeof window !== 'undefined' && (window as unknown as { notificationsManager?: NotificationsManager }).notificationsManager
+      ? (window as unknown as { notificationsManager?: NotificationsManager }).notificationsManager!.unreadCount
+      : 0
   const {
     initializeRoom,
     room,

@@ -3,9 +3,10 @@ import type { SignOptions } from 'jsonwebtoken';
 import type { IncomingMessage } from 'http';
 import type { Socket } from 'socket.io';
 import type { ParsedUrlQuery } from 'querystring';
+import { env, authJwtSecret } from '@/shared/config/env';
 import { User } from '../types/common';
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || 'your-secret-key';
+const JWT_SECRET = authJwtSecret || env.NEXTAUTH_SECRET || 'your-secret-key';
 
 type JwtPayload = {
   id: string;

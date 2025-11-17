@@ -6,6 +6,7 @@ import Handlebars from 'handlebars'
 
 // SMTP configuration interface
 import logger from '@/lib/logger'
+import { authBaseUrl } from '@/shared/config/env'
 
 export interface SmtpConfig {
   host: string
@@ -87,7 +88,7 @@ export const getSmtpConfig = async (): Promise<SmtpConfig> => {
     // Try to fetch from API first (only in server-side context)
     if (typeof window === 'undefined') {
       try {
-        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000'
+        const baseUrl = authBaseUrl || 'http://localhost:3000'
         logger.info('🔍 [SMTP CONFIG] Fetching from API:', `${baseUrl}/api/settings/smtp`)
 
         // Try direct file read first (bypass API to avoid auth issues)
@@ -124,7 +125,7 @@ export const getSmtpConfig = async (): Promise<SmtpConfig> => {
             logger.info('🔍 [SMTP CONFIG] Settings file does not exist')
           }
         } catch (fileError) {
-          console.error('❌ [SMTP CONFIG] Error reading settings file directly:', fileError)
+          logger.error('❌ [SMTP CONFIG] Error reading settings file directly:', { error: fileError, file: 'src/utils/email.ts' })
         }
 
         const response = await fetch(`${baseUrl}/api/settings/smtp`)
@@ -158,13 +159,13 @@ export const getSmtpConfig = async (): Promise<SmtpConfig> => {
           logger.info('❌ [SMTP CONFIG] API request failed')
         }
       } catch (error) {
-        console.error('❌ [SMTP CONFIG] Error fetching SMTP settings from API:', error)
+        logger.error('❌ [SMTP CONFIG] Error fetching SMTP settings from API:', { error: error, file: 'src/utils/email.ts' })
       }
     } else {
       logger.info('🔍 [SMTP CONFIG] Client-side context, skipping API fetch')
     }
   } catch (error) {
-    console.error('❌ [SMTP CONFIG] Error in SMTP config fetch:', error)
+    logger.error('❌ [SMTP CONFIG] Error in SMTP config fetch:', { error: error, file: 'src/utils/email.ts' })
   }
 
   // Fallback to environment variables
@@ -333,7 +334,7 @@ const sendEmailImmediate = async (options: ExtendedEmailOptions) => {
         }
       }
     } catch (error) {
-      console.error('Error fetching email template:', error)
+      logger.error('Error fetching email template:', { error: error, file: 'src/utils/email.ts' })
     }
   }
 
@@ -478,7 +479,7 @@ const renderTemplate = (template: string, variables: Record<string, any>): strin
     // Render with variables
     return compiledTemplate(variables)
   } catch (error) {
-    console.error('Error rendering Handlebars template:', error)
+    logger.error('Error rendering Handlebars template:', { error: error, file: 'src/utils/email.ts' })
     // Fallback to simple variable replacement
     return replaceVariables(template, variables)
   }
@@ -582,7 +583,7 @@ export const testSmtpConnection = async (): Promise<{ success: boolean; message:
       ...transporter.options,
       logger: true,
       debug: true
-    } as any)
+    })
 
     try {
       await debugTransporter.verify()

@@ -5,7 +5,11 @@ export type StoreEventPayload = {
   key: string
   userId?: string | null
   email?: string | null
+  emailHash?: string | null
   ipAddress?: string | null
+  ipHash?: string | null
+  ipPrefix?: string | null
+  hashVersion?: number | null
   eventType: 'warning' | 'block'
   mode: 'monitor' | 'enforce'
   count: number
@@ -25,7 +29,11 @@ export type RateLimitConsumeParams = {
   now: Date
   userId?: string | null
   email?: string | null
+  emailHash?: string | null
   ipAddress?: string | null
+  ipHash?: string | null
+  ipPrefix?: string | null
+  hashVersion?: number | null
   recordEvent: (payload: StoreEventPayload) => Promise<void>
 }
 
@@ -34,3 +42,5 @@ export interface RateLimitStore {
   resetCache(key?: string, module?: string): Promise<void>
   shutdown(): Promise<void>
 }
+
+export type { RateLimitResult } from '../types'

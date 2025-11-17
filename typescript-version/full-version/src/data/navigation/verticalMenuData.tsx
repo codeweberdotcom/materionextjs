@@ -332,15 +332,40 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
             href: '/admin/rate-limits/events'
           },
           {
+            label: dictionary['navigation'].blocking || 'Blocking',
+            href: '/admin/blocks'
+          },
+          {
             label: dictionary['navigation'].eventsJournal,
             href: '/admin/events'
           }
         ]
       },
       {
-        label: 'Metrics',
+        label: dictionary['navigation'].monitoring,
         icon: 'ri-bar-chart-line',
-        href: '/admin/monitoring/metrics'
+        children: [
+          {
+            label: dictionary['navigation'].monitoringOverview || 'Overview',
+            href: '/admin/monitoring'
+          },
+          {
+            label: dictionary['navigation'].monitoringMetrics || 'Metrics',
+            href: '/admin/monitoring/metrics'
+          },
+          {
+            label: dictionary['navigation'].monitoringErrorTracking || 'Error Tracking',
+            href: '/admin/monitoring/errors'
+          },
+          {
+            label: dictionary['navigation'].monitoringApplicationInsights || 'Application Insights',
+            href: '/admin/monitoring/insights'
+          },
+          {
+            label: dictionary['navigation'].maintenance || 'Maintenance',
+            href: '/admin/maintenance'
+          }
+        ]
       },
     ]
   },

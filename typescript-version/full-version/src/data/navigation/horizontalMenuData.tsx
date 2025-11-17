@@ -541,6 +541,11 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
         href: '/admin/rate-limits/events'
       },
       {
+        label: dictionary['navigation'].blocking || 'Blocking',
+        icon: 'ri-shield-keyhole-line',
+        href: '/admin/blocks'
+      },
+      {
         label: dictionary['navigation'].eventsJournal,
         icon: 'ri-history-line',
         href: '/admin/events'

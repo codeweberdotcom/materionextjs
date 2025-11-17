@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import { prisma } from '@/libs/prisma'
 
 export async function GET(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
 
     // Get user's chat rooms
-    const userRooms = await (prisma as any).chatRoom.findMany({
+    const userRooms = await prisma.chatRoom.findMany({
       where: {
         OR: [
           { user1Id: user.id },
@@ -25,7 +22,7 @@ export async function GET(request: NextRequest) {
     for (const room of userRooms) {
       const otherUserId = room.user1Id === user.id ? room.user2Id : room.user1Id
 
-      const unreadCount = await (prisma as any).message.count({
+      const unreadCount = await prisma.message.count({
         where: {
           roomId: room.id,
           senderId: otherUserId, // Messages from the other user
@@ -39,7 +36,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all users except current user for status tracking
-    const allUsers = await (prisma as any).user.findMany({
+    const allUsers = await prisma.user.findMany({
       where: {
         id: {
           not: user.id

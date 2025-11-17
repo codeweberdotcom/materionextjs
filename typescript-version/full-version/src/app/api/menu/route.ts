@@ -3,7 +3,6 @@ import type { NextRequest } from 'next/server'
 
 import type { Locale } from '@configs/i18n'
 import type { VerticalMenuDataType } from '@/types/menuTypes'
-import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { getDictionary } from '@/utils/formatting/getDictionary'
@@ -54,7 +53,7 @@ export const GET = async (request: NextRequest) => {
     const filteredMenuData = filterMenuDataByPermissions({
       items: menuData(dictionary),
       dictionary,
-      user: user as UserWithRole
+      user
     }).map(serializeMenuItem)
 
     logger.info('API MENU: Final filtered menu length:', filteredMenuData.length)

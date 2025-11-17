@@ -70,10 +70,22 @@ const ConfirmationDialog = ({ open, setOpen, type, onConfirm, name, isActive }: 
               {type === 'suspend-account' && (isActive ? dictionary.navigation.suspendConfirmTitle : dictionary.navigation.activateConfirmTitle)}
               {type === 'delete-order' && 'Are you sure?'}
               {type === 'delete-customer' && 'Are you sure?'}
-              {type === 'delete-user' && dictionary.navigation.deleteUserConfirm.replace('${name}', name || '')}
-              {type === 'delete-role' && dictionary.navigation.deleteRoleConfirm.replace('${name}', name || '')}
-              {type === 'delete-currency' && dictionary.navigation.deleteCurrencyConfirm.replace('${name}', name || '')}
-              {type === 'delete-country' && dictionary.navigation.deleteCountryConfirm.replace('${name}', name || '')}
+              {type === 'delete-user' &&
+                (dictionary.navigation.deleteUserConfirm
+                  ? dictionary.navigation.deleteUserConfirm.replace('${name}', name || '')
+                  : `Delete user ${name || ''}?`)}
+              {type === 'delete-role' &&
+                (dictionary.navigation.deleteRoleConfirm
+                  ? dictionary.navigation.deleteRoleConfirm.replace('${name}', name || '')
+                  : `Delete role ${name || ''}?`)}
+              {type === 'delete-currency' &&
+                (dictionary.navigation.deleteCurrencyConfirm
+                  ? dictionary.navigation.deleteCurrencyConfirm.replace('${name}', name || '')
+                  : `Delete currency ${name || ''}?`)}
+              {type === 'delete-country' &&
+                (dictionary.navigation.deleteCountryConfirm
+                  ? dictionary.navigation.deleteCountryConfirm.replace('${name}', name || '')
+                  : `Delete country ${name || ''}?`)}
             </Typography>
             {type === 'suspend-account' && (
               <Typography color='text.primary'>{isActive ? dictionary.navigation.suspendConfirmMessage : dictionary.navigation.activateConfirmMessage}</Typography>

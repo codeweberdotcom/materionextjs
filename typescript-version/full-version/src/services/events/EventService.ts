@@ -176,8 +176,8 @@ export class EventService {
       if (searchValue) {
         conditions.push({
           OR: [
-            { message: { contains: searchValue, mode: 'insensitive' } },
-            { key: { contains: searchValue, mode: 'insensitive' } },
+            { message: { contains: searchValue } },
+            { key: { contains: searchValue } },
             { payload: { contains: searchValue } }
           ]
         })

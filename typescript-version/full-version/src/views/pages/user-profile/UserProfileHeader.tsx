@@ -1,4 +1,3 @@
-// @ts-nocheck
 // MUI Imports
 import Card from '@mui/material/Card'
 import CardMedia from '@mui/material/CardMedia'
@@ -22,7 +21,7 @@ const UserProfileHeader = ({ data }: { data?: ProfileHeaderType }) => {
     data?.fullName ||
     ''
 
-  const avatar = profile.avatar || data?.profileImg
+  const avatar = profile.avatar || data?.profileImg || undefined
   const designation = data?.designation || profile.organization || '—'
   const location = data?.location || profile.country || '—'
   const joiningDate = data?.joiningDate || ''

@@ -1,9 +1,11 @@
-import { Prisma, PrismaClient } from '@prisma/client'
+import crypto from 'crypto'
+import { Prisma } from '@prisma/client'
 import type { RateLimitState, User, UserBlock } from '@prisma/client'
 
 import logger from '@/lib/logger'
 import { incrementUnknownModuleMetric } from '@/lib/metrics/rate-limit'
 import { eventService } from '@/services/events'
+import { prisma } from '@/libs/prisma'
 
 import type {
   RateLimitConfig,
@@ -26,15 +28,17 @@ export type {
 import { createRateLimitStore } from './rate-limit/stores'
 import type { RateLimitStore } from './rate-limit/stores'
 
-const prisma = new PrismaClient()
-
 export interface RateLimitEventAdminEntry {
   id: string
   module: string
   key: string
   userId: string | null
   ipAddress: string | null
+  ipHash: string | null
+  ipPrefix: string | null
+  hashVersion: number | null
   email: string | null
+  emailHash: string | null
   eventType: 'warning' | 'block'
   mode: 'monitor' | 'enforce'
   count: number
@@ -116,6 +120,92 @@ const decodeStatesCursor = (cursor?: string): StatesCursorPayload => {
   return { stateCursor: cursor }
 }
 
+const IP_HASH_VERSION = 1
+const DEV_IP_HASH_SECRET = 'dev-rate-limit-ip-hash-secret'
+const EMAIL_HASH_VERSION = 1
+const DEV_EMAIL_HASH_SECRET = 'dev-rate-limit-email-hash-secret'
+let ipHashSecretWarningShown = false
+let emailHashSecretWarningShown = false
+
+const getIpHashSecret = (): string => {
+  const secret = process.env.RATE_LIMIT_IP_HASH_SECRET
+  if (secret) return secret
+  if (!ipHashSecretWarningShown) {
+    logger.warn(
+      '[rate-limit] RATE_LIMIT_IP_HASH_SECRET is not set; using a development fallback secret. Configure a strong secret in production.'
+    )
+    ipHashSecretWarningShown = true
+  }
+  return DEV_IP_HASH_SECRET
+}
+
+const getEmailHashSecret = (): string => {
+  const secret = process.env.RATE_LIMIT_EMAIL_HASH_SECRET
+  if (secret) return secret
+  if (!emailHashSecretWarningShown) {
+    logger.warn(
+      '[rate-limit] RATE_LIMIT_EMAIL_HASH_SECRET is not set; using a development fallback secret. Configure a strong secret in production.'
+    )
+    emailHashSecretWarningShown = true
+  }
+  return DEV_EMAIL_HASH_SECRET
+}
+
+const hashIpAddress = (ip: string | null | undefined): string | null => {
+  if (!ip) return null
+  const hmac = crypto.createHmac('sha256', getIpHashSecret())
+  hmac.update(`${IP_HASH_VERSION}:${ip}`)
+  return hmac.digest('hex')
+}
+
+const hashEmail = (email: string | null | undefined): string | null => {
+  if (!email) return null
+  const hmac = crypto.createHmac('sha256', getEmailHashSecret())
+  hmac.update(`${EMAIL_HASH_VERSION}:${email.toLowerCase()}`)
+  return hmac.digest('hex')
+}
+
+const extractIpPrefix = (ip: string | null | undefined): string | null => {
+  if (!ip) return null
+  if (ip.includes(':')) {
+    // IPv6: use /48 prefix (first 4 hextets)
+    const segments = ip.split(':').filter(Boolean)
+    const prefix = segments.slice(0, 4).join(':')
+    return `${prefix || ip}::/48`
+  }
+
+  const octets = ip.split('.')
+  if (octets.length >= 3) {
+    return `${octets.slice(0, 3).join('.')}.0/24`
+  }
+  return `${ip}/32`
+}
+
+const buildIpArtifacts = (ip: string | null | undefined) => {
+  const ipHash = hashIpAddress(ip)
+  const ipPrefix = extractIpPrefix(ip)
+  const hashVersion = IP_HASH_VERSION
+  return { ipHash, ipPrefix, hashVersion }
+}
+
+const buildEmailArtifacts = (email: string | null | undefined) => {
+  const emailHash = hashEmail(email)
+  const hashVersion = emailHash ? EMAIL_HASH_VERSION : null
+  return { emailHash, hashVersion }
+}
+
+const humanizeWindow = (windowMs: number): string => {
+  if (windowMs % (60 * 60 * 1000) === 0) {
+    const hours = Math.round(windowMs / (60 * 60 * 1000))
+    return hours === 1 ? 'час' : `${hours} ч`
+  }
+  if (windowMs % (60 * 1000) === 0) {
+    const minutes = Math.round(windowMs / (60 * 1000))
+    return minutes === 1 ? '1 минута' : `${minutes} мин`
+  }
+  return `${Math.round(windowMs / 1000)} с`
+}
+
 class RateLimitService {
   private static instance: RateLimitService
   private configs: Map<string, RateLimitConfig> = new Map()
@@ -134,7 +224,7 @@ class RateLimitService {
     warnThreshold: 5,
     isActive: false,
     mode: 'monitor',
-    storeEmailInEvents: true,
+    storeEmailInEvents: false,
     storeIpInEvents: false,
     isFallback: true
   }
@@ -180,7 +270,7 @@ class RateLimitService {
 
       this.setDefaultConfigs()
     } catch (error) {
-      console.error('Error loading rate limit configs:', error)
+      logger.error('Error loading rate limit configs:', { error: error, file: 'src/lib/rate-limit.ts' })
       this.setDefaultConfigs()
     } finally {
       this.configsLoadedAt = Date.now()
@@ -213,8 +303,8 @@ class RateLimitService {
         warnThreshold: 5,
         isActive: true,
         mode: 'enforce',
-        storeEmailInEvents: true,
-        storeIpInEvents: true,
+        storeEmailInEvents: false,
+        storeIpInEvents: false,
         isFallback: false
       },
       ads: {
@@ -223,8 +313,8 @@ class RateLimitService {
         blockMs: 60 * 60 * 1000,
         isActive: true,
         mode: 'enforce',
-        storeEmailInEvents: true,
-        storeIpInEvents: true,
+        storeEmailInEvents: false,
+        storeIpInEvents: false,
         isFallback: false
       },
       upload: {
@@ -233,8 +323,8 @@ class RateLimitService {
         blockMs: 30 * 60 * 1000,
         isActive: true,
         mode: 'enforce',
-        storeEmailInEvents: true,
-        storeIpInEvents: true,
+        storeEmailInEvents: false,
+        storeIpInEvents: false,
         isFallback: false
       },
       auth: {
@@ -243,8 +333,8 @@ class RateLimitService {
         blockMs: 60 * 60 * 1000,
         isActive: true,
         mode: 'enforce',
-        storeEmailInEvents: true,
-        storeIpInEvents: true,
+        storeEmailInEvents: false,
+        storeIpInEvents: false,
         isFallback: false
       },
       email: {
@@ -253,8 +343,8 @@ class RateLimitService {
         blockMs: 60 * 60 * 1000,
         isActive: true,
         mode: 'enforce',
-        storeEmailInEvents: true,
-        storeIpInEvents: true,
+        storeEmailInEvents: false,
+        storeIpInEvents: false,
         isFallback: false
       },
       notifications: {
@@ -263,8 +353,8 @@ class RateLimitService {
         blockMs: 60 * 60 * 1000,
         isActive: false,
         mode: 'monitor',
-        storeEmailInEvents: true,
-        storeIpInEvents: true,
+        storeEmailInEvents: false,
+        storeIpInEvents: false,
         isFallback: false
       },
       registration: {
@@ -274,8 +364,8 @@ class RateLimitService {
         warnThreshold: 1,
         isActive: true,
         mode: 'enforce',
-        storeEmailInEvents: true,
-        storeIpInEvents: true,
+        storeEmailInEvents: false,
+        storeIpInEvents: false,
         isFallback: false
       }
     }
@@ -292,7 +382,11 @@ class RateLimitService {
     key: string
     userId?: string | null
     ipAddress?: string | null
+    ipHash?: string | null
+    ipPrefix?: string | null
+    hashVersion?: number | null
     email?: string | null
+    emailHash?: string | null
     eventType: 'warning' | 'block'
     mode: 'monitor' | 'enforce'
     count: number
@@ -301,11 +395,14 @@ class RateLimitService {
     windowEnd: Date
     blockedUntil?: Date | null
   }) {
-    const moduleConfig = this.configs.get(params.module)
-    const shouldStoreEmail = moduleConfig?.storeEmailInEvents !== false
-    const shouldStoreIp = moduleConfig?.storeIpInEvents !== false
-    const sanitizedEmail = shouldStoreEmail ? params.email ?? null : null
-    const sanitizedIp = shouldStoreIp ? params.ipAddress ?? null : null
+    // Временно сохраняем сырые IP/Email вместе с хешами
+    const sanitizedEmail = params.email ?? null
+    const emailHash = params.emailHash ?? hashEmail(params.email ?? null)
+    const sanitizedIp = params.ipAddress ?? null
+    const ipHash = params.ipHash ?? hashIpAddress(params.ipAddress ?? null)
+    const ipPrefix = params.ipPrefix ?? extractIpPrefix(params.ipAddress ?? null)
+    const hashVersion = params.hashVersion ?? IP_HASH_VERSION
+    const emailHashVersion = emailHash ? EMAIL_HASH_VERSION : null
 
     void eventService.record({
       source: 'rate_limit',
@@ -321,6 +418,11 @@ class RateLimitService {
         key: params.key,
         userId: params.userId ?? null,
         ipAddress: sanitizedIp,
+        ipHash,
+        ipPrefix,
+        hashVersion,
+        emailHash,
+        emailHashVersion,
         email: sanitizedEmail,
         eventType: params.eventType,
         mode: params.mode,
@@ -339,6 +441,10 @@ class RateLimitService {
           key: params.key,
           userId: params.userId ?? null,
           ipAddress: sanitizedIp,
+          ipHash,
+          ipPrefix,
+          hashVersion,
+          emailHash,
           email: sanitizedEmail,
           eventType: params.eventType,
           mode: params.mode,
@@ -363,6 +469,10 @@ class RateLimitService {
               key: params.key,
               userId: params.userId ?? null,
               ipAddress: sanitizedIp,
+              ipHash,
+              ipPrefix,
+              hashVersion,
+              emailHash,
               eventType: params.eventType,
               mode: params.mode,
               count: params.count,
@@ -437,16 +547,28 @@ class RateLimitService {
       blockConditions.push({ userId: options.userId })
     }
 
-    if (options?.email) {
-      blockConditions.push({ user: { is: { email: options.email } } })
+    const rawEmail = options?.email ?? null
+    if (rawEmail) {
+      const emailHash = hashEmail(rawEmail)
+      blockConditions.push({ user: { is: { email: rawEmail } } })
+      blockConditions.push({ email: rawEmail })
+      if (emailHash) blockConditions.push({ emailHash })
     }
 
     if (options?.ipAddress) {
+      const ipHash = hashIpAddress(options.ipAddress)
+      const ipPrefix = extractIpPrefix(options.ipAddress)
       blockConditions.push({ ipAddress: options.ipAddress })
+      if (ipHash) blockConditions.push({ ipHash })
+      if (ipPrefix) blockConditions.push({ ipPrefix })
     }
 
     if (options?.keyType === 'ip') {
+      const keyIpHash = hashIpAddress(key)
+      const keyIpPrefix = extractIpPrefix(key)
       blockConditions.push({ ipAddress: key })
+      if (keyIpHash) blockConditions.push({ ipHash: keyIpHash })
+      if (keyIpPrefix) blockConditions.push({ ipPrefix: keyIpPrefix })
     }
 
     const activeBlock = await prisma.userBlock.findFirst({
@@ -494,10 +616,12 @@ class RateLimitService {
       options?.keyType ?? (options?.userId ? 'user' : options?.ipAddress ? 'ip' : 'user')
     const eventUserId = options?.userId ?? (keyType === 'user' ? key : null)
     const rawIpAddress = options?.ipAddress ?? (keyType === 'ip' ? key : null)
+    const { ipHash, ipPrefix, hashVersion } = buildIpArtifacts(rawIpAddress)
     const shouldStoreEmail = config.storeEmailInEvents !== false
     const shouldStoreIp = config.storeIpInEvents !== false
     const eventIpAddress = shouldStoreIp ? rawIpAddress : null
-    const eventEmail = shouldStoreEmail ? options?.email ?? null : null
+    const eventEmail = shouldStoreEmail ? rawEmail : null
+    const { emailHash } = buildEmailArtifacts(rawEmail)
 
     const warnThreshold = config.warnThreshold ?? 0
 
@@ -512,6 +636,10 @@ class RateLimitService {
       userId: eventUserId,
       email: eventEmail,
       ipAddress: eventIpAddress,
+      emailHash,
+      ipHash,
+      ipPrefix,
+      hashVersion,
       recordEvent: payload => this.recordEvent(payload)
     })
   }
@@ -555,7 +683,7 @@ class RateLimitService {
         activeWindows: activeStates || 0
       }
     } catch (error) {
-      console.error('Error getting rate limit stats:', error)
+      logger.error('Error getting rate limit stats:', { error: error, file: 'src/lib/rate-limit.ts' })
       return null
     }
   }
@@ -730,7 +858,7 @@ class RateLimitService {
       await this.store.resetCache(key, module)
       return true
     } catch (error) {
-      console.error('Error resetting rate limits:', error)
+      logger.error('Error resetting rate limits:', { error: error, file: 'src/lib/rate-limit.ts' })
       return false
     }
   }
@@ -767,7 +895,7 @@ class RateLimitService {
 
       return true
     } catch (error) {
-      console.error('Error clearing rate limit state:', error)
+      logger.error('Error clearing rate limit state:', { error: error, file: 'src/lib/rate-limit.ts' })
       return false
     }
   }
@@ -777,7 +905,6 @@ class RateLimitService {
     const limit = Math.min(Math.max(params.limit ?? 20, 1), 100)
     const cursorState = decodeStatesCursor(params.cursor)
     const stateCursorId = cursorState.stateCursor
-    const cursorSource = cursorState.manualProcessed ? 'state' : 'manual'
 
     const where: Prisma.RateLimitStateWhereInput = {}
     if (params.module) {
@@ -795,11 +922,12 @@ class RateLimitService {
         where,
         orderBy: [
           { blockedUntil: 'desc' },
-          { updatedAt: 'desc' }
+          { updatedAt: 'desc' },
+          { id: 'asc' }
         ],
         take: limit + 1,
-        cursor: stateCursorId && cursorSource === 'state' ? { id: stateCursorId } : undefined,
-        skip: stateCursorId && cursorSource === 'state' ? 1 : 0
+        cursor: stateCursorId ? { id: stateCursorId } : undefined,
+        skip: stateCursorId ? 1 : 0
       }),
       prisma.rateLimitState.count({ where })
     ])
@@ -816,6 +944,10 @@ class RateLimitService {
         OR: [
           { userId: { contains: params.search } },
           { ipAddress: { contains: params.search } },
+          { ipHash: { contains: params.search } },
+          { ipPrefix: { contains: params.search } },
+          { emailHash: { contains: params.search } },
+          { cidr: { contains: params.search } },
           { user: { is: { name: { contains: params.search } } } },
           { user: { is: { email: { contains: params.search } } } }
         ]
@@ -845,7 +977,7 @@ class RateLimitService {
 
     const manualMatchingTuples = manualBlocks
       .map(block => {
-        const blockKey = block.userId || block.ipAddress
+        const blockKey = block.userId || block.ipAddress || block.emailHash || block.email || block.id
         if (!blockKey || !block.module || block.module === 'all') {
           return null
         }
@@ -875,13 +1007,34 @@ class RateLimitService {
         : new Set<string>()
 
     const manualOnlyBlocks = manualBlocks.filter(block => {
-      const blockKey = block.userId || block.ipAddress
-      if (!blockKey) return false
+      const blockKey = block.userId || block.ipAddress || block.emailHash || block.email || block.id
       if (!block.module || block.module === 'all') return true
       return !manualStateSet.has(`${blockKey}::${block.module}`)
     })
 
     const keys = Array.from(new Set(states.map(state => state.key).filter(Boolean)))
+
+    const blockCountMap = new Map<string, number>()
+    if (keys.length) {
+      const blockCounts = await prisma.rateLimitEvent.groupBy({
+        by: ['key', 'module'],
+        where: {
+          key: { in: keys },
+          module: { in: Array.from(new Set(states.map(s => s.module))) },
+          eventType: 'block'
+        },
+        _count: { _all: true }
+      })
+      for (const item of blockCounts) {
+        blockCountMap.set(`${item.key}::${item.module}`, item._count._all)
+      }
+    }
+
+    // Собираем инициаторов блоков для вывода email
+    const adminIds = manualBlocks.reduce<string[]>((acc, block) => {
+      if (block.blockedBy) acc.push(block.blockedBy)
+      return acc
+    }, [])
 
     const users = keys.length
       ? await prisma.user.findMany({
@@ -894,8 +1047,9 @@ class RateLimitService {
 
     const manualBlockEntries = manualBlocks
       .map(block => {
-        const blockKey = block.userId || block.ipAddress
+        const blockKey = block.userId || block.ipAddress || block.emailHash || block.email || block.id
         if (!blockKey || !block.module) return null
+        if (block.blockedBy) adminIds.push(block.blockedBy)
         return {
           key: `${blockKey}::${block.module}`,
           value: block
@@ -908,6 +1062,38 @@ class RateLimitService {
     const blockKeyMap = new Map<string, (typeof manualBlocks)[number]>(
       manualBlockEntries.map(entry => [entry.key, entry.value])
     )
+
+    for (const value of blockKeyMap.values()) {
+      if (value.blockedBy) adminIds.push(value.blockedBy)
+    }
+
+    const adminUsers = adminIds.length
+      ? await prisma.user.findMany({
+          where: { id: { in: Array.from(new Set(adminIds)) } },
+          select: { id: true, email: true }
+        })
+      : []
+    const adminUserMap = new Map(adminUsers.map(user => [user.id, user]))
+
+    const stateModules = Array.from(new Set(states.map(s => s.module)))
+    const latestBlockEvents = keys.length
+      ? await prisma.rateLimitEvent.findMany({
+          where: {
+            key: { in: keys },
+            module: { in: stateModules },
+            eventType: 'block'
+          },
+          orderBy: { createdAt: 'desc' }
+        })
+      : []
+
+      const latestBlockMap = new Map<string, (typeof latestBlockEvents)[number]>()
+      for (const ev of latestBlockEvents) {
+        const k = `${ev.key}::${ev.module}`
+        if (!latestBlockMap.has(k)) {
+          latestBlockMap.set(k, ev)
+      }
+    }
 
     const stateItems = states.slice(0, limit).map<RateLimitStateAdminEntry>(state => {
       const config = this.configs.get(state.module) ?? {
@@ -922,6 +1108,38 @@ class RateLimitService {
       const user = userMap.get(state.key) || null
       const activeBlock = blockKeyMap.get(`${state.key}::${state.module}`) || null
       const remaining = Math.max(0, config.maxRequests - state.count)
+      const now = new Date()
+      const isBlocked = Boolean(state.blockedUntil && state.blockedUntil > now)
+      const overLimit = state.count > config.maxRequests || isBlocked
+
+      const latestBlockEvent = latestBlockMap.get(`${state.key}::${state.module}`) || null
+      const totalViolations = blockCountMap.get(`${state.key}::${state.module}`)
+      const violationNumber =
+        typeof totalViolations === 'number'
+          ? Math.max(1, totalViolations)
+          : overLimit
+            ? Math.max(1, state.count - config.maxRequests)
+            : latestBlockEvent
+              ? Math.max(1, latestBlockEvent.count - latestBlockEvent.maxRequests)
+              : null
+
+      const reasonFromState =
+        overLimit
+          ? state.module === 'chat'
+            ? `Превышен лимит сообщений. Из разрешенных ${config.maxRequests} за ${humanizeWindow(config.windowMs)}, отправлено ${state.count}.`
+            : `Превышен лимит: ${state.count}/${config.maxRequests} за ${humanizeWindow(config.windowMs)}.`
+          : null
+
+      const reasonFromEvent = latestBlockEvent
+        ? latestBlockEvent.module === 'chat'
+          ? `Превышен лимит сообщений. Из разрешенных ${latestBlockEvent.maxRequests} за ${humanizeWindow(
+              latestBlockEvent.windowEnd.getTime() - latestBlockEvent.windowStart.getTime()
+            )}, отправлено ${latestBlockEvent.count}.`
+          : `Превышен лимит: ${latestBlockEvent.count}/${latestBlockEvent.maxRequests} за ${humanizeWindow(
+              latestBlockEvent.windowEnd.getTime() - latestBlockEvent.windowStart.getTime()
+            )}.`
+        : null
+      const reason = reasonFromEvent || reasonFromState
 
       return {
         id: state.id,
@@ -932,6 +1150,14 @@ class RateLimitService {
         windowEnd: state.windowEnd,
         blockedUntil: state.blockedUntil,
         remaining,
+        reason,
+        violationNumber,
+        targetIp: null,
+        targetEmail: null,
+        targetCidr: null,
+        targetAsn: null,
+        blockedBy: activeBlock?.blockedBy ?? null,
+        blockedByUser: activeBlock?.blockedBy ? adminUserMap.get(activeBlock.blockedBy) ?? null : null,
         config,
         source: 'state',
         user,
@@ -940,7 +1166,9 @@ class RateLimitService {
               id: activeBlock.id,
               reason: activeBlock.reason,
               blockedAt: activeBlock.blockedAt,
-              unblockedAt: activeBlock.unblockedAt
+              unblockedAt: activeBlock.unblockedAt,
+              blockedBy: activeBlock.blockedBy ?? null,
+              notes: activeBlock.notes ?? null
             }
           : null
       }
@@ -968,6 +1196,14 @@ class RateLimitService {
           windowEnd: block.blockedAt,
           blockedUntil: block.unblockedAt ?? null,
           remaining: 0,
+          reason: block.reason,
+          violationNumber: 1,
+          targetIp: block.ipAddress ?? null,
+          targetEmail: block.email ?? block.user?.email ?? null,
+          targetCidr: block.cidr ?? null,
+          targetAsn: block.asn ?? null,
+          blockedBy: block.blockedBy,
+          blockedByUser: block.blockedBy ? adminUserMap.get(block.blockedBy) ?? null : null,
           config,
           source: 'manual' as const,
           user: block.user
@@ -981,7 +1217,9 @@ class RateLimitService {
             id: block.id,
             reason: block.reason,
             blockedAt: block.blockedAt,
-            unblockedAt: block.unblockedAt ?? null
+            unblockedAt: block.unblockedAt ?? null,
+            blockedBy: block.blockedBy,
+            notes: block.notes ?? null
           }
         }
       })
@@ -1086,7 +1324,10 @@ class RateLimitService {
           { key: { contains: params.search } },
           { userId: { contains: params.search } },
           { ipAddress: { contains: params.search } },
-          { email: { contains: params.search } }
+          { ipHash: { contains: params.search } },
+          { ipPrefix: { contains: params.search } },
+          { email: { contains: params.search } },
+          { emailHash: { contains: params.search } }
         ]
       })
     }
@@ -1136,7 +1377,11 @@ class RateLimitService {
       key: event.key,
       userId: event.userId ?? null,
       ipAddress: event.ipAddress ?? null,
+      ipHash: event.ipHash ?? null,
+      ipPrefix: event.ipPrefix ?? null,
+      hashVersion: event.hashVersion ?? null,
       email: event.email ?? null,
+      emailHash: event.emailHash ?? null,
       eventType: event.eventType as 'warning' | 'block',
       mode: (event.mode === 'monitor' ? 'monitor' : 'enforce') as 'monitor' | 'enforce',
       count: event.count,
@@ -1179,14 +1424,64 @@ class RateLimitService {
     userId?: string | null
     email?: string | null
     ipAddress?: string | null
+    cidr?: string | null
+    asn?: string | null
     notes?: string | null
     durationMs?: number
+    overwrite?: boolean
   }) {
-    if (!params.userId && !params.ipAddress) {
-      throw new Error('User ID or IP address is required for manual block.')
+    if (!params.userId && !params.ipAddress && !params.email && !params.cidr && !params.asn) {
+      throw new Error('Не указан ни один таргет блокировки (userId/email/IP/CIDR/ASN).')
     }
 
+    const moduleConfig = this.configs.get(params.module) ?? this.fallbackConfigTemplate
+    const { ipHash, ipPrefix, hashVersion } = buildIpArtifacts(params.ipAddress ?? null)
+    const { emailHash } = buildEmailArtifacts(params.email ?? null)
+    const cidr = extractIpPrefix(params.ipAddress ?? null)
+    // Сохраняем введённые данные для отображения в админке
+    const storedIp = params.ipAddress ?? null
+    const storedEmail = params.email ?? null
+    const storedCidr = params.cidr ?? null
+    const storedAsn = params.asn ?? null
+
     try {
+      // Проверка существующих активных блоков на эту цель (включая module=all)
+      const existingBlock = await prisma.userBlock.findFirst({
+        where: {
+          isActive: true,
+          module: { in: [params.module, 'all'] },
+          OR: [
+            params.userId ? { userId: params.userId } : null,
+            params.email ? { emailHash } : null,
+            params.ipAddress ? { ipHash } : null,
+            params.cidr ? { cidr: params.cidr } : null,
+            params.asn ? { asn: params.asn } : null
+          ].filter(Boolean) as Prisma.UserBlockWhereInput['OR']
+        }
+      })
+      if (existingBlock) {
+        if (!params.overwrite) {
+          const error: Error & { code?: string } = new Error('Block already exists for this target')
+          error.code = 'BLOCK_EXISTS'
+          throw error
+        }
+        const newUnblockedAt =
+          params.durationMs && params.durationMs > 0 ? new Date(Date.now() + params.durationMs) : null
+
+        const updatedBlock = await prisma.userBlock.update({
+          where: { id: existingBlock.id },
+          data: {
+            reason: params.reason,
+            notes: params.notes ?? existingBlock.notes,
+            blockedBy: params.blockedBy,
+            unblockedAt: newUnblockedAt,
+            cidr: storedCidr ?? existingBlock.cidr,
+            asn: storedAsn ?? existingBlock.asn
+          }
+        })
+        return updatedBlock
+      }
+
       if (params.userId) {
         const userExists = await prisma.user.count({ where: { id: params.userId } })
         if (!userExists) {
@@ -1201,7 +1496,9 @@ class RateLimitService {
             isActive: true,
             ...(params.userId ? { userId: params.userId } : {}),
             ...(params.email ? { email: params.email } : {}),
-            ...(params.ipAddress ? { ipAddress: params.ipAddress } : {})
+            ...(params.ipAddress ? { ipAddress: params.ipAddress } : {}),
+            ...(ipHash ? { ipHash } : {}),
+            ...(emailHash ? { emailHash } : {})
           },
           data: {
             isActive: false,
@@ -1210,12 +1507,18 @@ class RateLimitService {
         })
       }
 
-    const block = await prisma.userBlock.create({
-      data: {
-        module: params.module,
-        userId: params.userId ?? null,
-        email: params.email ?? null,
-        ipAddress: params.ipAddress ?? null,
+      const block = await prisma.userBlock.create({
+        data: {
+          module: params.module,
+          userId: params.userId ?? null,
+          email: storedEmail,
+          emailHash,
+          ipAddress: storedIp,
+          ipHash,
+          ipPrefix,
+          hashVersion,
+          cidr: storedCidr ?? cidr,
+          asn: storedAsn,
           reason: params.reason,
           blockedBy: params.blockedBy,
           notes: params.notes ?? null,
@@ -1225,10 +1528,10 @@ class RateLimitService {
         }
       })
 
-    const cacheKey = params.userId || params.email || params.ipAddress || undefined
-    await this.store.resetCache(cacheKey, params.module === 'all' ? undefined : params.module)
+      const cacheKey = params.userId || params.email || params.ipAddress || undefined
+      await this.store.resetCache(cacheKey, params.module === 'all' ? undefined : params.module)
 
-    return block
+      return block
     } catch (error) {
       logger.error('Error creating manual block', {
         error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error

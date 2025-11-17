@@ -70,7 +70,22 @@ export class RedisRateLimitStore implements RateLimitStore {
   async consume(params: RateLimitConsumeParams): Promise<RateLimitResult> {
     await this.ensureConnected()
 
-    const { key, module, config, increment, warnThreshold, mode, now, userId, email, ipAddress, recordEvent } = params
+    const {
+      key,
+      module,
+      config,
+      increment,
+      warnThreshold,
+      mode,
+      now,
+      userId,
+      email,
+      ipAddress,
+      ipHash,
+      ipPrefix,
+      hashVersion,
+      recordEvent
+    } = params
 
     const blockKey = this.blockKey(module, key)
     const countKey = this.countKey(module, key)
@@ -137,7 +152,11 @@ export class RedisRateLimitStore implements RateLimitStore {
           key,
           userId,
           email,
+          emailHash,
           ipAddress,
+          ipHash,
+          ipPrefix,
+          hashVersion,
           eventType: 'block',
           mode,
           count: newCount,
@@ -181,7 +200,11 @@ export class RedisRateLimitStore implements RateLimitStore {
         key,
         userId,
         email,
+        emailHash,
         ipAddress,
+        ipHash,
+        ipPrefix,
+        hashVersion,
         eventType: 'warning',
         mode,
         count: newCount,

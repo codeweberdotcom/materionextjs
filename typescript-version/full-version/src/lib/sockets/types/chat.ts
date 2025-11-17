@@ -29,29 +29,33 @@ export interface ChatRoom {
 
 // События чата (входящие)
 export interface ChatEvents {
-  join: (userId: string) => void;
-  sendMessage: (data: SendMessageData, callback?: (response: SendMessageAck) => void) => void;
-  getOrCreateRoom: (data: GetOrCreateRoomData) => void;
-  markMessagesRead: (data: MarkMessagesReadData) => void;
-  ping: (callback: (response: { pong: boolean; timestamp: number }) => void) => void;
+  join: (userId: string) => void
+  sendMessage: (data: SendMessageData, callback?: (response: SendMessageAck) => void) => void
+  getOrCreateRoom: (data: GetOrCreateRoomData) => void
+  markMessagesRead: (data: MarkMessagesReadData) => void
+  ping: (
+    data: { timestamp?: number },
+    callback?: (response: { pong: boolean; timestamp?: number; error?: string }) => void
+  ) => void
 }
 
 // События чата (исходящие)
 export interface ChatEmitEvents {
-  receiveMessage: (message: ChatMessage) => void;
-  roomData: (data: RoomData) => void;
-  messagesRead: (data: MessagesReadData) => void;
-  rateLimitExceeded: (data: RateLimitExceededData) => void;
-  rateLimitWarning: (data: RateLimitWarningData) => void;
-  error: (error: ErrorData) => void;
+  connected: (payload: { userId: string; status: string }) => void
+  receiveMessage: (message: ChatMessage) => void
+  roomData: (data: RoomData) => void
+  messagesRead: (data: MessagesReadData) => void
+  rateLimitExceeded: (data: RateLimitExceededData) => void
+  rateLimitWarning: (data: RateLimitWarningData) => void
+  error: (error: ErrorData) => void
 }
 
 // Данные для отправки сообщения
 export interface SendMessageData {
-  roomId: string;
-  message: string;
-  senderId: string;
-  clientId?: string;
+  roomId: string
+  message: string
+  senderId: string
+  clientId?: string
 }
 
 export interface SendMessageAck {
@@ -74,8 +78,9 @@ export interface MarkMessagesReadData {
 
 // Данные комнаты
 export interface RoomData {
-  room: ChatRoom;
-  messages: ChatMessage[];
+  room: ChatRoom
+  messages: ChatMessage[]
+  nextCursor?: string | null
 }
 
 // Данные о прочтении сообщений
@@ -98,8 +103,9 @@ export interface RateLimitWarningData {
 
 // Общие данные ошибки
 export interface ErrorData {
-  message: string;
-  code?: string;
+  message: string
+  code?: string
+  timestamp?: string
 }
 
 // Состояние чата для клиента
@@ -114,8 +120,8 @@ export interface ChatState {
 
 // Данные rate limit для UI
 export interface RateLimitData {
-  retryAfter: number;
-  blockedUntil: number;
+  retryAfter: number
+  blockedUntil: number
 }
 
 // Конфигурация чата

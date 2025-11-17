@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
     })
 
     if (!rateLimitResult.allowed) {
-      const resetDate = rateLimitResult.resetTime
-      const blockedUntil = rateLimitResult.blockedUntil ?? resetDate
-      const retryAfterSeconds = Math.max(1, Math.ceil((resetDate.getTime() - Date.now()) / 1000))
+      const resetTimeMs = rateLimitResult.resetTime
+      const blockedUntil = rateLimitResult.blockedUntil ?? resetTimeMs
+      const retryAfterSeconds = Math.max(1, Math.ceil((resetTimeMs - Date.now()) / 1000))
 
       return NextResponse.json(
         {
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
           headers: {
             'Retry-After': retryAfterSeconds.toString(),
             'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': resetDate.toISOString()
+            'X-RateLimit-Reset': new Date(resetTimeMs).toISOString()
           }
         }
       )

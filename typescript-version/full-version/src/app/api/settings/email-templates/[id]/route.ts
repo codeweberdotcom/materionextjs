@@ -1,15 +1,24 @@
-// @ts-nocheck
-﻿// Next Imports
-
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-
 import { checkPermission } from '@/utils/permissions/permissions'
 
+type EmailTemplate = {
+  id: string
+  name: string
+  subject: string
+  content: string
+  createdAt: string
+  updatedAt: string
+}
+
+type UpdateTemplatePayload = {
+  name?: string
+  subject?: string
+  content?: string
+}
+
 // In-memory storage (same as in the main route)
-const emailTemplates: any[] = [
+const emailTemplates: EmailTemplate[] = [
   {
     id: '1',
     name: 'Welcome Email',
@@ -171,7 +180,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { user } = await requireAuth(request)
+    const { user, session } = await requireAuth(request)
 
     if (!session || !checkPermission(user, 'Email Templates', 'Write')) {
       return NextResponse.json(
@@ -180,9 +189,9 @@ export async function PUT(
       )
     }
 
-    const body = await ({} as any).json()
+    const body = (await request.json()) as UpdateTemplatePayload
     const { name, subject, content } = body
-    const templateId = params.id
+    const { id: templateId } = await params
 
     if (!name || !subject || !content) {
       return NextResponse.json(
@@ -226,7 +235,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { user } = await requireAuth(request)
+    const { user, session } = await requireAuth(request)
 
     if (!session || !checkPermission(user, 'Email Templates', 'Write')) {
       return NextResponse.json(
@@ -235,7 +244,7 @@ export async function DELETE(
       )
     }
 
-    const templateId = params.id
+    const { id: templateId } = await params
 
     const templateIndex = emailTemplates.findIndex(t => t.id === templateId)
 

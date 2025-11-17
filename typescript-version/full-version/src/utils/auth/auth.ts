@@ -1,6 +1,10 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
-import { lucia } from '@/libs/lucia'
+import { lucia, LuciaSession, LuciaUser } from '@/libs/lucia'
+import { prisma } from '@/libs/prisma'
+import type { Role } from '@prisma/client'
+
+export type AuthenticatedUser = LuciaUser extends null ? null : LuciaUser & { role?: Role | null }
 
 export async function getLuciaSession(request?: NextRequest) {
   let sessionId: string | null = null
@@ -13,9 +17,7 @@ export async function getLuciaSession(request?: NextRequest) {
     sessionId = lucia.readSessionCookie(cookieStore.toString())
   }
 
-  const { session, user } = await lucia.validateSession(sessionId || '')
-
-  return { session, user }
+  return lucia.validateSession(sessionId || '')
 }
 
 export async function requireAuth(request?: NextRequest) {
@@ -25,16 +27,24 @@ export async function requireAuth(request?: NextRequest) {
     throw new Error('Unauthorized')
   }
 
-  // Load user role for permissions
-  if (user && user.roleId) {
-    const { prisma } = await import('@/libs/prisma')
-    const role = await prisma.role.findUnique({
-      where: { id: user.roleId }
-    })
-    if (role) {
-      (user as any).role = role
-    }
+  const role = user.roleId
+    ? await prisma.role.findUnique({
+        where: { id: user.roleId }
+      })
+    : null
+
+  const enrichedUser: NonNullable<AuthenticatedUser> = {
+    ...user,
+    role
   }
 
-  return { session, user }
+  return { session, user: enrichedUser }
+}
+
+export async function optionalRequireAuth(request?: NextRequest) {
+  try {
+    return await requireAuth(request)
+  } catch {
+    return { session: null, user: null }
+  }
 }

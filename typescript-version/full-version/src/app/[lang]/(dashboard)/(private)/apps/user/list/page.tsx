@@ -31,7 +31,7 @@ import { checkPermission } from '@/utils/permissions/permissions'
 const UserListApp = async () => {
   // Check permissions
   const { user } = await requireAuth()
-  if (!user || !checkPermission(user as any, 'userManagement', 'read')) {
+  if (!user || !checkPermission(user, 'userManagement', 'read')) {
     redirect('/not-authorized')
   }
 

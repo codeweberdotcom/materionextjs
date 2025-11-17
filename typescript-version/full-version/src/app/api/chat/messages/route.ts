@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
@@ -76,7 +75,7 @@ export async function GET(request: NextRequest) {
           email: message.sender.email
         },
         roomId: message.roomId,
-        readAt: message.readAt?.toISOString?.() ?? message.readAt,
+        readAt: message.readAt ? message.readAt.toISOString() : null,
         createdAt: message.createdAt.toISOString(),
         clientId: null
       })),
@@ -175,7 +174,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const io = (globalThis as any)?.io
+      const io = globalThis.io
       if (io?.of) {
         io.of('/chat').to(`room_${roomId}`).emit('receiveMessage', messagePayload)
       }

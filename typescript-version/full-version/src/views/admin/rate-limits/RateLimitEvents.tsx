@@ -1,6 +1,6 @@
 'use client'
 
-import { forwardRef, useCallback, useEffect, useMemo, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useMemo, useState, type SyntheticEvent } from 'react'
 
 import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
@@ -10,6 +10,10 @@ import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
 import TextField, { type TextFieldProps } from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
+import Checkbox from '@mui/material/Checkbox'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Tabs from '@mui/material/Tabs'
+import Tab from '@mui/material/Tab'
 import Table from '@mui/material/Table'
 import TableHead from '@mui/material/TableHead'
 import TableBody from '@mui/material/TableBody'
@@ -68,7 +72,9 @@ type EventListResponse = {
 
 type ManualBlockForm = {
   module: string
-  targetType: 'user' | 'ip' | 'email'
+  targetUser: boolean
+  targetEmail: boolean
+  targetIp: boolean
   userId: string
   email: string
   ipAddress: string
@@ -83,6 +89,10 @@ type FilterState = {
   mode: string
   from: Date | null
   to: Date | null
+}
+
+type RateLimitConfigEntry = {
+  module?: string | null
 }
 
 const DateFilterInput = forwardRef<HTMLInputElement, TextFieldProps>(({ label, ...props }, ref) => (
@@ -153,7 +163,12 @@ const RateLimitEvents = () => {
   const [events, setEvents] = useState<EventEntry[]>([])
   const [nextCursor, setNextCursor] = useState<string | undefined>()
   const [totalEvents, setTotalEvents] = useState(0)
+  const [states, setStates] = useState<StateEntry[]>([])
+  const [nextStatesCursor, setNextStatesCursor] = useState<string | undefined>()
+  const [totalStates, setTotalStates] = useState(0)
   const [modules, setModules] = useState<string[]>(DEFAULT_MODULES)
+  const [activeModuleTab, setActiveModuleTab] = useState<string>('all')
+  const [activeView, setActiveView] = useState<'events' | 'states'>('events')
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -163,7 +178,9 @@ const RateLimitEvents = () => {
   const [creatingBlock, setCreatingBlock] = useState(false)
   const [manualBlockForm, setManualBlockForm] = useState<ManualBlockForm>({
     module: 'all',
-    targetType: 'user',
+    targetUser: true,
+    targetEmail: false,
+    targetIp: false,
     userId: '',
     email: '',
     ipAddress: '',
@@ -275,7 +292,14 @@ const RateLimitEvents = () => {
 
       const data = await response.json().catch(() => null)
       if (Array.isArray(data?.configs) && data.configs.length) {
-        const uniqueModules = Array.from(new Set(data.configs.map((config: { module?: string }) => config.module).filter(Boolean)))
+        const configs = data.configs as RateLimitConfigEntry[]
+        const moduleNames = configs.reduce<string[]>((acc, config) => {
+          if (typeof config.module === 'string' && config.module.length > 0) {
+            acc.push(config.module)
+          }
+          return acc
+        }, [])
+        const uniqueModules = Array.from(new Set<string>(moduleNames))
         if (uniqueModules.length) {
           setModules(uniqueModules)
           setManualBlockForm(prev => ({
@@ -303,8 +327,9 @@ const RateLimitEvents = () => {
 
       try {
         const params = new URLSearchParams()
-        if (filters.module !== 'all') {
-          params.set('module', filters.module)
+        const moduleFilter = activeModuleTab !== 'all' ? activeModuleTab : filters.module
+        if (moduleFilter !== 'all') {
+          params.set('module', moduleFilter)
         }
         if (filters.eventType !== 'all') {
           params.set('eventType', filters.eventType)
@@ -348,12 +373,60 @@ const RateLimitEvents = () => {
         setInitialLoading(false)
       }
     },
-    [debouncedSearch, filters, hasAccess, permissionsLoading, t.loadError]
+    [activeModuleTab, debouncedSearch, filters, hasAccess, permissionsLoading, t.loadError]
+  )
+
+  const fetchStates = useCallback(
+    async ({ append = false, cursor }: { append?: boolean; cursor?: string } = {}) => {
+      if (permissionsLoading || !hasAccess) {
+        return
+      }
+
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        const moduleFilter = activeModuleTab !== 'all' ? activeModuleTab : filters.module
+        if (moduleFilter !== 'all') {
+          params.set('module', moduleFilter)
+        }
+        if (debouncedSearch) {
+          params.set('search', debouncedSearch)
+        }
+        if (cursor) {
+          params.set('cursor', cursor)
+        }
+        params.set('limit', '50')
+        params.set('view', 'states')
+
+        const response = await fetch(`/api/admin/rate-limits?${params.toString()}`, {
+          credentials: 'include'
+        })
+        if (!response.ok) {
+          throw new Error('Failed to load states')
+        }
+
+        const data: StateListResponse = await response.json()
+        setStates(prev => (append ? [...prev, ...data.items] : data.items))
+        setNextStatesCursor(data.nextCursor)
+        setTotalStates(data.total)
+      } catch (error) {
+        console.error(error)
+        toast.error(t.loadError || 'Failed to load states')
+      } finally {
+        setLoading(false)
+        setInitialLoading(false)
+      }
+    },
+    [activeModuleTab, debouncedSearch, filters.module, hasAccess, permissionsLoading, t.loadError]
   )
 
   useEffect(() => {
-    fetchEvents({ append: false })
-  }, [fetchEvents, permissionsLoading, hasAccess])
+    if (activeView === 'events') {
+      fetchEvents({ append: false })
+    } else {
+      fetchStates({ append: false })
+    }
+  }, [activeView, fetchEvents, fetchStates, permissionsLoading, hasAccess])
 
   const resetFilters = () => {
     setFilters({
@@ -367,11 +440,18 @@ const RateLimitEvents = () => {
   }
 
   const openManualBlockDialog = (prefill?: Partial<ManualBlockForm>) => {
-    setManualBlockForm(prev => ({
-      ...prev,
-      ...prefill,
-      module: prefill?.module ?? prev.module ?? 'all'
-    }))
+    setManualBlockForm({
+      module: prefill?.module ?? 'all',
+      targetUser: prefill?.targetUser ?? true,
+      targetEmail: prefill?.targetEmail ?? false,
+      targetIp: prefill?.targetIp ?? false,
+      userId: prefill?.userId ?? '',
+      email: prefill?.email ?? '',
+      ipAddress: prefill?.ipAddress ?? '',
+      reason: prefill?.reason ?? '',
+      durationMinutes: prefill?.durationMinutes ?? '60',
+      notes: prefill?.notes ?? ''
+    })
     setManualBlockDialogOpen(true)
   }
 
@@ -383,7 +463,9 @@ const RateLimitEvents = () => {
     setManualBlockDialogOpen(false)
     setManualBlockForm({
       module: 'all',
-      targetType: 'user',
+      targetUser: true,
+      targetEmail: false,
+      targetIp: false,
       userId: '',
       email: '',
       ipAddress: '',
@@ -420,9 +502,16 @@ const RateLimitEvents = () => {
     }
   }
 
-  const handleManualBlockChange = (field: keyof ManualBlockForm, value: string) => {
+  const handleManualBlockChange = (field: keyof ManualBlockForm, value: ManualBlockForm[keyof ManualBlockForm]) => {
     setManualBlockForm(prev => ({
       ...prev,
+      ...((field === 'targetUser' || field === 'targetEmail' || field === 'targetIp') && value === true
+        ? {
+            targetUser: field === 'targetUser',
+            targetEmail: field === 'targetEmail',
+            targetIp: field === 'targetIp'
+          }
+        : {}),
       [field]: value
     }))
   }
@@ -432,7 +521,7 @@ const RateLimitEvents = () => {
       return
     }
 
-    const { module, targetType, userId, email, ipAddress, reason, durationMinutes, notes } = manualBlockForm
+    const { module, targetUser, targetEmail, targetIp, userId, email, ipAddress, reason, durationMinutes, notes } = manualBlockForm
 
     if (!module) {
       toast.error(t.manualBlockValidationModule || 'Module is required')
@@ -444,17 +533,22 @@ const RateLimitEvents = () => {
       return
     }
 
-    if (targetType === 'user' && !userId.trim()) {
+    if (!targetUser && !targetEmail && !targetIp) {
+      toast.error(t.manualBlockValidationTarget || 'Select at least one target (user, email, IP)')
+      return
+    }
+
+    if (targetUser && !userId.trim()) {
       toast.error(t.manualBlockValidationUser || 'User ID is required')
       return
     }
 
-    if (targetType === 'email' && !email.trim()) {
+    if (targetEmail && !email.trim()) {
       toast.error(t.manualBlockValidationEmail || 'Email is required')
       return
     }
 
-    if (targetType === 'ip' && !ipAddress.trim()) {
+    if (targetIp && !ipAddress.trim()) {
       toast.error(t.manualBlockValidationIp || 'IP address is required')
       return
     }
@@ -476,10 +570,10 @@ const RateLimitEvents = () => {
         credentials: 'include',
         body: JSON.stringify({
           module,
-          targetType,
-          userId: targetType === 'user' ? userId.trim() : undefined,
-          email: targetType === 'email' ? email.trim() : undefined,
-          ipAddress: targetType === 'ip' ? ipAddress.trim() : undefined,
+          targetType: targetUser ? 'user' : targetEmail ? 'email' : targetIp ? 'ip' : 'user',
+          userId: targetUser ? userId.trim() || undefined : undefined,
+          email: targetEmail ? email.trim() || undefined : undefined,
+          ipAddress: targetIp ? ipAddress.trim() || undefined : undefined,
           reason: reason.trim(),
           durationMinutes: durationMinutes ? Number(durationMinutes) : undefined,
           notes
@@ -505,6 +599,14 @@ const RateLimitEvents = () => {
   const eventRows = useMemo(() => events, [events])
 
   const moduleOptions = useMemo(() => ['all', ...modules], [modules])
+  const handleModuleTabChange = (_event: SyntheticEvent, value: string) => {
+    setActiveModuleTab(value)
+    setFilters(prev => ({ ...prev, module: value }))
+    setEvents([])
+    setStates([])
+    setNextCursor(undefined)
+    setNextStatesCursor(undefined)
+  }
 
   return (
     <>
@@ -526,7 +628,11 @@ const RateLimitEvents = () => {
                     <Button
                       variant='outlined'
                       startIcon={<i className='ri-refresh-line' />}
-                      onClick={() => fetchEvents({ append: false })}
+                      onClick={() =>
+                        activeView === 'events'
+                          ? fetchEvents({ append: false })
+                          : fetchStates({ append: false })
+                      }
                       disabled={loading}
                     >
                       {t.refresh || 'Refresh'}
@@ -535,7 +641,7 @@ const RateLimitEvents = () => {
                       <Button
                         variant='contained'
                         startIcon={<i className='ri-user-forbid-line' />}
-                        onClick={() => openManualBlockDialog()}
+                        onClick={() => openManualBlockDialog({ module: activeModuleTab })}
                       >
                         {t.manualBlockButton || 'Manual block'}
                       </Button>
@@ -544,6 +650,38 @@ const RateLimitEvents = () => {
                 }
               />
               <CardContent className='flex flex-col gap-4'>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                  <Tabs
+                    value={activeModuleTab}
+                    onChange={handleModuleTabChange}
+                    variant='scrollable'
+                    scrollButtons='auto'
+                  >
+                    {moduleOptions.map(option => (
+                      <Tab
+                        key={option}
+                        value={option}
+                        label={option === 'all' ? (t.filterModuleAll || 'All modules') : getModuleLabel(option, navigationLabels)}
+                      />
+                    ))}
+                  </Tabs>
+                </Box>
+                <Box className='flex gap-2 flex-wrap'>
+                  <Button
+                    variant={activeView === 'events' ? 'contained' : 'outlined'}
+                    onClick={() => setActiveView('events')}
+                    startIcon={<i className='ri-flashlight-line' />}
+                  >
+                    {t.tabEvents || 'События'}
+                  </Button>
+                  <Button
+                    variant={activeView === 'states' ? 'contained' : 'outlined'}
+                    onClick={() => setActiveView('states')}
+                    startIcon={<i className='ri-shield-star-line' />}
+                  >
+                    {t.tabStates || 'Состояния'}
+                  </Button>
+                </Box>
                 <Grid container spacing={4}>
                   <Grid size={{ xs: 12, md: 3 }}>
                   <TextField
@@ -748,11 +886,9 @@ const RateLimitEvents = () => {
                                     onClick={() =>
                                       openManualBlockDialog({
                                         module: event.module,
-                                        targetType: event.userId
-                                          ? 'user'
-                                          : event.email
-                                            ? 'email'
-                                            : 'ip',
+                                        targetUser: Boolean(event.userId),
+                                        targetEmail: Boolean(event.email),
+                                        targetIp: Boolean(event.ipAddress),
                                         userId: event.userId || '',
                                         email: event.email || '',
                                         ipAddress: event.ipAddress || '',
@@ -844,40 +980,59 @@ const RateLimitEvents = () => {
               </MenuItem>
             ))}
           </TextField>
-          <TextField
-            select
-            label={t.manualBlockTarget || 'Target'}
-            value={manualBlockForm.targetType}
-            onChange={event =>
-              handleManualBlockChange('targetType', event.target.value as 'user' | 'ip' | 'email')
-            }
-            fullWidth
-          >
-            <MenuItem value='user'>{t.manualBlockTargetUser || 'User ID'}</MenuItem>
-            <MenuItem value='email'>{t.manualBlockTargetEmail || 'Email'}</MenuItem>
-            <MenuItem value='ip'>{t.manualBlockTargetIp || 'IP address'}</MenuItem>
-          </TextField>
-          <TextField
-            label={t.manualBlockUserLabel || 'User ID'}
-            value={manualBlockForm.userId}
-            onChange={event => handleManualBlockChange('userId', event.target.value)}
-            disabled={manualBlockForm.targetType !== 'user'}
-            fullWidth
-          />
-          <TextField
-            label={t.manualBlockEmailLabel || 'Email'}
-            value={manualBlockForm.email}
-            onChange={event => handleManualBlockChange('email', event.target.value)}
-            disabled={manualBlockForm.targetType !== 'email'}
-            fullWidth
-          />
-          <TextField
-            label={t.manualBlockIpLabel || 'IP address'}
-            value={manualBlockForm.ipAddress}
-            onChange={event => handleManualBlockChange('ipAddress', event.target.value)}
-            disabled={manualBlockForm.targetType !== 'ip'}
-            fullWidth
-          />
+          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={manualBlockForm.targetUser}
+                  onChange={event => handleManualBlockChange('targetUser', event.target.checked)}
+                />
+              }
+              label={t.manualBlockTargetUser || 'User ID'}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={manualBlockForm.targetEmail}
+                  onChange={event => handleManualBlockChange('targetEmail', event.target.checked)}
+                />
+              }
+              label={t.manualBlockTargetEmail || 'Email'}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={manualBlockForm.targetIp}
+                  onChange={event => handleManualBlockChange('targetIp', event.target.checked)}
+                />
+              }
+              label={t.manualBlockTargetIp || 'IP address'}
+            />
+          </Box>
+          {manualBlockForm.targetEmail ? (
+            <TextField
+              label={t.manualBlockEmailLabel || 'Email'}
+              value={manualBlockForm.email}
+              onChange={event => handleManualBlockChange('email', event.target.value)}
+              fullWidth
+            />
+          ) : null}
+          {manualBlockForm.targetIp ? (
+            <TextField
+              label={t.manualBlockIpLabel || 'IP address'}
+              value={manualBlockForm.ipAddress}
+              onChange={event => handleManualBlockChange('ipAddress', event.target.value)}
+              fullWidth
+            />
+          ) : null}
+          {manualBlockForm.targetUser ? (
+            <TextField
+              label={t.manualBlockUserLabel || 'User ID'}
+              value={manualBlockForm.userId}
+              onChange={event => handleManualBlockChange('userId', event.target.value)}
+              fullWidth
+            />
+          ) : null}
           <TextField
             label={t.manualBlockReasonLabel || 'Reason'}
             value={manualBlockForm.reason}

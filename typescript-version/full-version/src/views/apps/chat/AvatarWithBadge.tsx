@@ -1,5 +1,5 @@
 // React Imports
-import type { MouseEvent, RefObject } from 'react'
+import type { MouseEvent, ReactNode, RefObject } from 'react'
 
 // MUI Imports
 import Badge from '@mui/material/Badge'
@@ -25,7 +25,7 @@ const BadgeContentSpan = styled('span', {
   height: badgeSize,
   borderRadius: '50%',
   cursor: 'pointer',
-  backgroundColor: `var(--mui-palette-${color}-main)`,
+  backgroundColor: color ? `var(--mui-palette-${color}-main)` : 'transparent',
   boxShadow: '0 0 0 2px var(--mui-palette-background-paper)'
 }))
 
@@ -35,36 +35,84 @@ type AvatarWithBadgeProps = {
   src?: string
   color?: ThemeColor
   badgeColor?: ThemeColor
+  badgeSize?: number
+  size?: number
   isChatActive?: boolean
   onClick?: (e: MouseEvent<HTMLDivElement>) => void
   className?: string
-  badgeSize?: number
+  fallbackInitials?: string
+  children?: ReactNode
 }
 
 const AvatarWithBadge = (props: AvatarWithBadgeProps) => {
-  // Props
-  const { ref, alt, src, color, badgeColor, isChatActive, onClick, className, badgeSize } = props
+  const {
+    ref,
+    alt,
+    src,
+    color,
+    badgeColor,
+    badgeSize,
+    size,
+    isChatActive,
+    onClick,
+    className,
+    fallbackInitials,
+    children
+  } = props
 
-  return (
-    <Badge
-      ref={ref}
-      overlap='circular'
-      badgeContent={<BadgeContentSpan color={badgeColor as ThemeColor} onClick={onClick} badgeSize={badgeSize || 8} />}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-    >
-      {src ? (
-        <Avatar ref={ref} alt={alt} src={src} onClick={onClick} className={classnames('cursor-pointer', className)} />
-      ) : (
+  const styleSize = size ? { inlineSize: size, blockSize: size } : undefined
+
+  const renderAvatar = () => {
+    if (children) {
+      return (
         <CustomAvatar
           ref={ref}
           color={color}
           skin={isChatActive ? 'light-static' : 'light'}
           onClick={onClick}
           className={classnames('cursor-pointer', className)}
+          sx={styleSize}
         >
-          {alt && getInitials(alt)}
+          {children}
         </CustomAvatar>
-      )}
+      )
+    }
+
+    if (src) {
+      return (
+        <Avatar
+          ref={ref}
+          alt={alt}
+          src={src}
+          onClick={onClick}
+          className={classnames('cursor-pointer', className)}
+          sx={styleSize}
+        />
+      )
+    }
+
+    return (
+      <CustomAvatar
+        ref={ref}
+        color={color}
+        skin={isChatActive ? 'light-static' : 'light'}
+        onClick={onClick}
+        className={classnames('cursor-pointer', className)}
+        sx={styleSize}
+      >
+        {getInitials(fallbackInitials || alt || '')}
+      </CustomAvatar>
+    )
+  }
+
+  return (
+    <Badge
+      ref={ref}
+      overlap='circular'
+      badgeContent={badgeColor ? <BadgeContentSpan color={badgeColor} onClick={onClick} badgeSize={badgeSize || 8} /> : null}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+    >
+      {renderAvatar()}
     </Badge>
   )
 }

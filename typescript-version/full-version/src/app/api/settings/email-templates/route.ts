@@ -1,16 +1,25 @@
-// @ts-nocheck
-﻿// Next Imports
-
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-
 import { checkPermission } from '@/utils/permissions/permissions'
+
+type EmailTemplate = {
+  id: string
+  name: string
+  subject: string
+  content: string
+  createdAt: string
+  updatedAt: string
+}
+
+type CreateTemplatePayload = {
+  name: string
+  subject: string
+  content: string
+}
 
 // In-memory storage for demo purposes
 // In production, this should be replaced with database storage
-const emailTemplates: any[] = [
+const emailTemplates: EmailTemplate[] = [
   {
     id: '1',
     name: 'Welcome Email',
@@ -192,7 +201,7 @@ return NextResponse.json(
 
 export async function POST(req: NextRequest) {
   try {
-    const { user, session } = await requireAuth(request)
+    const { user, session } = await requireAuth(req)
 
     if (!session || !checkPermission(user, 'Email Templates', 'Write')) {
       return NextResponse.json(
@@ -201,7 +210,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const body = await req.json()
+    const body = (await req.json()) as Partial<CreateTemplatePayload>
     const { name, subject, content } = body
 
     if (!name || !subject || !content) {

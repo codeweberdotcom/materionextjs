@@ -1,15 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
+import type { Notification as DbNotification } from '@prisma/client'
 import { prisma } from '@/libs/prisma'
 import { getSocketServer } from '@/lib/sockets'
 import { parseNotificationMetadata, serializeNotificationMetadata } from '@/utils/notifications/metadata'
+import type { NotificationMetadata } from '@/lib/sockets/types/notifications'
 
-const toApiNotification = (notification: any) => ({
+type ApiNotification = {
+  id: string
+  title: string
+  message: string
+  type: DbNotification['type']
+  status: DbNotification['status']
+  createdAt: string
+  updatedAt: string
+  userId: string
+  readAt: string | null
+  metadata: NotificationMetadata
+  subtitle: string
+  time: string
+  read: boolean
+  avatarImage?: string
+  avatarIcon?: string
+  avatarText?: string
+  avatarColor?: string
+  avatarSkin?: string
+}
+
+type NotificationEvent = 'newNotification' | 'notificationUpdate' | 'notificationDeleted' | 'notificationsRead'
+
+const toApiNotification = (notification: DbNotification): ApiNotification => ({
   id: notification.id,
   title: notification.title,
   message: notification.message,
-  type: notification.type as any,
-  status: notification.status as any,
+  type: notification.type,
+  status: notification.status,
   createdAt: notification.createdAt.toISOString(),
   updatedAt: notification.updatedAt.toISOString(),
   userId: notification.userId,
@@ -21,18 +46,18 @@ const toApiNotification = (notification: any) => ({
   avatarImage: notification.avatarImage || undefined,
   avatarIcon: notification.avatarIcon || undefined,
   avatarText: notification.avatarText || undefined,
-  avatarColor: notification.avatarColor as any || undefined,
-  avatarSkin: notification.avatarSkin as any || undefined
+  avatarColor: notification.avatarColor || undefined,
+  avatarSkin: notification.avatarSkin || undefined
 })
 
-const emitNotificationEvent = (userId: string, event: string, payload: any) => {
+const emitNotificationEvent = (userId: string, event: NotificationEvent, payload: ApiNotification) => {
   const io = getSocketServer()
   if (!io) return
 
   const namespace = io.of('/notifications')
   namespace.to(`user_${userId}`).emit(event, payload)
 
-  const legacyMap: Record<string, string> = {
+  const legacyMap: Record<NotificationEvent, string> = {
     newNotification: 'new-notification',
     notificationUpdate: 'notification-update',
     notificationDeleted: 'notification-deleted',

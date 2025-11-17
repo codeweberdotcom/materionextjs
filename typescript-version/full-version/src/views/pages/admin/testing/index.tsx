@@ -2,6 +2,7 @@
 
 // React Imports
 import { useEffect, useMemo, useState } from 'react'
+import { useParams } from 'next/navigation'
 
 // MUI Imports
 import Card from '@mui/material/Card'
@@ -25,6 +26,7 @@ import Skeleton from '@mui/material/Skeleton'
 // Data Imports
 import { playwrightTestScripts } from '@/data/testing/test-scripts'
 import tableStyles from '@core/styles/table.module.css'
+import { useTranslation } from '@/contexts/TranslationContext'
 
 type ScriptRunSummary = {
   runId: string
@@ -48,6 +50,9 @@ type PlaywrightRun = {
 }
 
 const TestingPage = () => {
+  const t = useTranslation().testing
+  const params = useParams()
+  const locale = typeof params?.lang === 'string' ? params.lang : Array.isArray(params?.lang) ? params.lang[0] : 'en'
   const [runs, setRuns] = useState<PlaywrightRun[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -116,12 +121,12 @@ const TestingPage = () => {
     try {
       const response = await fetch('/api/admin/test-runs?limit=50')
       if (!response.ok) {
-        throw new Error('Failed to load test runs')
+        throw new Error(t.errorLoad || 'Failed to load test runs')
       }
       const data = await response.json()
       setRuns(Array.isArray(data.runs) ? data.runs : [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load test runs')
+      setError(err instanceof Error ? err.message : (t.errorLoad || 'Failed to load test runs'))
     } finally {
       setLoading(false)
     }
@@ -142,7 +147,7 @@ const TestingPage = () => {
       const result = await response.json()
 
       if (!response.ok || result.success === false) {
-        throw new Error(result.error || 'Test execution failed')
+        throw new Error(result.error || (t.errorRun || 'Test execution failed'))
       }
     }
 
@@ -161,7 +166,7 @@ const TestingPage = () => {
         await runSingleTest(testId)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to run tests')
+      setError(err instanceof Error ? err.message : (t.errorRun || 'Failed to run tests'))
     } finally {
       setRunningTests(false)
       setRunningTestId(null)
@@ -228,21 +233,10 @@ const TestingPage = () => {
     )
   }
 
-  if (error) {
-    return (
-      <Card>
-        <CardHeader title="Testing Dashboard" />
-        <div className="p-5">
-          <Typography color="error">Error: {error}</Typography>
-        </div>
-      </Card>
-    )
-  }
-
   return (
     <>
       <Card>
-        <CardHeader title="Testing Dashboard" />
+        <CardHeader title={t.title || 'Testing'} />
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <Button
@@ -251,7 +245,7 @@ const TestingPage = () => {
             startIcon={<i className='ri-upload-2-line text-xl' />}
             className='max-sm:is-full'
           >
-            Export Results
+            {t.exportResults || 'Export Results'}
           </Button>
           <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
             <Button
@@ -267,7 +261,7 @@ const TestingPage = () => {
                 )
               }
             >
-              {runningTests ? 'Running Tests...' : 'Run Tests'}
+              {runningTests ? (t.running || 'Running Tests...') : (t.runTests || 'Run Tests')}
             </Button>
           </div>
         </div>
@@ -275,12 +269,12 @@ const TestingPage = () => {
           <Table className={tableStyles.table}>
             <TableHead>
               <TableRow>
-                <TableCell>Status</TableCell>
-                <TableCell>Test</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>File</TableCell>
-                <TableCell>Total/Passed/Failed</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell>{t.tableHeaderStatus || 'Status'}</TableCell>
+                <TableCell>{t.tableHeaderScript || 'Test'}</TableCell>
+                <TableCell>{t.tableHeaderType || 'Type'}</TableCell>
+                <TableCell>{t.tableHeaderFile || 'File'}</TableCell>
+                <TableCell>{t.tableHeaderTotals || 'Total/Passed/Failed'}</TableCell>
+                <TableCell>{t.tableHeaderActions || 'Actions'}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -289,7 +283,9 @@ const TestingPage = () => {
                 const scriptResult = scriptKey ? latestByScript.get(scriptKey) : undefined
                 const statsKey = scriptKey || script.file || script.title
                 const stats = statsKey ? scriptStats.get(statsKey) : undefined
-                const chipLabel = scriptResult ? (scriptResult.status === 'passed' ? 'Passed' : 'Failed') : 'Not run'
+                const chipLabel = scriptResult
+                  ? (scriptResult.status === 'passed' ? (t.statusPassed || 'Passed') : (t.statusFailed || 'Failed'))
+                  : (t.statusNotRun || 'Not run')
                 const chipColor: 'default' | 'success' | 'error' =
                   scriptResult ? (scriptResult.status === 'passed' ? 'success' : 'error') : 'default'
                 return (
@@ -354,7 +350,7 @@ const TestingPage = () => {
                             <i className='ri-information-line text-textSecondary' />
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title='Run with UI' arrow>
+                        <Tooltip title={t.runHeaded || 'Run with UI'} arrow>
                           <IconButton
                             aria-label='Run headed'
                             onClick={() => runTests(script.id, 'headed')}
@@ -368,7 +364,7 @@ const TestingPage = () => {
                             )}
                           </IconButton>
                         </Tooltip>
-                        <Tooltip title='Run headless' arrow>
+                        <Tooltip title={t.runHeadless || 'Run headless'} arrow>
                           <IconButton
                             aria-label='Run headless'
                             onClick={() => runTests(script.id, 'headless')}

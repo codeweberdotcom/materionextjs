@@ -3,6 +3,17 @@ import { trackEvent, trackError, trackPerformance } from './sentry'
 export type InsightsEventProperties = Record<string, string | number | boolean | undefined>
 export type InsightsContext = Record<string, unknown>
 
+const toEventProperty = (value: unknown): string | number | boolean | undefined => {
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value
+  }
+  if (value instanceof Date) {
+    return value.toISOString()
+  }
+
+  return undefined
+}
+
 export const trackEventAI = (event: string, properties?: InsightsEventProperties) => {
   trackEvent(event, properties)
 
@@ -19,8 +30,8 @@ export const trackErrorAI = (error: Error, context?: InsightsContext) => {
   // Дополнительная аналитика ошибок
   trackEventAI('error_occurred', {
     error: error.message,
-    component: context?.component,
-    userId: context?.userId
+    component: toEventProperty(context?.component) ?? 'unknown',
+    userId: toEventProperty(context?.userId)
   })
 }
 

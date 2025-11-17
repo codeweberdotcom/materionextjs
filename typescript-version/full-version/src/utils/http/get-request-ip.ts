@@ -17,9 +17,5 @@ export function getRequestIp(request: NextRequest): string | null {
     return realIp.trim()
   }
 
-  if (typeof request.ip === 'string' && request.ip.length > 0) {
-    return request.ip
-  }
-
   return null
 }

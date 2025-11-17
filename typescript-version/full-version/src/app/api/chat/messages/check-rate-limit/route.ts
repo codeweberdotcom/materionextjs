@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
       warning: rateLimitResult.warning || null
     })
   } catch (error) {
-    console.error('вќЊ [API DEBUG] Error in rate limit check:', error)
+    logger.error('вќЊ [API DEBUG] Error in rate limit check:', { error: error, file: 'src/app/api/chat/messages/check-rate-limit/route.ts' })
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -1,12 +1,11 @@
-import { Server, Namespace } from 'socket.io';
-import logger from '../../../logger';
-import { TypedSocket } from '../../types/common';
+import type { Namespace } from 'socket.io'
+import logger from '../../../logger'
+import type { ServerToClientEvents, TypedIOServer, TypedSocket } from '../../types/common'
 import { ChatEvents, ChatEmitEvents, ChatMessage, ChatRoom } from '../../types/chat';
 import { authenticateSocket, requirePermission, requireRole } from '../../middleware/auth';
 import { rateLimitService } from '@/lib/rate-limit';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/libs/prisma'
+import type { ChatMessageWithSender } from '@/types/prisma'
 
 // Хранилище активных пользователей (in-memory)
 const activeUsers = new Map<string, string>(); // userId -> socketId
@@ -44,7 +43,7 @@ const updateUserOnlineStatus = async (userId: string, isOnline: boolean) => {
 /**
  * Инициализация namespace для чата
  */
-export const initializeChatNamespace = (io: Server): Namespace => {
+export const initializeChatNamespace = (io: TypedIOServer): Namespace => {
   const chatNamespace = io.of('/chat');
 
   logger.info('Initializing chat namespace');
@@ -295,7 +294,7 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
       }
 
       // Получаем сообщения комнаты
-      const latestMessages = await prisma.message.findMany({
+    const latestMessages: ChatMessageWithSender[] = await prisma.message.findMany({
         where: { roomId: room.id },
         include: { sender: true },
         orderBy: { createdAt: 'desc' },
@@ -303,7 +302,7 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
       })
 
       const hasMoreHistory = latestMessages.length > 30
-      const trimmedMessages = hasMoreHistory ? latestMessages.slice(0, 30) : latestMessages
+      const trimmedMessages: ChatMessageWithSender[] = hasMoreHistory ? latestMessages.slice(0, 30) : latestMessages
 
       const normalizedMessages = trimmedMessages
         .map(msg => ({
@@ -316,7 +315,7 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
             email: msg.sender.email
           },
           roomId: msg.roomId,
-          readAt: msg.readAt,
+          readAt: msg.readAt ? msg.readAt.toISOString() : undefined,
           createdAt: msg.createdAt.toISOString()
         }))
         .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
@@ -489,10 +488,14 @@ export const getOnlineUsers = async () => {
 };
 
 // Отправка уведомления в комнату чата
-export const sendToChatRoom = (roomId: string, event: string, data: any) => {
-  const chatNamespace = (global as any).io?.of('/chat');
+export const sendToChatRoom = <TEvent extends keyof ServerToClientEvents>(
+  roomId: string,
+  event: TEvent,
+  ...args: Parameters<ServerToClientEvents[TEvent]>
+) => {
+  const chatNamespace = globalThis.io?.of('/chat')
   if (chatNamespace) {
-    chatNamespace.to(`room_${roomId}`).emit(event, data);
-    logger.debug('Sent to chat room', { roomId, event });
+    chatNamespace.to(`room_${roomId}`).emit(event, ...args)
+    logger.debug('Sent to chat room', { roomId, event })
   }
-};
+}

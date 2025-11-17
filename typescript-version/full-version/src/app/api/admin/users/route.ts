@@ -3,18 +3,10 @@ import { writeFile } from 'fs/promises'
 import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
 
-
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-import { PrismaClient } from '@prisma/client'
-
-
-
+import { prisma } from '@/libs/prisma'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { getOnlineUsers } from '@/lib/sockets/namespaces/chat'
-
-const prisma = new PrismaClient()
 
 // Кеш для пользователей (простая in-memory кеш)
 let usersCache: any[] | null = null
@@ -39,7 +31,7 @@ export async function POST(request: NextRequest) {
       include: { role: true }
     })
 
-    if (!currentUser || !checkPermission(currentUser as UserWithRole, 'Users', 'Create')) {
+    if (!currentUser || !checkPermission(currentUser, 'Users', 'Create')) {
       return NextResponse.json(
         { message: 'Permission denied: Create Users required' },
         { status: 403 }
@@ -161,7 +153,7 @@ export async function GET(request: NextRequest) {
       include: { role: true }
     })
 
-    if (!currentUser || !checkPermission(currentUser as UserWithRole, 'userManagement', 'read')) {
+    if (!currentUser || !checkPermission(currentUser, 'userManagement', 'read')) {
       return NextResponse.json(
         { message: 'Permission denied: Read Users required' },
         { status: 403 }

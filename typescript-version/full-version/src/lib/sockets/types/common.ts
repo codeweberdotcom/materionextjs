@@ -1,35 +1,44 @@
-import { Socket } from 'socket.io';
+import type { Server, Socket } from 'socket.io'
+import type { ChatEvents, ChatEmitEvents } from './chat'
+import type { NotificationEvents, NotificationEmitEvents, NotificationLegacyEmitEvents } from './notifications'
 
 // Роли пользователей
-export type UserRole = 'admin' | 'user' | 'moderator' | 'guest';
+export type UserRole = 'admin' | 'user' | 'moderator' | 'guest'
 
 // Разрешения
-export type Permission = 'send_message' | 'send_notification' | 'moderate_chat' | 'view_admin_panel';
+export type Permission =
+  | 'send_message'
+  | 'send_notification'
+  | 'moderate_chat'
+  | 'view_admin_panel'
+  | 'receive_notifications'
+
+export type UserPermissions = Permission[] | 'all'
 
 // Пользователь с ролями и разрешениями
 export interface User {
-  id: string;
-  role: UserRole;
-  permissions: Permission[];
-  name?: string;
-  email?: string;
+  id: string
+  role: UserRole
+  permissions: UserPermissions
+  name?: string
+  email?: string
 }
 
 // Данные сокета
 export interface SocketData {
-  user: User;
-  authenticated: boolean;
-  connectedAt: Date;
-  lastActivity: Date;
+  user: User
+  authenticated: boolean
+  connectedAt: Date
+  lastActivity: Date
 }
 
 // Активные пользователи (in-memory cache)
 export interface ActiveUser {
-  userId: string;
-  socketId: string;
-  connectedAt: Date;
-  lastActivity: Date;
-  rooms: string[];
+  userId: string
+  socketId: string
+  connectedAt: Date
+  lastActivity: Date
+  rooms: string[]
 }
 
 // Элемент очереди сообщений
@@ -50,10 +59,17 @@ export interface ApiResponse<T = unknown> {
 }
 
 // Расширенный Socket с типизацией
-export interface TypedSocket extends Socket {
-  data: SocketData;
-  userId?: string;
+type InterServerEvents = Record<string, never>
+type CoreServerEvents = {
+  ping: (payload: { timestamp: number }) => void
 }
+export type ClientToServerEvents = ChatEvents & NotificationEvents
+export type ServerToClientEvents = ChatEmitEvents & NotificationEmitEvents & NotificationLegacyEmitEvents & CoreServerEvents
+export interface TypedSocket
+  extends Socket<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData> {
+  userId?: string
+}
+export type TypedIOServer = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>
 
 // Конфигурация rate limiting
 export interface RateLimitConfig {
@@ -82,3 +98,10 @@ export interface SocketMetrics {
   queueSize: number;
   memoryUsage: number;
 }
+
+declare global {
+  // eslint-disable-next-line no-var
+  var io: TypedIOServer | undefined
+}
+
+export {}

@@ -3,12 +3,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
 import type { UserWithRole } from '@/utils/permissions/permissions'
 
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/libs/prisma'
 import bcrypt from 'bcryptjs'
 
 
-
-const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {

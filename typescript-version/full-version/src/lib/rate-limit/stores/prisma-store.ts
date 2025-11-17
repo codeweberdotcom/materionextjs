@@ -13,7 +13,23 @@ export class PrismaRateLimitStore implements RateLimitStore {
   constructor(private prisma: PrismaClient) {}
 
   async consume(params: RateLimitConsumeParams): Promise<RateLimitResult> {
-    const { key, module, config, increment, warnThreshold, mode, now, recordEvent, userId, email, ipAddress } = params
+    const {
+      key,
+      module,
+      config,
+      increment,
+      warnThreshold,
+      mode,
+      now,
+      recordEvent,
+      userId,
+      email,
+      emailHash,
+      ipAddress,
+      ipHash,
+      ipPrefix,
+      hashVersion
+    } = params
 
     const outcome = await this.prisma.$transaction(async tx => {
       let state = await tx.rateLimitState.findUnique({
@@ -171,7 +187,11 @@ export class PrismaRateLimitStore implements RateLimitStore {
                   key,
                   userId,
                   email,
+                  emailHash,
                   ipAddress,
+                  ipHash,
+                  ipPrefix,
+                  hashVersion,
                   eventType: 'block',
                   mode,
                   count: newCount,
@@ -207,7 +227,11 @@ export class PrismaRateLimitStore implements RateLimitStore {
               key,
               userId,
               email,
+              emailHash,
               ipAddress,
+              ipHash,
+              ipPrefix,
+              hashVersion,
               eventType: 'warning',
               mode,
               count: newCount,

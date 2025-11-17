@@ -57,6 +57,8 @@ const defaultData: string[] = [
   'emailTemplatesManagement',
   'smtpManagement',
   'rateLimitManagement',
+  'blocking',
+  'maintenance',
   'notifications',
   'chat'
 ]
@@ -74,12 +76,14 @@ const permissionIds = {
   emailTemplatesManagement: 'emailTemplatesManagement',
   smtpManagement: 'smtpManagement',
   rateLimitManagement: 'rateLimitManagement',
+  blocking: 'blocking',
+  maintenance: 'maintenance',
   notifications: 'notifications',
   chat: 'chat'
 }
 
 const allPermissions = defaultData.flatMap(item => {
-  const id = (permissionIds as any)[item]
+  const id = permissionIds[item as keyof typeof permissionIds] ?? item
 
   return [`${id}-create`, `${id}-read`, `${id}-update`, `${id}-delete`]
 })
@@ -227,7 +231,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false 
                 } else if (typeof parsedPermissions === 'object' && parsedPermissions !== null) {
                   // Convert object to array of permissions
                   const permissionsArray = Object.entries(parsedPermissions).flatMap(([module, actions]) =>
-                    (actions as string[]).map(action => `${(permissionIds as any)[module]}-${action}`)
+                    (actions as string[]).map(action => `${permissionIds[module as keyof typeof permissionIds] ?? module}-${action}`)
                   )
                   setSelectedCheckbox(permissionsArray)
                 } else {

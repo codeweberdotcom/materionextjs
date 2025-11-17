@@ -4,6 +4,37 @@ import logger from './logger'
 type SentryContext = Record<string, unknown>
 type SentryEventProperties = Record<string, string | number | boolean | undefined>
 
+type SentryExtraValue = string | number | boolean | null | undefined
+type SentryExtras = Record<string, SentryExtraValue>
+
+const toPrimitive = (value: unknown): SentryExtraValue => {
+  if (value === null || value === undefined) {
+    return value as null | undefined
+  }
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return value
+  }
+  if (value instanceof Date) {
+    return value.toISOString()
+  }
+
+  return JSON.stringify(value)
+}
+
+const sanitizeContext = (context?: SentryContext): SentryExtras | undefined => {
+  if (!context) {
+    return undefined
+  }
+
+  return Object.entries(context).reduce<SentryExtras>((acc, [key, value]) => {
+    const primitive = toPrimitive(value)
+    if (primitive !== undefined) {
+      acc[key] = primitive
+    }
+    return acc
+  }, {})
+}
+
 Sentry.init({
   dsn: process.env.SENTRY_DSN || process.env.GLITCHTIP_DSN,
   environment: process.env.NODE_ENV,
@@ -30,9 +61,9 @@ export const errorHandler = (error: unknown, context?: SentryContext) => {
 
   Sentry.captureException(errorObj, {
     tags: {
-      component: context?.component || 'unknown'
+      component: typeof context?.component === 'string' ? context.component : 'unknown'
     },
-    extra: context
+    extra: sanitizeContext(context)
   })
 
   // Также логируем через Winston
@@ -49,13 +80,15 @@ export const trackError = (error: Error, context?: SentryContext) => {
 
 // Функция для трекинга производительности
 export const trackPerformance = (operation: string, duration: number, metadata?: SentryContext) => {
+  const metadataExtras = sanitizeContext(metadata)
+
   Sentry.captureMessage(`Performance: ${operation}`, {
     level: 'info',
     tags: {
       operation,
       performance: 'true'
     },
-    extra: { duration, ...metadata }
+    extra: metadataExtras ? { duration, ...metadataExtras } : { duration }
   })
 
   logger.info(`PERF: ${operation}`, { duration, ...metadata })

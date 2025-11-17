@@ -1,0 +1,21 @@
+{
+  "runId": "2025-11-16T02-17-24-506Z_chat-smoke",
+  "label": "Chat Smoke",
+  "testId": "chat-smoke",
+  "status": "failed",
+  "startedAt": "2025-11-16T02:16:52.223Z",
+  "finishedAt": "2025-11-16T02:17:24.516Z",
+  "scripts": [
+    {
+      "runId": "2025-11-16T02-17-24-506Z_chat-smoke",
+      "scriptId": "chat-smoke",
+      "title": "chat functionality works end-to-end",
+      "file": "chat.spec.ts",
+      "status": "failed",
+      "duration": 30103,
+      "startedAt": "2025-11-16T02:16:53.034Z",
+      "finishedAt": "2025-11-16T02:17:23.137Z"
+    }
+  ],
+  "artifactsPath": "artifacts\\playwright\\runs\\2025-11-16T02-17-24-506Z_chat-smoke"
+}

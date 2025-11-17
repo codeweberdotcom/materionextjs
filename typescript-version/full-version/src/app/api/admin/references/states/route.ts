@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-// Create Prisma client instance
-const { PrismaClient } = require('@prisma/client')
-
-const prisma = new PrismaClient()
+import { prisma } from '@/libs/prisma'
 
 // GET - Get all states (admin only)
 export async function GET(request: NextRequest) {

@@ -1,4 +1,3 @@
-// @ts-nocheck
 // React Imports
 import { useRef, useEffect, useCallback } from 'react'
 
@@ -38,6 +37,7 @@ type ChatLogProps = {
   loadMoreMessages: () => Promise<void>
   historyLoading: boolean
   hasMoreHistory: boolean
+  isConnected: boolean
 }
 
 const ChatLog = ({

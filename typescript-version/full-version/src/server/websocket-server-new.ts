@@ -10,11 +10,6 @@ import { initializeSocketServer } from '../lib/sockets'
 import logger from '../lib/logger'
 import { env, isProduction } from '../shared/config/env'
 
-declare global {
-  // eslint-disable-next-line no-var
-  var io: ReturnType<typeof initializeSocketServer> | undefined;
-}
-
 const dev = !isProduction
 const app = next({ dev })
 const handle = app.getRequestHandler()

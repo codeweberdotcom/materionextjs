@@ -1,6 +1,6 @@
 import type { VerticalMenuDataType } from '@/types/menuTypes'
 import type { getDictionary } from '@/utils/formatting/getDictionary'
-import type { UserWithRole } from '@/utils/permissions/permissions'
+import type { UserWithRoleLike } from '@/utils/permissions/permissions'
 
 import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
 import {
@@ -12,7 +12,7 @@ import {
 interface FilterMenuOptions {
   items: VerticalMenuDataType[]
   dictionary: Awaited<ReturnType<typeof getDictionary>>
-  user: UserWithRole | null
+  user: UserWithRoleLike
 }
 
 export const filterMenuDataByPermissions = ({
@@ -34,7 +34,7 @@ export const filterMenuDataByPermissions = ({
 const filterMenuNode = (
   item: VerticalMenuDataType,
   labels: MenuNavigationLabels,
-  user: UserWithRole | null
+  user: UserWithRoleLike
 ): VerticalMenuDataType | null => {
   if (!hasMenuChildren(item)) {
     return item
@@ -60,7 +60,7 @@ const applyPermissionRules = (
   item: VerticalMenuDataType,
   children: VerticalMenuDataType[],
   labels: MenuNavigationLabels,
-  user: UserWithRole | null
+  user: UserWithRoleLike
 ): VerticalMenuDataType[] => {
   if (!hasMenuChildren(item) || typeof item.label !== 'string') {
     return children
@@ -79,7 +79,7 @@ const applyPermissionRules = (
 
 const filterUserSettingsChild = (
   child: VerticalMenuDataType,
-  user: UserWithRole | null,
+  user: UserWithRoleLike,
   labels: MenuNavigationLabels
 ): boolean => {
   if (typeof child.label !== 'string') {
@@ -103,7 +103,7 @@ const filterUserSettingsChild = (
 
 const filterAdminSectionChild = (
   child: VerticalMenuDataType,
-  user: UserWithRole | null,
+  user: UserWithRoleLike,
   labels: MenuNavigationLabels
 ): boolean => {
   if (typeof child.label !== 'string') {
@@ -128,6 +128,29 @@ const filterAdminSectionChild = (
 
   if (child.label === labels.rateLimitEvents) {
     return checkPermission(user, 'rateLimitManagement', 'read')
+  }
+
+  if (child.label === labels.blocking) {
+    return checkPermission(user, 'rateLimitManagement', 'read')
+  }
+
+  const isMaintenanceNode =
+    typeof child.href === 'string' && child.href.startsWith('/admin/maintenance')
+
+  if (
+    child.label === labels.monitoring ||
+    child.label === labels.monitoringOverview ||
+    child.label === labels.monitoringMetrics ||
+    child.label === labels.monitoringErrorTracking ||
+    child.label === labels.monitoringApplicationInsights ||
+    child.label === labels.maintenance ||
+    isMaintenanceNode
+  ) {
+    return (
+      checkPermission(user, 'rateLimitManagement', 'read') ||
+      checkPermission(user, 'maintenance', 'read') ||
+      checkPermission(user, 'blocking', 'read')
+    )
   }
 
   return true

@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-
-// Create Prisma client instance
-const { PrismaClient } = require('@prisma/client')
-
-const prisma = new PrismaClient()
+import { prisma } from '@/libs/prisma'
 
 // GET - Get all active cities (public access)
 export async function GET() {

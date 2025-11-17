@@ -5,15 +5,10 @@ import path from 'path'
 
 import { existsSync } from 'fs'
 
-
 import { requireAuth } from '@/utils/auth/auth'
 import type { UserWithRole } from '@/utils/permissions/permissions'
-
-import { PrismaClient } from '@prisma/client'
-
-
-
-const prisma = new PrismaClient()
+import { prisma } from '@/libs/prisma'
+import { authBaseUrl } from '@/shared/config/env'
 
 // PUT - Update user information (admin only)
 export async function PUT(
@@ -179,7 +174,7 @@ export async function PUT(
 
     // Очищаем кеш после обновления пользователя
     try {
-      await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/users?clearCache=true`, {
+      await fetch(`${authBaseUrl}/api/admin/users?clearCache=true`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -191,7 +186,7 @@ export async function PUT(
 
     // Очищаем кеш после изменения статуса пользователя
     try {
-      await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/users?clearCache=true`, {
+      await fetch(`${authBaseUrl}/api/admin/users?clearCache=true`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'

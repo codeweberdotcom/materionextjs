@@ -1,4 +1,3 @@
-// @ts-nocheck
 // React Imports
 import { useEffect, useState } from 'react'
 import type { RefObject } from 'react'
@@ -13,6 +12,7 @@ import IconButton from '@mui/material/IconButton'
 import CardContent from '@mui/material/CardContent'
 
 import type { ChatRoom } from '@/lib/sockets/types/chat'
+import type { ThemeColor } from '@core/types'
 
 // Type Imports
 import type { AppDispatch } from '@/redux-store'
@@ -65,7 +65,7 @@ const UserAvatar = ({
   activeUser: ContactType
   setUserProfileLeftOpen: (open: boolean) => void
   setBackdropOpen: (open: boolean) => void
-  navigation: any
+  navigation: Record<string, string>
   userStatuses: { [userId: string]: { isOnline: boolean; lastSeen?: string } }
 }) => {
   // Get real-time user status
@@ -73,7 +73,7 @@ const UserAvatar = ({
 
   // Determine status text, last seen text and color
   let statusText: string
-  let statusColor: string
+  let statusColor: ThemeColor
 
   if (!userStatus) {
     // Data is still loading - fallback to static status
@@ -253,19 +253,21 @@ const ChatContent = (props: Props) => {
             isRoomLoading={isRoomLoading}
             loadMoreMessages={loadMoreMessages}
             historyLoading={historyLoading}
-            hasMoreHistory={hasMoreHistory}
-          />
+          hasMoreHistory={hasMoreHistory}
+          isConnected={isConnected}
+        />
 
-          <SendMsgForm
-            dispatch={dispatch}
-            activeUser={activeUser}
+        <SendMsgForm
+          dispatch={dispatch}
+          activeUser={activeUser}
             isBelowSmScreen={isBelowSmScreen}
             messageInputRef={messageInputRef}
             room={room}
             isRoomLoading={isRoomLoading}
             sendMessage={sendMessage}
-            rateLimitData={rateLimitData}
-          />
+          rateLimitData={rateLimitData}
+          isConnected={isConnected}
+        />
         </div>
       )}
 

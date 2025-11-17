@@ -1,14 +1,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-import { PrismaClient } from '@prisma/client'
-
-
+import { prisma } from '@/libs/prisma'
 import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
-
-const prisma = new PrismaClient()
 
 // РљРµС€ РґР»СЏ РїР°СЂСЃРёСЂРѕРІР°РЅРЅС‹С… СЂРѕР»РµР№ (РїСЂРѕСЃС‚Р°СЏ in-memory РєРµС€)
 let rolesCache: any[] | null = null
@@ -103,7 +98,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating role:', error)
 
-    if ((error as any).code === 'P2002' && (error as any).meta?.target?.includes('name')) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002' && Array.isArray(error.meta?.target) && error.meta?.target.includes('name')) {
       return NextResponse.json(
         { message: 'Role name already exists' },
         { status: 400 }

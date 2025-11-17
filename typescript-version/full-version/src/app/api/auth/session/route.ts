@@ -1,66 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { lucia } from '@/libs/lucia'
-import { prisma } from '@/libs/prisma'
+import { optionalRequireAuth } from '@/utils/auth/auth'
 import logger from '@/lib/logger'
 
 
 export async function GET(request: NextRequest) {
   try {
-    logger.info('рџ”Ќ [SESSION] Getting ({} as any)...')
+    logger.info('рџ”Ќ [SESSION] Getting session...')
 
-    const sessionId = lucia.readSessionCookie(request.headers.get('cookie') ?? '')
-    logger.info('рџ”Ќ [SESSION] Session ID from cookie:', sessionId)
-
-    if (!sessionId) {
-      logger.info('вќЊ [SESSION] No session ID found in cookie')
-      return NextResponse.json({ user: null }, { status: 401 })
-    }
-
-    const { session, user } = await lucia.validateSession(sessionId)
-    logger.info('рџ”Ќ [SESSION] Session validation result:', { session: !!session, user: !!user })
+    const { session, user } = await optionalRequireAuth(request)
 
     if (!session || !user) {
-      logger.info('вќЊ [SESSION] Session or user not found')
-      return NextResponse.json({ user: null }, { status: 401 })
+      logger.info('вќЊ [SESSION] No valid session found')
+      return NextResponse.json({ user: null })
     }
 
-    // Get full user data from database
-    const userData = await prisma.user.findUnique({
-      where: { id: user.id },
-      include: { role: true }
-    })
-
-    if (!userData) {
-      logger.info('вќЊ [SESSION] User not found in database')
-      return NextResponse.json({ user: null }, { status: 401 })
-    }
-
-    logger.info('вњ… [SESSION] Session found for user:', userData.email)
+    logger.info('вњ… [SESSION] Session found for user:', user.email)
 
     return NextResponse.json({
       user: {
-        id: userData.id,
-        email: userData.email,
-        name: userData.name,
-        image: userData.image,
-        role: {
-          id: userData.role.id,
-          name: userData.role.name,
-          permissions: userData.role.permissions
-        }
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        image: user.image,
+        role: user.role ? {
+          id: user.role.id,
+          name: user.role.name,
+          permissions: user.role.permissions
+        } : null
       },
       session: {
         user: {
-          id: userData.id,
-          email: userData.email,
-          name: userData.name,
-          image: userData.image
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image
         }
       }
     })
   } catch (error) {
-    console.error('вќЊ [SESSION] Error getting session:', error)
-    return NextResponse.json({ user: null }, { status: 401 })
+    logger.error('вќЊ [SESSION] Error getting session:', { error: error instanceof Error ? error.message : error, file: 'src/app/api/auth/session/route.ts' })
+    return NextResponse.json({ user: null })
   }
 }
 

@@ -10,7 +10,7 @@ import { checkPermission } from '@/utils/permissions/permissions'
 const NotificationsPage = async () => {
   // Check permissions
   const { user } = await requireAuth()
-  if (!user || !checkPermission(user as any, 'notifications', 'read')) {
+  if (!user || !checkPermission(user, 'notifications', 'read')) {
     redirect('/not-authorized')
   }
 
