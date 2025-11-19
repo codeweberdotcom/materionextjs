@@ -12,8 +12,6 @@ import TextField, { type TextFieldProps } from '@mui/material/TextField'
 import MenuItem from '@mui/material/MenuItem'
 import Checkbox from '@mui/material/Checkbox'
 import FormControlLabel from '@mui/material/FormControlLabel'
-import Tabs from '@mui/material/Tabs'
-import Tab from '@mui/material/Tab'
 import Table from '@mui/material/Table'
 import TableHead from '@mui/material/TableHead'
 import TableBody from '@mui/material/TableBody'
@@ -22,6 +20,8 @@ import TableCell from '@mui/material/TableCell'
 import Chip from '@mui/material/Chip'
 import Box from '@mui/material/Box'
 import Divider from '@mui/material/Divider'
+import Tabs from '@mui/material/Tabs'
+import Tab from '@mui/material/Tab'
 import Alert from '@mui/material/Alert'
 import Tooltip from '@mui/material/Tooltip'
 import IconButton from '@mui/material/IconButton'
@@ -84,7 +84,6 @@ type ManualBlockForm = {
 }
 
 type FilterState = {
-  module: string
   eventType: string
   mode: string
   from: Date | null
@@ -163,12 +162,8 @@ const RateLimitEvents = () => {
   const [events, setEvents] = useState<EventEntry[]>([])
   const [nextCursor, setNextCursor] = useState<string | undefined>()
   const [totalEvents, setTotalEvents] = useState(0)
-  const [states, setStates] = useState<StateEntry[]>([])
-  const [nextStatesCursor, setNextStatesCursor] = useState<string | undefined>()
-  const [totalStates, setTotalStates] = useState(0)
   const [modules, setModules] = useState<string[]>(DEFAULT_MODULES)
   const [activeModuleTab, setActiveModuleTab] = useState<string>('all')
-  const [activeView, setActiveView] = useState<'events' | 'states'>('events')
   const [loading, setLoading] = useState(false)
   const [initialLoading, setInitialLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -189,7 +184,6 @@ const RateLimitEvents = () => {
     notes: ''
   })
   const [filters, setFilters] = useState<FilterState>({
-    module: 'all',
     eventType: 'all',
     mode: 'all',
     from: null,
@@ -327,7 +321,7 @@ const RateLimitEvents = () => {
 
       try {
         const params = new URLSearchParams()
-        const moduleFilter = activeModuleTab !== 'all' ? activeModuleTab : filters.module
+        const moduleFilter = activeModuleTab
         if (moduleFilter !== 'all') {
           params.set('module', moduleFilter)
         }
@@ -376,61 +370,12 @@ const RateLimitEvents = () => {
     [activeModuleTab, debouncedSearch, filters, hasAccess, permissionsLoading, t.loadError]
   )
 
-  const fetchStates = useCallback(
-    async ({ append = false, cursor }: { append?: boolean; cursor?: string } = {}) => {
-      if (permissionsLoading || !hasAccess) {
-        return
-      }
-
-      setLoading(true)
-      try {
-        const params = new URLSearchParams()
-        const moduleFilter = activeModuleTab !== 'all' ? activeModuleTab : filters.module
-        if (moduleFilter !== 'all') {
-          params.set('module', moduleFilter)
-        }
-        if (debouncedSearch) {
-          params.set('search', debouncedSearch)
-        }
-        if (cursor) {
-          params.set('cursor', cursor)
-        }
-        params.set('limit', '50')
-        params.set('view', 'states')
-
-        const response = await fetch(`/api/admin/rate-limits?${params.toString()}`, {
-          credentials: 'include'
-        })
-        if (!response.ok) {
-          throw new Error('Failed to load states')
-        }
-
-        const data: StateListResponse = await response.json()
-        setStates(prev => (append ? [...prev, ...data.items] : data.items))
-        setNextStatesCursor(data.nextCursor)
-        setTotalStates(data.total)
-      } catch (error) {
-        console.error(error)
-        toast.error(t.loadError || 'Failed to load states')
-      } finally {
-        setLoading(false)
-        setInitialLoading(false)
-      }
-    },
-    [activeModuleTab, debouncedSearch, filters.module, hasAccess, permissionsLoading, t.loadError]
-  )
-
   useEffect(() => {
-    if (activeView === 'events') {
-      fetchEvents({ append: false })
-    } else {
-      fetchStates({ append: false })
-    }
-  }, [activeView, fetchEvents, fetchStates, permissionsLoading, hasAccess])
+    fetchEvents({ append: false })
+  }, [fetchEvents])
 
   const resetFilters = () => {
     setFilters({
-      module: 'all',
       eventType: 'all',
       mode: 'all',
       from: null,
@@ -601,11 +546,9 @@ const RateLimitEvents = () => {
   const moduleOptions = useMemo(() => ['all', ...modules], [modules])
   const handleModuleTabChange = (_event: SyntheticEvent, value: string) => {
     setActiveModuleTab(value)
-    setFilters(prev => ({ ...prev, module: value }))
     setEvents([])
-    setStates([])
     setNextCursor(undefined)
-    setNextStatesCursor(undefined)
+    fetchEvents({ append: false })
   }
 
   return (
@@ -628,11 +571,7 @@ const RateLimitEvents = () => {
                     <Button
                       variant='outlined'
                       startIcon={<i className='ri-refresh-line' />}
-                      onClick={() =>
-                        activeView === 'events'
-                          ? fetchEvents({ append: false })
-                          : fetchStates({ append: false })
-                      }
+                      onClick={() => fetchEvents({ append: false })}
                       disabled={loading}
                     >
                       {t.refresh || 'Refresh'}
@@ -666,40 +605,7 @@ const RateLimitEvents = () => {
                     ))}
                   </Tabs>
                 </Box>
-                <Box className='flex gap-2 flex-wrap'>
-                  <Button
-                    variant={activeView === 'events' ? 'contained' : 'outlined'}
-                    onClick={() => setActiveView('events')}
-                    startIcon={<i className='ri-flashlight-line' />}
-                  >
-                    {t.tabEvents || 'События'}
-                  </Button>
-                  <Button
-                    variant={activeView === 'states' ? 'contained' : 'outlined'}
-                    onClick={() => setActiveView('states')}
-                    startIcon={<i className='ri-shield-star-line' />}
-                  >
-                    {t.tabStates || 'Состояния'}
-                  </Button>
-                </Box>
                 <Grid container spacing={4}>
-                  <Grid size={{ xs: 12, md: 3 }}>
-                  <TextField
-                    select
-                    fullWidth
-                    label={t.filterModule || 'Module'}
-                    value={filters.module}
-                    onChange={event => setFilters(prev => ({ ...prev, module: event.target.value }))}
-                  >
-                    {moduleOptions.map(option => (
-                      <MenuItem key={option} value={option}>
-                        {option === 'all'
-                          ? (t.filterModuleAll || 'All modules')
-                          : getModuleLabel(option, navigationLabels)}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
                 <Grid size={{ xs: 12, md: 3 }}>
                   <TextField
                     select

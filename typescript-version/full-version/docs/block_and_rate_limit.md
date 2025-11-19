@@ -1,7 +1,7 @@
 # Block & Rate-Limit (краткая дока)
 
 ## Архитектура
-- **RateLimitState** — текущее состояние лимита для `key+module` (счётчик окна, `blockedUntil`). Одна запись, обновляется; история в RateLimitEvent.
+- **RateLimitState** — текущее состояние лимита для `key+module` (счётчик окна, `blockedUntil`). После завершения окна или истечения блока записи очищаются автоматически при ближайшем `checkLimit`, `listStates` или `getStats`, а кнопка **Clear block** удаляет state немедленно. История хранится в RateLimitEvent.
 - **RateLimitEvent** — история срабатываний (warning/block). Сейчас хранит сырые IP/email *и* хэши (временное решение).
 - **UserBlock** — ручные блокировки (user/email/IP/CIDR/ASN), статические поля `reason/notes/blockedBy`, видимые в админке. Поддержка module=`all`.
 - Бэкенд: `RateLimitService` + store (Redis/Prisma, с fallback).
@@ -18,6 +18,11 @@
 - Фильтры: search, target/reason/author, source (Auto/Manual), module buttons.
 - Actions: просмотр, (для ручных) удаление, создание ручного блока (массовый ввод по строкам).
 - Детали: причина, заметка, автор (ссылка), история блоков, таймер до окончания.
+- История в боковой панели показывает только `eventType = block` (monitor/warning остаются на странице событий).
+
+## UI `/admin/rate-limits/events`
+- Страница показывает только события RateLimitEvent; переключатель “Состояния/События” и dropdown “Модуль” удалены, фильтрация по модулю управляется табами.
+- Кнопка обновления всегда перезагружает ленту событий; списки состояний просматриваются на `/admin/blocks` и карточках `/admin/rate-limits`.
 
 ## PII / приватность
 - **Сейчас:** в RateLimitEvent сохраняются сырые IP/email + хэши (временно). UserBlock хранит сырые поля. Приоритет на приватизацию ещё не принят.
@@ -41,3 +46,10 @@
 - Миграция/ротуция секретов (IP/Email hash) — dual-read, runbook.
 - Тесты: RateLimitService/store, API states/events/blocks, UI (/admin/blocks) фильтры/история.
 - Документировать админ-флоу: как создать/снять блок, как читать историю, что делать при жалобах пользователей.
+
+## Чат: текущие лимиты
+- **chat-messages** (активен) — Socket/REST (`POST /api/chat/messages`). При блоке отправляет `rateLimitExceeded` с `blockedUntilMs`, `retryAfterSec`, `remaining` (legacy поля оставлены). Переключение режима “Мониторинг/Блокировка” мгновенно сбрасывает блоки; фронт держит таймер в памяти и при перезагрузке заново обращается к `/api/chat/messages/check-rate-limit`.
+- **chat-rooms** (активен) — Socket `getOrCreateRoom`. Использует тот же payload rate limit, события/состояния выводятся в админке отдельной карточкой, Seed содержит лимиты по умолчанию (20 req/мин, блок 15 мин, warn=2).
+- **Готовы, но не подключены**: `chat-read` (markMessagesRead) и `chat-ping` (keepalive/lastSeen); подключаются через `createSocketRateLimiter`, если понадобится.
+- Глобального лимитера на namespace `/chat` нет — настраиваем только конкретные события.
+- Клиент `useChatNew` и сокет-слушатели используют новый формат `rateLimitExceeded`/`rateLimitWarning`, таймер хранится в state (`blockedUntil` в мс, `retryAfter` в секундах) без LocalStorage.

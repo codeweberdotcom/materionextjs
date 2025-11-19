@@ -79,7 +79,8 @@
     "monitoringMetrics": "Metrics",
     "monitoringErrorTracking": "Error Tracking",
     "monitoringApplicationInsights": "Application Insights",
-    "maintenance": "Maintenance",
+    "maintenance": "Cron",
+    "cron": "Cron",
     "monitoringTesting": "Testing",
     "advanced": "Advanced",
     "auth": "Authentication",
@@ -717,6 +718,11 @@
     "runTests": "Run Tests",
     "running": "Running Tests...",
     "exportResults": "Export Results",
-    "runHeaded": "Run with UI"
+    "runHeaded": "Run with UI",
+    "recentRunsTitle": "Recent Runs",
+    "columnRun": "Run",
+    "columnTest": "Test",
+    "columnDateTime": "Date/Time",
+    "viewReport": "View report"
   }
 }

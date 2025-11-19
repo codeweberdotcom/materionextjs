@@ -33,7 +33,7 @@ The chat system is a real-time messaging platform built with Next.js, WebSocket 
 
 ### Presence (статусы online/offline)
 - 30-секундный `ping` отправляется в namespace `/notifications` и обновляет `lastSeen` в БД.
-- Событие `presence:sync` в `/notifications` возвращает карту `{ userId: { isOnline, lastSeen } }`, расчёт по `lastSeen` (порог ~30 сек).
+- Событие `presence:sync` в `/notifications` возвращает карту `{ userId: { isOnline, lastSeen } }`. Сервер сначала проверяет активные сокет-подключения (`onlineUsers`), а при их отсутствии сверяет `lastSeen` (порог ~30 сек), так что `isOnline=true` получают только реальные подключения или свежие пинги.
 - Клиент: `PresenceProvider`/`usePresence` опрашивает `/notifications` раз в 30 сек, хранит статусы in-memory и раздаёт их чатовым компонентам; пока кэш пуст — чат может использовать fallback из `useUnreadByContact` (старый источник статусов).
 - Чат-сокет `/chat` пинг не использует; он только для сообщений/acks.
 
@@ -43,6 +43,10 @@ The chat system is a real-time messaging platform built with Next.js, WebSocket 
 ### Namespaces
 - `/chat` — сообщения; события: `sendMessage`, `receiveMessage`, `getOrCreateRoom`, `markMessagesRead`; разрешение: `send_message`.
 - `/notifications` — уведомления и presence; события: `newNotification`, `markAsRead`, `markAllAsRead`, `deleteNotification`, `presence:sync` (карта `{ userId: { isOnline, lastSeen } }`), `ping` (обновляет `lastSeen`, клиентский интервал 30 сек); разрешение: `send_notification`.
+
+### Rate limiting (чат)
+- Активно: отправка сообщений (`sendMessage` / `POST /api/chat/messages`) — модуль `chat-messages`. Формат превышения/варнинга: `blockedUntilMs` (ms), `retryAfterSec` (sec), `remaining`, legacy `blockedUntil/retryAfter` для совместимости.
+- Подготовлено, но не включено: модули `chat-rooms` (`getOrCreateRoom`), `chat-read` (`markMessagesRead`), `chat-ping` (`ping`). Могут быть подключены через `createSocketRateLimiter` с тем же форматом payload.
 
 ### Роли и разрешения
 - Роли: `admin`, `moderator`, `user`, `guest`.
@@ -55,7 +59,7 @@ const socket = io('http://localhost:3000', { auth: { token: 'jwt-token-here' } }
 ```
 
 ### Rate limiting
-- Чат: 10 сообщений в час
+- Чат: активны модули `chat-messages` (отправка сообщений, Socket/REST) и `chat-rooms` (Socket `getOrCreateRoom`). Оба возвращают единый payload `rateLimitExceeded` / warning (`blockedUntilMs`, `retryAfterSec`, `remaining`), а карточки в `/admin/rate-limits` управляют режимами “Мониторинг/Блокировка” — при переключении state очищается сразу.
 - Уведомления: 30 уведомлений в час
 
 ### Масштабирование (опционально)

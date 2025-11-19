@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     }
 
     const clientIp = getRequestIp(request)
-    const rateLimitResult = await rateLimitService.checkLimit(user.id, 'chat', {
+    const rateLimitResult = await rateLimitService.checkLimit(user.id, 'chat-messages', {
       userId: user.id,
       email: user.email ?? null,
       ipAddress: clientIp,
@@ -104,23 +104,27 @@ export async function POST(request: NextRequest) {
     })
 
     if (!rateLimitResult.allowed) {
-      const retryAfterSeconds = Math.max(
+      const blockedUntilMs = rateLimitResult.blockedUntil ?? rateLimitResult.resetTime
+      const retryAfterSec = Math.max(
         1,
-        Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+        Math.ceil((blockedUntilMs - Date.now()) / 1000)
       )
-      const blockedUntil = rateLimitResult.blockedUntil ?? rateLimitResult.resetTime
       return NextResponse.json(
         {
           error: 'Rate limit exceeded',
-          retryAfter: retryAfterSeconds,
-          blockedUntil
+          blockedUntilMs,
+          retryAfterSec,
+          remaining: rateLimitResult.remaining,
+          // Legacy для обратной совместимости
+          retryAfter: retryAfterSec,
+          blockedUntil: blockedUntilMs
         },
         {
           status: 429,
           headers: {
-            'Retry-After': retryAfterSeconds.toString(),
+            'Retry-After': retryAfterSec.toString(),
             'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
-            'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
+            'X-RateLimit-Reset': blockedUntilMs.toString()
           }
         }
       )

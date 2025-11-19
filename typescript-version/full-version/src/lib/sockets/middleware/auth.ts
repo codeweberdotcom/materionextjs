@@ -12,12 +12,20 @@ authLogger.info('Lucia auth configured for Socket.IO middleware')
 // Middleware аутентификации для Socket.IO с Lucia
 export const authenticateSocket = async (socket: TypedSocket, next: (err?: ExtendedError) => void) => {
   try {
+    const queryTokenProvided = hasQueryToken(socket)
+    if (queryTokenProvided) {
+      authLogger.warn('Socket connection attempt included token in query string. Query tokens are ignored.', {
+        socketId: socket.id,
+        ip: socket.handshake.address
+      })
+    }
+
     const token = extractToken(socket)
 
     authLogger.info('Socket authentication attempt', {
       socketId: socket.id,
       hasAuthToken: !!socket.handshake.auth?.token,
-      hasQueryToken: hasQueryToken(socket),
+      queryTokenProvided,
       ip: socket.handshake.address
     })
 
@@ -108,11 +116,6 @@ const extractToken = (socket: TypedSocket): string | null => {
   const authToken = normalizeTokenValue(socket.handshake.auth?.token)
   if (authToken) {
     return authToken
-  }
-
-  const queryToken = normalizeTokenValue((socket.handshake.query as Record<string, unknown> | undefined)?.token)
-  if (queryToken) {
-    return queryToken
   }
 
   const headerToken = socket.handshake.headers?.authorization

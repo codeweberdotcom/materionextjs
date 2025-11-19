@@ -261,6 +261,38 @@ async function main() {
     }
   })
 
+  // Create sample users for each role (except admin/superadmin)
+  const defaultUserPassword = await bcrypt.hash('user123', 10)
+  const additionalUsers = [
+    { email: 'user@example.com', name: 'Regular User', roleId: userRole.id },
+    { email: 'moderator@example.com', name: 'Moderator User', roleId: moderatorRole.id },
+    { email: 'seo@example.com', name: 'SEO Specialist', roleId: seoRole.id },
+    { email: 'editor@example.com', name: 'Content Editor', roleId: editorRole.id },
+    { email: 'marketing@example.com', name: 'Marketing Specialist', roleId: marketologRole.id },
+    { email: 'subscriber@example.com', name: 'Subscriber User', roleId: subscriberRole.id },
+    { email: 'support@example.com', name: 'Support Agent', roleId: supportRole.id },
+    { email: 'manager@example.com', name: 'Manager User', roleId: managerRole.id }
+  ]
+
+  for (const sampleUser of additionalUsers) {
+    await prisma.user.upsert({
+      where: { email: sampleUser.email },
+      update: {
+        password: defaultUserPassword,
+        roleId: sampleUser.roleId
+      },
+      create: {
+        email: sampleUser.email,
+        name: sampleUser.name,
+        password: defaultUserPassword,
+        roleId: sampleUser.roleId,
+        language: 'ru',
+        currency: 'RUB',
+        country: 'russia'
+      }
+    })
+  }
+
   // Create some sample currencies if they don't exist
   await prisma.currency.upsert({
     where: { code: 'RUB' },
@@ -670,10 +702,18 @@ async function main() {
   // Create rate limit configurations
   const rateLimitConfigs = [
     {
-      module: 'chat',
+      module: 'chat-messages',
       maxRequests: 10,
       windowMs: 60000, // 1 minute
       blockMs: 900000, // 15 minutes
+      isActive: true
+    },
+    {
+      module: 'chat-rooms',
+      maxRequests: 20,
+      windowMs: 60000, // 1 minute
+      blockMs: 900000, // 15 minutes
+      warnThreshold: 2,
       isActive: true
     },
     {
@@ -721,7 +761,7 @@ async function main() {
     {
       userId: user.id, // Блокируем обычного админа для тестирования
       reason: 'rate_limit_violation',
-      module: 'chat',
+      module: 'chat-messages',
       blockedBy: 'system',
       blockedAt: new Date(Date.now() - 30 * 60 * 1000), // Заблокирован 30 минут назад
       unblockedAt: new Date(Date.now() + 10 * 60 * 1000), // Разблокируется через 10 минут
@@ -737,6 +777,16 @@ async function main() {
       unblockedAt: null, // Permanent block
       isActive: true,
       notes: 'Manual block for excessive ad posting'
+    },
+    {
+      userId: user.id,
+      reason: 'rate_limit_violation',
+      module: 'chat-rooms',
+      blockedBy: 'system',
+      blockedAt: new Date(Date.now() - 10 * 60 * 1000), // 10 минут назад
+      unblockedAt: new Date(Date.now() + 5 * 60 * 1000), // ещё 5 минут блок
+      isActive: true,
+      notes: 'Создание комнат слишком часто'
     }
   ]
 

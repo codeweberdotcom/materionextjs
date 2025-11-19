@@ -172,7 +172,7 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
             {dictionary['navigation'].monitoringTesting || dictionary['navigation'].testingConnection || 'Testing'}
           </MenuItem>
           <MenuItem href={`/${locale}/admin/maintenance`} icon={<i className='ri-tools-line' />}>
-            {dictionary['navigation'].maintenance || 'Maintenance'}
+            {(dictionary['navigation'] as any)?.cron || dictionary['navigation'].maintenance || 'Cron'}
           </MenuItem>
         </MenuSection>
 <MenuSection label={dictionary['navigation'].blocking}>

@@ -50,7 +50,8 @@ type PlaywrightRun = {
 }
 
 const TestingPage = () => {
-  const t = useTranslation().testing
+  const translation = useTranslation()
+  const t = translation?.testing ?? ({} as Record<string, string>)
   const params = useParams()
   const locale = typeof params?.lang === 'string' ? params.lang : Array.isArray(params?.lang) ? params.lang[0] : 'en'
   const [runs, setRuns] = useState<PlaywrightRun[]>([])
@@ -390,25 +391,25 @@ const TestingPage = () => {
       </Card>
 
       <Card className='mt-6'>
-        <CardHeader title='Recent Runs' />
+        <CardHeader title={t.recentRunsTitle || 'Recent Runs'} />
         <Divider />
         <TableContainer className='overflow-x-auto'>
           <Table className={tableStyles.table}>
             <TableHead>
               <TableRow>
-                <TableCell>Run</TableCell>
-                <TableCell>Test</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Duration</TableCell>
-                <TableCell>Date/Time</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell>{t.columnRun || 'Run'}</TableCell>
+                <TableCell>{t.columnTest || 'Test'}</TableCell>
+                <TableCell>{t.tableHeaderStatus || 'Status'}</TableCell>
+                <TableCell>{t.tableHeaderDuration || 'Duration'}</TableCell>
+                <TableCell>{t.columnDateTime || 'Date/Time'}</TableCell>
+                <TableCell>{t.tableHeaderActions || 'Actions'}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {recentEntries.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className='text-center'>
-                    No runs yet. Execute a test to populate this table.
+                    {t.noRuns || 'No test runs yet'}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -428,7 +429,7 @@ const TestingPage = () => {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={entry.status === 'passed' ? 'Passed' : 'Failed'}
+                        label={entry.status === 'passed' ? (t.statusPassed || 'Passed') : (t.statusFailed || 'Failed')}
                         color={entry.status === 'passed' ? 'success' : 'error'}
                         variant='tonal'
                         size='small'
@@ -442,17 +443,19 @@ const TestingPage = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant='body2' color='text.secondary'>
-                        {new Date(entry.startedAt).toLocaleString()}
+                        {new Date(entry.startedAt).toLocaleString(locale)}
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <IconButton
-                        aria-label='View report'
-                        size='small'
-                        onClick={() => openTestDetails(entry)}
-                      >
-                        <i className='ri-eye-line text-textSecondary' />
-                      </IconButton>
+                      <Tooltip title={t.viewReport || 'View report'} arrow>
+                        <IconButton
+                          aria-label={t.viewReport || 'View report'}
+                          size='small'
+                          onClick={() => openTestDetails(entry)}
+                        >
+                          <i className='ri-eye-line text-textSecondary' />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 ))

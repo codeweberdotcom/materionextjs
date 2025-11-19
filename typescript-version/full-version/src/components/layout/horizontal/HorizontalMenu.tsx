@@ -173,6 +173,9 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
           <MenuItem href={`/${locale}/admin/monitoring/testing`} icon={<i className='ri-test-tube-line' />}>
             {dictionary['navigation'].monitoringTesting || dictionary['navigation'].testingConnection || 'Testing'}
           </MenuItem>
+          <MenuItem href={`/${locale}/admin/maintenance`} icon={<i className='ri-tools-line' />}>
+            {(dictionary['navigation'] as any)?.cron || dictionary['navigation'].maintenance || 'Cron'}
+          </MenuItem>
         </SubMenu>
 <SubMenu label={dictionary['navigation'].blocking} icon={<i className='ri-shield-check-line' />}>
           <MenuItem href={`/${locale}/admin/rate-limits`} icon={<i className='ri-timer-flash-line' />}>

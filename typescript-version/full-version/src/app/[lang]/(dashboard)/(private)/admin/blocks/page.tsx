@@ -107,7 +107,7 @@ type ManualBlockForm = {
   notes: string
 }
 
-const DEFAULT_MODULES = ['all', 'chat', 'ads', 'upload', 'auth', 'email', 'notifications', 'registration']
+const DEFAULT_MODULES = ['all', 'chat-messages', 'ads', 'upload', 'auth', 'email', 'notifications', 'registration']
 
 const moduleLabelMap: Record<
   string,

@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     }
 
     const configs = await rateLimitService.getAllConfigs()
-    const modules: Array<'chat' | 'ads' | 'upload' | 'auth'> = ['chat', 'ads', 'upload', 'auth']
+    const modules: Array<'chat-messages' | 'ads' | 'upload' | 'auth'> = ['chat-messages', 'ads', 'upload', 'auth']
     const stats = await Promise.all(modules.map(module => rateLimitService.getStats(module)))
     const filteredStats = stats.filter((stat): stat is RateLimitStats => Boolean(stat))
 
@@ -181,7 +181,15 @@ export async function PUT(request: NextRequest) {
       updatePayload.storeIpInEvents = storeIpInEvents
     }
 
+    const previousConfig = rateLimitService.getConfig(module)
     await rateLimitService.updateConfig(module, updatePayload)
+    const updatedConfig = rateLimitService.getConfig(module)
+    if (
+      updatedConfig?.mode === 'monitor' &&
+      previousConfig?.mode === 'enforce'
+    ) {
+      await rateLimitService.resetLimits(undefined, module)
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

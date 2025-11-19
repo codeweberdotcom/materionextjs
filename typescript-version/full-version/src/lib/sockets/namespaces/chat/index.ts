@@ -3,6 +3,7 @@ import logger from '../../../logger'
 import type { ServerToClientEvents, TypedIOServer, TypedSocket } from '../../types/common'
 import { ChatEvents, ChatEmitEvents, ChatMessage, ChatRoom } from '../../types/chat';
 import { authenticateSocket, requirePermission, requireRole } from '../../middleware/auth';
+import { rateLimitChatConnections } from '../../middleware/rateLimit';
 import { rateLimitService } from '@/lib/rate-limit';
 import { prisma } from '@/libs/prisma'
 import type { ChatMessageWithSender } from '@/types/prisma'
@@ -10,6 +11,32 @@ import type { ChatMessageWithSender } from '@/types/prisma'
 // Хранилище активных пользователей (in-memory)
 const activeUsers = new Map<string, string>(); // userId -> socketId
 const onlineUsers = new Map<string, { socketId: string; connectedAt: Date }>(); // userId -> { socketId, connectedAt }
+
+const emitRateLimitExceeded = (
+  socket: TypedSocket,
+  result: { blockedUntil?: number; resetTime: number; remaining: number },
+  callback?: (response: { ok: boolean; error: string; blockedUntil?: number; retryAfter?: number }) => void
+) => {
+  const blockTarget = result.blockedUntil ?? result.resetTime
+  const retryAfterSec = Math.max(1, Math.ceil((blockTarget - Date.now()) / 1000))
+
+  socket.emit('rateLimitExceeded', {
+    error: 'Rate limit exceeded',
+    blockedUntilMs: blockTarget,
+    retryAfterSec,
+    remaining: result.remaining,
+    // Legacy
+    retryAfter: retryAfterSec,
+    blockedUntil: blockTarget
+  })
+
+  callback?.({
+    ok: false,
+    error: 'RATE_LIMITED',
+    blockedUntil: blockTarget,
+    retryAfter: retryAfterSec
+  })
+}
 
 /**
  * Обновление статуса пользователя онлайн/оффлайн
@@ -50,6 +77,7 @@ export const initializeChatNamespace = (io: TypedIOServer): Namespace => {
 
   // Middleware для чата
   chatNamespace.use(authenticateSocket);
+  chatNamespace.use(rateLimitChatConnections);
   chatNamespace.use(requirePermission('send_message'));
 
   // Обработка подключения к namespace чата
@@ -142,7 +170,7 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
     try {
       logger.info('Processing sendMessage', { userId, roomId: data.roomId, socketId: socket.id, connected: socket.connected });
 
-      const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat', {
+      const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat-messages', {
         userId,
         email: socket.data.user?.email ?? null,
         ipAddress: socket.handshake.address,
@@ -154,27 +182,7 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
       }
 
       if (!rateLimitResult.allowed) {
-        const blockTarget = rateLimitResult.blockedUntil ?? rateLimitResult.resetTime
-        const retryAfter = Math.max(1, Math.ceil((blockTarget - Date.now()) / 1000))
-
-        logger.warn('Chat rate limit exceeded for sendMessage', {
-          userId,
-          socketId: socket.id,
-          retryAfter,
-          blockedUntil: blockTarget
-        })
-
-        socket.emit('rateLimitExceeded', {
-          error: 'Rate limit exceeded',
-          retryAfter,
-          blockedUntil: blockTarget
-        })
-        callback?.({
-          ok: false,
-          error: 'RATE_LIMITED',
-          retryAfter,
-          blockedUntil: blockTarget
-        })
+        emitRateLimitExceeded(socket, rateLimitResult, callback)
         return
       }
 
@@ -263,6 +271,21 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
   // Создание или получение комнаты
   socket.on('getOrCreateRoom', async (data: { user1Id: string; user2Id: string }) => {
     try {
+      const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat-rooms', {
+        userId,
+        email: socket.data.user?.email ?? null,
+        ipAddress: socket.handshake.address,
+        keyType: 'user'
+      })
+
+      if (rateLimitResult.warning) {
+        socket.emit('rateLimitWarning', rateLimitResult.warning)
+      }
+
+      if (!rateLimitResult.allowed) {
+        emitRateLimitExceeded(socket, rateLimitResult)
+        return
+      }
       logger.debug('Processing getOrCreateRoom', { userId, user1Id: data.user1Id, user2Id: data.user2Id });
 
       // Проверяем, что текущий пользователь участвует в комнате
@@ -450,38 +473,37 @@ export const getActiveChatUsers = () => {
 
 // Получение статусов онлайн пользователей на основе lastSeen
 export const getOnlineUsers = async () => {
-  // Получаем всех пользователей из базы данных
+  // Получаем всех пользователей (для расчета нужен только lastSeen)
   const allUsers = await prisma.user.findMany({
     select: {
       id: true,
-      isActive: true,
-      email: true,
-      country: true,
-      image: true,
-      name: true,
-      language: true,
-      currency: true,
-      roleId: true,
-      password: true,
-      emailVerified: true,
-      createdAt: true,
-      updatedAt: true,
       lastSeen: true
     }
   });
 
-  // Создаем Map статусов для всех пользователей
   const userStatuses: { [userId: string]: { isOnline: boolean; lastSeen?: string } } = {};
-  const now = new Date();
+  const now = Date.now();
 
   for (const user of allUsers) {
-    // Определяем онлайн статус:
-    // - Если lastSeen = null, пользователь онлайн (подключен к сокетам)
-    // - Если lastSeen обновлялся менее 30 секунд назад, пользователь онлайн
-    // - Иначе оффлайн
-    const isOnline = !user.lastSeen || (now.getTime() - user.lastSeen.getTime()) < (30 * 1000);
-    const lastSeen = user.lastSeen ? user.lastSeen.toISOString() : undefined;
-    userStatuses[user.id] = { isOnline: !!isOnline, lastSeen };
+    const onlineEntry = onlineUsers.get(user.id);
+    let isOnline = Boolean(onlineEntry);
+    let lastSeen: string | undefined = user.lastSeen ? user.lastSeen.toISOString() : undefined;
+
+    if (!isOnline) {
+      if (user.lastSeen) {
+        isOnline = now - user.lastSeen.getTime() < 30_000;
+      } else {
+        isOnline = false;
+      }
+    } else {
+      // Для активных подключений lastSeen выставится при отключении
+      lastSeen = undefined;
+    }
+
+    userStatuses[user.id] = {
+      isOnline,
+      ...(lastSeen ? { lastSeen } : {})
+    };
   }
 
   return userStatuses;

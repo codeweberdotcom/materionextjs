@@ -5,7 +5,7 @@ import type { UserWithRole } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
 
-const CHAT_MODULE = 'chat'
+const CHAT_MODULE = 'chat-messages'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 })
     }
 
-    const rateLimitResult = await rateLimitService.checkLimit(userId, CHAT_MODULE, {
+    const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat-messages', {
       increment: false,
       userId,
       email: user.email ?? null,
@@ -37,26 +37,30 @@ export async function POST(request: NextRequest) {
       blockedUntil: rateLimitResult.blockedUntil
     })
 
-    const respondWithBlock = (blockedUntil: number) => {
-      const retryAfter = Math.max(1, Math.ceil((blockedUntil - Date.now()) / 1000))
+    const respondWithBlock = (blockedUntilMs: number) => {
+      const retryAfterSec = Math.max(1, Math.ceil((blockedUntilMs - Date.now()) / 1000))
 
-      logger.info('рџљ« [API DEBUG] Rate limit exceeded:', {
-        retryAfter,
-        blockedUntil
+      logger.info('🚫 [API DEBUG] Rate limit exceeded:', {
+        retryAfter: retryAfterSec,
+        blockedUntil: blockedUntilMs
       })
 
       return NextResponse.json(
         {
           error: 'Rate limit exceeded',
-          retryAfter,
-          blockedUntil
+          blockedUntilMs,
+          retryAfterSec,
+          remaining: rateLimitResult.remaining,
+          // Legacy for compatibility
+          retryAfter: retryAfterSec,
+          blockedUntil: blockedUntilMs
         },
         {
           status: 429,
           headers: {
-            'Retry-After': retryAfter.toString(),
+            'Retry-After': retryAfterSec.toString(),
             'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining).toString(),
-            'X-RateLimit-Reset': blockedUntil.toString()
+            'X-RateLimit-Reset': blockedUntilMs.toString()
           }
         }
       )
@@ -75,7 +79,7 @@ export async function POST(request: NextRequest) {
 
       logger.info('⚠️ [API DEBUG] Rate limit exhausted, mode check', { mode: config?.mode })
 
-      const enforceResult = await rateLimitService.checkLimit(userId, CHAT_MODULE, {
+      const enforceResult = await rateLimitService.checkLimit(userId, 'chat-messages', {
         increment: true,
         userId,
         email: user.email ?? null,
@@ -92,7 +96,8 @@ export async function POST(request: NextRequest) {
           resetTime: resetTimeMs,
           warning: {
             remaining: warningRemaining,
-            blockedUntil: resetTimeMs
+            blockedUntil: resetTimeMs,
+            blockedUntilMs: resetTimeMs
           }
         })
       }
@@ -112,7 +117,12 @@ export async function POST(request: NextRequest) {
       allowed: true,
       remaining: rateLimitResult.remaining,
       resetTime: rateLimitResult.resetTime,
-      warning: rateLimitResult.warning || null
+      warning: rateLimitResult.warning
+        ? {
+            ...rateLimitResult.warning,
+            blockedUntilMs: rateLimitResult.warning.blockedUntil ?? rateLimitResult.resetTime
+          }
+        : null
     })
   } catch (error) {
     logger.error('вќЊ [API DEBUG] Error in rate limit check:', { error: error, file: 'src/app/api/chat/messages/check-rate-limit/route.ts' })

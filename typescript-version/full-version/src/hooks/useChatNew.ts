@@ -18,6 +18,8 @@ import {
 type RateLimitExceededPayload = {
   retryAfter?: number
   blockedUntil?: number
+  retryAfterSec?: number
+  blockedUntilMs?: number
 }
 
 type SendMessageAck = {
@@ -60,20 +62,6 @@ export const useChatNew = (otherUserId?: string) => {
   const warningToastRemaining = useRef<number | null>(null)
 
   useEffect(() => {
-    if (!user?.id) return
-    const stored = readStoredRateLimit(user.id)
-    if (stored && stored > Date.now()) {
-      const retryAfter = Math.ceil((stored - Date.now()) / 1000)
-      setRateLimitData({
-        retryAfter,
-        blockedUntil: stored
-      })
-    } else if (stored) {
-      writeStoredRateLimit(user.id, undefined)
-    }
-  }, [user?.id])
-
-  useEffect(() => {
     if (!rateLimitData) {
       warningToastRemaining.current = null
     }
@@ -90,14 +78,8 @@ export const useChatNew = (otherUserId?: string) => {
   }, [dictionary.navigation.rateLimitWarning])
 
   const clearCachedRateLimit = useCallback(() => {
-    if (!user?.id) {
-      setRateLimitData(null)
-      return
-    }
-
     setRateLimitData(null)
-    writeStoredRateLimit(user.id, undefined)
-  }, [user?.id])
+  }, [])
 
   const requestRateLimitStatus = useCallback(async (): Promise<{ blockedUntil?: number; warningRemaining?: number; remaining?: number } | null> => {
     if (!user?.id || !isOnline) {
@@ -116,17 +98,25 @@ export const useChatNew = (otherUserId?: string) => {
       const data = await response.json().catch(() => ({}))
 
       if (response.status === 429) {
-        const retryAfter = Number.isFinite(data.retryAfter) ? data.retryAfter : 300
+        const blockedUntilMs =
+          typeof data.blockedUntilMs === 'number'
+            ? data.blockedUntilMs
+            : typeof data.blockedUntil === 'number'
+              ? data.blockedUntil
+              : null
+        const retryAfterSec = Number.isFinite(data.retryAfterSec)
+          ? data.retryAfterSec
+          : Number.isFinite(data.retryAfter)
+            ? data.retryAfter
+            : 300
         const blockedUntil =
-          typeof data.blockedUntil === 'number'
-            ? data.blockedUntil
-            : Date.now() + retryAfter * 1000
+          blockedUntilMs ??
+          Date.now() + retryAfterSec * 1000
 
         setRateLimitData({
-          retryAfter,
+          retryAfter: retryAfterSec,
           blockedUntil
         })
-        writeStoredRateLimit(user.id, blockedUntil)
 
         return { blockedUntil }
       }
@@ -135,6 +125,12 @@ export const useChatNew = (otherUserId?: string) => {
         const warningRemaining = data?.warning?.remaining
         const remaining = typeof data?.remaining === 'number' ? data.remaining : undefined
         const resetTimeMs = typeof data?.resetTime === 'number' ? data.resetTime : undefined
+        const warningBlockedUntil =
+          typeof data?.warning?.blockedUntilMs === 'number'
+            ? data.warning.blockedUntilMs
+            : typeof data?.warning?.blockedUntil === 'number'
+              ? data.warning.blockedUntil
+              : resetTimeMs
 
         const isHardBlock =
           data?.allowed === false &&
@@ -143,13 +139,12 @@ export const useChatNew = (otherUserId?: string) => {
           resetTimeMs &&
           resetTimeMs > Date.now()
 
-        if (isHardBlock) {
+        if (isHardBlock && resetTimeMs) {
           const retryAfter = Math.max(1, Math.ceil((resetTimeMs - Date.now()) / 1000))
           setRateLimitData({
             retryAfter,
             blockedUntil: resetTimeMs
           })
-          writeStoredRateLimit(user.id, resetTimeMs)
           return { blockedUntil: resetTimeMs, warningRemaining, remaining }
         }
 
@@ -164,7 +159,7 @@ export const useChatNew = (otherUserId?: string) => {
         }
 
         return {
-          blockedUntil: isHardBlock ? resetTimeMs : undefined,
+          blockedUntil: isHardBlock ? warningBlockedUntil : undefined,
           warningRemaining,
           remaining
         }
@@ -318,11 +313,20 @@ export const useChatNew = (otherUserId?: string) => {
     }
 
     const handleRateLimitExceeded = (data: RateLimitExceededPayload) => {
-      const retryAfter = data.retryAfter && Number.isFinite(data.retryAfter) ? data.retryAfter : 300
-      const blockedUntilTimestamp =
-        typeof data.blockedUntil === 'number'
-          ? data.blockedUntil
-          : Date.now() + retryAfter * 1000
+      const blockedUntilMs =
+        typeof (data as any).blockedUntilMs === 'number'
+          ? (data as any).blockedUntilMs
+          : typeof data.blockedUntil === 'number'
+            ? data.blockedUntil
+            : null
+
+      const retryAfterSecRaw =
+        typeof (data as any).retryAfterSec === 'number'
+          ? (data as any).retryAfterSec
+          : data.retryAfter
+
+      const retryAfter = Number.isFinite(retryAfterSecRaw) ? retryAfterSecRaw! : 300
+      const blockedUntilTimestamp = blockedUntilMs ?? Date.now() + retryAfter * 1000
 
       setRateLimitData({
         retryAfter,
@@ -874,40 +878,5 @@ export const useChatNew = (otherUserId?: string) => {
     loadMoreMessages,
     historyLoading,
     hasMoreHistory
-  }
-}
-const RATE_LIMIT_STORAGE_KEY = 'chatRateLimit'
-
-const readStoredRateLimit = (userId?: string): number | null => {
-  if (typeof window === 'undefined' || !userId) return null
-
-  try {
-    const raw = window.localStorage.getItem(RATE_LIMIT_STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw) as Record<string, number>
-    const value = parsed[userId]
-    if (!value) return null
-    return value
-  } catch {
-    return null
-  }
-}
-
-const writeStoredRateLimit = (userId: string | undefined, blockedUntil?: number) => {
-  if (typeof window === 'undefined' || !userId) return
-
-  try {
-    const raw = window.localStorage.getItem(RATE_LIMIT_STORAGE_KEY)
-    const parsed = raw ? (JSON.parse(raw) as Record<string, number>) : {}
-
-    if (blockedUntil && blockedUntil > Date.now()) {
-      parsed[userId] = blockedUntil
-    } else {
-      delete parsed[userId]
-    }
-
-    window.localStorage.setItem(RATE_LIMIT_STORAGE_KEY, JSON.stringify(parsed))
-  } catch {
-    // ignore storage errors
   }
 }

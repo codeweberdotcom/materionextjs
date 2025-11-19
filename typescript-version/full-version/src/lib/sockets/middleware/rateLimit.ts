@@ -46,25 +46,24 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
       }
 
       if (result.allowed) {
-        rateLimitLogger.limitApplied(
-          rateKey,
-          socket.handshake.address,
-          result.remaining,
-          result.resetTime
-        )
+        rateLimitLogger.limitApplied(rateKey, socket.handshake.address, result.remaining, result.resetTime)
         return next()
       }
 
       const blockedUntil = result.blockedUntil ?? result.resetTime
       const msBeforeNext = Math.max(0, blockedUntil - Date.now())
-      const retryAfter = Math.max(1, Math.ceil(msBeforeNext / 1000))
+      const retryAfterSec = Math.max(1, Math.ceil(msBeforeNext / 1000))
 
       rateLimitLogger.limitExceeded(rateKey, socket.handshake.address, socket.id, msBeforeNext)
 
       if (exceededEvent) {
         socket.emit(exceededEvent, {
           error: 'Rate limit exceeded',
-          retryAfter,
+          blockedUntilMs: blockedUntil,
+          retryAfterSec,
+          remaining: result.remaining,
+          // Legacy для совместимости
+          retryAfter: retryAfterSec,
           blockedUntil
         })
       }
@@ -81,14 +80,43 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
   }
 }
 
-export const rateLimitChat = createSocketRateLimiter({
-  module: 'chat',
+export const rateLimitChatMessages = createSocketRateLimiter({
+  module: 'chat-messages',
   warnEvent: 'rateLimitWarning',
   exceededEvent: 'rateLimitExceeded',
-  context: 'chat-rate-limit'
+  context: 'chat-messages-rate-limit'
+})
+
+export const rateLimitChatRooms = createSocketRateLimiter({
+  module: 'chat-rooms',
+  warnEvent: 'rateLimitWarning',
+  exceededEvent: 'rateLimitExceeded',
+  context: 'chat-rooms-rate-limit'
+})
+
+export const rateLimitChatRead = createSocketRateLimiter({
+  module: 'chat-read',
+  warnEvent: 'rateLimitWarning',
+  exceededEvent: 'rateLimitExceeded',
+  context: 'chat-read-rate-limit'
+})
+
+export const rateLimitChatPing = createSocketRateLimiter({
+  module: 'chat-ping',
+  warnEvent: 'rateLimitWarning',
+  exceededEvent: 'rateLimitExceeded',
+  context: 'chat-ping-rate-limit'
 })
 
 export const rateLimitNotification = createSocketRateLimiter({
   module: 'notifications',
   context: 'notification-rate-limit'
 })
+
+export const rateLimitChatConnections = createSocketRateLimiter({
+  module: 'chat-connections',
+  context: 'chat-connections-rate-limit'
+})
+
+// Export factory for potential reuse
+export { createSocketRateLimiter }

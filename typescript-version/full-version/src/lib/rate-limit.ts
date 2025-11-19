@@ -295,8 +295,9 @@ class RateLimitService {
   }
 
   private setDefaultConfigs() {
-    const defaults: Record<string, RateLimitConfig> = {
-      chat: {
+      const defaults: Record<string, RateLimitConfig> = {
+      // Чат: отправка сообщений (используется в /chat и /api/chat/messages)
+      'chat-messages': {
         maxRequests: 1000,
         windowMs: 60 * 60 * 1000,
         blockMs: 60 * 1000,
@@ -305,6 +306,17 @@ class RateLimitService {
         mode: 'enforce',
         storeEmailInEvents: false,
         storeIpInEvents: false,
+        isFallback: false
+      },
+      'chat-connections': {
+        maxRequests: 30,
+        windowMs: 60 * 1000,
+        blockMs: 5 * 60 * 1000,
+        warnThreshold: 5,
+        isActive: true,
+        mode: 'enforce',
+        storeEmailInEvents: false,
+        storeIpInEvents: true,
         isFallback: false
       },
       ads: {
@@ -535,6 +547,7 @@ class RateLimitService {
   }
 
   async checkLimit(key: string, module: string, options?: RateLimitCheckOptions): Promise<RateLimitResult> {
+    await this.cleanupExpiredState({ key, module })
     await this.ensureConfigsFresh()
     await this.configsReadyPromise
     const increment = options?.increment ?? true
@@ -645,6 +658,7 @@ class RateLimitService {
   }
 
   async getStats(module: string): Promise<RateLimitStats | null> {
+    await this.cleanupExpiredState({ module })
     await this.ensureConfigsFresh()
     try {
       const config = this.configs.get(module)
@@ -666,7 +680,7 @@ class RateLimitService {
       let totalRequests = states.reduce((sum, state) => sum + state.count, 0)
       const blockedCount = activeStates
 
-      if (module === 'chat') {
+      if (module === 'chat-messages') {
         const oneHourAgo = new Date(Date.now() - config.windowMs)
         totalRequests = await prisma.message.count({
           where: {
@@ -870,7 +884,10 @@ class RateLimitService {
       })
 
       if (state) {
-        await this.resetLimits(state.key, state.module)
+        await prisma.rateLimitState.delete({
+          where: { id: stateId }
+        })
+        await this.store.resetCache(state.key, state.module)
         return true
       }
 
@@ -900,7 +917,40 @@ class RateLimitService {
     }
   }
 
+  private async cleanupExpiredState(filter?: { key?: string; module?: string }) {
+    try {
+      const now = new Date()
+      const where: Prisma.RateLimitStateWhereInput = {
+        AND: [
+          { count: 0 },
+          {
+            OR: [
+              { blockedUntil: { lt: now } },
+              { AND: [{ blockedUntil: null }, { windowEnd: { lt: now } }] }
+            ]
+          }
+        ]
+      }
+
+      if (filter?.key) {
+        where.key = filter.key
+      }
+
+      if (filter?.module) {
+        where.module = filter.module
+      }
+
+      await prisma.rateLimitState.deleteMany({ where })
+    } catch (error) {
+      logger.warn('Failed to cleanup expired rate limit states', {
+        filter,
+        error: error instanceof Error ? error.message : error
+      })
+    }
+  }
+
   async listStates(params: ListRateLimitStatesParams = {}): Promise<RateLimitStateListResult> {
+    await this.cleanupExpiredState()
     await this.ensureConfigsFresh()
     const limit = Math.min(Math.max(params.limit ?? 20, 1), 100)
     const cursorState = decodeStatesCursor(params.cursor)
@@ -1125,13 +1175,13 @@ class RateLimitService {
 
       const reasonFromState =
         overLimit
-          ? state.module === 'chat'
+          ? state.module === 'chat-messages'
             ? `Превышен лимит сообщений. Из разрешенных ${config.maxRequests} за ${humanizeWindow(config.windowMs)}, отправлено ${state.count}.`
             : `Превышен лимит: ${state.count}/${config.maxRequests} за ${humanizeWindow(config.windowMs)}.`
           : null
 
       const reasonFromEvent = latestBlockEvent
-        ? latestBlockEvent.module === 'chat'
+        ? latestBlockEvent.module === 'chat-messages'
           ? `Превышен лимит сообщений. Из разрешенных ${latestBlockEvent.maxRequests} за ${humanizeWindow(
               latestBlockEvent.windowEnd.getTime() - latestBlockEvent.windowStart.getTime()
             )}, отправлено ${latestBlockEvent.count}.`
