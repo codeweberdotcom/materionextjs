@@ -107,6 +107,10 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
             href: '/apps/user/view'
           },
           {
+            label: dictionary['navigation'].documentsVerification || 'Подтверждение документов',
+            href: '/apps/user/documents-verification'
+          },
+          {
             label: dictionary['navigation'].roles,
             href: '/apps/roles'
           },
@@ -171,6 +175,31 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         label: dictionary['navigation'].emailTemplates,
         icon: 'ri-file-text-line',
         href: '/apps/settings/email-templates'
+      },
+      {
+        label: dictionary['navigation'].registrationSettings || 'Настройки регистрации',
+        icon: 'ri-user-add-line',
+        href: '/apps/settings/registration'
+      },
+      {
+        label: dictionary['navigation'].smsRuSettings,
+        icon: 'ri-message-3-line',
+        href: '/apps/settings/sms-ru'
+      },
+      {
+        label: dictionary['navigation'].telegramSettings,
+        icon: 'ri-telegram-line',
+        href: '/apps/settings/telegram'
+      },
+      {
+        label: dictionary['navigation'].notificationScenarios,
+        icon: 'ri-flow-chart',
+        href: '/admin/notifications/scenarios'
+      },
+      {
+        label: dictionary['navigation'].externalServices || 'External Services',
+        icon: 'ri-server-line',
+        href: '/admin/settings/services'
       }
     ]
   },  {
@@ -179,9 +208,9 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
     isSection: true,
     children: [
       {
-        label: dictionary['navigation'].monitoringOverview,
-        icon: 'ri-eye-line',
-        href: '/admin/monitoring/overview'
+        label: dictionary['navigation'].monitoringDashboard || 'Dashboard',
+        icon: 'ri-dashboard-line',
+        href: '/admin/monitoring/dashboard'
       },
       {
         label: dictionary['navigation'].monitoringMetrics,
@@ -436,9 +465,8 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
             href: '/pages/widget-examples/actions'
           }
         ]
-      }
-    ]
-  },  {
+      },
+  {
     label: dictionary['navigation'].appsPages,
     isSection: true,
     children: [
@@ -618,7 +646,10 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
             href: '/apps/permissions'
           }
         ]
-      },  {
+      }
+    ]
+  },
+  {
     label: dictionary['navigation'].formsAndTables,
     isSection: true,
     children: [

@@ -28,7 +28,7 @@ const emitNotificationEvent = <T extends keyof NotificationEmitEvents>(
   userId: string,
   event: T,
   ...args: Parameters<NotificationEmitEvents[T]>
-) => {
+): void => {
   const io = globalThis.io
 
   if (!io) {
@@ -46,7 +46,7 @@ const emitNotificationEvent = <T extends keyof NotificationEmitEvents>(
   if (legacyEvent) {
     namespace
       .to(`user_${userId}`)
-      .emit(legacyEvent, ...(args as Parameters<NotificationLegacyEmitEvents[typeof legacyEvent]>))
+      .emit(legacyEvent as any, ...args)
   }
 }
 
@@ -316,7 +316,7 @@ const registerNotificationEventHandlers = (socket: TypedSocket) => {
   })
 
   // Синхронизация статусов онлайн через notifications namespace
-  socket.on('presence:sync', async (_data, callback) => {
+  socket.on('presence:sync', async (_data: unknown, callback?: (data?: { [userId: string]: { isOnline: boolean; lastSeen?: string } } | undefined) => void) => {
     try {
       const userStatuses = await getOnlineUsers()
       callback?.(userStatuses)

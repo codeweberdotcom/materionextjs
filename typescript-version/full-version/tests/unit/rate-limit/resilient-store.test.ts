@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 /**
  * @jest-environment node
  */
@@ -14,12 +15,12 @@ import {
   startConsumeDurationTimer
 } from '@/lib/metrics/rate-limit'
 
-jest.mock('@/lib/metrics/rate-limit', () => ({
-  markBackendActive: jest.fn(),
-  recordBackendSwitch: jest.fn(),
-  recordFallbackDuration: jest.fn(),
-  recordRedisFailure: jest.fn(),
-  startConsumeDurationTimer: jest.fn(() => jest.fn())
+vi.mock('@/lib/metrics/rate-limit', () => ({
+  markBackendActive: vi.fn(),
+  recordBackendSwitch: vi.fn(),
+  recordFallbackDuration: vi.fn(),
+  recordRedisFailure: vi.fn(),
+  startConsumeDurationTimer: vi.fn(() => vi.fn())
 }))
 
 const baseConfig: RateLimitConfig = {
@@ -39,13 +40,16 @@ const createParams = (): RateLimitConsumeParams => ({
   warnThreshold: 1,
   mode: 'enforce',
   now: new Date(0),
-  recordEvent: jest.fn().mockResolvedValue(undefined)
+  recordEvent: vi.fn().mockResolvedValue(undefined)
 })
 
 class MockStore implements RateLimitStore {
-  consume = jest.fn<Promise<RateLimitResult>, [RateLimitConsumeParams]>()
-  resetCache = jest.fn()
-  shutdown = jest.fn()
+  consume = vi.fn<Promise<RateLimitResult>, [RateLimitConsumeParams]>()
+  resetCache = vi.fn()
+  shutdown = vi.fn()
+  syncBlocksFromDatabase = vi.fn()
+  clearCacheCompletely = vi.fn()
+  healthCheck = vi.fn().mockResolvedValue({ healthy: true, latency: 10 })
 }
 
 const successResult: RateLimitResult = {
@@ -55,11 +59,11 @@ const successResult: RateLimitResult = {
 }
 
 let fakeNow = 0
-const dateNowSpy = jest.spyOn(Date, 'now').mockImplementation(() => fakeNow)
+const dateNowSpy = vi.spyOn(Date, 'now').mockImplementation(() => fakeNow)
 
 beforeEach(() => {
   fakeNow = 0
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 afterAll(() => {

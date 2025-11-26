@@ -1,6 +1,6 @@
 import { ExtendedError } from 'socket.io'
 
-import { rateLimitService } from '@/lib/rate-limit'
+import { rateLimitContainer } from '@/lib/rate-limit/di/container'
 import logger, { rateLimitLogger } from '../../logger'
 import type { ServerToClientEvents, TypedSocket } from '../types/common'
 
@@ -34,7 +34,7 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
         return next()
       }
 
-      const result = await rateLimitService.checkLimit(rateKey, options.module, {
+      const result = await rateLimitContainer.getRateLimitEngine().checkLimit(rateKey, options.module, {
         userId: resolvedUserId ?? null,
         email: socket.data.user?.email ?? null,
         ipAddress: ipAddress ?? null,

@@ -3,58 +3,60 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
-import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
+import { checkPermission, isSuperadmin, parsePermissions } from '@/utils/permissions/permissions'
+import { canModifyRole, canModifyRoleByObject, getRoleLevel, getRoleLevelFromRole, ROLE_HIERARCHY } from '@/utils/formatting/string'
+import { getPermissionValidationErrors } from '@/utils/permissions/validation'
+import { createRoleCacheStore } from '@/lib/role-cache'
+import type { Role } from '@/lib/role-cache/types'
+import logger from '@/lib/logger'
+import { eventService } from '@/services/events/EventService'
+import { markRoleOperation, recordRoleOperationDuration, markRoleEvent } from '@/lib/metrics/roles'
+import { buildRoleError } from './utils/error-helper'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
-// РљРµС€ РґР»СЏ РїР°СЂСЃРёСЂРѕРІР°РЅРЅС‹С… СЂРѕР»РµР№ (РїСЂРѕСЃС‚Р°СЏ in-memory РєРµС€)
-let rolesCache: any[] | null = null
-let cacheTimestamp: number = 0
-const CACHE_DURATION = 30 * 1000 // 30 СЃРµРєСѓРЅРґ РґР»СЏ С‚РµСЃС‚РёСЂРѕРІР°РЅРёСЏ
+// Lazy initialization хранилища кэша ролей (Redis с fallback на in-memory или только in-memory)
+let roleCacheStorePromise: Promise<ReturnType<typeof createRoleCacheStore>> | null = null
 
-// Р¤СѓРЅРєС†РёСЏ РґР»СЏ РїР°СЂСЃРёРЅРіР° СЂР°Р·СЂРµС€РµРЅРёР№ СЂРѕР»Рё
-function parseRolePermissions(role: any) {
-  if (!role.permissions) return { ...role, permissions: {} }
-
-  // Р•СЃР»Рё СѓР¶Рµ СЂР°СЃРїР°СЂСЃРµРЅРѕ, РІРѕР·РІСЂР°С‰Р°РµРј РєР°Рє РµСЃС‚СЊ
-  if (typeof role.permissions === 'object') {
-    return role
+const getRoleCacheStore = async () => {
+  if (!roleCacheStorePromise) {
+    roleCacheStorePromise = createRoleCacheStore()
   }
+  return roleCacheStorePromise
+}
 
-  try {
-    // РџС‹С‚Р°РµРјСЃСЏ СЂР°СЃРїР°СЂСЃРёС‚СЊ JSON
-    const parsed = JSON.parse(role.permissions)
+const CACHE_KEY = 'all-roles'
+const CACHE_DURATION = 5 * 60 * 1000 // 5 минут для production
+const isDev = process.env.NODE_ENV !== 'production'
 
-    // Р•СЃР»Рё СЌС‚Рѕ СЃС‚СЂРѕРєР° "all", РІРѕР·РІСЂР°С‰Р°РµРј РєР°Рє РµСЃС‚СЊ
-    if (role.permissions === '"all"' || parsed === 'all') {
-      return { ...role, permissions: 'all' }
-    }
+const getRequestContext = (request: NextRequest, extra?: Record<string, unknown>) => ({
+  requestId: request.headers.get('x-request-id') ?? undefined,
+  path: request.nextUrl.pathname,
+  method: request.method,
+  ...extra
+})
 
-    // Р•СЃР»Рё СЌС‚Рѕ РѕР±СЉРµРєС‚, РІРѕР·РІСЂР°С‰Р°РµРј СЂР°СЃРїР°СЂСЃРµРЅРЅС‹Р№
-    if (typeof parsed === 'object' && parsed !== null) {
-      return { ...role, permissions: parsed }
-    }
-
-    // Р•СЃР»Рё СЌС‚Рѕ СЃС‚СЂРѕРєР°, РІРѕР·РІСЂР°С‰Р°РµРј РєР°Рє РµСЃС‚СЊ
-    if (typeof parsed === 'string') {
-      return { ...role, permissions: parsed }
-    }
-
-    return { ...role, permissions: {} }
-  } catch {
-    // Р•СЃР»Рё РЅРµ СѓРґР°Р»РѕСЃСЊ СЂР°СЃРїР°СЂСЃРёС‚СЊ, РІРѕР·РІСЂР°С‰Р°РµРј РїСѓСЃС‚РѕР№ РѕР±СЉРµРєС‚
-    return { ...role, permissions: {} }
+const debugLog = (message: string, meta?: Record<string, unknown>) => {
+  if (isDev) {
+    logger.debug(message, meta)
   }
 }
 
 // POST - Create a new role (admin only)
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+  let actorEmail: string | null = null
+  let actorId: string | null = null
+  let requestedRoleName: string | null = null
+
   try {
     const { user } = await requireAuth(request)
+    actorEmail = user?.email ?? null
 
     if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+      logger.warn('[roles] Unauthorized role creation attempt', getRequestContext(request))
+      return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
+        status: 401
+      })
     }
 
     // Check permission for creating roles (skip for superadmin)
@@ -62,77 +64,172 @@ export async function POST(request: NextRequest) {
       where: { email: user.email },
       include: { role: true }
     })
+    actorId = currentUser?.id ?? null
 
     if (!currentUser || (!isSuperadmin(currentUser) && !checkPermission(currentUser, 'roleManagement', 'create'))) {
+      logger.warn('[roles] Permission denied: create role', getRequestContext(request, { actorEmail }))
       return NextResponse.json(
-        { message: 'Permission denied: Create Roles required' },
+        buildRoleError('ROLE_PERMISSION_DENIED', 'Permission denied: Create Roles required'),
         { status: 403 }
       )
     }
 
     const body = await request.json()
     const { name, description, permissions } = body
+    requestedRoleName = name ?? null
 
     // Validate required fields
     if (!name) {
+      return NextResponse.json(buildRoleError('ROLE_NAME_REQUIRED', 'Role name is required'), {
+        status: 400
+      })
+    }
+
+    // Validate permissions structure if provided
+    if (permissions !== undefined && permissions !== null) {
+      const validationErrors = getPermissionValidationErrors(permissions)
+      if (validationErrors.length > 0) {
+        debugLog('[roles] Role permission validation failed on creation', {
+          errors: validationErrors,
+          actorEmail,
+          roleName: name
+        })
+        return NextResponse.json(
+          buildRoleError('ROLE_INVALID_PERMISSIONS', 'Invalid permissions format', {
+            errors: validationErrors
+          }),
+          { status: 400 }
+        )
+      }
+    }
+
+    // Check hierarchy: user can only create roles with lower priority (higher level number)
+    const userRoleLevel = getRoleLevelFromRole(currentUser.role)
+    const newRoleLevel = 100 // Custom roles always get level 100 (lowest priority)
+    
+    if (currentUser.role && userRoleLevel >= newRoleLevel) {
+      // User cannot create roles at same or higher level
       return NextResponse.json(
-        { message: 'Role name is required' },
-        { status: 400 }
+        buildRoleError(
+          'ROLE_INVALID_HIERARCHY',
+          'Cannot create custom roles with your permission level',
+          {
+            actorRole: currentUser.role.code,
+            actorLevel: currentUser.role.level
+          }
+        ),
+        { status: 403 }
       )
     }
 
-    // Create the role
+    // Generate code from name (uppercase, replace spaces with underscores)
+    const generatedCode = name.toUpperCase().replace(/[^A-Z0-9]/g, '_')
+
+    // Create the role with new fields
     const newRole = await prisma.role.create({
       data: {
+        code: generatedCode,  // Generated from name
         name,
         description,
-        permissions: JSON.stringify(permissions || {})
+        permissions: JSON.stringify(permissions || {}),
+        level: newRoleLevel,  // Custom roles get level 100
+        isSystem: false       // Custom roles are not system roles
       }
     })
 
-    // РћС‡РёС‰Р°РµРј РєРµС€ РїРѕСЃР»Рµ СЃРѕР·РґР°РЅРёСЏ РЅРѕРІРѕР№ СЂРѕР»Рё
-    rolesCache = null
-    cacheTimestamp = 0
+    // Очищаем кэш после создания новой роли
+    const store = await getRoleCacheStore()
+    await store.delete(CACHE_KEY).catch(err => {
+      logger.warn('[role-cache] Failed to clear cache after role creation', {
+        error: err,
+        roleId: newRole.id
+      })
+    })
+
+    // Фиксируем событие создания роли
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'roleManagement',
+      module: 'roleManagement',
+      type: 'role.created',
+      severity: 'info',
+      actor: {
+        type: 'user',
+        id: currentUser.id
+      },
+      subject: {
+        type: 'role',
+        id: newRole.id
+      },
+      message: `Role "${name}" (${newRole.code}) created`,
+      payload: {
+        roleId: newRole.id,
+        roleCode: newRole.code,
+        roleName: name,
+        level: newRole.level,
+        isSystem: newRole.isSystem,
+        description: description || null,
+        permissions: permissions || {}
+      }
+    })).catch(err => {
+      logger.warn('[role-cache] Failed to record role creation event', { error: err })
+    })
+
+    // Метрики
+    const duration = (Date.now() - startTime) / 1000
+    recordRoleOperationDuration('create', duration)
+    markRoleOperation('create', 'success')
+    markRoleEvent('role.created', 'info')
 
     return NextResponse.json(newRole)
   } catch (error) {
-    console.error('Error creating role:', error)
+    const duration = (Date.now() - startTime) / 1000
+    recordRoleOperationDuration('create', duration)
+    markRoleOperation('create', 'error')
+    markRoleEvent('role.create.failed', 'error')
+
+    logger.error('[roles] Error creating role', {
+      ...getRequestContext(request, { actorEmail, actorId, requestedRoleName }),
+      error
+    })
 
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002' && Array.isArray(error.meta?.target) && error.meta?.target.includes('name')) {
       return NextResponse.json(
-        { message: 'Role name already exists' },
+        buildRoleError('ROLE_NAME_EXISTS', 'Role name already exists', { roleName: requestedRoleName }),
         { status: 400 }
       )
     }
 
-
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json(buildRoleError('ROLE_INTERNAL_ERROR', 'Internal server error'), {
+      status: 500
+    })
   }
 }
 
 // GET - Get all roles (admin only)
 export async function GET(request: NextRequest) {
+  const startTime = Date.now()
+  let actorEmail: string | null = null
   try {
     const url = new URL(request.url)
     const clearCache = url.searchParams.get('clearCache')
 
-    // Р•СЃР»Рё Р·Р°РїСЂРѕСЃ РЅР° РѕС‡РёСЃС‚РєСѓ РєРµС€Р°
+    // Если запрос на очистку кэша
     if (clearCache === 'true') {
-      rolesCache = null
-      cacheTimestamp = 0
+      const store = await getRoleCacheStore()
+      await store.clear().catch(err => {
+        logger.warn('[role-cache] Failed to clear cache', { error: err })
+      })
       return NextResponse.json({ message: 'Cache cleared' })
     }
 
     const { user } = await requireAuth(request)
+    actorEmail = user?.email ?? null
 
     if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+      logger.warn('[roles] Unauthorized access to roles list', getRequestContext(request))
+      return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
+        status: 401
+      })
     }
 
     // Check permission for reading roles (skip for superadmin)
@@ -142,78 +239,71 @@ export async function GET(request: NextRequest) {
     })
 
     if (!currentUser || (!isSuperadmin(currentUser) && !checkPermission(currentUser, 'roleManagement', 'read'))) {
+      logger.warn('[roles] Permission denied: read roles', getRequestContext(request, { actorEmail }))
       return NextResponse.json(
-        { message: 'Permission denied: Read Roles required' },
+        buildRoleError('ROLE_PERMISSION_DENIED', 'Permission denied: Read Roles required'),
         { status: 403 }
       )
     }
 
-    // РџСЂРѕРІРµСЂСЏРµРј РєРµС€
-    const now = Date.now()
-    if (rolesCache && (now - cacheTimestamp) < CACHE_DURATION) {
-      return NextResponse.json(rolesCache)
-    }
-    const baseRoles = ['superadmin', 'admin', 'manager', 'editor', 'moderator', 'seo', 'marketolog', 'support', 'subscriber', 'user']
+    // Проверяем кэш
+    const store = await getRoleCacheStore()
+    const cachedRoles = await store.get(CACHE_KEY).catch(err => {
+      logger.warn('[role-cache] Failed to get from cache', { error: err })
+      return null
+    })
 
+    if (cachedRoles) {
+      const duration = (Date.now() - startTime) / 1000
+      recordRoleOperationDuration('read', duration)
+      markRoleOperation('read', 'success')
+      return NextResponse.json(cachedRoles)
+    }
+    // Fetch roles sorted by level (hierarchy)
     const roles = await prisma.role.findMany({
       orderBy: [
-        {
-          name: 'asc'
-        }
+        { level: 'asc' },  // Sort by hierarchy level first
+        { name: 'asc' }    // Then by name for same level
       ]
     })
 
-    // Sort roles: base roles first in the order they appear in baseRoles, then others alphabetically
-    const sortedRoles = roles.sort((a, b) => {
-      const aIndex = baseRoles.indexOf(a.name.toLowerCase())
-      const bIndex = baseRoles.indexOf(b.name.toLowerCase())
+    // Roles are already sorted by level from database query
+    // Just use them directly
+    const sortedRoles = roles
 
-      if (aIndex !== -1 && bIndex !== -1) {
-        return aIndex - bIndex
-      }
+    // Parse permissions using centralized function
+    const rolesWithParsedPermissions = sortedRoles.map(role => ({
+      ...role,
+      permissions: parsePermissions(role.permissions)
+    }))
 
-      if (aIndex !== -1 && bIndex === -1) return -1
-      if (bIndex !== -1 && aIndex === -1) return 1
-
-      return a.name.localeCompare(b.name)
+    // Сохраняем в кэш (асинхронно, не блокируем ответ)
+    getRoleCacheStore().then(store => {
+      store.set(CACHE_KEY, rolesWithParsedPermissions as Role[], CACHE_DURATION).catch(err => {
+        logger.warn('[role-cache] Failed to save to cache', { error: err })
+      })
+    })
+      logger.warn('[role-cache] Failed to save to cache', { error: err })
     })
 
-    // Parse permissions in new format
-    const rolesWithParsedPermissions = sortedRoles.map(role => {
-      if (!role.permissions) return { ...role, permissions: {} }
+    // Метрики
+    const duration = (Date.now() - startTime) / 1000
+    recordRoleOperationDuration('read', duration)
+    markRoleOperation('read', 'success')
 
-      try {
-        const parsed = JSON.parse(role.permissions)
-
-        // Handle legacy format: "all" means all permissions
-        if (role.permissions === 'all') {
-          return { ...role, permissions: 'all' }
-        }
-
-        // Handle legacy format: simple string like "read"
-        if (typeof parsed === 'string') {
-          return { ...role, permissions: parsed }
-        }
-
-        // New format: object like { "Users": ["Read", "Write"] }
-        return { ...role, permissions: parsed }
-      } catch {
-        // Legacy format: "all" means all permissions
-        return { ...role, permissions: role.permissions === 'all' ? 'all' : {} }
-      }
-    })
-
-    // РЎРѕС…СЂР°РЅСЏРµРј РІ РєРµС€
-    rolesCache = rolesWithParsedPermissions
-    cacheTimestamp = now
     return NextResponse.json(rolesWithParsedPermissions)
   } catch (error) {
-    console.error('Error fetching roles:', error)
+    const duration = (Date.now() - startTime) / 1000
+    recordRoleOperationDuration('read', duration)
+    markRoleOperation('read', 'error')
+    logger.error('[roles] Error fetching roles', {
+      ...getRequestContext(request, { actorEmail }),
+      error
+    })
 
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json(buildRoleError('ROLE_INTERNAL_ERROR', 'Internal server error'), {
+      status: 500
+    })
   }
 }
 

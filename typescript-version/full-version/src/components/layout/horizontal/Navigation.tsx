@@ -62,7 +62,7 @@ const Navigation = ({ dictionary, locale }: { dictionary: Awaited<ReturnType<typ
           className: classnames(horizontalLayoutClasses.navigationContentWrapper, 'flex items-center is-full plb-2.5')
         })}
       >
-        <HorizontalMenu dictionary={dictionary} locale={locale} />
+        <HorizontalMenu dictionary={dictionary} locale={safeLocale} />
       </StyledDiv>
     </div>
   )

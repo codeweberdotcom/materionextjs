@@ -90,14 +90,15 @@ type RateLimitStateEntry = {
     blockedAt: string
     unblockedAt?: string | null
   } | null
+  targetIp?: string | null
+  targetEmail?: string | null
+  targetMailDomain?: string | null
+  targetCidr?: string | null
+  targetAsn?: string | null
+  reason?: string | null
+  violationNumber?: number | null
 }
 
-type ModuleDetailRow = {
-  label: string
-  value: string
-  icon: string
-  color: ThemeColor
-}
 
 type RateLimitStatesResponse = {
   items: RateLimitStateEntry[]
@@ -113,7 +114,6 @@ type ConfigFormState = {
   windowMinutes: string
   blockMinutes: string
   warnThreshold: string
-  mode: 'monitor' | 'enforce'
 }
 
 const formatDateTime = (value?: string | null) => {
@@ -147,16 +147,39 @@ const isEntryBlocked = (entry: RateLimitStateEntry): boolean => {
 
 const getModuleLabel = (
   moduleName: string,
-  navigation: Record<string, string | undefined>
+  navigation: Record<string, string | undefined>,
+  moduleLabels?: Record<string, string | undefined>
 ): string => {
+  if (moduleLabels?.[moduleName]) {
+    return moduleLabels[moduleName] as string
+  }
+
+  const registrationLabel = navigation.registrationModule || 'Registration'
+
+  if (moduleName === 'registration') {
+    return registrationLabel
+  }
+
+  if (moduleName === 'registration-ip') {
+    return `${registrationLabel} · IP`
+  }
+
+  if (moduleName === 'registration-domain') {
+    return `${registrationLabel} · Domain`
+  }
+
+  if (moduleName === 'registration-email') {
+    return `${registrationLabel} · Email`
+  }
+
   const fallbackMap: Record<string, string | undefined> = {
     chat: navigation.chat,
     ads: navigation.ads,
     upload: navigation.upload,
     auth: navigation.auth,
+    registration: navigation.registrationModule,
     email: navigation.email,
-    notifications: navigation.notifications,
-    registration: navigation.registrationModule
+    notifications: navigation.notifications
   }
   return fallbackMap[moduleName] || moduleName
 }
@@ -200,13 +223,13 @@ const RateLimitManagement = () => {
     maxRequests: '',
     windowMinutes: '',
     blockMinutes: '',
-    warnThreshold: '',
-    mode: 'enforce'
+    warnThreshold: ''
   })
   const [savingConfig, setSavingConfig] = useState(false)
   const [statusSavingModule, setStatusSavingModule] = useState<string | null>(null)
   const [modeSavingModule, setModeSavingModule] = useState<string | null>(null)
   const [infoConfig, setInfoConfig] = useState<RateLimitConfig | null>(null)
+  const [instructionsOpen, setInstructionsOpen] = useState(false)
 
   const hasAccess = isSuperadmin || checkPermission('rateLimitManagement', 'read')
   const canModify =
@@ -357,8 +380,7 @@ const RateLimitManagement = () => {
       maxRequests: config.maxRequests ? String(config.maxRequests) : '',
       windowMinutes: String(Math.max(1, Math.round((config.windowMs || 60000) / 60000))),
       blockMinutes: String(Math.max(1, Math.round(((config.blockMs ?? config.windowMs) || 60000) / 60000))),
-      warnThreshold: config.warnThreshold != null ? String(config.warnThreshold) : '',
-      mode: config.mode === 'monitor' ? 'monitor' : 'enforce'
+      warnThreshold: config.warnThreshold != null ? String(config.warnThreshold) : ''
     })
     setConfigDialogOpen(true)
   }, [canModify])
@@ -368,27 +390,38 @@ const RateLimitManagement = () => {
     setConfigDialogOpen(false)
   }, [savingConfig])
 
-  const handleClearState = async (stateId: string) => {
+  const handleClearState = async (entry: RateLimitStateEntry) => {
     if (!canModify) {
       return
     }
 
-    setClearingId(stateId)
+    setClearingId(entry.id)
 
     try {
-      const response = await fetch(`/api/admin/rate-limits/${stateId}`, {
-        method: 'DELETE'
-      })
+      let response: Response
+      
+      // Для manual блоков используем другой endpoint
+      if (entry.source === 'manual' && entry.activeBlock?.id) {
+        response = await fetch(`/api/admin/rate-limits/blocks/${entry.activeBlock.id}`, {
+          method: 'DELETE'
+        })
+      } else {
+        // Для state используем стандартный endpoint
+        response = await fetch(`/api/admin/rate-limits/${entry.id}`, {
+          method: 'DELETE'
+        })
+      }
 
       if (!response.ok) {
-        throw new Error('Failed to clear rate limit state')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to clear rate limit state')
       }
 
       toast.success(dictionary.rateLimit?.clearSuccess ?? 'Rate limit has been reset')
       await fetchStates({ append: false })
     } catch (err) {
       console.error(err)
-      toast.error(dictionary.rateLimit?.clearError ?? 'Failed to reset rate limit')
+      toast.error(err instanceof Error ? err.message : (dictionary.rateLimit?.clearError ?? 'Failed to reset rate limit'))
     } finally {
       setClearingId(null)
     }
@@ -438,8 +471,7 @@ const RateLimitManagement = () => {
           maxRequests,
           windowMs: windowMinutes * 60000,
           blockMs: blockMinutes * 60000,
-          warnThreshold: Number.isFinite(warnThreshold) && warnThreshold >= 0 ? warnThreshold : 0,
-          mode: configForm.mode
+          warnThreshold: Number.isFinite(warnThreshold) && warnThreshold >= 0 ? warnThreshold : 0
         })
       })
 
@@ -645,7 +677,11 @@ const RateLimitManagement = () => {
           <Grid size={{ xs: 12 }}>
             <Grid container spacing={4}>
               {modulesToRender.map(config => {
-                const moduleLabel = getModuleLabel(config.module, dictionary.navigation)
+                const moduleLabel = getModuleLabel(
+                  config.module,
+                  dictionary.navigation,
+                  dictionary.rateLimit?.moduleLabels
+                )
                 const stat = statsMap.get(config.module)
                 const windowMinutes = Math.max(1, Math.round((config.windowMs || 60000) / 60000))
                 const blockMinutes = Math.max(1, Math.round(((config.blockMs ?? config.windowMs) || 60000) / 60000))
@@ -662,46 +698,10 @@ const RateLimitManagement = () => {
                   warnThresholdDisplay > 0
                     ? warnThresholdDisplay.toLocaleString()
                     : t.configWarnDisabled || 'Disabled'
-                const isModePending = modeSavingModule === config.module
 
-                const detailRows: ModuleDetailRow[] = [
-                  {
-                    label: t.configStatusLabel || 'Status',
-                    value: statusLabel,
-                    icon: isActive ? 'ri-checkbox-circle-line' : 'ri-close-circle-line',
-                    color: isActive ? 'success' : 'secondary'
-                  },
-                  {
-                    label: t.configModeLabel || 'Mode',
-                    value: modeLabel,
-                    icon: currentMode === 'monitor' ? 'ri-eye-line' : 'ri-shield-check-line',
-                    color: currentMode === 'monitor' ? 'info' : 'warning'
-                  },
-                  {
-                    label: t.configMaxRequests || 'Max requests',
-                    value: config.maxRequests.toLocaleString(),
-                    icon: 'ri-speed-up-line',
-                    color: 'primary'
-                  },
-                  {
-                    label: t.configWindowMinutes || 'Window (minutes)',
-                    value: `${windowMinutes} ${minutesLabel}`,
-                    icon: 'ri-timer-line',
-                    color: 'info'
-                  },
-                  {
-                    label: t.configBlockMinutes || 'Block duration (minutes)',
-                    value: `${blockMinutes} ${minutesLabel}`,
-                    icon: 'ri-lock-time-line',
-                    color: 'warning'
-                  },
-                  {
-                    label: t.configWarnThreshold || 'Warning threshold',
-                    value: warnValue,
-                    icon: 'ri-alert-line',
-                    color: 'error'
-                  }
-                ]
+                // Debug logging
+                console.log(`Module ${config.module}: warnThreshold=${config.warnThreshold}, warnThresholdDisplay=${warnThresholdDisplay}`)
+                const isModePending = modeSavingModule === config.module
 
                 return (
                   <Grid key={config.module} size={{ xs: 12, md: 4 }}>
@@ -754,9 +754,19 @@ const RateLimitManagement = () => {
                                     size='small'
                                     aria-label={t.configInfoTooltip || 'How the parameters work'}
                                     className='text-textSecondary'
-                                    onClick={() => setInfoConfig(config)}
+                                    onClick={() => setInstructionsOpen(true)}
                                   >
                                     <i className='ri-information-line' />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={t.configViewButton || 'View details'}>
+                                  <IconButton
+                                    color='info'
+                                    size='small'
+                                    onClick={() => setInfoConfig(config)}
+                                    disabled={statusSavingModule === config.module || isModePending}
+                                  >
+                                    <i className='ri-eye-line' />
                                   </IconButton>
                                 </Tooltip>
                                 <Tooltip title={t.configEditButton || 'Edit limits'}>
@@ -803,24 +813,6 @@ const RateLimitManagement = () => {
                             </Typography>
                           </div>
                         </div>
-                        <Divider />
-                        <div className='flex flex-col gap-4'>
-                          {detailRows.map(row => (
-                            <div key={row.label} className='flex items-center gap-3'>
-                              <CustomAvatar skin='light' color={row.color} variant='rounded'>
-                                <i className={row.icon} />
-                              </CustomAvatar>
-                              <div className='flex items-center justify-between gap-4 is-full'>
-                                <Typography className='font-medium' color='text.primary'>
-                                  {row.label}
-                                </Typography>
-                                <Typography className='font-semibold' color='text.primary'>
-                                  {row.value}
-                                </Typography>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
                       </CardContent>
                     </Card>
                   </Grid>
@@ -865,7 +857,7 @@ const RateLimitManagement = () => {
                   <MenuItem value='all'>{t.moduleAll || 'All modules'}</MenuItem>
                   {moduleOptions.map(module => (
                     <MenuItem key={module} value={module}>
-                      {getModuleLabel(module, dictionary.navigation)}
+                      {getModuleLabel(module, dictionary.navigation, dictionary.rateLimit?.moduleLabels)}
                     </MenuItem>
                   ))}
                 </Select>
@@ -906,7 +898,7 @@ const RateLimitManagement = () => {
                   <TableBody>
                     {visibleStates.map(entry => {
                       const blocked = isEntryBlocked(entry)
-                      const moduleLabel = getModuleLabel(entry.module, dictionary.navigation)
+                      const moduleLabel = getModuleLabel(entry.module, dictionary.navigation, dictionary.rateLimit?.moduleLabels)
                       const usagePercent = formatUsagePercentage(entry.count, entry.config.maxRequests)
 
                       return (
@@ -991,7 +983,7 @@ const RateLimitManagement = () => {
                               size='small'
                               startIcon={clearingId === entry.id ? <CircularProgress size={14} /> : <i className='ri-eraser-line' />}
                               disabled={!canModify || clearingId === entry.id}
-                              onClick={() => handleClearState(entry.id)}
+                              onClick={() => handleClearState(entry)}
                             >
                               {t.actionClear || 'Clear block'}
                             </Button>
@@ -1040,69 +1032,43 @@ const RateLimitManagement = () => {
             disabled
             fullWidth
           />
-          <TextField
-            label={t.configMaxRequests || 'Max requests'}
-            type='number'
-            value={configForm.maxRequests}
-            onChange={event => handleConfigInputChange('maxRequests', event.target.value)}
-            inputProps={{ min: 1 }}
-            fullWidth
-          />
           <div className='grid gap-4 grid-cols-1 sm:grid-cols-2'>
+            <TextField
+              label={t.configMaxRequests || 'Max requests'}
+              type='number'
+              value={configForm.maxRequests}
+              onChange={event => handleConfigInputChange('maxRequests', event.target.value)}
+              inputProps={{ min: 1 }}
+              sx={{ width: '100%' }}
+            />
             <TextField
               label={t.configWindowMinutes || 'Window (minutes)'}
               type='number'
               value={configForm.windowMinutes}
               onChange={event => handleConfigInputChange('windowMinutes', event.target.value)}
               inputProps={{ min: 1 }}
-              fullWidth
+              sx={{ width: '100%' }}
             />
+          </div>
+          <div className='grid gap-4 grid-cols-1 sm:grid-cols-2'>
             <TextField
               label={t.configBlockMinutes || 'Block duration (minutes)'}
               type='number'
               value={configForm.blockMinutes}
               onChange={event => handleConfigInputChange('blockMinutes', event.target.value)}
               inputProps={{ min: 1 }}
-              fullWidth
+              sx={{ width: '100%' }}
+            />
+            <TextField
+              label={t.configWarnThreshold || 'Warning threshold'}
+              type='number'
+              value={configForm.warnThreshold}
+              onChange={event => handleConfigInputChange('warnThreshold', event.target.value)}
+              inputProps={{ min: 0 }}
+              helperText={t.configWarnThresholdHint || 'Optional: show warning when remaining messages <= value'}
+              sx={{ width: '100%' }}
             />
           </div>
-          <div className='flex flex-col gap-2'>
-            <div>
-              <Typography variant='subtitle2'>
-                {t.configModeLabel || 'Mode'}
-              </Typography>
-              <Typography variant='body2' color='text.secondary'>
-                {t.configModeHelper || 'Monitoring records warnings without blocking, Blocking enforces the limit.'}
-              </Typography>
-            </div>
-            <ToggleButtonGroup
-              exclusive
-              color='primary'
-              value={configForm.mode}
-              onChange={(_, value) => {
-                if (value) {
-                  handleConfigInputChange('mode', value)
-                }
-              }}
-              size='small'
-            >
-              <ToggleButton value='monitor'>
-                {t.configModeMonitor || 'Monitoring'}
-              </ToggleButton>
-              <ToggleButton value='enforce'>
-                {t.configModeEnforce || 'Blocking'}
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </div>
-          <TextField
-            label={t.configWarnThreshold || 'Warning threshold'}
-            type='number'
-            value={configForm.warnThreshold}
-            onChange={event => handleConfigInputChange('warnThreshold', event.target.value)}
-            inputProps={{ min: 0 }}
-            helperText={t.configWarnThresholdHint || 'Optional: show warning when remaining messages <= value'}
-            fullWidth
-          />
         </DialogContent>
         <DialogActions>
           <Button variant='outlined' color='secondary' onClick={closeConfigDialog} disabled={savingConfig}>
@@ -1114,29 +1080,150 @@ const RateLimitManagement = () => {
         </DialogActions>
       </Dialog>
       <Dialog open={Boolean(infoConfig)} onClose={() => setInfoConfig(null)} fullWidth maxWidth='sm'>
-        <DialogTitle>{t.configInfoTitle || 'How rate limit settings work'}</DialogTitle>
-        <DialogContent className='flex flex-col gap-3 pbs-2'>
-          <Typography color='text.secondary'>
-            {t.configInfoDescription ||
-              'Each module tracks how many requests are made inside the selected time window. When the limit is exceeded, the user is blocked for the specified duration.'}
-          </Typography>
-          <ul className='list-disc pli-5 flex flex-col gap-2 text-sm text-textSecondary'>
-            <li>{t.configInfoMaxRequests || 'Max requests — how many actions are allowed per window before throttling starts.'}</li>
-            <li>{t.configInfoWindow || 'Window (minutes) — the length of the sliding window in which requests are counted.'}</li>
-            <li>{t.configInfoBlock || 'Block duration — how long users stay blocked after exceeding the limit.'}</li>
-            <li>{t.configInfoWarn || 'Warning threshold — optional reminder shown when the remaining messages drop below the specified value.'}</li>
-          </ul>
-          <Typography variant='body2' color='text.secondary'>
-            {t.configInfoNote ||
-              'Tip: monitoring mode records warnings only, while blocking mode enforces the limits and stops requests.'}
-          </Typography>
+        <DialogTitle className='flex items-center justify-between'>
+          {t.configDetailsTitle || 'Rate limit configuration details'}
+          <IconButton
+            aria-label='close'
+            onClick={() => setInfoConfig(null)}
+            sx={{ color: 'grey.500' }}
+          >
+            <i className='ri-close-line' />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent className='flex flex-col gap-4 pbs-2'>
+          {infoConfig && (
+            <div className='flex flex-col gap-4'>
+              <div className='flex items-center gap-3'>
+                <CustomAvatar skin='light' color='primary' variant='rounded'>
+                  <i className='ri-speed-up-line' />
+                </CustomAvatar>
+                <div className='flex items-center justify-between gap-4 is-full'>
+                  <Typography className='font-medium' color='text.primary'>
+                    {t.configMaxRequests || 'Max requests'}
+                  </Typography>
+                  <Typography className='font-semibold' color='text.primary'>
+                    {infoConfig.maxRequests.toLocaleString()}
+                  </Typography>
+                </div>
+              </div>
+              <div className='flex items-center gap-3'>
+                <CustomAvatar skin='light' color='info' variant='rounded'>
+                  <i className='ri-timer-line' />
+                </CustomAvatar>
+                <div className='flex items-center justify-between gap-4 is-full'>
+                  <Typography className='font-medium' color='text.primary'>
+                    {t.configWindowMinutes || 'Window (minutes)'}
+                  </Typography>
+                  <Typography className='font-semibold' color='text.primary'>
+                    {Math.max(1, Math.round((infoConfig.windowMs || 60000) / 60000))} {t.minutesShort || 'min'}
+                  </Typography>
+                </div>
+              </div>
+              <div className='flex items-center gap-3'>
+                <CustomAvatar skin='light' color='warning' variant='rounded'>
+                  <i className='ri-time-line' />
+                </CustomAvatar>
+                <div className='flex items-center justify-between gap-4 is-full'>
+                  <Typography className='font-medium' color='text.primary'>
+                    {t.configBlockMinutes || 'Block duration (minutes)'}
+                  </Typography>
+                  <Typography className='font-semibold' color='text.primary'>
+                    {Math.max(1, Math.round(((infoConfig.blockMs ?? infoConfig.windowMs) || 60000) / 60000))} {t.minutesShort || 'min'}
+                  </Typography>
+                </div>
+              </div>
+              <div className='flex items-center gap-3'>
+                <CustomAvatar skin='light' color='error' variant='rounded'>
+                  <i className='ri-alert-line' />
+                </CustomAvatar>
+                <div className='flex items-center justify-between gap-4 is-full'>
+                  <Typography className='font-medium' color='text.primary'>
+                    {t.configWarnThreshold || 'Warning threshold'}
+                  </Typography>
+                  <Typography className='font-semibold' color='text.primary'>
+                    {infoConfig.warnThreshold && infoConfig.warnThreshold > 0
+                      ? infoConfig.warnThreshold.toLocaleString()
+                      : (t.configWarnDisabled || 'Disabled')
+                    }
+                  </Typography>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setInfoConfig(null)}>{t.configInfoClose || dictionary.navigation.close || 'Close'}</Button>
-        </DialogActions>
+      </Dialog>
+      <Dialog open={instructionsOpen} onClose={() => setInstructionsOpen(false)} fullWidth maxWidth='md'>
+        <DialogTitle className='flex items-center justify-between'>
+          Как работают лимиты запросов
+          <IconButton
+            aria-label='close'
+            onClick={() => setInstructionsOpen(false)}
+            sx={{ color: 'grey.500' }}
+          >
+            <i className='ri-close-line' />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent className='flex flex-col gap-4 pbs-2'>
+          <Typography variant='body1' paragraph>
+            Ограничение частоты запросов помогает защитить ваше приложение от злоупотреблений, контролируя количество запросов, которые пользователи могут отправлять в течение временного окна.
+          </Typography>
+
+          <div className='flex flex-col gap-3'>
+            <div>
+              <Typography variant='h6' gutterBottom>
+                Максимальное количество запросов
+              </Typography>
+              <Typography variant='body2'>
+                Максимальное количество запросов, разрешенное для одного пользователя в течение указанного временного окна. При превышении этого лимита пользователь может быть заблокирован или предупрежден в зависимости от режима.
+              </Typography>
+            </div>
+
+            <div>
+              <Typography variant='h6' gutterBottom>
+                Временное окно
+              </Typography>
+              <Typography variant='body2'>
+                Период времени, в течение которого подсчитываются запросы. После истечения этого окна счетчик сбрасывается, и пользователь может снова отправлять запросы.
+              </Typography>
+            </div>
+
+            <div>
+              <Typography variant='h6' gutterBottom>
+                Длительность блокировки
+              </Typography>
+              <Typography variant='body2'>
+                Как долго пользователь остается заблокированным после превышения лимита. В течение этого времени все его запросы отклоняются.
+              </Typography>
+            </div>
+
+            <div>
+              <Typography variant='h6' gutterBottom>
+                Порог предупреждения
+              </Typography>
+              <Typography variant='body2'>
+                Необязательный порог для показа предупреждений перед блокировкой. Когда количество оставшихся запросов опускается ниже этого числа, пользователи получают предупреждение.
+              </Typography>
+            </div>
+
+            <div>
+              <Typography variant='h6' gutterBottom>
+                Режимы работы
+              </Typography>
+              <Typography variant='body2' paragraph>
+                <strong>Мониторинг:</strong> Записывает предупреждения, но позволяет пользователям продолжать отправку запросов. Полезно для сбора данных перед введением строгих ограничений.
+              </Typography>
+              <Typography variant='body2'>
+                <strong>Блокировка:</strong> Строго соблюдает лимиты, блокируя пользователей, которые их превышают. Рекомендуется для рабочих сред.
+              </Typography>
+            </div>
+          </div>
+        </DialogContent>
       </Dialog>
     </>
   )
 }
 
 export default RateLimitManagement
+
+
+

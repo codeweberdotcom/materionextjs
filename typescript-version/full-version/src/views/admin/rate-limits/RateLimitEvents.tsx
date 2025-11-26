@@ -74,9 +74,11 @@ type ManualBlockForm = {
   module: string
   targetUser: boolean
   targetEmail: boolean
+  targetDomain: boolean
   targetIp: boolean
   userId: string
   email: string
+  mailDomain: string
   ipAddress: string
   reason: string
   durationMinutes: string
@@ -107,7 +109,18 @@ DateFilterInput.displayName = 'DateFilterInput'
 
 const formatDateParam = (date: Date | null) => (date ? date.toISOString() : undefined)
 
-const DEFAULT_MODULES = ['chat', 'ads', 'upload', 'auth', 'email', 'notifications', 'registration']
+const DEFAULT_MODULES = [
+  'chat',
+  'ads',
+  'upload',
+  'auth',
+  'email',
+  'notifications',
+  'registration',
+  'registration-ip',
+  'registration-domain',
+  'registration-email'
+]
 
 const formatDateTime = (value?: string | null) => {
   if (!value) {
@@ -127,10 +140,33 @@ const formatDateTime = (value?: string | null) => {
 const getModuleLabel = (
   moduleName: string,
   navigation: Record<string, string | undefined>,
-  allLabel?: string
+  allLabel?: string,
+  moduleLabels?: Record<string, string | undefined>
 ) => {
   if (moduleName === 'all') {
     return allLabel || 'All modules'
+  }
+
+  if (moduleLabels?.[moduleName]) {
+    return moduleLabels[moduleName] as string
+  }
+
+  const registrationLabel = navigation.registrationModule || 'Registration'
+
+  if (moduleName === 'registration') {
+    return registrationLabel
+  }
+
+  if (moduleName === 'registration-ip') {
+    return `${registrationLabel} · IP`
+  }
+
+  if (moduleName === 'registration-domain') {
+    return `${registrationLabel} · Domain`
+  }
+
+  if (moduleName === 'registration-email') {
+    return `${registrationLabel} · Email`
   }
 
   const fallbackMap: Record<string, string | undefined> = {
@@ -175,9 +211,11 @@ const RateLimitEvents = () => {
     module: 'all',
     targetUser: true,
     targetEmail: false,
+    targetDomain: false,
     targetIp: false,
     userId: '',
     email: '',
+    mailDomain: '',
     ipAddress: '',
     reason: '',
     durationMinutes: '60',
@@ -389,9 +427,11 @@ const RateLimitEvents = () => {
       module: prefill?.module ?? 'all',
       targetUser: prefill?.targetUser ?? true,
       targetEmail: prefill?.targetEmail ?? false,
+      targetDomain: prefill?.targetDomain ?? false,
       targetIp: prefill?.targetIp ?? false,
       userId: prefill?.userId ?? '',
       email: prefill?.email ?? '',
+      mailDomain: prefill?.mailDomain ?? '',
       ipAddress: prefill?.ipAddress ?? '',
       reason: prefill?.reason ?? '',
       durationMinutes: prefill?.durationMinutes ?? '60',
@@ -410,9 +450,11 @@ const RateLimitEvents = () => {
       module: 'all',
       targetUser: true,
       targetEmail: false,
+      targetDomain: false,
       targetIp: false,
       userId: '',
       email: '',
+      mailDomain: '',
       ipAddress: '',
       reason: '',
       durationMinutes: '60',
@@ -450,10 +492,12 @@ const RateLimitEvents = () => {
   const handleManualBlockChange = (field: keyof ManualBlockForm, value: ManualBlockForm[keyof ManualBlockForm]) => {
     setManualBlockForm(prev => ({
       ...prev,
-      ...((field === 'targetUser' || field === 'targetEmail' || field === 'targetIp') && value === true
+      ...((field === 'targetUser' || field === 'targetEmail' || field === 'targetDomain' || field === 'targetIp') &&
+      value === true
         ? {
             targetUser: field === 'targetUser',
             targetEmail: field === 'targetEmail',
+            targetDomain: field === 'targetDomain',
             targetIp: field === 'targetIp'
           }
         : {}),
@@ -466,7 +510,20 @@ const RateLimitEvents = () => {
       return
     }
 
-    const { module, targetUser, targetEmail, targetIp, userId, email, ipAddress, reason, durationMinutes, notes } = manualBlockForm
+    const {
+      module,
+      targetUser,
+      targetEmail,
+      targetDomain,
+      targetIp,
+      userId,
+      email,
+      mailDomain,
+      ipAddress,
+      reason,
+      durationMinutes,
+      notes
+    } = manualBlockForm
 
     if (!module) {
       toast.error(t.manualBlockValidationModule || 'Module is required')
@@ -478,8 +535,8 @@ const RateLimitEvents = () => {
       return
     }
 
-    if (!targetUser && !targetEmail && !targetIp) {
-      toast.error(t.manualBlockValidationTarget || 'Select at least one target (user, email, IP)')
+    if (!targetUser && !targetEmail && !targetDomain && !targetIp) {
+      toast.error(t.manualBlockValidationTarget || 'Select at least one target (user, email, domain, IP)')
       return
     }
 
@@ -490,6 +547,11 @@ const RateLimitEvents = () => {
 
     if (targetEmail && !email.trim()) {
       toast.error(t.manualBlockValidationEmail || 'Email is required')
+      return
+    }
+
+    if (targetDomain && !mailDomain.trim()) {
+      toast.error(t.manualBlockValidationDomain || 'Domain is required')
       return
     }
 
@@ -515,9 +577,10 @@ const RateLimitEvents = () => {
         credentials: 'include',
         body: JSON.stringify({
           module,
-          targetType: targetUser ? 'user' : targetEmail ? 'email' : targetIp ? 'ip' : 'user',
+          targetType: targetUser ? 'user' : targetEmail ? 'email' : targetDomain ? 'domain' : targetIp ? 'ip' : 'user',
           userId: targetUser ? userId.trim() || undefined : undefined,
           email: targetEmail ? email.trim() || undefined : undefined,
+          mailDomain: targetDomain ? mailDomain.trim().replace(/^\*@/, '').replace(/^@/, '') || undefined : undefined,
           ipAddress: targetIp ? ipAddress.trim() || undefined : undefined,
           reason: reason.trim(),
           durationMinutes: durationMinutes ? Number(durationMinutes) : undefined,
@@ -600,7 +663,11 @@ const RateLimitEvents = () => {
                       <Tab
                         key={option}
                         value={option}
-                        label={option === 'all' ? (t.filterModuleAll || 'All modules') : getModuleLabel(option, navigationLabels)}
+                        label={
+                          option === 'all'
+                            ? (t.filterModuleAll || 'All modules')
+                            : getModuleLabel(option, navigationLabels, undefined, dictionary.rateLimit?.moduleLabels)
+                        }
                       />
                     ))}
                   </Tabs>
@@ -713,10 +780,11 @@ const RateLimitEvents = () => {
                       ) : null}
                       {eventRows.map(event => {
                         const displayName =
-                          event.user?.name ||
-                          event.user?.email ||
-                          (event.userId ? `${t.userIdLabel || 'User'}: ${event.userId}` : '')
-                    const displayKey = event.key || event.userId || event.email || event.ipAddress || '—'
+                              event.user?.name ||
+                              event.user?.email ||
+                              (event.userId ? `${t.userIdLabel || 'User'}: ${event.userId}` : '')
+                        const displayKey = event.key || event.userId || event.email || event.ipAddress || '—'
+                        const debugInfo = isSuperadmin && (event as any).debugEmail ? `Debug: ${(event as any).debugEmail}` : null
                     const isBlock = event.eventType === 'block'
                     const blockedUntilLabel = event.blockedUntil
                       ? formatRelativeTime(event.blockedUntil) || '—'
@@ -733,12 +801,22 @@ const RateLimitEvents = () => {
                           <Typography variant='caption' color='text.secondary'>
                             {displayKey}
                           </Typography>
+                          {debugInfo ? (
+                            <Typography variant='caption' color='primary' sx={{ fontWeight: 600 }}>
+                              {debugInfo}
+                            </Typography>
+                          ) : null}
                         </TableCell>
                         <TableCell>
                           <Typography>
                             {event.module === 'all'
                               ? (t.filterModuleAll || 'All modules')
-                              : getModuleLabel(event.module, navigationLabels)}
+                              : getModuleLabel(
+                                  event.module,
+                                  navigationLabels,
+                                  undefined,
+                                  dictionary.rateLimit?.moduleLabels
+                                )}
                           </Typography>
                           <Typography variant='caption' color='text.secondary'>
                             {event.mode === 'monitor'
@@ -792,11 +870,13 @@ const RateLimitEvents = () => {
                                     onClick={() =>
                                       openManualBlockDialog({
                                         module: event.module,
-                                        targetUser: Boolean(event.userId),
-                                        targetEmail: Boolean(event.email),
-                                        targetIp: Boolean(event.ipAddress),
+                                        targetUser: event.module !== 'registration-domain' && Boolean(event.userId),
+                                        targetEmail: event.module !== 'registration-domain' && Boolean(event.email),
+                                        targetDomain: event.module === 'registration-domain',
+                                        targetIp: event.module !== 'registration-domain' && Boolean(event.ipAddress),
                                         userId: event.userId || '',
                                         email: event.email || '',
+                                        mailDomain: event.module === 'registration-domain' ? event.key : '',
                                         ipAddress: event.ipAddress || '',
                                         reason:
                                           event.eventType === 'warning'
@@ -882,7 +962,7 @@ const RateLimitEvents = () => {
               <MenuItem key={option} value={option}>
                 {option === 'all'
                   ? (t.filterModuleAll || 'All modules')
-                  : getModuleLabel(option, navigationLabels)}
+                  : getModuleLabel(option, navigationLabels, undefined, dictionary.rateLimit?.moduleLabels)}
               </MenuItem>
             ))}
           </TextField>
@@ -908,6 +988,15 @@ const RateLimitEvents = () => {
             <FormControlLabel
               control={
                 <Checkbox
+                  checked={manualBlockForm.targetDomain}
+                  onChange={event => handleManualBlockChange('targetDomain', event.target.checked)}
+                />
+              }
+              label={t.manualBlockTargetDomain || 'Email domain'}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
                   checked={manualBlockForm.targetIp}
                   onChange={event => handleManualBlockChange('targetIp', event.target.checked)}
                 />
@@ -920,6 +1009,15 @@ const RateLimitEvents = () => {
               label={t.manualBlockEmailLabel || 'Email'}
               value={manualBlockForm.email}
               onChange={event => handleManualBlockChange('email', event.target.value)}
+              fullWidth
+            />
+          ) : null}
+          {manualBlockForm.targetDomain ? (
+            <TextField
+              label={t.manualBlockDomainLabel || 'Mail domain'}
+              placeholder='example.com'
+              value={manualBlockForm.mailDomain}
+              onChange={event => handleManualBlockChange('mailDomain', event.target.value)}
               fullWidth
             />
           ) : null}

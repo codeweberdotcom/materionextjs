@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
+import { rateLimitService } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
   try {

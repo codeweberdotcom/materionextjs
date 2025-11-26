@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs'
 import { prisma } from '../src/libs/prisma'
+import { encrypt } from '../src/lib/config/encryption'
 
 // Country data
 const countriesData = [
@@ -60,18 +61,25 @@ async function main() {
   const superadminRole = await prisma.role.upsert({
     where: { name: 'superadmin' },
     update: {
-      permissions: JSON.stringify(['all'])
+      code: 'SUPERADMIN',
+      permissions: JSON.stringify(['all']),
+      level: 0,
+      isSystem: true
     },
     create: {
+      code: 'SUPERADMIN',
       name: 'superadmin',
       description: 'Super Administrator role with full access',
-      permissions: JSON.stringify(['all'])
+      permissions: JSON.stringify(['all']),
+      level: 0,
+      isSystem: true
     }
   })
 
   const adminRole = await prisma.role.upsert({
     where: { name: 'admin' },
     update: {
+      code: 'ADMIN',
       permissions: JSON.stringify({
         userManagement: ['create', 'read', 'update', 'delete'],
         roleManagement: ['read'],
@@ -83,10 +91,14 @@ async function main() {
         languageManagement: ['create', 'read', 'update', 'delete'],
         translationManagement: ['create', 'read', 'update', 'delete'],
         emailTemplatesManagement: ['create', 'read', 'update', 'delete'],
-        smtpManagement: ['create', 'read', 'update', 'delete']
-      })
+        smtpManagement: ['create', 'read', 'update', 'delete'],
+        notificationScenarios: ['create', 'read', 'update', 'delete']
+      }),
+      level: 10,
+      isSystem: true
     },
     create: {
+      code: 'ADMIN',
       name: 'admin',
       description: 'Administrator role',
       permissions: JSON.stringify({
@@ -100,15 +112,22 @@ async function main() {
         languageManagement: ['create', 'read', 'update', 'delete'],
         translationManagement: ['create', 'read', 'update', 'delete'],
         emailTemplatesManagement: ['create', 'read', 'update', 'delete'],
-        smtpManagement: ['create', 'read', 'update', 'delete']
-      })
+        smtpManagement: ['create', 'read', 'update', 'delete'],
+        notificationScenarios: ['create', 'read', 'update', 'delete']
+      }),
+      level: 10,
+      isSystem: true
     }
   })
 
   const userRole = await prisma.role.upsert({
     where: { name: 'user' },
-    update: {},
+    update: {
+      level: 90,
+      isSystem: true
+    },
     create: {
+      code: 'USER',
       name: 'user',
       description: 'Regular user role',
       permissions: JSON.stringify({
@@ -116,93 +135,135 @@ async function main() {
         roleManagement: ['create', 'read', 'update', 'delete'],
         profileManagement: ['read', 'update'],
         contentManagement: ['read']
-      })
+      }),
+      level: 90,
+      isSystem: true
     }
   })
 
   const moderatorRole = await prisma.role.upsert({
     where: { name: 'moderator' },
-    update: {},
+    update: {
+      level: 40,
+      isSystem: true
+    },
     create: {
+      code: 'MODERATOR',
       name: 'moderator',
       description: 'Moderator role with content moderation permissions',
       permissions: JSON.stringify({
         userManagement: ['read'],
         roleManagement: ['read'],
         contentModerationManagement: ['create', 'read', 'update', 'delete']
-      })
+      }),
+      level: 40,
+      isSystem: true
     }
   })
 
   const seoRole = await prisma.role.upsert({
     where: { name: 'seo' },
-    update: {},
+    update: {
+      level: 50,
+      isSystem: true
+    },
     create: {
+      code: 'SEO',
       name: 'seo',
       description: 'SEO specialist role',
       permissions: JSON.stringify({
         contentManagement: ['create', 'read', 'update', 'delete'],
         analyticsManagement: ['read']
-      })
+      }),
+      level: 50,
+      isSystem: true
     }
   })
 
   const editorRole = await prisma.role.upsert({
     where: { name: 'editor' },
-    update: {},
+    update: {
+      level: 30,
+      isSystem: true
+    },
     create: {
+      code: 'EDITOR',
       name: 'editor',
       description: 'Content editor role',
       permissions: JSON.stringify({
         contentManagement: ['create', 'read', 'update', 'delete'],
         mediaManagement: ['create', 'read', 'update', 'delete']
-      })
+      }),
+      level: 30,
+      isSystem: true
     }
   })
 
   const marketologRole = await prisma.role.upsert({
     where: { name: 'marketolog' },
-    update: {},
+    update: {
+      level: 60,
+      isSystem: true
+    },
     create: {
+      code: 'MARKETOLOG',
       name: 'marketolog',
       description: 'Marketing specialist role',
       permissions: JSON.stringify({
         marketingManagement: ['create', 'read', 'update', 'delete'],
         analyticsManagement: ['read']
-      })
+      }),
+      level: 60,
+      isSystem: true
     }
   })
 
   const subscriberRole = await prisma.role.upsert({
     where: { name: 'subscriber' },
-    update: {},
+    update: {
+      level: 80,
+      isSystem: true
+    },
     create: {
+      code: 'SUBSCRIBER',
       name: 'subscriber',
       description: 'Subscriber role with limited access',
       permissions: JSON.stringify({
         contentManagement: ['read'],
         profileManagement: ['read', 'update']
-      })
+      }),
+      level: 80,
+      isSystem: true
     }
   })
 
   const supportRole = await prisma.role.upsert({
     where: { name: 'support' },
-    update: {},
+    update: {
+      level: 70,
+      isSystem: true
+    },
     create: {
+      code: 'SUPPORT',
       name: 'support',
       description: 'Customer support role',
       permissions: JSON.stringify({
         supportManagement: ['create', 'read', 'update', 'delete'],
         userManagement: ['read']
-      })
+      }),
+      level: 70,
+      isSystem: true
     }
   })
 
   const managerRole = await prisma.role.upsert({
     where: { name: 'manager' },
-    update: {},
+    update: {
+      level: 20,
+      isSystem: true
+    },
     create: {
+      code: 'MANAGER',
       name: 'manager',
       description: 'Manager role with team management permissions',
       permissions: JSON.stringify({
@@ -217,7 +278,9 @@ async function main() {
         translationManagement: ['create', 'read', 'update', 'delete'],
         emailTemplatesManagement: ['create', 'read', 'update', 'delete'],
         smtpManagement: ['read']
-      })
+      }),
+      level: 20,
+      isSystem: true
     }
   })
 
@@ -228,7 +291,8 @@ async function main() {
     where: { email: 'admin@example.com' },
     update: {
       password: hashedPassword,
-      roleId: adminRole.id
+      roleId: adminRole.id,
+      status: 'active'
     },
     create: {
       email: 'admin@example.com',
@@ -237,7 +301,8 @@ async function main() {
       roleId: adminRole.id,
       language: 'ru',
       currency: 'RUB',
-      country: 'russia'
+      country: 'russia',
+      status: 'active'
     }
   })
 
@@ -248,7 +313,8 @@ async function main() {
     where: { email: 'superadmin@example.com' },
     update: {
       password: superadminPassword,
-      roleId: superadminRole.id
+      roleId: superadminRole.id,
+      status: 'active'
     },
     create: {
       email: 'superadmin@example.com',
@@ -257,7 +323,8 @@ async function main() {
       roleId: superadminRole.id,
       language: 'ru',
       currency: 'RUB',
-      country: 'russia'
+      country: 'russia',
+      status: 'active'
     }
   })
 
@@ -279,7 +346,8 @@ async function main() {
       where: { email: sampleUser.email },
       update: {
         password: defaultUserPassword,
-        roleId: sampleUser.roleId
+        roleId: sampleUser.roleId,
+        status: 'active'
       },
       create: {
         email: sampleUser.email,
@@ -288,7 +356,8 @@ async function main() {
         roleId: sampleUser.roleId,
         language: 'ru',
         currency: 'RUB',
-        country: 'russia'
+        country: 'russia',
+        status: 'active'
       }
     })
   }
@@ -699,6 +768,11 @@ async function main() {
 
   console.log(`✅ Created ${sampleNotifications.length} sample notifications for superadmin user`)
 
+  // Remove deprecated registration module config
+  await prisma.rateLimitConfig.deleteMany({
+    where: { module: 'registration' }
+  })
+
   // Create rate limit configurations
   const rateLimitConfigs = [
     {
@@ -735,7 +809,10 @@ async function main() {
       maxRequests: 5,
       windowMs: 900000, // 15 minutes
       blockMs: 3600000, // 1 hour
-      isActive: true
+      warnThreshold: 3,
+      isActive: true,
+      storeEmailInEvents: true,
+      storeIpInEvents: true
     },
     {
       module: 'email',
@@ -745,17 +822,58 @@ async function main() {
       isActive: true
     },
     {
-      module: 'registration',
-      maxRequests: 3,
-      windowMs: 3600000, // 1 hour
-      blockMs: 24 * 60 * 60 * 1000, // 24 hours
-      warnThreshold: 1,
+      module: 'export',
+      maxRequests: 10,
+      windowMs: 900000, // 15 minutes
+      blockMs: 900000, // 15 minutes
+      warnThreshold: 3,
+      isActive: true,
+      storeEmailInEvents: true,
+      storeIpInEvents: true
+    },
+    {
+      module: 'import',
+      maxRequests: 5,
+      windowMs: 900000, // 15 minutes
+      blockMs: 900000, // 15 minutes
+      warnThreshold: 2,
+      isActive: true,
+      storeEmailInEvents: true,
+      storeIpInEvents: true
+    },
+    // Новые модули для многоуровневой защиты регистрации
+    {
+      module: 'registration-ip',
+      maxRequests: 3,        // 3 регистрации с одного IP
+      windowMs: 60 * 60 * 1000, // за 1 час
+      blockMs: 24 * 60 * 60 * 1000, // блок на 24 часа
+      warnThreshold: 2,
+      isActive: true,
+      storeEmailInEvents: true,
+      storeIpInEvents: true
+    },
+    {
+      module: 'registration-domain',
+      maxRequests: 10,       // 10 регистраций с одного домена
+      windowMs: 60 * 60 * 1000, // за 1 час
+      blockMs: 6 * 60 * 60 * 1000, // блок на 6 часов
+      warnThreshold: 5,
+      isActive: true,
+      storeEmailInEvents: true,
+      storeIpInEvents: true
+    },
+    {
+      module: 'registration-email',
+      maxRequests: 1,        // 1 попытка на email
+      windowMs: 24 * 60 * 60 * 1000, // за 24 часа
+      blockMs: 24 * 60 * 60 * 1000, // блок на 24 часа
+      warnThreshold: 0,
       isActive: true,
       storeEmailInEvents: true,
       storeIpInEvents: true
     }
   ]
-  
+
   // Создаем тестовые блокировки для демонстрации системы
   const userBlocks = [
     {
@@ -912,7 +1030,8 @@ async function main() {
         name: demoUser.name,
         password: hashedDemoPassword,
         roleId: demoUser.roleId,
-        lastSeen: demoUser.lastSeen
+        lastSeen: demoUser.lastSeen,
+        status: 'active'
       },
       create: {
         email: demoUser.email,
@@ -922,12 +1041,462 @@ async function main() {
         language: 'ru',
         currency: 'RUB',
         country: 'russia',
-        lastSeen: demoUser.lastSeen
+        lastSeen: demoUser.lastSeen,
+        status: 'active'
       }
     })
   }
 
   console.log('Email templates created successfully!')
+
+  // ============================================
+  // Service Configurations (Test/Example)
+  // ============================================
+  console.log('Creating test service configurations...')
+
+  // Helper function to safely encrypt (fallback if ENCRYPTION_KEY not set)
+  const safeEncrypt = (value: string): string | null => {
+    try {
+      return encrypt(value)
+    } catch (error) {
+      console.warn(`⚠️  Cannot encrypt value (ENCRYPTION_KEY not set). Storing as plain text for seed.`)
+      return value // В seed можно хранить без шифрования, но в production это недопустимо
+    }
+  }
+
+  const testServices = [
+    // Redis
+    {
+      name: 'redis',
+      displayName: 'Redis (Local Docker)',
+      type: 'REDIS',
+      host: 'localhost',
+      port: 6379,
+      protocol: 'redis://',
+      username: null,
+      password: safeEncrypt(''),
+      token: null,
+      tlsEnabled: false,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    {
+      name: 'redis-production',
+      displayName: 'Redis (Production)',
+      type: 'REDIS',
+      host: 'redis.example.com',
+      port: 6379,
+      protocol: 'rediss://',
+      username: null,
+      password: safeEncrypt('your-redis-password'),
+      token: null,
+      tlsEnabled: true,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    // PostgreSQL
+    {
+      name: 'postgresql',
+      displayName: 'PostgreSQL (Local)',
+      type: 'POSTGRESQL',
+      host: 'localhost',
+      port: 5432,
+      protocol: 'postgresql://',
+      username: 'postgres',
+      password: safeEncrypt('postgres'),
+      token: null,
+      tlsEnabled: false,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: JSON.stringify({ database: 'mydb' })
+    },
+    {
+      name: 'postgresql-production',
+      displayName: 'PostgreSQL (Production)',
+      type: 'POSTGRESQL',
+      host: 'db.example.com',
+      port: 5432,
+      protocol: 'postgresql://',
+      username: 'app_user',
+      password: safeEncrypt('secure-password'),
+      token: null,
+      tlsEnabled: true,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: JSON.stringify({ database: 'production_db' })
+    },
+    // Prometheus
+    {
+      name: 'prometheus',
+      displayName: 'Prometheus (Local Docker)',
+      type: 'PROMETHEUS',
+      host: 'localhost',
+      port: 9090,
+      protocol: 'http://',
+      basePath: '/api/v1',
+      username: null,
+      password: null,
+      token: null,
+      tlsEnabled: false,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    {
+      name: 'prometheus-production',
+      displayName: 'Prometheus (Production)',
+      type: 'PROMETHEUS',
+      host: 'prometheus.example.com',
+      port: 9090,
+      protocol: 'https://',
+      basePath: '/api/v1',
+      username: null,
+      password: null,
+      token: safeEncrypt('your-prometheus-token'),
+      tlsEnabled: true,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    // Loki
+    {
+      name: 'loki',
+      displayName: 'Loki (Local Docker)',
+      type: 'LOKI',
+      host: 'localhost',
+      port: 3100,
+      protocol: 'http://',
+      basePath: '/loki/api/v1',
+      username: null,
+      password: null,
+      token: null,
+      tlsEnabled: false,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    {
+      name: 'loki-production',
+      displayName: 'Loki (Production)',
+      type: 'LOKI',
+      host: 'loki.example.com',
+      port: 3100,
+      protocol: 'https://',
+      basePath: '/loki/api/v1',
+      username: null,
+      password: null,
+      token: safeEncrypt('your-loki-token'),
+      tlsEnabled: true,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    // Grafana
+    {
+      name: 'grafana',
+      displayName: 'Grafana (Local Docker)',
+      type: 'GRAFANA',
+      host: 'localhost',
+      port: 3001,
+      protocol: 'http://',
+      basePath: '/api',
+      username: 'admin',
+      password: safeEncrypt('admin'),
+      token: null,
+      tlsEnabled: false,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    {
+      name: 'grafana-production',
+      displayName: 'Grafana (Production)',
+      type: 'GRAFANA',
+      host: 'grafana.example.com',
+      port: 443,
+      protocol: 'https://',
+      basePath: '/api',
+      username: 'grafana_user',
+      password: safeEncrypt('secure-password'),
+      token: safeEncrypt('your-grafana-api-token'),
+      tlsEnabled: true,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    // Sentry
+    {
+      name: 'sentry',
+      displayName: 'Sentry (Production)',
+      type: 'SENTRY',
+      host: 'sentry.io',
+      port: 443,
+      protocol: 'https://',
+      basePath: '/api',
+      username: null,
+      password: null,
+      token: safeEncrypt('https://your-key@sentry.io/your-project-id'),
+      tlsEnabled: true,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    // S3
+    {
+      name: 's3-minio',
+      displayName: 'S3 MinIO (Local)',
+      type: 'S3',
+      host: 'localhost',
+      port: 9000,
+      protocol: 'http://',
+      username: 'minioadmin',
+      password: safeEncrypt('minioadmin'),
+      token: null,
+      tlsEnabled: false,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: JSON.stringify({
+        region: 'us-east-1',
+        bucket: 'test-bucket',
+        storageType: 'minio',
+        forcePathStyle: true
+      })
+    },
+    {
+      name: 's3-aws',
+      displayName: 'S3 AWS (Production)',
+      type: 'S3',
+      host: 's3.amazonaws.com',
+      port: 443,
+      protocol: 'https://',
+      username: 'AKIAIOSFODNN7EXAMPLE',
+      password: safeEncrypt('wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'),
+      token: null,
+      tlsEnabled: true,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: JSON.stringify({
+        region: 'us-east-1',
+        bucket: 'my-production-bucket',
+        storageType: 'aws',
+        forcePathStyle: false
+      })
+    },
+    {
+      name: 's3-yandex',
+      displayName: 'S3 Yandex Object Storage',
+      type: 'S3',
+      host: 'storage.yandexcloud.net',
+      port: 443,
+      protocol: 'https://',
+      username: 'YCAJxxxxxxxxxxxxxxxxxxxx',
+      password: safeEncrypt('YCMxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'),
+      token: null,
+      tlsEnabled: true,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: JSON.stringify({
+        region: 'ru-central1',
+        bucket: 'my-bucket',
+        storageType: 'yandex',
+        forcePathStyle: false
+      })
+    },
+    // SMTP
+    {
+      name: 'smtp-gmail',
+      displayName: 'SMTP Gmail',
+      type: 'SMTP',
+      host: 'smtp.gmail.com',
+      port: 587,
+      protocol: 'smtp://',
+      username: 'your-email@gmail.com',
+      password: safeEncrypt('your-app-password'),
+      token: null,
+      tlsEnabled: true,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    {
+      name: 'smtp-sendgrid',
+      displayName: 'SMTP SendGrid',
+      type: 'SMTP',
+      host: 'smtp.sendgrid.net',
+      port: 587,
+      protocol: 'smtp://',
+      username: 'apikey',
+      password: safeEncrypt('SG.your-sendgrid-api-key'),
+      token: null,
+      tlsEnabled: true,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    // Elasticsearch
+    {
+      name: 'elasticsearch',
+      displayName: 'Elasticsearch (Local)',
+      type: 'ELASTICSEARCH',
+      host: 'localhost',
+      port: 9200,
+      protocol: 'http://',
+      basePath: '',
+      username: 'elastic',
+      password: safeEncrypt('changeme'),
+      token: null,
+      tlsEnabled: false,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    {
+      name: 'elasticsearch-production',
+      displayName: 'Elasticsearch (Production)',
+      type: 'ELASTICSEARCH',
+      host: 'elasticsearch.example.com',
+      port: 9200,
+      protocol: 'https://',
+      basePath: '',
+      username: 'elastic',
+      password: safeEncrypt('secure-password'),
+      token: null,
+      tlsEnabled: true,
+      enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    }
+  ]
+
+  for (const service of testServices) {
+    await prisma.serviceConfiguration.upsert({
+      where: { name: service.name },
+      update: {
+        displayName: service.displayName,
+        type: service.type,
+        host: service.host,
+        port: service.port,
+        protocol: service.protocol,
+        basePath: service.basePath || null,
+        username: service.username,
+        password: service.password,
+        token: service.token,
+        tlsEnabled: service.tlsEnabled,
+        enabled: service.enabled,
+        status: service.status,
+        metadata: service.metadata || '{}'
+      },
+      create: {
+        name: service.name,
+        displayName: service.displayName,
+        type: service.type,
+        host: service.host,
+        port: service.port,
+        protocol: service.protocol,
+        basePath: service.basePath || null,
+        username: service.username,
+        password: service.password,
+        token: service.token,
+        tlsEnabled: service.tlsEnabled,
+        enabled: service.enabled,
+        status: service.status,
+        metadata: service.metadata || '{}'
+      }
+    })
+  }
+
+  console.log(`✅ Created ${testServices.length} test service configurations (all disabled by default)`)
+
+  // Create tariff plans
+  const tariffPlans = [
+    {
+      code: 'FREE',
+      name: 'Free',
+      description: 'Бесплатный тариф для начала работы',
+      price: 0,
+      currency: 'RUB',
+      features: JSON.stringify({
+        maxListings: 5,
+        maxCompanies: 1,
+        maxAccounts: 1,
+        canAssignManagers: false,
+        support: 'community'
+      }),
+      maxAccounts: 1,
+      isActive: true,
+      isSystem: true
+    },
+    {
+      code: 'BASIC',
+      name: 'Basic',
+      description: 'Базовый тариф для малого бизнеса',
+      price: 500,
+      currency: 'RUB',
+      features: JSON.stringify({
+        maxListings: 50,
+        maxCompanies: 3,
+        maxAccounts: 3,
+        canAssignManagers: true,
+        maxManagers: 2,
+        support: 'email'
+      }),
+      maxAccounts: 3,
+      isActive: true,
+      isSystem: false
+    },
+    {
+      code: 'PRO',
+      name: 'Professional',
+      description: 'Профессиональный тариф для среднего бизнеса',
+      price: 2000,
+      currency: 'RUB',
+      features: JSON.stringify({
+        maxListings: 200,
+        maxCompanies: 10,
+        maxAccounts: 10,
+        canAssignManagers: true,
+        maxManagers: 10,
+        support: 'priority',
+        analytics: true
+      }),
+      maxAccounts: 10,
+      isActive: true,
+      isSystem: false
+    },
+    {
+      code: 'ENTERPRISE',
+      name: 'Enterprise',
+      description: 'Корпоративный тариф для крупного бизнеса',
+      price: 10000,
+      currency: 'RUB',
+      features: JSON.stringify({
+        maxListings: -1, // unlimited
+        maxCompanies: -1, // unlimited
+        maxAccounts: -1, // unlimited
+        canAssignManagers: true,
+        maxManagers: -1, // unlimited
+        support: 'dedicated',
+        analytics: true,
+        apiAccess: true,
+        customIntegration: true
+      }),
+      maxAccounts: null, // unlimited
+      isActive: true,
+      isSystem: false
+    }
+  ]
+
+  for (const plan of tariffPlans) {
+    await prisma.tariffPlan.upsert({
+      where: { code: plan.code },
+      update: plan,
+      create: plan
+    })
+  }
+
+  console.log(`✅ Created ${tariffPlans.length} tariff plans`)
   console.log('Database seeded successfully!')
   console.log('Users created:')
   console.log('- Email: superadmin@example.com, Password: admin123, Role: superadmin (DEFAULT ADMIN)')

@@ -46,8 +46,11 @@ const countries = ['Select Country', 'United States', 'United Kingdom', 'France'
 
 type Role = {
   id: string
+  code: string
   name: string
   description: string | null
+  level: number
+  isSystem: boolean
 }
 
 // No mapping needed anymore

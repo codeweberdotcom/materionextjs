@@ -23,6 +23,7 @@ import DialogContent from '@mui/material/DialogContent'
 import IconButton from '@mui/material/IconButton'
 
 import { toast } from 'react-toastify'
+import Menu from '@mui/material/Menu'
 
 import { usePermissions } from '@/hooks/usePermissions'
 import { useTranslation } from '@/contexts/TranslationContext'
@@ -111,8 +112,11 @@ const SystemEvents = () => {
   const [initialLoading, setInitialLoading] = useState(true)
   const [nextCursor, setNextCursor] = useState<string | undefined>()
   const [selectedEvent, setSelectedEvent] = useState<EventEntry | null>(null)
+  const [exportMenuAnchor, setExportMenuAnchor] = useState<null | HTMLElement>(null)
+  const [exportLoading, setExportLoading] = useState(false)
 
   const hasAccess = useMemo(() => checkPermission('events', 'read'), [checkPermission])
+  const hasExportPermission = useMemo(() => checkPermission('events', 'export'), [checkPermission])
 
   useEffect(() => {
     const handle = setTimeout(() => setSearch(searchInput), 400)
@@ -199,6 +203,62 @@ const SystemEvents = () => {
     setTo('')
   }
 
+  const handleExportClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setExportMenuAnchor(event.currentTarget)
+  }
+
+  const handleExportClose = () => {
+    setExportMenuAnchor(null)
+  }
+
+  const handleExport = async (format: 'csv' | 'json') => {
+    if (exportLoading || !hasExportPermission) return
+
+    setExportLoading(true)
+    handleExportClose()
+
+    try {
+      const query = buildQuery()
+      const url = `/api/admin/events/export/${format}${query ? `?${query}` : ''}`
+      
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Export failed' }))
+        throw new Error(errorData.error || `Export failed: ${response.statusText}`)
+      }
+
+      // Получаем имя файла из заголовка Content-Disposition
+      const contentDisposition = response.headers.get('content-disposition')
+      let filename = `events-export-${new Date().toISOString().split('T')[0]}.${format}`
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?(.+?)"?$/i)
+        if (filenameMatch) {
+          filename = filenameMatch[1]
+        }
+      }
+
+      // Скачиваем файл
+      const blob = await response.blob()
+      const downloadUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(downloadUrl)
+
+      toast.success(`Экспорт завершен. Скачан файл: ${filename}`)
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Ошибка экспорта'
+      toast.error(errorMessage)
+      console.error('Export error:', error)
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
   if (permissionsLoading || initialLoading) {
     return (
       <div className='flex justify-center items-center py-16'>
@@ -224,9 +284,44 @@ const SystemEvents = () => {
           title={t.title}
           subheader={t.description}
           action={
-            <Button variant='outlined' onClick={() => fetchEvents()} disabled={loading}>
-              {t.refresh}
-            </Button>
+            <div className='flex gap-2'>
+              {hasExportPermission && (
+                <>
+                  <Button
+                    variant='outlined'
+                    onClick={handleExportClick}
+                    disabled={exportLoading || loading}
+                    startIcon={exportLoading ? <CircularProgress size={16} /> : <i className='ri-file-download-line' />}
+                    endIcon={<i className='ri-arrow-down-s-line' />}
+                  >
+                    {exportLoading ? 'Экспорт...' : 'Экспорт'}
+                  </Button>
+                  <Menu
+                    anchorEl={exportMenuAnchor}
+                    open={Boolean(exportMenuAnchor)}
+                    onClose={handleExportClose}
+                    anchorOrigin={{
+                      vertical: 'bottom',
+                      horizontal: 'left',
+                    }}
+                    transformOrigin={{
+                      vertical: 'top',
+                      horizontal: 'left',
+                    }}
+                  >
+                    <MenuItem onClick={() => handleExport('csv')} disabled={exportLoading}>
+                      CSV
+                    </MenuItem>
+                    <MenuItem onClick={() => handleExport('json')} disabled={exportLoading}>
+                      JSON
+                    </MenuItem>
+                  </Menu>
+                </>
+              )}
+              <Button variant='outlined' onClick={() => fetchEvents()} disabled={loading}>
+                {t.refresh}
+              </Button>
+            </div>
           }
         />
         <CardContent>

@@ -76,6 +76,13 @@ Comprehensive documentation for AI agents and developers is available in the `do
 
 For detailed setup instructions, see the [Setup Guide](docs/setup/setup.md).
 
+### Data Management
+- [Universal Import/Export Tool](docs/import-export/universal-import-export-tool.md) - Comprehensive data import/export system with Excel/CSV support
+- [Bulk User Operations](docs/user-operations/bulk-user-operations.md) - Mass user management operations
+- [Data Sanitization](docs/fixes/data-sanitization.md) - GDPR-compliant data anonymization and deletion
+
+**Полная документация:** См. [docs/README.md](docs/README.md) для полного списка всех документов.
+
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
 ## Learn More

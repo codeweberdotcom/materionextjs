@@ -1,22 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { rateLimitService } from '@/lib/rate-limit'
+import { rateLimitContainer } from '@/lib/rate-limit/di/container'
 import { requireAuth } from '@/utils/auth/auth'
+import { requireFullVerification } from '@/utils/verification'
 import { getRequestIp } from '@/utils/http/get-request-ip'
+import { getEnvironmentFromRequest } from '@/lib/metrics/helpers'
 
 export async function POST(request: NextRequest) {
   try {
-    const { user } = await requireAuth(request)
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Проверяем полную верификацию (email + phone) для создания объявлений
+    const verificationCheck = await requireFullVerification(request)
+    if (!verificationCheck.allowed) {
+      return verificationCheck.response || NextResponse.json(
+        { error: 'Full verification required (email and phone)' },
+        { status: 403 }
+      )
     }
 
+    const { user } = verificationCheck
+
     const clientIp = getRequestIp(request)
-    const rateLimitResult = await rateLimitService.checkLimit(user.id, 'ads', {
+    const environment = getEnvironmentFromRequest(request)
+    const rateLimitResult = await rateLimitContainer.getRateLimitEngine().checkLimit(user.id, 'ads', {
       userId: user.id,
       email: user.email ?? null,
       ipAddress: clientIp,
-      keyType: 'user'
+      keyType: 'user',
+      environment
     })
 
     if (!rateLimitResult.allowed) {

@@ -1,17 +1,36 @@
-import { writeFile } from 'fs/promises'
+import { writeFile, mkdir } from 'fs/promises'
 
 import { NextRequest, NextResponse } from 'next/server'
 import path from 'path'
+import crypto from 'crypto'
+
+import bcrypt from 'bcryptjs'
+
+import { existsSync } from 'fs'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { getOnlineUsers } from '@/lib/sockets/namespaces/chat'
+import {
+  createUserSchema,
+  parseFormDataToObject,
+  formatZodError,
+  avatarFileSchema
+} from '@/lib/validations/user-schemas'
 
 // Кеш для пользователей (простая in-memory кеш)
 let usersCache: any[] | null = null
 let usersCacheTimestamp: number = 0
 const USERS_CACHE_DURATION = 30 * 1000 // 30 секунд для тестирования
+
+const hashPassword = (password: string) => bcrypt.hash(password, 10)
+
+const generateTemporaryPassword = () => {
+  const candidate = crypto.randomBytes(16).toString('base64').replace(/[^a-zA-Z0-9]/g, '')
+
+  return candidate.slice(0, 12) || `Temp${Date.now()}!`
+}
 
 // POST - Create new user (admin only)
 export async function POST(request: NextRequest) {
@@ -39,20 +58,54 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = await request.formData()
-    const fullName = formData.get('fullName') as string
-    const username = formData.get('username') as string
-    const email = formData.get('email') as string
-    const role = formData.get('role') as string
-    const plan = formData.get('plan') as string
-    const status = formData.get('status') as string
-    const company = formData.get('company') as string
-    const country = formData.get('country') as string
-    const contact = formData.get('contact') as string
     const avatar = formData.get('avatar') as File | null
+    const providedPassword = formData.get('password') as string | null
+
+    // Валидация файла аватара (если предоставлен)
+    if (avatar && avatar.size > 0) {
+      const avatarValidation = avatarFileSchema.safeParse(avatar)
+      if (!avatarValidation.success) {
+        return NextResponse.json(
+          { message: formatZodError(avatarValidation.error) },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Парсим FormData в объект и валидируем
+    const formDataObj = parseFormDataToObject(formData)
+    const validationResult = createUserSchema.safeParse({
+      fullName: formDataObj.fullName,
+      username: formDataObj.username,
+      email: formDataObj.email,
+      role: formDataObj.role,
+      plan: formDataObj.plan || undefined,
+      status: formDataObj.status || undefined,
+      company: formDataObj.company || null,
+      country: formDataObj.country || null,
+      contact: formDataObj.contact || null,
+      password: providedPassword || undefined
+    })
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { message: formatZodError(validationResult.error) },
+        { status: 400 }
+      )
+    }
+
+    const validatedData = validationResult.data
+
+    // Генерируем пароль если не предоставлен или невалидный
+    const plainPassword =
+      validatedData.password && validatedData.password.length >= 8
+        ? validatedData.password
+        : generateTemporaryPassword()
+    const hashedPassword = await hashPassword(plainPassword)
 
     // Find the role by name
     const dbRole = await prisma.role.findUnique({
-      where: { name: role }
+      where: { name: validatedData.role }
     })
 
     if (!dbRole) {
@@ -62,30 +115,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Map status to isActive
-    const isActive = status === 'active'
+    // Map status (default to 'active')
+    const userStatus = validatedData.status || 'active'
 
     // Create the user
     let imagePath = null
 
     if (avatar) {
-      // Save the file to public/images/avatars
+      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars')
+      if (!existsSync(uploadsDir)) {
+        await mkdir(uploadsDir, { recursive: true })
+      }
+
       const bytes = await avatar.arrayBuffer()
       const buffer = Buffer.from(bytes)
-      const avatarPath = path.join(process.cwd(), 'public', 'images', 'avatars', avatar.name)
+      const extension = path.extname(avatar.name) || '.jpg'
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}${extension}`
+      const avatarPath = path.join(uploadsDir, fileName)
 
       await writeFile(avatarPath, buffer)
-      imagePath = `/images/avatars/${avatar.name}`
+      imagePath = `/uploads/avatars/${fileName}`
     }
 
     const newUser = await prisma.user.create({
       data: {
-        name: fullName,
-        email: email,
-        password: 'password123', // Default password, should be hashed or handled properly
+        name: validatedData.fullName,
+        email: validatedData.email,
+        password: hashedPassword,
         roleId: dbRole.id,
-        country: country,
-        isActive: isActive,
+        country: validatedData.country || null,
+        status: userStatus,
         image: imagePath
       },
       include: {
@@ -114,13 +173,43 @@ export async function POST(request: NextRequest) {
     usersCache = null
     usersCacheTimestamp = 0
 
-    return NextResponse.json(transformedUser)
+    return NextResponse.json({
+      ...transformedUser,
+      ...(validatedData.password ? {} : { temporaryPassword: plainPassword })
+    })
   } catch (error) {
     console.error('Error creating user:', error || 'Unknown error')
     
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
+    // Извлекаем детальное сообщение об ошибке
+    let errorMessage = 'Internal server error'
+    let statusCode = 500
+    
+    if (error instanceof Error) {
+      // Обработка ошибок Prisma
+      if (error.message.includes('Unique constraint')) {
+        statusCode = 409
+        if (error.message.includes('email')) {
+          errorMessage = 'User with this email already exists'
+        } else if (error.message.includes('username')) {
+          errorMessage = 'User with this username already exists'
+        }
+      } else if (error.message.includes('Foreign key constraint')) {
+        statusCode = 400
+        errorMessage = 'Invalid role or reference data'
+      } else if (error.message.includes('Invalid')) {
+        statusCode = 400
+        errorMessage = error.message
+      }
+      // Для остальных ошибок используем общее сообщение
+    }
+    
+    return NextResponse.json(
+      { 
+        message: errorMessage,
+        error: error instanceof Error ? error.name : 'UnknownError',
+        ...(process.env.NODE_ENV === 'development' && error instanceof Error ? { stack: error.stack } : {})
+      },
+      { status: statusCode }
     )
   }
 }

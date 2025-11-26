@@ -332,7 +332,6 @@ export const useChatNew = (otherUserId?: string) => {
         retryAfter,
         blockedUntil: blockedUntilTimestamp
       })
-      writeStoredRateLimit(user?.id, blockedUntilTimestamp)
     }
 
     const handleRateLimitWarning = (data: { remaining: number }) => {
@@ -560,7 +559,6 @@ export const useChatNew = (otherUserId?: string) => {
               retryAfter,
               blockedUntil
             })
-            writeStoredRateLimit(user?.id, blockedUntil)
 
             const rateLimitError = new Error('RATE_LIMITED') as Error & { blockedUntil?: number }
             rateLimitError.blockedUntil = blockedUntil
@@ -600,7 +598,6 @@ export const useChatNew = (otherUserId?: string) => {
           retryAfter,
           blockedUntil
         })
-        writeStoredRateLimit(user?.id, blockedUntil)
 
         const rateLimitError = new Error('RATE_LIMITED') as Error & { blockedUntil?: number }
         rateLimitError.blockedUntil = blockedUntil

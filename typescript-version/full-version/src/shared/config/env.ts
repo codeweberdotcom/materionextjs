@@ -60,9 +60,25 @@ const envSchema = z.object({
   SMTP_PASSWORD: z.string().optional(),
   SMTP_FROM_EMAIL: z.string().email().optional(),
   SMTP_FROM_NAME: z.string().optional(),
+  SMSRU_API_KEY: z.string().optional(),
   MAPBOX_ACCESS_TOKEN: z.string().optional(),
   GLITCHTIP_DSN: z.string().optional(),
-  SENTRY_DSN: z.string().optional()
+  SENTRY_DSN: z.string().optional(),
+  // Event Retention Policy (days)
+  EVENT_RETENTION_DEFAULT_DAYS: numberFromEnv.default('90'),
+  EVENT_RETENTION_RATE_LIMIT_DAYS: numberFromEnv.default('30'),
+  EVENT_RETENTION_AUTH_DAYS: numberFromEnv.default('90'),
+  EVENT_RETENTION_REGISTRATION_DAYS: numberFromEnv.default('90'),
+  EVENT_RETENTION_MODERATION_DAYS: numberFromEnv.default('365'),
+  EVENT_RETENTION_BLOCK_DAYS: numberFromEnv.default('365'),
+  EVENT_RETENTION_CHAT_DAYS: numberFromEnv.default('90'),
+  EVENT_RETENTION_ADS_DAYS: numberFromEnv.default('90'),
+  EVENT_RETENTION_NOTIFICATIONS_DAYS: numberFromEnv.default('90'),
+  EVENT_RETENTION_SYSTEM_DAYS: numberFromEnv.default('90'),
+  EVENT_RETENTION_TEST_EVENTS_DAYS: numberFromEnv.default('30'),
+  // Retention Job Settings
+  EVENT_RETENTION_BATCH_SIZE: numberFromEnv.default('1000'),
+  EVENT_RETENTION_ENABLED: booleanFromEnv.default('true')
 })
 
 const parsedEnv = envSchema.safeParse(process.env)

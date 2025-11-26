@@ -7,10 +7,25 @@ import localforage from 'localforage'
 // Enable MapSet plugin for Immer to support Set objects in Redux state
 enableMapSet()
 
-localforage.config({
-  name: 'materio-nextjs',
-  storeName: 'redux_persist'
-})
+// Создаём noop storage для SSR (на сервере localforage недоступен)
+const createNoopStorage = () => {
+  return {
+    getItem(_key: string) {
+      return Promise.resolve(null)
+    },
+    setItem(_key: string, value: string) {
+      return Promise.resolve(value)
+    },
+    removeItem(_key: string) {
+      return Promise.resolve()
+    }
+  }
+}
+
+// Используем localforage на клиенте (IndexedDB), noop storage на сервере
+const storage = typeof window !== 'undefined' 
+  ? localforage 
+  : createNoopStorage()
 
 // Slice Imports
 import chatReducer from '@/redux-store/slices/chat'
@@ -32,7 +47,7 @@ const rootReducer = combineReducers({
 const persistConfig = {
   key: 'root',
   version: 1,
-  storage: localforage,
+  storage,  // localforage (IndexedDB) на клиенте, noop на сервере
   whitelist: ['chatQueue']
 }
 

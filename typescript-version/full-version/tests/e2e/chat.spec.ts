@@ -1,7 +1,23 @@
 import { test, expect } from '@playwright/test'
+import { generateTestRunId } from './helpers/user-helpers'
 
 test('chat functionality works end-to-end', async ({ page }) => {
-  // Login first
+  // Генерируем уникальный testRunId для этого теста
+  const testRunId = generateTestRunId()
+  
+  // Add test headers to all API calls for proper test data distinction
+  await page.route('**/api/**', route => {
+    route.continue({
+      headers: {
+        ...route.request().headers(),
+        'x-test-request': 'true',
+        'x-test-run-id': testRunId,
+        'x-test-suite': 'e2e'
+      }
+    })
+  })
+
+  // Login first (using admin account for this specific test)
   await page.goto('/login?redirectTo=/en/dashboards/crm')
   await page.fill('[name=email]', 'admin@example.com')
   await page.fill('[name=password]', 'admin123')

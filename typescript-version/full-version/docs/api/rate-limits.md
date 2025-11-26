@@ -193,32 +193,113 @@ Update configuration for a module.
 
 ## 📊 Monitoring & Metrics
 
-- Эндпоинт `/api/metrics` отдаёт метрики Prometheus с префиксом `materio_` и `rate_limit_*`.
-- Ключевые серии:
-  - `rate_limit_store_backend{backend="redis"|"prisma"}` — gauge активного стора (подходит для алерта «долго работаем в fallback»).
-  - `rate_limit_fallback_switch_total{from,to}` — количество переключений между Redis и Prisma.
-  - `rate_limit_redis_failures_total` — сколько ошибок Redis привели к fallback.
-  - `rate_limit_consume_duration_seconds{backend,module,mode}` — латентность операций `store.consume()`.
-  - `rate_limit_unknown_module_total{module}` — fail-fast на вызовы `checkLimit` без конфигурации (используйте как сигнал misconfig).
-- Пример правила Prometheus:
+### Доступ к метрикам
+
+Эндпоинт `/api/metrics` отдаёт метрики Prometheus с префиксом `materio_` и `rate_limit_*`.
+
+**Пример запроса:**
+```bash
+curl -s http://localhost:3000/api/metrics | grep rate_limit
+```
+
+### Ключевые метрики
+
+**Backend и failover:**
+- `rate_limit_store_backend{backend="redis"|"prisma"}` — gauge активного стора
+- `rate_limit_fallback_switch_total{from,to}` — количество переключений между Redis и Prisma
+- `rate_limit_redis_failures_total` — количество ошибок Redis
+- `rate_limit_fallback_duration_seconds` — время в fallback режиме
+
+**Производительность:**
+- `rate_limit_consume_duration_seconds{backend,module,mode}` — латентность операций `store.consume()`
+- `rate_limit_check_duration_seconds{module}` — время выполнения `checkLimit()`
+
+**Проверки и события:**
+- `rate_limit_checks_total{module,result}` — количество проверок (allowed/blocked)
+- `rate_limit_events_total{module,event_type,mode}` — события (warning/block)
+- `rate_limit_blocks_total{module,block_type}` — блокировки по типам
+- `rate_limit_active_blocks{module,block_type}` — количество активных блоков
+
+**Диагностика:**
+- `rate_limit_unknown_module_total{module}` — вызовы `checkLimit` без конфигурации
+
+### Примеры правил Prometheus:
 
 ```yaml
-- alert: RateLimitFallbackTooLong
-  expr: rate_limit_store_backend{backend="prisma"} == 1
-  for: 5m
-  labels: { severity: warning }
-  annotations:
-    summary: "Rate limit fallback активен"
-    description: "Приложение >5 минут работает на Prisma вместо Redis."
+groups:
+  - name: rate_limit
+    rules:
+      # Fallback активен слишком долго
+      - alert: RateLimitFallbackTooLong
+        expr: rate_limit_store_backend{backend="prisma"} == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Rate limit fallback активен"
+          description: "Приложение >5 минут работает на Prisma вместо Redis."
+
+      # Неизвестные модули
+      - alert: RateLimitUnknownModule
+        expr: increase(rate_limit_unknown_module_total[5m]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: "Обнаружены запросы к неизвестным модулям"
+          description: "Модуль {{ $labels.module }} не имеет конфигурации."
+
+      # Высокий процент блокировок
+      - alert: RateLimitHighBlockRate
+        expr: |
+          rate(rate_limit_checks_total{result="blocked"}[5m]) /
+          rate(rate_limit_checks_total[5m]) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Высокий процент блокировок"
+          description: "Модуль {{ $labels.module }} блокирует >10% запросов."
 ```
+
+Подробнее см. [Операционный гайд](../monitoring/rate-limit-operations.md)
 
 ## 🧹 Retention и PII
 
-- Таблица `RateLimitEvent` и журнал состояний могут разрастаться. Рекомендуемый TTL:
-  - `rate_limit` события — 30 дней для мониторинга, 90 дней для аудита.
-  - ручные блокировки (`UserBlock`) — активные до `unblockedAt`, архивируем после 180 дней.
-- Настройте cron/скрипт, который удаляет события старше TTL и деактивирует просроченные блокировки.
-- Флаги `storeEmailInEvents` / `storeIpInEvents` позволяют ограничить PII в событиях. Для production рекомендуется хранить userId, ipHash/ipPrefix и маскировать «сырые» данные в ответах API.
+### Рекомендуемые TTL
+
+- **RateLimitEvent** — 30 дней для мониторинга, 90 дней для аудита
+- **RateLimitState** — автоматическая очистка после истечения окна
+- **UserBlock** — активные до `unblockedAt`, архивируем после 180 дней
+
+### Очистка данных
+
+Настройте cron/скрипт для автоматической очистки:
+
+```bash
+# Очистка событий старше 30 дней
+pnpm prisma db execute --schema prisma/schema.prisma --stdin <<'SQL'
+DELETE FROM "RateLimitEvent"
+WHERE "createdAt" < datetime('now', '-30 days');
+SQL
+```
+
+Подробнее см. [Операционный гайд](../monitoring/rate-limit-operations.md#4-очистка-и-ретеншн)
+
+### PII защита
+
+Флаги `storeEmailInEvents` / `storeIpInEvents` позволяют ограничить PII в событиях.
+
+**Рекомендации для production:**
+- `storeEmailInEvents: false` — не сохранять email в событиях
+- `storeIpInEvents: false` — не сохранять IP в событиях
+- Использовать `ipHash` и `ipPrefix` вместо raw IP
+- Использовать `emailHash` вместо raw email
+
+**Исключения:**
+- Административные операции (требуют аудита)
+- Критические операции (защита от серьезных атак)
+
+Подробнее см. [Ротация ключей хэширования](../rate-limits/hash-key-rotation.md)
 
 ## 🗄️ Database Schema
 
@@ -274,16 +355,32 @@ model UserBlock {
 - **UserBlock Table**: Manual/admin blocks
 - **Sliding Windows**: Time-based rate limiting
 - **Automatic Cleanup**: Expired blocks removal
+- **PII Protection**: Хэширование IP и email (GDPR compliance)
+- **Deduplication**: Предотвращение спама warning событий
 
 ### Block Types
-- **Automatic**: Rate limit violations
-- **Manual**: Admin-imposed blocks
-- **Permanent**: No unblock time set
-- **Temporary**: Time-based unblocking
+- **Automatic**: Rate limit violations (создаются системой)
+- **Manual**: Admin-imposed blocks (создаются администраторами)
+- **User blocks**: Блокировка по userId
+- **IP blocks**: Блокировка по IP адресу
+- **Email blocks**: Блокировка по email
+- **Domain blocks**: Блокировка по домену email
+
+### Режимы работы
+- **Enforce**: Активная блокировка при превышении лимита
+- **Monitor**: Только логирование, без блокировки (для сбора статистики)
+
+## 📚 Дополнительные ресурсы
+
+- [Операционный гайд](../monitoring/rate-limit-operations.md) — настройка, мониторинг, troubleshooting
+- [Примеры конфигурации](../rate-limits/configuration-examples.md) — готовые конфигурации для разных сценариев
+- [Ротация ключей хэширования](../rate-limits/hash-key-rotation.md) — процесс ротации секретных ключей
 
 ## 🚀 Usage Examples
 
-### Check Rate Limit Before Action
+### Пример 1: Проверка лимита перед действием
+
+**TypeScript:**
 ```typescript
 import { rateLimitService } from '@/lib/rate-limit'
 
@@ -295,6 +392,372 @@ if (!result.allowed) {
     retryAfter: Math.ceil((result.resetTime - Date.now()) / 1000),
     blockedUntil: result.blockedUntil ?? result.resetTime
   }
+}
+```
+
+**cURL:**
+```bash
+# Проверка выполняется внутри приложения, не через API
+# Но можно проверить статистику через admin API
+curl -X GET "http://localhost:3000/api/admin/rate-limits?view=states&module=chat&key=user-123" \
+  -H "Authorization: Bearer <token>"
+```
+
+### Пример 2: Получение конфигураций и статистики
+
+**cURL:**
+```bash
+curl -X GET "http://localhost:3000/api/admin/rate-limits" \
+  -H "Authorization: Bearer <token>"
+```
+
+**Ответ:**
+```json
+{
+  "configs": [
+    {
+      "module": "chat",
+      "maxRequests": 10,
+      "windowMs": 3600000,
+      "blockMs": 900000,
+      "warnThreshold": 3,
+      "mode": "enforce",
+      "isActive": true
+    }
+  ],
+  "stats": [
+    {
+      "module": "chat",
+      "config": {
+        "maxRequests": 10,
+        "windowMs": 3600000,
+        "blockMs": 900000
+      },
+      "totalRequests": 45,
+      "blockedCount": 2,
+      "activeWindows": 3
+    }
+  ]
+}
+```
+
+### Пример 3: Просмотр состояний (States)
+
+**cURL:**
+```bash
+# Получить все состояния для модуля chat
+curl -X GET "http://localhost:3000/api/admin/rate-limits?view=states&module=chat&limit=20" \
+  -H "Authorization: Bearer <token>"
+
+# Поиск по ключу
+curl -X GET "http://localhost:3000/api/admin/rate-limits?view=states&module=chat&search=user-123" \
+  -H "Authorization: Bearer <token>"
+
+# Пагинация с cursor
+curl -X GET "http://localhost:3000/api/admin/rate-limits?view=states&module=chat&cursor=abc123&limit=10" \
+  -H "Authorization: Bearer <token>"
+```
+
+**Ответ:**
+```json
+{
+  "items": [
+    {
+      "id": "state-123",
+      "key": "user-123",
+      "module": "chat",
+      "count": 5,
+      "windowStart": "2023-01-01T00:00:00Z",
+      "windowEnd": "2023-01-01T01:00:00Z",
+      "blockedUntil": null,
+      "remaining": 5,
+      "config": {
+        "maxRequests": 10,
+        "windowMs": 3600000
+      }
+    }
+  ],
+  "total": 100,
+  "nextCursor": "abc123"
+}
+```
+
+### Пример 4: Просмотр событий (Events)
+
+**cURL:**
+```bash
+# Получить события блокировок для пользователя
+curl -X GET "http://localhost:3000/api/admin/rate-limits?view=events&module=chat&key=user-123&limit=10" \
+  -H "Authorization: Bearer <token>"
+```
+
+**Ответ:**
+```json
+{
+  "items": [
+    {
+      "id": "event-123",
+      "module": "chat",
+      "key": "user-123",
+      "eventType": "block",
+      "count": 11,
+      "maxRequests": 10,
+      "windowStart": "2023-01-01T00:00:00Z",
+      "windowEnd": "2023-01-01T01:00:00Z",
+      "blockedUntil": "2023-01-01T00:15:00Z",
+      "createdAt": "2023-01-01T00:05:00Z"
+    }
+  ],
+  "total": 5
+}
+```
+
+### Пример 5: Обновление конфигурации
+
+**cURL:**
+```bash
+# Увеличить лимит для модуля chat
+curl -X PUT "http://localhost:3000/api/admin/rate-limits" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module": "chat",
+    "maxRequests": 15,
+    "windowMs": 3600000,
+    "blockMs": 1800000,
+    "warnThreshold": 5,
+    "mode": "enforce",
+    "isActive": true
+  }'
+```
+
+**Ответ:**
+```json
+{
+  "success": true,
+  "config": {
+    "module": "chat",
+    "maxRequests": 15,
+    "windowMs": 3600000,
+    "blockMs": 1800000,
+    "warnThreshold": 5,
+    "mode": "enforce",
+    "isActive": true
+  }
+}
+```
+
+### Пример 6: Переключение в режим мониторинга
+
+**cURL:**
+```bash
+# Включить monitor mode для нового модуля
+curl -X PUT "http://localhost:3000/api/admin/rate-limits" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module": "new-feature",
+    "maxRequests": 10,
+    "windowMs": 3600000,
+    "blockMs": 900000,
+    "warnThreshold": 3,
+    "mode": "monitor",
+    "isActive": true
+  }'
+```
+
+### Пример 7: Сброс лимитов
+
+**cURL:**
+```bash
+# Сбросить лимиты для конкретного пользователя
+curl -X DELETE "http://localhost:3000/api/admin/rate-limits?key=user-123&module=chat" \
+  -H "Authorization: Bearer <token>"
+
+# Сбросить все лимиты для модуля
+curl -X DELETE "http://localhost:3000/api/admin/rate-limits?module=chat" \
+  -H "Authorization: Bearer <token>"
+```
+
+**Ответ:**
+```json
+{
+  "success": true,
+  "message": "Rate limits reset successfully"
+}
+```
+
+### Пример 8: Создание ручной блокировки
+
+**cURL:**
+```bash
+# Заблокировать пользователя
+curl -X POST "http://localhost:3000/api/admin/rate-limits/blocks" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module": "chat",
+    "targetType": "user",
+    "userId": "user-123",
+    "reason": "Spam detected",
+    "durationMinutes": 60,
+    "notes": "Multiple spam messages reported"
+  }'
+
+# Заблокировать IP адрес
+curl -X POST "http://localhost:3000/api/admin/rate-limits/blocks" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module": "auth",
+    "targetType": "ip",
+    "ipAddress": "192.168.1.100",
+    "reason": "Brute force attempt",
+    "durationMinutes": 1440
+  }'
+
+# Заблокировать email домен
+curl -X POST "http://localhost:3000/api/admin/rate-limits/blocks" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "module": "registration",
+    "targetType": "domain",
+    "mailDomain": "spam-domain.com",
+    "reason": "Known spam domain",
+    "notes": "Permanent block"
+  }'
+```
+
+**Ответ:**
+```json
+{
+  "success": true,
+  "block": {
+    "id": "block-123",
+    "module": "chat",
+    "userId": "user-123",
+    "reason": "Spam detected",
+    "blockedBy": "admin-user-id",
+    "blockedAt": "2023-01-01T00:00:00Z",
+    "unblockedAt": "2023-01-01T01:00:00Z",
+    "isActive": true
+  }
+}
+```
+
+### Пример 9: Деактивация блокировки
+
+**cURL:**
+```bash
+curl -X DELETE "http://localhost:3000/api/admin/rate-limits/blocks/block-123" \
+  -H "Authorization: Bearer <token>"
+```
+
+**Ответ:**
+```json
+{
+  "success": true,
+  "message": "Block deactivated successfully"
+}
+```
+
+### Пример 10: Обработка ошибок
+
+**Ошибка 400 - Неверные параметры:**
+```bash
+curl -X PUT "http://localhost:3000/api/admin/rate-limits" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "maxRequests": -1
+  }'
+```
+
+**Ответ:**
+```json
+{
+  "error": "maxRequests must be a positive number"
+}
+```
+
+**Ошибка 401 - Не авторизован:**
+```bash
+curl -X GET "http://localhost:3000/api/admin/rate-limits"
+```
+
+**Ответ:**
+```json
+{
+  "error": "Unauthorized"
+}
+```
+
+**Ошибка 403 - Нет прав:**
+```bash
+# Пользователь без прав admin/superadmin
+curl -X GET "http://localhost:3000/api/admin/rate-limits" \
+  -H "Authorization: Bearer <user-token>"
+```
+
+**Ответ:**
+```json
+{
+  "error": "Forbidden"
+}
+```
+
+### Пример 11: Интеграция в API endpoint
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server'
+import { rateLimitService } from '@/lib/rate-limit'
+
+export async function POST(request: NextRequest) {
+  const userId = request.headers.get('x-user-id')
+  if (!userId) {
+    return NextResponse.json({ error: 'User ID required' }, { status: 400 })
+  }
+
+  // Проверка rate limit
+  const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat')
+
+  if (!rateLimitResult.allowed) {
+    const retryAfter = Math.ceil(
+      ((rateLimitResult.blockedUntil ?? rateLimitResult.resetTime) - Date.now()) / 1000
+    )
+    
+    return NextResponse.json(
+      {
+        error: 'Rate limit exceeded',
+        retryAfter,
+        blockedUntil: rateLimitResult.blockedUntil
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': retryAfter.toString(),
+          'X-RateLimit-Limit': '10',
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
+        }
+      }
+    )
+  }
+
+  // Продолжить обработку запроса
+  // ...
+
+  return NextResponse.json(
+    { success: true },
+    {
+      headers: {
+        'X-RateLimit-Limit': '10',
+        'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+        'X-RateLimit-Reset': rateLimitResult.resetTime.toString()
+      }
+    }
+  )
 }
 
 // Proceed with action

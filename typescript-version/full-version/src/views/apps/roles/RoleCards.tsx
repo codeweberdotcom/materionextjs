@@ -30,7 +30,7 @@ import { toast } from 'react-toastify'
 import type { Locale } from '@configs/i18n'
 
 // Context Imports
-import { useTranslation } from '@/contexts/TranslationContext'
+import { useTranslate } from '@/hooks/useTranslate'
 
 // Hook Imports
 import { usePermissions } from '@/hooks/usePermissions'
@@ -40,7 +40,8 @@ import Skeleton from '@mui/material/Skeleton'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/formatting/i18n'
-import { getUserPermissions, isAdmin } from '@/utils/permissions/permissions'
+import { getUserPermissions, isAdminByCode } from '@/utils/permissions/permissions'
+import { isProtectedRole, isSystemRole } from '@/shared/config/protected-roles'
 
 // Component Imports
 import RoleDialog from '@components/dialogs/role-dialog'
@@ -49,9 +50,12 @@ import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 
 type Role = {
   id: string
+  code: string
   name: string
   description?: string | null
   permissions?: string | null
+  level: number
+  isSystem: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -96,7 +100,7 @@ const Icon = styled('i')({})
 
 const RoleCards = () => {
   // Hooks
-  const t = useTranslation()
+  const { t } = useTranslate()
   const { lang: locale } = useParams()
   const { checkPermission, isSuperadmin, user } = usePermissions()
 
@@ -150,7 +154,7 @@ const RoleCards = () => {
      logger.info('Current user permissions (raw):', user?.role?.permissions)
      logger.info('Parsed user permissions:', getUserPermissions(user || null))
      logger.info('isSuperadmin:', isSuperadmin)
-     logger.info('isAdmin:', isAdmin(user || null))
+     logger.info('isAdmin:', isAdminByCode(user || null))
      logger.info('Current page permissions - module: roleManagement, action: read')
      logger.info('Has permission for current page:', checkPermission('roleManagement', 'read'))
      // Debug logging removed
@@ -235,14 +239,14 @@ const RoleCards = () => {
         logger.info('🗑️ [DELETE DIALOG] Dialog closed')
 
         // Show success notification
-        toast.success(t.navigation.roleDeletedSuccessfully.replace('${roleName}', role.name))
+        toast.success(t('navigation.roleDeletedSuccessfully', { roleName: role.name }))
         logger.info('🗑️ [DELETE TOAST] Success toast shown')
       } else if (response.status === 400) {
         const data = await response.json()
         logger.info('🗑️ [DELETE ERROR 400] Delete failed with 400, data:', data)
 
         if (data.users) {
-          setErrorMessage(t.navigation.roleDeleteError.replace('${roleName}', role.name))
+          setErrorMessage(t('navigation.roleDeleteError', { roleName: role.name }))
           setRoleUsers(data.users)
           logger.info('🗑️ [DELETE ERROR 400] Error message set with users:', data.users.length)
         }
@@ -250,17 +254,17 @@ const RoleCards = () => {
         setDeleteDialogOpen(false)
         setRoleToDelete(null)
 
-        toast.error(t.navigation.roleDeleteError.replace('${roleName}', role.name))
+        toast.error(t('navigation.roleDeleteError', { roleName: role.name }))
       } else {
         logger.error('🗑️ [DELETE ERROR] Error deleting role - unexpected status')
 
-        toast.error(t.navigation.roleDeleteFailed)
+        toast.error(t('navigation.roleDeleteFailed'))
       }
     } catch (error) {
       logger.error('🗑️ [DELETE ERROR] Error deleting role:', error)
 
       // Show error notification
-      toast.error(t.navigation.roleDeleteFailed)
+      toast.error(t('navigation.roleDeleteFailed'))
     } finally {
       setIsDeleting(false)
       logger.info('🗑️ [DELETE FINISH] Set isDeleting to false')
@@ -281,11 +285,11 @@ const RoleCards = () => {
             <div className='flex flex-col items-end gap-4 text-right'>
               {(isSuperadmin || checkPermission('roleManagement', 'create')) && (
                 <Button variant='contained' size='small'>
-                  {t.navigation.addRole}
+                  {t('navigation.addRole')}
                 </Button>
               )}
               <Typography>
-                {t.navigation.addRoleDescription}
+                {t('navigation.addRoleDescription')}
               </Typography>
             </div>
           </CardContent>
@@ -301,7 +305,7 @@ const RoleCards = () => {
           <AlertTitle>{errorMessage}</AlertTitle>
           {roleUsers.length > 0 && (
             <div className="mt-2">
-              <Typography variant="body2" className="font-medium">{t.navigation.usersList}:</Typography>
+              <Typography variant="body2" className="font-medium">{t('navigation.usersList')}:</Typography>
               {roleUsers.map(user => (
                 <Typography key={user.id} variant="body2" className="ml-2">
                   - <Link href={getLocalizedUrl(`/apps/user/view?id=${user.id}`, locale as Locale)}>{user.fullName}</Link>
@@ -318,7 +322,7 @@ const RoleCards = () => {
               setRoleUsers([])
             }}
           >
-            {t.navigation.cancel}
+            {t('navigation.cancel')}
           </Button>
         </Alert>
       )}
@@ -371,7 +375,7 @@ const RoleCards = () => {
                 <Card>
                   <CardContent className='flex flex-col gap-4'>
                     <div className='flex items-center justify-between'>
-                      <Typography className='flex-grow'>{t.navigation.totalUsersCount.replace('${count}', roleUsers.length.toString())}</Typography>
+                      <Typography className='flex-grow'>{t('navigation.totalUsersCount', { count: roleUsers.length })}</Typography>
                       <AvatarGroup total={Math.max(roleUsers.length, 1)}>
                         {roleUsers.slice(0, 3).map((user, userIndex) => (
                           <Avatar key={user.id} alt={user.fullName} src={user.avatar || undefined} />
@@ -386,11 +390,12 @@ const RoleCards = () => {
                     <div className='flex justify-between items-center'>
                       <div className='flex flex-col items-start gap-1'>
                         {(() => {
-                          const roleInfo = userRoleObj[role.name.toLowerCase()] || userRoleObj.subscriber
+                          // Use role.code to determine icon/color
+                          const roleInfo = userRoleObj[role.code?.toLowerCase()] || userRoleObj[role.name.toLowerCase()] || userRoleObj.subscriber
 
                           return (
                             <div className='flex items-center gap-2'>
-                              <Icon className={roleInfo.icon} sx={{ color: role.name.toLowerCase() === 'superadmin' ? '#FFD700' : `var(--mui-palette-${roleInfo.color}-main)`, fontSize: '1.375rem' }} />
+                              <Icon className={roleInfo.icon} sx={{ color: role.code === 'SUPERADMIN' ? '#FFD700' : `var(--mui-palette-${roleInfo.color}-main)`, fontSize: '1.375rem' }} />
                               <Typography variant='h5'>{role.name}</Typography>
                             </div>
                           )
@@ -420,7 +425,7 @@ const RoleCards = () => {
                             dialogProps={{ title: role.name, roleId: role.id, onSuccess: handleRoleSuccess }}
                           />
                         )}
-                        {(isSuperadmin || checkPermission('roleManagement', 'delete')) && !['superadmin', 'subscriber', 'admin', 'user', 'moderator', 'seo', 'editor', 'marketolog', 'support', 'manager'].includes(role.name.toLowerCase()) && (
+                        {(isSuperadmin || checkPermission('roleManagement', 'delete')) && !isSystemRole(role) && (
                           <IconButton
                             onClick={() => {
                               setRoleToDelete(role)

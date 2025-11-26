@@ -49,17 +49,23 @@ const RenderVerticalExpandIcon = ({ open, transitionDuration }: RenderVerticalEx
   </StyledVerticalNavExpandIcon>
 )
 
-const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof getDictionary>> }) => {
+type HorizontalMenuProps = {
+  dictionary: Awaited<ReturnType<typeof getDictionary>>
+  locale?: string
+}
+
+const HorizontalMenu = ({ dictionary, locale: propLocale }: HorizontalMenuProps) => {
   // Hooks
   const verticalNavOptions = useVerticalNav()
   const theme = useTheme()
   const { settings } = useSettings()
-  const params = useParams()
+  const params = useParams<{ lang?: string | string[] }>()
 
   // Vars
   const { skin } = settings
   const { transitionDuration } = verticalNavOptions
-  const { lang: locale } = params
+  const urlLocale = Array.isArray(params.lang) ? params.lang[0] : params.lang
+  const locale = propLocale || urlLocale || 'en'
 
   return (
     <HorizontalNav
@@ -155,8 +161,8 @@ const HorizontalMenu = ({ dictionary }: { dictionary: Awaited<ReturnType<typeof 
           </MenuItem>
         </SubMenu>
 <SubMenu label={dictionary['navigation'].monitoring} icon={<i className='ri-bar-chart-line' />}>
-          <MenuItem href={`/${locale}/admin/monitoring/overview`} icon={<i className='ri-eye-line' />}>
-            {dictionary['navigation'].monitoringOverview}
+          <MenuItem href={`/${locale}/admin/monitoring/dashboard`} icon={<i className='ri-dashboard-line' />}>
+            {dictionary['navigation'].monitoringDashboard || 'Dashboard'}
           </MenuItem>
           <MenuItem href={`/${locale}/admin/monitoring/metrics`} icon={<i className='ri-bar-chart-2-line' />}>
             {dictionary['navigation'].monitoringMetrics}

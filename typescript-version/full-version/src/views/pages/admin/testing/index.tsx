@@ -19,12 +19,18 @@ import TableCell from '@mui/material/TableCell'
 import TableContainer from '@mui/material/TableContainer'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import TextField from '@mui/material/TextField'
 
 // Third-party Imports
 import Skeleton from '@mui/material/Skeleton'
+import { toast } from 'react-toastify'
 
 // Data Imports
-import { playwrightTestScripts } from '@/data/testing/test-scripts'
+import { playwrightTestScripts, type PlaywrightTestScript } from '@/data/testing/test-scripts'
 import tableStyles from '@core/styles/table.module.css'
 import { useTranslation } from '@/contexts/TranslationContext'
 
@@ -37,6 +43,7 @@ type ScriptRunSummary = {
   duration: number
   startedAt: string
   finishedAt: string
+  timeout?: number
 }
 
 type PlaywrightRun = {
@@ -63,6 +70,14 @@ const TestingPage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selectedRunId, setSelectedRunId] = useState<string | null>(null)
   const [selectedRunTitle, setSelectedRunTitle] = useState<string>('')
+  const [timeoutModalOpen, setTimeoutModalOpen] = useState(false)
+  const [selectedScript, setSelectedScript] = useState<PlaywrightTestScript | null>(null)
+  const [timeoutValue, setTimeoutValue] = useState<string>('')
+  // Only show E2E tests in admin panel (Unit and Integration tests run in CI/CD)
+  const [scriptsWithTimeouts, setScriptsWithTimeouts] = useState<PlaywrightTestScript[]>(
+    playwrightTestScripts.filter(script => script.type === 'E2E')
+  )
+  const [testConfigs, setTestConfigs] = useState<Record<string, number>>({})
 
   const latestByScript = useMemo<Map<string, ScriptRunSummary & { runId: string }>>(() => {
     const map = new Map<string, ScriptRunSummary & { runId: string }>()
@@ -133,16 +148,44 @@ const TestingPage = () => {
     }
   }
 
+
+  const fetchTestConfigs = async () => {
+    try {
+      const response = await fetch('/api/admin/test-configs')
+      if (response.ok) {
+        const data = await response.json()
+        const configMap: Record<string, number> = {}
+        data.configs.forEach((config: any) => {
+          configMap[config.testId] = config.timeout
+        })
+        setTestConfigs(configMap)
+
+        // Update scripts with loaded timeouts
+        setScriptsWithTimeouts(prev =>
+          prev.map(script => ({
+            ...script,
+            timeout: configMap[script.id] || script.timeout || 30000
+          }))
+        )
+      }
+    } catch (err) {
+      console.warn('Failed to load test configs:', err)
+    }
+  }
+
   useEffect(() => {
     fetchRuns()
+    fetchTestConfigs()
   }, [])
 
   const runTests = async (testId: string = 'all', mode: 'headed' | 'headless' = 'headed') => {
     const runSingleTest = async (id: string) => {
+      const script = scriptsWithTimeouts.find(s => s.id === id)
+      const timeout = script?.timeout || 30000
       const response = await fetch('/api/admin/run-tests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ testId: id, mode })
+        body: JSON.stringify({ testId: id, mode, timeout })
       })
 
       const result = await response.json()
@@ -158,7 +201,8 @@ const TestingPage = () => {
 
     try {
       if (testId === 'all') {
-        for (const script of playwrightTestScripts) {
+        // Only run E2E tests (all scripts in this view are E2E)
+        for (const script of scriptsWithTimeouts) {
           setRunningTestId(script.id)
           await runSingleTest(script.id)
         }
@@ -188,8 +232,51 @@ const TestingPage = () => {
     setSelectedRunTitle('')
   }
 
+  const openTimeoutModal = (script: PlaywrightTestScript) => {
+    setSelectedScript(script)
+    setTimeoutValue((script.timeout || 30000).toString())
+    setTimeoutModalOpen(true)
+  }
+
+  const closeTimeoutModal = () => {
+    setTimeoutModalOpen(false)
+    setSelectedScript(null)
+    setTimeoutValue('')
+  }
+
+  const saveTimeout = async () => {
+    if (selectedScript) {
+      const timeout = parseInt(timeoutValue, 10)
+      if (!isNaN(timeout) && timeout > 0) {
+        try {
+          const response = await fetch('/api/admin/test-configs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ testId: selectedScript.id, timeout })
+          })
+
+          if (response.ok) {
+            // Update local state
+            setScriptsWithTimeouts(prev =>
+              prev.map(s => s.id === selectedScript.id ? { ...s, timeout } : s)
+            )
+            setTestConfigs(prev => ({ ...prev, [selectedScript.id]: timeout }))
+            toast.success(t.timeoutSaved || 'Timeout saved successfully')
+          } else {
+            console.error('Failed to save timeout configuration')
+            toast.error('Failed to save timeout configuration')
+          }
+        } catch (error) {
+          console.error('Error saving timeout:', error)
+          toast.error('Failed to save timeout configuration')
+        }
+      }
+    }
+    closeTimeoutModal()
+  }
+
   if (loading) {
-    const skeletonRows = playwrightTestScripts.length || 3
+    const skeletonRows = scriptsWithTimeouts.length || 3
 
     return (
       <Card>
@@ -207,7 +294,7 @@ const TestingPage = () => {
           <Table className={tableStyles.table}>
             <TableHead>
               <TableRow>
-                {Array.from({ length: 8 }).map((_, index) => (
+                {Array.from({ length: 9 }).map((_, index) => (
                   <TableCell key={index}>
                     <Skeleton width={100} height={20} />
                   </TableCell>
@@ -217,9 +304,9 @@ const TestingPage = () => {
             <TableBody>
               {Array.from({ length: skeletonRows }).map((_, rowIdx) => (
                 <TableRow key={rowIdx}>
-                  {Array.from({ length: 8 }).map((__, cellIdx) => (
+                  {Array.from({ length: 9 }).map((__, cellIdx) => (
                     <TableCell key={cellIdx}>
-                      <Skeleton width={cellIdx === 7 ? 120 : 100} height={16} />
+                      <Skeleton width={cellIdx === 8 ? 120 : 100} height={16} />
                     </TableCell>
                   ))}
                 </TableRow>
@@ -275,15 +362,22 @@ const TestingPage = () => {
                 <TableCell>{t.tableHeaderType || 'Type'}</TableCell>
                 <TableCell>{t.tableHeaderFile || 'File'}</TableCell>
                 <TableCell>{t.tableHeaderTotals || 'Total/Passed/Failed'}</TableCell>
+                <TableCell>{t.tableHeaderTimeout || 'Timeout (s)'}</TableCell>
                 <TableCell>{t.tableHeaderActions || 'Actions'}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {playwrightTestScripts.map(script => {
-                const scriptKey = script.id || script.file
-                const scriptResult = scriptKey ? latestByScript.get(scriptKey) : undefined
-                const statsKey = scriptKey || script.file || script.title
-                const stats = statsKey ? scriptStats.get(statsKey) : undefined
+               {scriptsWithTimeouts.map(script => {
+                // Используем script.id как основной ключ, но также пробуем script.file для совместимости
+                const scriptKey = script.id
+                const scriptResult = scriptKey 
+                  ? (latestByScript.get(scriptKey) || latestByScript.get(script.file))
+                  : undefined
+                // Для stats используем scriptId из runs, если есть, иначе пробуем по file
+                const statsKey = script.id
+                const stats = statsKey 
+                  ? (scriptStats.get(statsKey) || scriptStats.get(script.file))
+                  : undefined
                 const chipLabel = scriptResult
                   ? (scriptResult.status === 'passed' ? (t.statusPassed || 'Passed') : (t.statusFailed || 'Failed'))
                   : (t.statusNotRun || 'Not run')
@@ -345,7 +439,21 @@ const TestingPage = () => {
                       </div>
                     </TableCell>
                     <TableCell>
+                      <Typography variant='body2' color='text.secondary'>
+                        {(script.timeout || 30000) / 1000}s
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
                       <div className='flex items-center gap-1'>
+                        <Tooltip title={t.setTimeout || 'Set timeout'} arrow>
+                          <IconButton
+                            aria-label='Set timeout'
+                            size='small'
+                            onClick={() => openTimeoutModal(script)}
+                          >
+                            <i className='ri-edit-line text-textSecondary' />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title={script.description} arrow>
                           <IconButton aria-label='Test info' size='small'>
                             <i className='ri-information-line text-textSecondary' />
@@ -402,13 +510,14 @@ const TestingPage = () => {
                 <TableCell>{t.tableHeaderStatus || 'Status'}</TableCell>
                 <TableCell>{t.tableHeaderDuration || 'Duration'}</TableCell>
                 <TableCell>{t.columnDateTime || 'Date/Time'}</TableCell>
+                <TableCell>{t.tableHeaderTimeout || 'Timeout (s)'}</TableCell>
                 <TableCell>{t.tableHeaderActions || 'Actions'}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {recentEntries.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className='text-center'>
+                  <TableCell colSpan={7} className='text-center'>
                     {t.noRuns || 'No test runs yet'}
                   </TableCell>
                 </TableRow>
@@ -444,6 +553,11 @@ const TestingPage = () => {
                     <TableCell>
                       <Typography variant='body2' color='text.secondary'>
                         {new Date(entry.startedAt).toLocaleString(locale)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant='body2' color='text.secondary'>
+                        {entry.timeout ? `${entry.timeout / 1000}s` : 'N/A'}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -509,6 +623,30 @@ const TestingPage = () => {
           onClick={closeDrawer}
         />
       )}
+
+      {/* Timeout Modal */}
+      <Dialog open={timeoutModalOpen} onClose={closeTimeoutModal} maxWidth="sm" fullWidth>
+        <DialogTitle>{t.setTimeout || 'Set Timeout'} - {selectedScript?.title}</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label={t.timeoutMs || 'Timeout (ms)'}
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={timeoutValue}
+            onChange={(e) => setTimeoutValue(e.target.value)}
+            helperText={t.timeoutHelper || 'Enter timeout in milliseconds (e.g., 30000 for 30 seconds)'}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeTimeoutModal}>{t.cancel || 'Cancel'}</Button>
+          <Button onClick={saveTimeout} variant="contained">
+            {t.save || 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   )
 }

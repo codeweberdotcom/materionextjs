@@ -1,7 +1,14 @@
 
+import { writeFile, mkdir } from 'fs/promises'
+
 import { NextRequest, NextResponse } from 'next/server'
+import path from 'path'
+
+import { existsSync } from 'fs'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
+import { avatarFileSchema, formatZodError } from '@/lib/validations/user-schemas'
 
 // POST - Upload avatar for current user
 export async function POST(request: NextRequest) {
@@ -18,33 +25,36 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData()
     const file = formData.get('avatar') as File
 
-    if (!file) {
+    if (!file || file.size === 0) {
       return NextResponse.json(
         { message: 'No file provided' },
         { status: 400 }
       )
     }
 
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
+    // Валидация файла через Zod
+    const validationResult = avatarFileSchema.safeParse(file)
+    if (!validationResult.success) {
       return NextResponse.json(
-        { message: 'File must be an image' },
+        { message: formatZodError(validationResult.error) },
         { status: 400 }
       )
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json(
-        { message: 'File size must be less than 5MB' },
-        { status: 400 }
-      )
+    // Persist file to disk for consistent storage
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars')
+    if (!existsSync(uploadsDir)) {
+      await mkdir(uploadsDir, { recursive: true })
     }
 
-    // Convert file to base64
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
-    const base64Image = `data:${file.type};base64,${buffer.toString('base64')}`
+    const extension = path.extname(file.name) || '.jpg'
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}${extension}`
+    const absolutePath = path.join(uploadsDir, fileName)
+
+    await writeFile(absolutePath, buffer)
+    const relativePath = `/uploads/avatars/${fileName}`
 
     // Find the current user
     const currentUser = await prisma.user.findUnique({
@@ -62,7 +72,7 @@ export async function POST(request: NextRequest) {
     const updatedUser = await prisma.user.update({
       where: { id: currentUser.id },
       data: {
-        image: base64Image
+        image: relativePath
       },
       include: {
         role: true
@@ -71,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       message: 'Avatar uploaded successfully',
-      avatarUrl: base64Image
+      avatarUrl: relativePath
     })
   } catch (error) {
     console.error('Error uploading avatar:', error)

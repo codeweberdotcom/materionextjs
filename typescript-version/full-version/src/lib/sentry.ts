@@ -1,11 +1,14 @@
 import * as Sentry from '@sentry/nextjs'
 import logger from './logger'
+import { serviceConfigResolver } from './config'
 
 type SentryContext = Record<string, unknown>
 type SentryEventProperties = Record<string, string | number | boolean | undefined>
 
 type SentryExtraValue = string | number | boolean | null | undefined
 type SentryExtras = Record<string, SentryExtraValue>
+
+let sentryInitialized = false
 
 const toPrimitive = (value: unknown): SentryExtraValue => {
   if (value === null || value === undefined) {
@@ -35,24 +38,82 @@ const sanitizeContext = (context?: SentryContext): SentryExtras | undefined => {
   }, {})
 }
 
-Sentry.init({
-  dsn: process.env.SENTRY_DSN || process.env.GLITCHTIP_DSN,
-  environment: process.env.NODE_ENV,
-  tracesSampleRate: 1.0,
-  beforeSend(event) {
-    // Фильтрация чувствительных данных
-    if (event.request?.data) {
-      // Удаляем пароли и другие чувствительные данные
-      if (typeof event.request.data === 'object') {
-        const data = event.request.data as Record<string, unknown>
-        if ('password' in data) data.password = '[FILTERED]'
-        if ('confirmPassword' in data) data.confirmPassword = '[FILTERED]'
-        if ('token' in data) data.token = '[FILTERED]'
-      }
-    }
-    return event
+/**
+ * Инициализация Sentry с поддержкой ServiceConfigResolver
+ * Приоритет: Admin (БД) → ENV (.env) → Default
+ */
+async function initializeSentry(): Promise<void> {
+  if (sentryInitialized) {
+    return
   }
-})
+
+  try {
+    // Получаем конфигурацию Sentry через ServiceConfigResolver
+    // Приоритет: Admin (БД) → ENV (.env) → Default
+    const sentryConfig = await serviceConfigResolver.getConfig('sentry')
+    
+    // Получаем DSN из конфигурации (может быть в url, apiKey или token)
+    const dsn = sentryConfig.url || sentryConfig.apiKey || sentryConfig.token || 
+                process.env.SENTRY_DSN || process.env.GLITCHTIP_DSN
+
+    if (!dsn) {
+      logger.info('[Sentry] DSN not configured, Sentry disabled')
+      return
+    }
+
+    Sentry.init({
+      dsn,
+      environment: process.env.NODE_ENV,
+      tracesSampleRate: 1.0,
+      beforeSend(event) {
+        // Фильтрация чувствительных данных
+        if (event.request?.data) {
+          // Удаляем пароли и другие чувствительные данные
+          if (typeof event.request.data === 'object') {
+            const data = event.request.data as Record<string, unknown>
+            if ('password' in data) data.password = '[FILTERED]'
+            if ('confirmPassword' in data) data.confirmPassword = '[FILTERED]'
+            if ('token' in data) data.token = '[FILTERED]'
+          }
+        }
+        return event
+      }
+    })
+
+    sentryInitialized = true
+    logger.info('[Sentry] Initialized', {
+      source: sentryConfig.source,
+      dsn: dsn.substring(0, 30) + '...' // Показываем только начало DSN
+    })
+  } catch (error) {
+    logger.warn('[Sentry] Failed to initialize, using fallback ENV', {
+      error: error instanceof Error ? error.message : String(error)
+    })
+
+    // Fallback на прямое использование ENV
+    const fallbackDsn = process.env.SENTRY_DSN || process.env.GLITCHTIP_DSN
+    if (fallbackDsn) {
+      Sentry.init({
+        dsn: fallbackDsn,
+        environment: process.env.NODE_ENV,
+        tracesSampleRate: 1.0,
+        beforeSend(event) {
+          if (event.request?.data && typeof event.request.data === 'object') {
+            const data = event.request.data as Record<string, unknown>
+            if ('password' in data) data.password = '[FILTERED]'
+            if ('confirmPassword' in data) data.confirmPassword = '[FILTERED]'
+            if ('token' in data) data.token = '[FILTERED]'
+          }
+          return event
+        }
+      })
+      sentryInitialized = true
+    }
+  }
+}
+
+// Инициализируем Sentry асинхронно (не блокируем старт приложения)
+void initializeSentry()
 
 // Глобальный error handler
 export const errorHandler = (error: unknown, context?: SentryContext) => {

@@ -3,8 +3,28 @@ import EventEmitter from 'events'
 import type { Event as PrismaEvent, Prisma } from '@prisma/client'
 
 import logger from '@/lib/logger'
-import { markEventFailed, markEventRecorded, startEventRecordTimer } from '@/lib/metrics/events'
 import { prisma } from '@/libs/prisma'
+
+// Условный импорт метрик только на сервере
+let metrics: {
+  markEventFailed: (source: string, environment?: string) => void
+  markEventRecorded: (source: string, severity: string, environment?: string) => void
+  startEventRecordTimer: (source: string, environment?: string) => () => void
+} | null = null
+
+if (typeof window === 'undefined') {
+  try {
+    const metricsModule = require('@/lib/metrics/events')
+    metrics = {
+      markEventFailed: metricsModule.markEventFailed,
+      markEventRecorded: metricsModule.markEventRecorded,
+      startEventRecordTimer: metricsModule.startEventRecordTimer
+    }
+  } catch (error) {
+    // Метрики недоступны (например, в клиентском окружении)
+    metrics = null
+  }
+}
 
 export type EventSeverity = 'info' | 'warning' | 'error' | 'critical'
 
@@ -30,6 +50,10 @@ export type RecordEventInput = {
   payload?: Record<string, any>
   correlationId?: string | null
   metadata?: Record<string, any>
+  // Контекст для различения тестовых и реальных событий
+  environment?: 'test' | 'production'
+  testRunId?: string
+  testSuite?: string
 }
 
 export type ListEventsParams = {
@@ -47,6 +71,9 @@ export type ListEventsParams = {
   to?: Date
   limit?: number
   cursor?: string | null
+  // Фильтрация по environment
+  excludeTest?: boolean // Если true, исключает события с environment='test'
+  environment?: 'test' | 'production' // Фильтр по конкретному environment
 }
 
 export type ListEventsResult = {
@@ -77,6 +104,40 @@ export class EventService {
   }
 
   async record(input: RecordEventInput): Promise<PrismaEvent | null> {
+    // На клиенте отправляем события через API
+    if (typeof window !== 'undefined') {
+      try {
+        const response = await fetch('/api/events/record', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include',
+          body: JSON.stringify(input)
+        })
+
+        if (!response.ok) {
+          logger.warn('Failed to record event via API', {
+            source: input.source,
+            type: input.type,
+            status: response.status
+          })
+          return null
+        }
+
+        const result = await response.json()
+        // Возвращаем объект с id для совместимости
+        return result.eventId ? ({ id: result.eventId } as PrismaEvent) : null
+      } catch (error) {
+        logger.warn('Error recording event via API', {
+          source: input.source,
+          type: input.type,
+          error: error instanceof Error ? error.message : error
+        })
+        return null
+      }
+    }
+
     const source = input.source.trim()
     const moduleName = (input.module ?? input.source).trim()
     const type = input.type.trim()
@@ -88,9 +149,20 @@ export class EventService {
       return null
     }
 
+    // Определение environment из input или по умолчанию 'production'
+    const environment = input.environment || 'production'
+    
     // Маскирование PII согласно профилю источника перед сохранением
     const maskedPayloadObj = maskPayloadForSource(source, moduleName, input.payload ?? {})
-    const maskedMetadataObj = maskPayloadForSource(source, moduleName, input.metadata ?? {})
+    
+    // Добавляем environment и тестовые метаданные в metadata
+    const enrichedMetadata = {
+      ...(input.metadata ?? {}),
+      environment,
+      ...(input.testRunId && { testRunId: input.testRunId }),
+      ...(input.testSuite && { testSuite: input.testSuite })
+    }
+    const maskedMetadataObj = maskPayloadForSource(source, moduleName, enrichedMetadata)
 
     const payload = safeStringify(maskedPayloadObj)
     const metadata = safeStringify(maskedMetadataObj)
@@ -112,18 +184,18 @@ export class EventService {
       createdAt: new Date()
     }
 
-    const stopTimer = startEventRecordTimer(source)
+    const stopTimer = metrics?.startEventRecordTimer(source, environment) || (() => {})
 
     try {
       const event = await prisma.event.create({ data })
 
       this.emitter.emit(EVENT_EMITTER_KEY, event)
-      markEventRecorded(source, data.severity)
+      metrics?.markEventRecorded(source, data.severity, environment)
 
       return event
     } catch (error) {
       logger.error('Failed to record event', { error, source, type })
-      markEventFailed(source)
+      metrics?.markEventFailed(source, environment)
 
       return null
     } finally {
@@ -191,6 +263,40 @@ export class EventService {
           lte: params.to ?? undefined
         }
       })
+    }
+
+    // Фильтрация по environment
+    if (params.excludeTest !== undefined) {
+      if (params.excludeTest) {
+        // Исключить тесты: (environment IS NULL OR environment != 'test')
+        // В Prisma для JSON полей используем contains для поиска
+        conditions.push({
+          OR: [
+            { metadata: null },
+            { metadata: { not: { contains: '"environment":"test"' } } }
+          ]
+        })
+      } else {
+        // Только тесты
+        conditions.push({
+          metadata: { contains: '"environment":"test"' }
+        })
+      }
+    } else if (params.environment) {
+      // Фильтр по конкретному environment
+      if (params.environment === 'test') {
+        conditions.push({
+          metadata: { contains: `"environment":"${params.environment}"` }
+        })
+      } else {
+        // Для production: (environment IS NULL OR environment = 'production')
+        conditions.push({
+          OR: [
+            { metadata: null },
+            { metadata: { contains: `"environment":"${params.environment}"` } }
+          ]
+        })
+      }
     }
 
     const cursorPayload = decodeCursor(params.cursor)
@@ -305,7 +411,13 @@ export const maskPayloadForSource = (
 ): Record<string, any> => {
   const src = source.toLowerCase()
   const mod = (moduleName ?? '').toLowerCase()
-  if (src === 'rate_limit' || src === 'auth' || src === 'registration' || mod === 'registration') {
+  if (
+    src === 'rate_limit' ||
+    src === 'auth' ||
+    src === 'registration' ||
+    mod === 'registration' ||
+    mod.startsWith('registration-')
+  ) {
     return deepMaskObject(payload)
   }
   // По умолчанию — без изменений

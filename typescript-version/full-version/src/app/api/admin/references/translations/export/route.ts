@@ -1,86 +1,86 @@
-import fs from 'fs'
-
 import { NextRequest, NextResponse } from 'next/server'
-import path from 'path'
-
 
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-
 import { prisma } from '@/libs/prisma'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
+import { buildTranslationError } from '../utils/error-helper'
+import { exportTranslationsToJSON } from '@/utils/translations/export-helper'
+import {
+  recordTranslationOperationDuration,
+  markTranslationExport,
+  markTranslationEvent
+} from '@/lib/metrics/translations'
 
+// Коды ролей с доступом к переводам
+const ALLOWED_ROLE_CODES = ['SUPERADMIN', 'ADMIN']
 
 // POST - Export translations to JSON files (admin only)
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+
   try {
     const { user } = await requireAuth(request)
 
     if (!user?.email) {
+      markTranslationExport('error')
+
       return NextResponse.json(
-        { message: 'Unauthorized' },
+        buildTranslationError('TRANSLATION_UNAUTHORIZED', 'Unauthorized'),
         { status: 401 }
       )
     }
 
-    // Check if user is admin
+    // Check if user is admin by role code
     const currentUser = await prisma.user.findUnique({
       where: { email: user.email },
       include: { role: true }
     })
 
-    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
+    if (!currentUser || !currentUser.role?.code || !ALLOWED_ROLE_CODES.includes(currentUser.role.code)) {
+      markTranslationExport('error')
+
       return NextResponse.json(
-        { message: 'Admin access required' },
+        buildTranslationError('TRANSLATION_PERMISSION_DENIED', 'Admin access required'),
         { status: 403 }
       )
     }
 
-    // Fetch active translations from database
-    const translations = await prisma.translation.findMany({
-      where: { isActive: true },
-      orderBy: [
-        { language: 'asc' },
-        { namespace: 'asc' },
-        { key: 'asc' }
-      ]
-    })
+    // Export translations to JSON files
+    const result = await exportTranslationsToJSON()
 
-    // Group translations by language and namespace
-    const jsonData: Record<string, Record<string, Record<string, string>>> = {}
-
-    translations.forEach(t => {
-      if (!jsonData[t.language]) jsonData[t.language] = {}
-      if (!jsonData[t.language][t.namespace]) jsonData[t.language][t.namespace] = {}
-      jsonData[t.language][t.namespace][t.key] = t.value
-    })
-
-    // Write to JSON files
-    const dictionariesPath = path.join(process.cwd(), 'src/data/dictionaries')
-    const languagesJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/data/languages.json'), 'utf8'))
-    const availableLanguages = languagesJson.map((lang: {code: string}) => lang.code)
-
-    for (const language of availableLanguages) {
-      if (jsonData[language]) {
-        const filePath = path.join(dictionariesPath, `${language}.json`)
-
-        fs.writeFileSync(filePath, JSON.stringify(jsonData[language], null, 2))
+    // Record event
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'translationManagement',
+      module: 'translationManagement',
+      type: 'translation.exported',
+      message: `Exported ${result.exportedCount} language(s): ${result.exportedLanguages.join(', ')}`,
+      severity: 'info',
+      userId: currentUser.id,
+      details: {
+        exportedCount: result.exportedCount,
+        exportedLanguages: result.exportedLanguages
       }
-    }
+    }))
+
+    const durationSeconds = (Date.now() - startTime) / 1000
+
+    markTranslationExport('success')
+    recordTranslationOperationDuration('export', durationSeconds)
+    markTranslationEvent('translation.exported', 'info')
 
     return NextResponse.json({
       message: 'translationsExportSuccess',
-      exportedLanguages: Object.keys(jsonData),
-      exportedCount: Object.keys(jsonData).length
+      exportedLanguages: result.exportedLanguages,
+      exportedCount: result.exportedCount
     })
   } catch (error) {
     console.error('Error exporting translations:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
+    markTranslationExport('error')
+
+    return NextResponse.json(
+      buildTranslationError('TRANSLATION_EXPORT_FAILED', 'Internal server error'),
       { status: 500 }
     )
   }
 }
-
-

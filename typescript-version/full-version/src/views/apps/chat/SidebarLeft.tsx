@@ -135,15 +135,29 @@ const renderContacts = (props: RenderChatType & { session: any; unreadByContact:
           'bg-primary shadow-xs': isContactActive,
           'text-[var(--mui-palette-primary-contrastText)]': isContactActive
         })}
-        onClick={() => {
-          // Initialize room for the selected contact
-          initializeRoom(contact.id.toString())
+        onClick={async () => {
+           // Initialize room for the selected contact
+           initializeRoom(contact.id.toString())
 
-          // Set active user for UI
-          getActiveUserData(contact.id)
-          isBelowMdScreen && setSidebarOpen(false)
-          isBelowMdScreen && backdropOpen && setBackdropOpen(false)
-        }}
+           // Set active user for UI
+           getActiveUserData(contact.id)
+           isBelowMdScreen && setSidebarOpen(false)
+           isBelowMdScreen && backdropOpen && setBackdropOpen(false)
+
+           // HTTP fallback for room creation (for testing/E2E)
+           try {
+             await fetch('/api/chat/rooms', {
+               method: 'POST',
+               headers: {
+                 'Content-Type': 'application/json'
+               },
+               body: JSON.stringify({ userId: contact.id.toString() })
+             })
+           } catch (error) {
+             // Ignore HTTP fallback errors - WebSocket should handle it
+             console.warn('HTTP room creation fallback failed:', error)
+           }
+         }}
       >
         <AvatarWithBadge
           src={contact.avatar}

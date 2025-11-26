@@ -13,6 +13,8 @@ import { getUserData } from '@/app/server/actions'
 
 // Util Imports
 import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
+import { requireAdminView, canManage } from '@/utils/verification'
+import { prisma } from '@/libs/prisma'
 
 /**
  * ! If you need data using an API call, uncomment the below API code, update the `process.env.API_URL` variable in the
@@ -38,6 +40,23 @@ const RolesApp = async () => {
 
   if (!user) {
     redirect('/login')
+  }
+
+  // Проверяем верификацию для доступа к админке
+  const fullUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      id: true,
+      email: true,
+      emailVerified: true,
+      phone: true,
+      phoneVerified: true
+    }
+  })
+
+  if (fullUser && !canManage(fullUser)) {
+    // Пользователь может видеть админку, но не может управлять
+    // Показываем предупреждение на клиенте
   }
 
   if (!isSuperadmin(user) && !checkPermission(user, 'roleManagement', 'read')) {

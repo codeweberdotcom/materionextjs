@@ -9,6 +9,7 @@ import ThemeProvider from '@components/theme'
 import ReduxProvider from '@/redux-store/ReduxProvider'
 import { SocketProvider } from '@/contexts/SocketProvider'
 import { PresenceProvider } from '@/contexts/PresenceProvider'
+import { AccountProvider } from '@/contexts/AccountContext'
 import NotificationsInitializer from '@/components/NotificationsInitializer'
 
 // Styled Component Imports
@@ -35,15 +36,17 @@ const Providers = async (props: Props) => {
       <SocketProvider>
         <PresenceProvider>
           <ReduxProvider>
-            <NotificationsInitializer />
-            <VerticalNavProvider>
-              <SettingsProvider settingsCookie={settingsCookie} mode={mode}>
-                <ThemeProvider direction={direction} systemMode={systemMode}>
-                  {children}
-                  <AppReactToastify direction={direction} hideProgressBar />
-                </ThemeProvider>
-              </SettingsProvider>
-            </VerticalNavProvider>
+            <AccountProvider>
+              <NotificationsInitializer />
+              <VerticalNavProvider>
+                <SettingsProvider settingsCookie={settingsCookie} mode={mode}>
+                  <ThemeProvider direction={direction} systemMode={systemMode}>
+                    {children}
+                    <AppReactToastify direction={direction} hideProgressBar />
+                  </ThemeProvider>
+                </SettingsProvider>
+              </VerticalNavProvider>
+            </AccountProvider>
           </ReduxProvider>
         </PresenceProvider>
       </SocketProvider>

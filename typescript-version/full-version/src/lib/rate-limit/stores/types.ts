@@ -10,6 +10,7 @@ export type StoreEventPayload = {
   ipHash?: string | null
   ipPrefix?: string | null
   hashVersion?: number | null
+  debugEmail?: string | null // For superadmin debugging only
   eventType: 'warning' | 'block'
   mode: 'monitor' | 'enforce'
   count: number
@@ -17,6 +18,8 @@ export type StoreEventPayload = {
   windowStart: Date
   windowEnd: Date
   blockedUntil?: Date | null
+  createUserBlock?: boolean // Whether to create UserBlock record
+  environment?: 'test' | 'production' // Environment для различения тестовых и реальных метрик
 }
 
 export type RateLimitConsumeParams = {
@@ -34,13 +37,20 @@ export type RateLimitConsumeParams = {
   ipHash?: string | null
   ipPrefix?: string | null
   hashVersion?: number | null
+  debugEmail?: string | null // For superadmin debugging only
+  environment?: 'test' | 'production' // Environment для различения тестовых и реальных метрик
   recordEvent: (payload: StoreEventPayload) => Promise<void>
 }
 
 export interface RateLimitStore {
   consume(params: RateLimitConsumeParams): Promise<RateLimitResult>
   resetCache(key?: string, module?: string): Promise<void>
+  setBlock(key: string, module: string, blockedUntil?: Date | null): Promise<void>
+  restoreStateFromDatabase?(params: { key: string; module: string; count: number; blockedUntil?: Date | null }): Promise<void>
   shutdown(): Promise<void>
+  syncBlocksFromDatabase(): Promise<void>
+  clearCacheCompletely(key?: string, module?: string): Promise<void>
+  healthCheck(): Promise<{ healthy: boolean; latency?: number; error?: string }>
 }
 
 export type { RateLimitResult } from '../types'

@@ -1,87 +1,89 @@
-import fs from 'fs'
-
 import { NextRequest, NextResponse } from 'next/server'
-import path from 'path'
-
 
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-
 import { prisma } from '@/libs/prisma'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
+import { buildTranslationError } from '../utils/error-helper'
+import { importTranslationsFromJSON } from '@/utils/translations/export-helper'
+import {
+  recordTranslationOperationDuration,
+  markTranslationImport,
+  markTranslationEvent
+} from '@/lib/metrics/translations'
 
+// Коды ролей с доступом к переводам
+const ALLOWED_ROLE_CODES = ['SUPERADMIN', 'ADMIN']
 
 // POST - Import translations from JSON files to database (admin only)
 export async function POST(request: NextRequest) {
-  try {
-    const { user, session } = await requireAuth(request)
+  const startTime = Date.now()
 
-    // Check if user is admin
+  try {
+    const { user } = await requireAuth(request)
+
+    // Check if user is admin by role code
     const currentUser = await prisma.user.findUnique({
       where: { email: user.email },
       include: { role: true }
     })
 
-    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
+    if (!currentUser || !currentUser.role?.code || !ALLOWED_ROLE_CODES.includes(currentUser.role.code)) {
+      markTranslationImport('error')
+
       return NextResponse.json(
-        { message: 'Admin access required' },
+        buildTranslationError('TRANSLATION_PERMISSION_DENIED', 'Admin access required'),
         { status: 403 }
       )
     }
 
-    // Read JSON files
-    const dictionariesPath = path.join(process.cwd(), 'src/data/dictionaries')
-    const languagesJson = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/data/languages.json'), 'utf8'))
-    const languages = languagesJson.map((lang: {code: string}) => lang.code)
-    const translationsToCreate = []
+    // Import translations from JSON files
+    const result = await importTranslationsFromJSON()
 
-    for (const language of languages) {
-      const filePath = path.join(dictionariesPath, `${language}.json`)
-
-      if (fs.existsSync(filePath)) {
-        const jsonData = JSON.parse(fs.readFileSync(filePath, 'utf8'))
-
-        // Flatten JSON structure to array of translations
-        for (const [namespace, keys] of Object.entries(jsonData)) {
-          for (const [key, value] of Object.entries(keys as Record<string, string>)) {
-            translationsToCreate.push({
-              key,
-              language,
-              value,
-              namespace,
-              isActive: true
-            })
-          }
-        }
+    // Record event
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'translationManagement',
+      module: 'translationManagement',
+      type: 'translation.imported',
+      message: `Imported ${result.importedCount} translations for languages: ${result.languages.join(', ')}`,
+      severity: 'info',
+      userId: currentUser.id,
+      details: {
+        importedCount: result.importedCount,
+        languages: result.languages
       }
-    }
+    }))
 
-    // Clear existing translations
-    await prisma.translation.deleteMany({})
+    const durationSeconds = (Date.now() - startTime) / 1000
 
-    // Insert new translations
-    for (const translation of translationsToCreate) {
-      await prisma.translation.create({
-        data: translation
-      })
-    }
+    markTranslationImport('success')
+    recordTranslationOperationDuration('import', durationSeconds)
+    markTranslationEvent('translation.imported', 'info')
 
     return NextResponse.json({
       message: 'translationsImportSuccess',
-      importedCount: translationsToCreate.length,
-
+      importedCount: result.importedCount,
+      languages: result.languages,
       // For client-side translation
       translationKey: 'translationsImportSuccess',
-      translationParams: { count: translationsToCreate.length }
+      translationParams: { count: result.importedCount }
     })
   } catch (error) {
     console.error('Error importing translations:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
+
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    const errorStack = error instanceof Error ? error.stack : undefined
+
+    console.error('Error details:', {
+      message: errorMessage,
+      stack: errorStack
+    })
+
+    markTranslationImport('error')
+
+    return NextResponse.json(
+      buildTranslationError('TRANSLATION_IMPORT_FAILED', `Failed to import translations: ${errorMessage}`),
       { status: 500 }
     )
   }
 }
-
-

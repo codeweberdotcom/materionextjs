@@ -7,8 +7,85 @@ import { existsSync } from 'fs'
 
 import { requireAuth } from '@/utils/auth/auth'
 import type { UserWithRole } from '@/utils/permissions/permissions'
+import { isSuperadmin } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import { authBaseUrl } from '@/shared/config/env'
+import {
+  updateUserSchema,
+  toggleUserStatusSchema,
+  parseFormDataToObject,
+  formatZodError,
+  avatarFileSchema
+} from '@/lib/validations/user-schemas'
+
+// GET - Get user by id (admin only)
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { user } = await requireAuth(request)
+
+    if (!user?.email) {
+      return NextResponse.json(
+        { message: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const { id: userId } = await params
+
+    // Check if user is admin
+    const currentUser = await prisma.user.findUnique({
+      where: { email: user.email },
+      include: { role: true }
+    })
+
+    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
+      return NextResponse.json(
+        { message: 'Admin access required' },
+        { status: 403 }
+      )
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { role: true }
+    })
+
+    if (!targetUser) {
+      return NextResponse.json(
+        { message: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    // Transform to match UsersType format
+    const transformedUser = {
+      id: targetUser.id,
+      fullName: targetUser.name || 'Unknown User',
+      email: targetUser.email,
+      role: targetUser.role?.name || 'subscriber',
+      company: 'N/A',
+      contact: 'N/A',
+      username: targetUser.email.split('@')[0],
+      country: targetUser.country,
+      currentPlan: 'basic',
+      status: targetUser.status || 'active',
+      isActive: targetUser.status === 'active',
+      avatar: targetUser.image || '',
+      avatarColor: 'primary' as const
+    }
+
+    return NextResponse.json(transformedUser)
+  } catch (error) {
+    console.error('Error fetching user:', error)
+    return NextResponse.json(
+      { message: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
 
 // PUT - Update user information (admin only)
 export async function PUT(
@@ -42,11 +119,11 @@ export async function PUT(
 
     // Allow admins and superadmins to edit any user, or users to edit their own data
     // But prevent editing superadmin users unless you're a superadmin
-    const isAdmin = currentUser.role?.name === 'admin'
-    const isSuperadmin = currentUser.role?.name === 'superadmin'
+    const isAdmin = currentUser.role?.code === 'ADMIN'
+    const isSuperadminUser = isSuperadmin(currentUser)
     const isEditingOwnData = currentUser.id === userId
 
-    if (!isAdmin && !isSuperadmin && !isEditingOwnData) {
+    if (!isAdmin && !isSuperadminUser && !isEditingOwnData) {
       return NextResponse.json(
         { message: 'Access denied' },
         { status: 403 }
@@ -74,7 +151,7 @@ export async function PUT(
     }
 
     // Prevent non-superadmin users from editing superadmin users
-    if (userToUpdateCheck.role?.name === 'superadmin' && !isSuperadmin) {
+    if (userToUpdateCheck.role?.code === 'SUPERADMIN' && !isSuperadminUser) {
       return NextResponse.json(
         { message: 'Cannot edit superadmin users' },
         { status: 403 }
@@ -83,27 +160,55 @@ export async function PUT(
 
     const contentType = request.headers.get('content-type') || ''
     let body: any = {}
+    let newAvatar: File | null = null
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData()
-
+      newAvatar = formData.get('avatar') as File | null
+      const formDataObj = parseFormDataToObject(formData)
+      
       body = {
-        fullName: formData.get('fullName') as string,
-        email: formData.get('email') as string,
-        role: formData.get('role') as string,
-        company: formData.get('company') as string,
-        contact: formData.get('contact') as string,
-        country: formData.get('country') as string,
-        avatar: formData.get('avatar') as File | null
+        fullName: formDataObj.fullName,
+        email: formDataObj.email,
+        role: formDataObj.role,
+        company: formDataObj.company || null,
+        contact: formDataObj.contact || null,
+        country: formDataObj.country || null
       }
     } else {
       body = await request.json()
     }
 
-    const { fullName, email, role, company, contact, country, firstName, lastName, avatar: newAvatar } = body
+    // Валидация файла аватара (если предоставлен)
+    if (newAvatar && newAvatar.size > 0) {
+      const avatarValidation = avatarFileSchema.safeParse(newAvatar)
+      if (!avatarValidation.success) {
+        return NextResponse.json(
+          { message: formatZodError(avatarValidation.error) },
+          { status: 400 }
+        )
+      }
+    }
 
-    // Handle both fullName and separate firstName/lastName
-    const nameToUpdate = fullName || (firstName && lastName ? `${firstName} ${lastName}`.trim() : undefined)
+    // Валидация данных обновления
+    const validationResult = updateUserSchema.safeParse({
+      fullName: body.fullName || body.firstName && body.lastName ? `${body.firstName} ${body.lastName}`.trim() : undefined,
+      email: body.email,
+      role: body.role,
+      company: body.company || null,
+      contact: body.contact || null,
+      country: body.country || null
+    })
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { message: formatZodError(validationResult.error) },
+        { status: 400 }
+      )
+    }
+
+    const validatedData = validationResult.data
+    const nameToUpdate = validatedData.fullName
 
     // Find the user to update (full data)
     const userToUpdate = await prisma.user.findUnique({
@@ -120,22 +225,27 @@ export async function PUT(
     // Use role name directly
     let dbRoleId = userToUpdate.roleId
 
-    if (role) {
+    if (validatedData.role) {
       const dbRole = await prisma.role.findUnique({
-        where: { name: role }
+        where: { name: validatedData.role }
       })
 
       if (dbRole) {
         dbRoleId = dbRole.id
+      } else {
+        return NextResponse.json(
+          { message: 'Invalid role' },
+          { status: 400 }
+        )
       }
     }
 
     // Update user data
     const updateData: any = {
-      name: nameToUpdate,
-      email: email,
-      roleId: dbRoleId,
-      country: body.country
+      ...(nameToUpdate && { name: nameToUpdate }),
+      ...(validatedData.email && { email: validatedData.email }),
+      ...(validatedData.role && { roleId: dbRoleId }),
+      ...(validatedData.country !== undefined && { country: validatedData.country })
     }
 
     if (newAvatar && newAvatar instanceof File) {
@@ -226,7 +336,7 @@ return NextResponse.json(
   }
 }
 
-// PATCH - Toggle user active status (admin only)
+// PATCH - Set user active status (admin only)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -256,8 +366,8 @@ export async function PATCH(
       )
     }
 
-    // Find the user to toggle
-    const userToToggle = await prisma.user.findUnique({
+    // Find the user to update
+    const userToUpdate = await prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
@@ -270,15 +380,35 @@ export async function PATCH(
       }
     })
 
-    if (!userToToggle) {
+    if (!userToUpdate) {
       return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
       )
     }
 
+    // Валидация тела запроса
+    let parsedBody: any = {}
+    try {
+      parsedBody = await request.json()
+    } catch {
+      // Если тело пустое или не JSON, используем пустой объект
+      parsedBody = {}
+    }
+
+    const validationResult = toggleUserStatusSchema.safeParse(parsedBody)
+    
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { message: formatZodError(validationResult.error) },
+        { status: 400 }
+      )
+    }
+
+    const nextStatus = validationResult.data.isActive
+
     // Prevent admin from deactivating themselves
-    if (currentUser.id === userId) {
+    if (currentUser.id === userId && !nextStatus) {
       return NextResponse.json(
         { message: 'Cannot deactivate your own account' },
         { status: 400 }
@@ -286,17 +416,17 @@ export async function PATCH(
     }
 
     // Prevent deactivating superadmin users
-    if (userToToggle.role?.name === 'superadmin') {
+    if (userToUpdate.role?.code === 'SUPERADMIN' && !nextStatus) {
       return NextResponse.json(
         { message: 'Cannot deactivate superadmin users' },
         { status: 403 }
       )
     }
 
-    // Toggle the isActive status
+    // Set the isActive status to the provided value
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: { isActive: !userToToggle.isActive },
+      data: { isActive: nextStatus },
       include: { role: true }
     })
 
@@ -309,6 +439,18 @@ export async function PATCH(
 
     // Use database role name directly
     const uiRole = updatedUser.role?.name || 'subscriber'
+
+    // Clear cached list to prevent stale data
+    try {
+      await fetch(`${authBaseUrl}/api/admin/users?clearCache=true`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+    } catch (cacheError) {
+      console.warn('Failed to clear users cache after status change', cacheError)
+    }
 
     return NextResponse.json({
       id: updatedUser.id,
@@ -394,7 +536,7 @@ export async function DELETE(
     }
 
     // Prevent deleting superadmin users
-    if (userToDelete.role?.name === 'superadmin') {
+    if (userToDelete.role?.code === 'SUPERADMIN') {
       return NextResponse.json(
         { message: 'Cannot delete superadmin users' },
         { status: 403 }
@@ -409,7 +551,7 @@ export async function DELETE(
     // Очищаем кеш после удаления пользователя
     // Используем простой HTTP запрос для очистки кеша
     try {
-      await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/users?clearCache=true`, {
+      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/admin/users?clearCache=true`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'

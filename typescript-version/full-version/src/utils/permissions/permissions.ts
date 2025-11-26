@@ -4,9 +4,12 @@ import type { UserWithRoleRecord } from '@/types/prisma'
 
 export interface Role {
   id: string
-  name: string
+  code: string // Immutable code: 'SUPERADMIN', 'ADMIN', 'USER'
+  name: string // Display name (can be renamed)
   description?: string | null
   permissions?: string | null // JSON string: { "module": ["action1", "action2"] } | 'all'
+  level: number // Hierarchy level (0 = highest priority)
+  isSystem: boolean // System role (cannot be deleted)
 }
 
 export interface BaseUser {
@@ -63,7 +66,14 @@ const transformLegacyPermissions = (permissions: string[]): Permissions => {
   }, {})
 }
 
-const parsePermissions = (permissions: string | null | undefined): Permissions => {
+/**
+ * Парсит строку разрешений в объект Permissions
+ * Поддерживает различные форматы: JSON объект, массив строк, строку "all"
+ *
+ * @param permissions - Строка разрешений (JSON или "all")
+ * @returns Объект Permissions или "all"
+ */
+export const parsePermissions = (permissions: string | null | undefined): Permissions => {
   if (!permissions) {
     return {}
   }
@@ -101,33 +111,114 @@ export const getUserPermissions = (user: UserWithRoleLike): Permissions => {
 }
 
 export const checkPermission = (user: UserWithRoleLike, module: string, action: string): boolean => {
-  logger.info('🔍 [PERMISSIONS] Checking permission', { module, action, role: user?.role?.name })
+  // Убрали избыточное логирование - проверки разрешений происходят очень часто
+  // Логи оставлены только на уровне DEBUG для отладки, если нужно
 
   if (!user?.role) {
-    logger.info('❌ [PERMISSIONS] No user or role found')
+    logger.debug('❌ [PERMISSIONS] No user or role found', { module, action })
     return false
   }
 
   const permissions = getUserPermissions(user)
 
   if (permissions === 'all') {
-    logger.info('✅ [PERMISSIONS] All permissions granted', { role: user.role.name })
+    // Все разрешения предоставлены - не логируем каждый раз
     return true
   }
 
   const hasPermission = permissions[module]?.includes(action) ?? false
-  logger.info('🔍 [PERMISSIONS] Result', { module, action, hasPermission })
+
+  // Логируем только если нет разрешения (для отладки)
+  if (!hasPermission) {
+    logger.debug('❌ [PERMISSIONS] Permission denied', { module, action, role: user.role.name })
+  }
 
   return hasPermission
 }
 
+// =============================================================================
+// LEGACY FUNCTIONS (deprecated - use code-based functions below)
+// =============================================================================
+
+/**
+ * @deprecated Use hasRoleCode() instead
+ * Legacy function - checks role by name
+ */
 export const hasRole = (user: UserWithRole | null, roleName: string): boolean =>
-  user?.role?.name === roleName
+  user?.role?.name?.toLowerCase() === roleName.toLowerCase()
 
-export const isAdmin = (user: UserWithRole | null): boolean => hasRole(user, 'admin')
-
+/**
+ * @deprecated Use hasRoleCode(user, 'MODERATOR') instead
+ */
 export const isModerator = (user: UserWithRole | null): boolean => hasRole(user, 'moderator')
 
+/**
+ * @deprecated Use hasRoleCode(user, 'USER') instead
+ */
 export const isUser = (user: UserWithRole | null): boolean => hasRole(user, 'user')
 
-export const isSuperadmin = (user: UserWithRole | null): boolean => getUserPermissions(user) === 'all'
+/**
+ * Checks if user is superadmin (by permissions or role code)
+ * This function is NOT deprecated as it checks permissions
+ */
+export const isSuperadmin = (user: UserWithRole | null): boolean => {
+  // Check by permissions (for backward compatibility)
+  if (getUserPermissions(user) === 'all') return true
+  // Check by role code
+  if (user?.role?.code === 'SUPERADMIN') return true
+  return false
+}
+
+// =============================================================================
+// NEW CODE-BASED FUNCTIONS
+// =============================================================================
+
+/**
+ * Check if user has a specific role by code
+ * @param user - User object with role
+ * @param code - Role code to check (e.g., 'ADMIN', 'SUPERADMIN')
+ */
+export const hasRoleCode = (user: UserWithRole | null, code: string): boolean =>
+  user?.role?.code === code
+
+/**
+ * Check if user is SUPERADMIN by role code
+ */
+export const isSuperadminByCode = (user: UserWithRole | null): boolean =>
+  user?.role?.code === 'SUPERADMIN'
+
+/**
+ * Check if user is ADMIN by role code
+ */
+export const isAdminByCode = (user: UserWithRole | null): boolean =>
+  user?.role?.code === 'ADMIN'
+
+/**
+ * Check if user is ADMIN or SUPERADMIN by role code
+ */
+export const isAdminOrHigher = (user: UserWithRole | null): boolean =>
+  user?.role?.code === 'ADMIN' || user?.role?.code === 'SUPERADMIN'
+
+/**
+ * Get user's role level (0 = highest priority)
+ */
+export const getUserRoleLevel = (user: UserWithRole | null): number =>
+  user?.role?.level ?? 100
+
+/**
+ * Check if user can modify another user based on role levels
+ * @param actor - User performing the action
+ * @param target - User being modified
+ */
+export const canModifyUserByRole = (
+  actor: UserWithRole | null,
+  target: UserWithRole | null
+): boolean => {
+  if (!actor?.role || !target?.role) return false
+  
+  // SUPERADMIN can modify anyone
+  if (actor.role.code === 'SUPERADMIN') return true
+  
+  // Can only modify users with higher level number (lower priority)
+  return actor.role.level < target.role.level
+}

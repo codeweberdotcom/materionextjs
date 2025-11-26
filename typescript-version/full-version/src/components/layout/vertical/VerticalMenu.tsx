@@ -151,10 +151,33 @@ const VerticalMenu = ({ dictionary, scrollMenu }: Props) => {
           <MenuItem href={`/${locale}/apps/settings/email-templates`} icon={<i className='ri-file-text-line' />}>
             {dictionary['navigation'].emailTemplates}
           </MenuItem>
+          <MenuItem href={`/${locale}/apps/settings/sms-ru`} icon={<i className='ri-message-3-line' />}>
+            {dictionary['navigation'].smsRuSettings}
+          </MenuItem>
+          <MenuItem href={`/${locale}/apps/settings/telegram`} icon={<i className='ri-telegram-line' />}>
+            {dictionary['navigation'].telegramSettings}
+          </MenuItem>
+          <SubMenu 
+            label={dictionary['navigation'].notificationsModule || 'Уведомления'}
+            icon={<i className='ri-notification-3-line' />}
+          >
+            <MenuItem href={`/${locale}/admin/notifications/dashboard`}>
+              {dictionary['navigation'].notificationsDashboard || 'Статистика'}
+            </MenuItem>
+            <MenuItem href={`/${locale}/admin/notifications/scenarios`}>
+              {dictionary['navigation'].notificationScenarios || 'Сценарии'}
+            </MenuItem>
+            <MenuItem href={`/${locale}/admin/notifications/executions`}>
+              {dictionary['navigation'].notificationsExecutions || 'История'}
+            </MenuItem>
+          </SubMenu>
+          <MenuItem href={`/${locale}/admin/settings/services`} icon={<i className='ri-server-line' />}>
+            {dictionary['navigation'].externalServices || 'External Services'}
+          </MenuItem>
         </MenuSection>
 <MenuSection label={dictionary['navigation'].monitoring}>
-          <MenuItem href={`/${locale}/admin/monitoring/overview`} icon={<i className='ri-eye-line' />}>
-            {dictionary['navigation'].monitoringOverview}
+          <MenuItem href={`/${locale}/admin/monitoring/dashboard`} icon={<i className='ri-dashboard-line' />}>
+            {dictionary['navigation'].monitoringDashboard || 'Dashboard'}
           </MenuItem>
           <MenuItem href={`/${locale}/admin/monitoring/metrics`} icon={<i className='ri-bar-chart-2-line' />}>
             {dictionary['navigation'].monitoringMetrics}

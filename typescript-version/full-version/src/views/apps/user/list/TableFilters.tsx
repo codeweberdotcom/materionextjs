@@ -18,9 +18,12 @@ import type { UsersType } from '@/types/apps/userTypes'
 
 type Role = {
   id: string
+  code: string
   name: string
   description?: string | null
   permissions?: string | null
+  level: number
+  isSystem: boolean
   createdAt: Date
   updatedAt: Date
 }

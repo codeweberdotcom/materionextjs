@@ -169,6 +169,18 @@ Get navigation menu structure.
 }
 ```
 
+## 📊 Events API
+
+### GET `/api/admin/events` - Get events list
+### GET `/api/admin/events/export/csv` - Export events to CSV
+### GET `/api/admin/events/export/json` - Export events to JSON
+### GET `/api/admin/events/retention` - Get retention statistics
+### POST `/api/admin/events/retention` - Run retention cleanup
+
+**Подробнее:** [Events API Documentation](events.md)
+
+---
+
 ## 🔍 Public Endpoints
 
 These endpoints don't require authentication:

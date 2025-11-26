@@ -4,6 +4,7 @@ import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { rateLimitService } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
+import { getEnvironmentFromRequest } from '@/lib/metrics/helpers'
 
 const CHAT_MODULE = 'chat-messages'
 
@@ -23,11 +24,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 })
     }
 
+    const environment = getEnvironmentFromRequest(request)
     const rateLimitResult = await rateLimitService.checkLimit(userId, 'chat-messages', {
       increment: false,
       userId,
       email: user.email ?? null,
-      keyType: 'user'
+      keyType: 'user',
+      environment
     })
 
     logger.info('рџ“Љ [API DEBUG] Rate limit result:', {
@@ -75,20 +78,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (rateLimitResult.remaining <= 0) {
-      const config = rateLimitService.getConfig(CHAT_MODULE)
-
+      const config = await rateLimitService.getConfig(CHAT_MODULE)
       logger.info('⚠️ [API DEBUG] Rate limit exhausted, mode check', { mode: config?.mode })
 
-      const enforceResult = await rateLimitService.checkLimit(userId, 'chat-messages', {
-        increment: true,
-        userId,
-        email: user.email ?? null,
-        keyType: 'user'
-      })
-
       if (config?.mode === 'monitor') {
-        const warningRemaining = enforceResult.warning?.remaining ?? 0
-        const resetTimeMs = enforceResult.resetTime
+        const warningRemaining = rateLimitResult.warning?.remaining ?? 0
+        const resetTimeMs = rateLimitResult.resetTime
         logger.info('⚠️ [API DEBUG] Monitor mode — returning warning only', { warningRemaining, resetTimeMs })
         return NextResponse.json({
           allowed: true,
@@ -102,13 +97,13 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      if (!enforceResult.allowed && enforceResult.blockedUntil) {
-        return respondWithBlock(enforceResult.blockedUntil)
-      }
-
       const blockMs = config?.blockMs ?? config?.windowMs ?? 60000
       const simulatedBlockEnd = Date.now() + blockMs
-      return respondWithBlock(enforceResult.blockedUntil ?? simulatedBlockEnd)
+      logger.info('🚫 [API DEBUG] Enforce mode — responding with simulated block', {
+        blockMs,
+        simulatedBlockEnd
+      })
+      return respondWithBlock(rateLimitResult.blockedUntil ?? simulatedBlockEnd)
     }
 
     logger.info('вњ… [API DEBUG] Rate limit check passed')
@@ -120,7 +115,8 @@ export async function POST(request: NextRequest) {
       warning: rateLimitResult.warning
         ? {
             ...rateLimitResult.warning,
-            blockedUntilMs: rateLimitResult.warning.blockedUntil ?? rateLimitResult.resetTime
+            blockedUntil: rateLimitResult.resetTime,
+            blockedUntilMs: rateLimitResult.resetTime
           }
         : null
     })

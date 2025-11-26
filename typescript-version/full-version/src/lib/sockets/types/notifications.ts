@@ -42,6 +42,10 @@ export interface NotificationEvents {
     data: { timestamp?: number },
     callback?: (response: { pong: boolean; timestamp?: number; error?: string }) => void
   ) => void
+  'presence:sync': (
+    data: unknown,
+    callback?: ((userStatuses?: { [userId: string]: { isOnline: boolean; lastSeen?: string } } | undefined) => void) | undefined
+  ) => void
 }
 
 // События уведомлений (исходящие)

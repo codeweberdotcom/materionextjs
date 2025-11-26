@@ -323,7 +323,7 @@ const sendEmailImmediate = async (options: ExtendedEmailOptions) => {
     try {
       // Only fetch in server-side context
       if (typeof window === 'undefined') {
-        const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/settings/email-templates/${options.templateId}`)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/settings/email-templates/${options.templateId}`)
 
         if (response.ok) {
           const template = await response.json()
@@ -500,6 +500,22 @@ const replaceVariables = (text: string, variables: Record<string, any>): string 
 // Initialize email scheduler on module load
 if (typeof window === 'undefined') {
   startEmailScheduler()
+  
+  // Initialize Rules Engine (новая система уведомлений)
+  // Старая система NotificationScenarios отключена в пользу RulesEngine
+  import('../services/rules/initialize').then(({ initializeRulesEngine }) => {
+    initializeRulesEngine().catch((error) => {
+      console.error('Failed to initialize rules engine:', error)
+    })
+  })
+  
+  // Старая система уведомлений отключена (полная миграция на RulesEngine)
+  // Раскомментировать только для отката:
+  // import('../services/notifications/scenarios/initialize').then(({ initializeNotificationScenarios }) => {
+  //   initializeNotificationScenarios().catch((error) => {
+  //     console.error('Failed to initialize notification scenarios:', error)
+  //   })
+  // })
 }
 
 // Certificate and key utilities

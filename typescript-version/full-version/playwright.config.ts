@@ -38,5 +38,8 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: undefined
+  webServer: undefined,
+
+  /* Global setup */
+  globalSetup: './tests/e2e/helpers/global-setup.ts'
 })

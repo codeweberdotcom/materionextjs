@@ -50,6 +50,7 @@ type StateEntry = {
   violationNumber?: number | null
   targetIp?: string | null
   targetEmail?: string | null
+  targetMailDomain?: string | null
   targetCidr?: string | null
   targetAsn?: string | null
   blockedBy?: string | null
@@ -63,8 +64,8 @@ type StateEntry = {
     blockedBy?: string | null
   } | null
   notes?: string | null
-  blockedBy?: string | null
   user?: {
+    id?: string
     email?: string | null
   } | null
 }
@@ -96,9 +97,10 @@ type EventsResponse = {
 
 type ManualBlockForm = {
   module: string
-  target: 'user' | 'email' | 'ip' | 'cidr' | 'asn'
+  target: 'user' | 'email' | 'domain' | 'ip' | 'cidr' | 'asn'
   userId: string
   email: string
+  mailDomain: string
   ipAddress: string
   cidr: string
   asn: string
@@ -107,15 +109,21 @@ type ManualBlockForm = {
   notes: string
 }
 
-const DEFAULT_MODULES = ['all', 'chat-messages', 'ads', 'upload', 'auth', 'email', 'notifications', 'registration']
+const DEFAULT_MODULES = [
+  'all',
+  'chat-messages',
+  'ads',
+  'upload',
+  'auth',
+  'email',
+  'notifications',
+  'registration',
+  'registration-ip',
+  'registration-domain',
+  'registration-email'
+]
 
-const moduleLabelMap: Record<
-  string,
-  Record<
-    string,
-    string
-  >
-> = {
+const moduleLabelMap: Record<string, Record<string, string>> = {
   ru: {
     all: 'Все модули',
     chat: 'Чат',
@@ -124,7 +132,8 @@ const moduleLabelMap: Record<
     auth: 'Аутентификация',
     email: 'Email',
     notifications: 'Уведомления',
-    registration: 'Регистрация'
+    registration: 'Регистрации',
+    'chat-messages': 'Чат · Сообщения'
   },
   en: {
     all: 'All modules',
@@ -134,7 +143,8 @@ const moduleLabelMap: Record<
     auth: 'Auth',
     email: 'Email',
     notifications: 'Notifications',
-    registration: 'Registration'
+    registration: 'Registrations',
+    'chat-messages': 'Chat · Messages'
   },
   fr: {
     all: 'Tous les modules',
@@ -144,7 +154,8 @@ const moduleLabelMap: Record<
     auth: 'Auth',
     email: 'Email',
     notifications: 'Notifications',
-    registration: 'Inscription'
+    registration: 'Inscriptions',
+    'chat-messages': 'Chat · Messages'
   },
   ar: {
     all: 'كل الوحدات',
@@ -154,30 +165,42 @@ const moduleLabelMap: Record<
     auth: 'تسجيل الدخول',
     email: 'البريد',
     notifications: 'الإشعارات',
-    registration: 'التسجيل'
+    registration: 'التسجيلات',
+    'chat-messages': 'الدردشة · الرسائل'
   }
 }
 
-const uiText: Record<
-  string,
-  {
-    title: string
-    subtitle: string
-    search: string
-    moduleFilter: string
-    refresh: string
-    key: string
-    module: string
-    source: string
-    violation: string
-    counter: string
-    window: string
-    reason: string
-    actions: string
-    noRecords: string
-    loadMore: string
-  }
-> = {
+type UITextEntry = {
+  title: string
+  subtitle: string
+  search: string
+  moduleFilter: string
+  module: string
+  source: string
+  violation: string
+  counter: string
+  window: string
+  actions: string
+  noRecords: string
+  loadMore: string
+  refresh?: string
+  key?: string
+  reason?: string
+  permanent?: string
+  target?: string
+  author?: string
+  sourceFilter?: string
+  sourceAll?: string
+  sourceAuto?: string
+  sourceManual?: string
+  activeOnly?: string
+  keyFilter?: string
+  targetFilter?: string
+  reasonFilter?: string
+  authorFilter?: string
+}
+
+const uiText: Record<string, UITextEntry> = {
   ru: {
     title: 'Блокировки',
     subtitle: 'Ручные и автоматические блоки по модулям',
@@ -305,7 +328,8 @@ const formatDate = (value?: string | null) => {
 }
 
 const BlocksPage = () => {
-  const { hasAccess, isLoading: permissionsLoading } = usePermissions()
+  const { isSuperadmin, checkPermission, isLoading: permissionsLoading } = usePermissions()
+  const hasAccess = isSuperadmin || checkPermission('rateLimitManagement', 'read')
   const t = (useTranslation().rateLimitEvents ?? {}) as Record<string, string>
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -339,6 +363,7 @@ const BlocksPage = () => {
     target: 'user',
     userId: '',
     email: '',
+    mailDomain: '',
     ipAddress: '',
     cidr: '',
     asn: '',
@@ -355,12 +380,31 @@ const BlocksPage = () => {
 
   const moduleLabel = (mod: string) => {
     const langMap = moduleLabelMap[currentLang] || moduleLabelMap.ru
+    const baseRegistration = langMap.registration || 'Registration'
+
+    if (mod === 'registration') {
+      return baseRegistration
+    }
+
+    if (mod === 'registration-ip') {
+      return `${baseRegistration} · IP`
+    }
+
+    if (mod === 'registration-domain') {
+      return `${baseRegistration} · Domain`
+    }
+
+    if (mod === 'registration-email') {
+      return `${baseRegistration} · Email`
+    }
+
     return langMap[mod] || mod
   }
 
   const targetLabel = (entry: StateEntry) =>
     entry.user?.email ||
     entry.targetEmail ||
+    entry.targetMailDomain ||
     entry.targetCidr ||
     entry.targetAsn ||
     entry.targetIp ||
@@ -477,6 +521,7 @@ const BlocksPage = () => {
       let values: string[] = []
       if (target === 'user') values = splitValues(manualBlockForm.userId)
       if (target === 'email') values = splitValues(manualBlockForm.email)
+      if (target === 'domain') values = splitValues(manualBlockForm.mailDomain)
       if (target === 'ip') values = splitValues(manualBlockForm.ipAddress)
       if (target === 'cidr') values = splitValues(manualBlockForm.cidr)
       if (target === 'asn') values = splitValues(manualBlockForm.asn)
@@ -495,6 +540,7 @@ const BlocksPage = () => {
           targetType: target,
           userId: target === 'user' ? value : undefined,
           email: target === 'email' ? value : undefined,
+          mailDomain: target === 'domain' ? value : undefined,
           ipAddress: target === 'ip' ? value : undefined,
           cidr: target === 'cidr' ? value : undefined,
           asn: target === 'asn' ? value : undefined,
@@ -935,7 +981,7 @@ const BlocksPage = () => {
           {viewEntry ? (
             <Stack spacing={1.5}>
               <Typography variant='body2'><strong>Ключ:</strong> {viewEntry.key}</Typography>
-              {viewEntry.user?.email || viewEntry.targetEmail || viewEntry.targetIp ? (
+              {viewEntry.user?.email || viewEntry.targetEmail || viewEntry.targetMailDomain || viewEntry.targetIp ? (
                 <Typography variant='body2'>
                   <strong>Пользователь:</strong>{' '}
                   {viewEntry.user?.id ? (
@@ -945,10 +991,10 @@ const BlocksPage = () => {
                       target='_blank'
                       rel='noreferrer'
                     >
-                      {viewEntry.user.email || viewEntry.targetEmail || viewEntry.targetIp}
+                      {viewEntry.user.email || viewEntry.targetEmail || viewEntry.targetMailDomain || viewEntry.targetIp}
                     </Link>
                   ) : (
-                    viewEntry.user?.email || viewEntry.targetEmail || viewEntry.targetIp
+                    viewEntry.user?.email || viewEntry.targetEmail || viewEntry.targetMailDomain || viewEntry.targetIp
                   )}
                 </Typography>
               ) : null}
@@ -1086,6 +1132,7 @@ const BlocksPage = () => {
           >
             <MenuItem value='user'>{t.manualBlockTargetUser || 'User ID'}</MenuItem>
             <MenuItem value='email'>{t.manualBlockTargetEmail || 'Email'}</MenuItem>
+            <MenuItem value='domain'>{t.manualBlockTargetDomain || 'Email domain'}</MenuItem>
             <MenuItem value='ip'>{t.manualBlockTargetIp || 'IP address'}</MenuItem>
             <MenuItem value='cidr'>CIDR</MenuItem>
             <MenuItem value='asn'>ASN</MenuItem>
@@ -1099,6 +1146,15 @@ const BlocksPage = () => {
               multiline
               minRows={3}
               placeholder='One per line'
+            />
+          ) : null}
+          {manualBlockForm.target === 'domain' ? (
+            <TextField
+              label={t.manualBlockDomainLabel || 'Mail domain'}
+              placeholder='example.com'
+              value={manualBlockForm.mailDomain}
+              onChange={event => handleManualBlockChange('mailDomain', event.target.value)}
+              fullWidth
             />
           ) : null}
           {manualBlockForm.target === 'ip' ? (
@@ -1198,7 +1254,14 @@ const BlocksPage = () => {
           <Typography variant='body2'>Блокировка уже существует. Перезаписать её?</Typography>
         </DialogContent>
         <DialogActions>
-          <Button variant='outlined' onClick={() => { setOverwriteDialogOpen(false); setPendingPayload(null) }} disabled={creatingBlock}>
+          <Button
+            variant='outlined'
+            onClick={() => {
+              setOverwriteDialogOpen(false)
+              setConflictPayloads([])
+            }}
+            disabled={creatingBlock}
+          >
             Отмена
           </Button>
           <Button variant='contained' onClick={confirmOverwrite} disabled={creatingBlock}>

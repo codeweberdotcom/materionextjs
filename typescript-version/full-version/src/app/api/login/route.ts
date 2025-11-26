@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 
 import { prisma } from '@/libs/prisma'
+import { rateLimitService } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,14 +22,33 @@ export async function POST(request: NextRequest) {
       body = await request.json()
     } catch (parseError) {
       console.error('Login JSON parse error:', parseError)
-      
-return NextResponse.json(
+
+ return NextResponse.json(
         { message: ['Invalid JSON in request body'] },
         { status: 400, statusText: 'Bad Request' }
       )
     }
 
     const { email, password } = body
+
+    // Rate limit check
+    const clientIp = request.headers.get('x-forwarded-for') ||
+                     request.headers.get('x-real-ip') ||
+                     'unknown'
+
+    const rateLimitResult = await rateLimitService.checkLimit(clientIp, 'auth-login', {
+      increment: true,
+      userId: null,
+      email: email,
+      ipAddress: clientIp
+    })
+
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json({
+        message: ['Too many login attempts. Try again later.'],
+        retryAfter: Math.ceil(rateLimitResult.resetTime / 1000)
+      }, { status: 429 })
+    }
 
     // Find user by email
     const user = await prisma.user.findUnique({

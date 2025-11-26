@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
+import { updateProfileSchema, formatZodError } from '@/lib/validations/user-schemas'
 
 // GET - Fetch current user profile data
 export async function GET(request: NextRequest) {
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    if (!user) {
+    if (!userProfile) {
       return NextResponse.json(
         { message: 'User not found' },
         { status: 404 }
@@ -85,7 +86,24 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, language, currency, country } = body
+    
+    // Валидация данных
+    const validationResult = updateProfileSchema.safeParse({
+      name: body.name,
+      email: body.email,
+      country: body.country || null,
+      language: body.language || null,
+      currency: body.currency || null
+    })
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { message: formatZodError(validationResult.error) },
+        { status: 400 }
+      )
+    }
+
+    const validatedData = validationResult.data
 
     // Find the current user
     const currentUser = await prisma.user.findUnique({
@@ -103,11 +121,11 @@ export async function PUT(request: NextRequest) {
     const updatedUser = await prisma.user.update({
       where: { id: currentUser.id },
       data: {
-        name: name || currentUser.name,
-        email: email || currentUser.email,
-        language: language || currentUser.language,
-        currency: currency || currentUser.currency,
-        country: country || currentUser.country
+        ...(validatedData.name && { name: validatedData.name }),
+        ...(validatedData.email && { email: validatedData.email }),
+        ...(validatedData.language !== undefined && { language: validatedData.language }),
+        ...(validatedData.currency !== undefined && { currency: validatedData.currency }),
+        ...(validatedData.country !== undefined && { country: validatedData.country })
       },
       include: {
         role: true

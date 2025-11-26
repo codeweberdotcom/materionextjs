@@ -5,6 +5,7 @@ import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { prisma } from '@/libs/prisma'
 import bcrypt from 'bcryptjs'
+import { changePasswordSchema, formatZodError } from '@/lib/validations/user-schemas'
 
 
 
@@ -20,28 +21,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { currentPassword, newPassword, confirmPassword } = body
+    
+    // Валидация данных
+    const validationResult = changePasswordSchema.safeParse({
+      currentPassword: body.currentPassword,
+      newPassword: body.newPassword,
+      confirmPassword: body.confirmPassword
+    })
 
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    if (!validationResult.success) {
       return NextResponse.json(
-        { message: 'All fields are required' },
+        { message: formatZodError(validationResult.error) },
         { status: 400 }
       )
     }
 
-    if (newPassword !== confirmPassword) {
-      return NextResponse.json(
-        { message: 'New password and confirm password do not match' },
-        { status: 400 }
-      )
-    }
-
-    if (newPassword.length < 8) {
-      return NextResponse.json(
-        { message: 'New password must be at least 8 characters long' },
-        { status: 400 }
-      )
-    }
+    const { currentPassword, newPassword } = validationResult.data
 
     // Find the current user
     const currentUser = await prisma.user.findUnique({

@@ -11,12 +11,17 @@ import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
 import Divider from '@mui/material/Divider'
 import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import Chip from '@mui/material/Chip'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import Switch from '@mui/material/Switch'
+import InputAdornment from '@mui/material/InputAdornment'
+import FormControl from '@mui/material/FormControl'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
 import { styled } from '@mui/material/styles'
 import TablePagination from '@mui/material/TablePagination'
 import type { TextFieldProps } from '@mui/material/TextField'
@@ -41,7 +46,9 @@ import {
   getFacetedUniqueValues,
   getFacetedMinMaxValues,
   getPaginationRowModel,
-  getSortedRowModel
+  getSortedRowModel,
+  type ColumnFiltersState,
+  type Column
 } from '@tanstack/react-table'
 import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
@@ -82,8 +89,40 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
   const itemRank = rankItem(row.getValue(columnId), value)
 
   addMeta({ itemRank })
-  
+
 return itemRank.passed
+}
+
+// Filter functions for each column
+const containsFilterFn: FilterFn<Translation> = (row, columnId, value) => {
+  if (!value) return true
+
+  const cellValue = row.getValue(columnId) as string
+
+  return cellValue.toLowerCase().includes(String(value).toLowerCase())
+}
+
+const languageFilterFn: FilterFn<Translation> = (row, columnId, value) => {
+  if (!value) return true
+
+  return row.getValue(columnId) === value
+}
+
+const namespaceFilterFn: FilterFn<Translation> = (row, columnId, value) => {
+  if (!value) return true
+
+  return row.getValue(columnId) === value
+}
+
+const statusFilterFn: FilterFn<Translation> = (row, columnId, value) => {
+  if (!value) return true
+  
+  const isActive = row.getValue(columnId) as boolean
+
+  if (value === 'active') return isActive
+  if (value === 'inactive') return !isActive
+
+  return true
 }
 
 const DebouncedInput = ({
@@ -110,7 +149,145 @@ const DebouncedInput = ({
     return () => clearTimeout(timeout)
   }, [value])
 
-  return <TextField {...props} value={value} onChange={e => setValue(e.target.value)} size='small' />
+  return (
+    <TextField
+      {...props}
+      value={value}
+      onChange={e => setValue(e.target.value)}
+      size='small'
+      InputProps={{
+        startAdornment: (
+          <InputAdornment position='start'>
+            <i className='ri-search-line text-[18px] text-textSecondary' />
+          </InputAdornment>
+        )
+      }}
+    />
+  )
+}
+
+// Styled FilterSelect component (matching UserListTable)
+const FilterSelect = styled(Select)(({ theme }) => ({
+  minWidth: 150,
+  '& .MuiSelect-select': {
+    padding: theme.spacing(1.75, 2),
+    textTransform: 'none',
+    color: 'var(--mui-palette-text-disabled)'
+  },
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderColor: 'var(--mui-palette-divider)'
+  },
+  '&:hover .MuiOutlinedInput-notchedOutline': {
+    borderColor: 'var(--mui-palette-text-secondary)'
+  },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    borderColor: 'var(--mui-palette-primary-main)'
+  }
+}))
+
+// Column Filter Component
+const ColumnFilter = ({
+  column,
+  placeholder,
+  dictionary,
+  languageOptions,
+  namespaceOptions
+}: {
+  column: Column<Translation, unknown>
+  placeholder: string
+  dictionary: ReturnType<typeof useTranslation>
+  languageOptions: string[]
+  namespaceOptions: string[]
+}) => {
+  const columnFilterValue = column.getFilterValue()
+
+  if (column.id === 'isActive') {
+    return (
+      <FormControl fullWidth size='small' sx={{ '& .MuiSelect-select': { py: 1.75 } }}>
+        <FilterSelect
+          value={(columnFilterValue ?? '') as string}
+          onChange={e => column.setFilterValue(e.target.value)}
+          displayEmpty
+          renderValue={selected => {
+            if (!selected) return <span className='text-textSecondary'>{dictionary.navigation.all}</span>
+
+            return selected === 'active' ? dictionary.navigation.active : dictionary.navigation.inactive
+          }}
+        >
+          <MenuItem value='' sx={{ textTransform: 'none' }}>
+            <span className='text-textSecondary'>{dictionary.navigation.all}</span>
+          </MenuItem>
+          <MenuItem value='active' sx={{ textTransform: 'none', color: 'var(--mui-palette-text-primary)' }}>
+            {dictionary.navigation.active}
+          </MenuItem>
+          <MenuItem value='inactive' sx={{ textTransform: 'none', color: 'var(--mui-palette-text-primary)' }}>
+            {dictionary.navigation.inactive}
+          </MenuItem>
+        </FilterSelect>
+      </FormControl>
+    )
+  }
+
+  if (column.id === 'language') {
+    return (
+      <FormControl fullWidth size='small' sx={{ '& .MuiSelect-select': { py: 1.75 } }}>
+        <FilterSelect
+          value={(columnFilterValue ?? '') as string}
+          onChange={e => column.setFilterValue(e.target.value)}
+          displayEmpty
+          renderValue={selected => {
+            if (!selected) return <span className='text-textSecondary'>{dictionary.navigation.all}</span>
+
+            return (selected as string).toUpperCase()
+          }}
+        >
+          <MenuItem value='' sx={{ textTransform: 'none' }}>
+            <span className='text-textSecondary'>{dictionary.navigation.all}</span>
+          </MenuItem>
+          {languageOptions.map(lang => (
+            <MenuItem key={lang} value={lang} sx={{ textTransform: 'none', color: 'var(--mui-palette-text-primary)' }}>
+              {lang.toUpperCase()}
+            </MenuItem>
+          ))}
+        </FilterSelect>
+      </FormControl>
+    )
+  }
+
+  if (column.id === 'namespace') {
+    return (
+      <FormControl fullWidth size='small' sx={{ '& .MuiSelect-select': { py: 1.75 } }}>
+        <FilterSelect
+          value={(columnFilterValue ?? '') as string}
+          onChange={e => column.setFilterValue(e.target.value)}
+          displayEmpty
+          renderValue={selected => {
+            if (!selected) return <span className='text-textSecondary'>{dictionary.navigation.all}</span>
+
+            return selected as string
+          }}
+        >
+          <MenuItem value=''>{dictionary.navigation.all}</MenuItem>
+          {namespaceOptions.map(ns => (
+            <MenuItem key={ns} value={ns}>
+              {ns}
+            </MenuItem>
+          ))}
+        </FilterSelect>
+      </FormControl>
+    )
+  }
+
+  // Default text filter for key and value columns
+  return (
+    <DebouncedInput
+      value={(columnFilterValue ?? '') as string}
+      onChange={value => column.setFilterValue(value)}
+      placeholder={placeholder}
+      size='small'
+      className='w-full'
+    />
+  )
 }
 
 const columnHelper = createColumnHelper<Translation>()
@@ -122,11 +299,23 @@ const TranslationsListTable = () => {
   const [data, setData] = useState<Translation[]>([])
   const [filteredData, setFilteredData] = useState(data)
   const [globalFilter, setGlobalFilter] = useState('')
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [loading, setLoading] = useState(true)
+  const [importLoading, setImportLoading] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
   const [addTranslationOpen, setAddTranslationOpen] = useState(false)
   const [editTranslation, setEditTranslation] = useState<Translation | null>(null)
 
   const { lang: locale } = useParams()
+
+  // Get unique languages and namespaces for filter options
+  const languageOptions = useMemo(() => {
+    return [...new Set(data.map(t => t.language))].sort()
+  }, [data])
+
+  const namespaceOptions = useMemo(() => {
+    return [...new Set(data.map(t => t.namespace))].sort()
+  }, [data])
 
   // Fetch translations data
   useEffect(() => {
@@ -172,15 +361,20 @@ const TranslationsListTable = () => {
             onChange: row.getToggleSelectedHandler()
           }}
         />
-      )
+      ),
+      enableColumnFilter: false
     },
     columnHelper.accessor('key', {
       header: dictionary.navigation.translationKey,
-      cell: ({ row }) => <Typography>{row.original.key}</Typography>
+      cell: ({ row }) => <Typography>{row.original.key}</Typography>,
+      filterFn: containsFilterFn,
+      enableColumnFilter: true
     }),
     columnHelper.accessor('namespace', {
       header: dictionary.navigation.namespace,
-      cell: ({ row }) => <Typography>{row.original.namespace}</Typography>
+      cell: ({ row }) => <Typography>{row.original.namespace}</Typography>,
+      filterFn: namespaceFilterFn,
+      enableColumnFilter: true
     }),
     columnHelper.accessor('language', {
       header: dictionary.navigation.language,
@@ -190,7 +384,9 @@ const TranslationsListTable = () => {
           size='small'
           variant='outlined'
         />
-      )
+      ),
+      filterFn: languageFilterFn,
+      enableColumnFilter: true
     }),
     columnHelper.accessor('value', {
       header: dictionary.navigation.translation,
@@ -198,7 +394,9 @@ const TranslationsListTable = () => {
         <Typography className='max-w-64 truncate' title={row.original.value}>
           {row.original.value}
         </Typography>
-      )
+      ),
+      filterFn: containsFilterFn,
+      enableColumnFilter: true
     }),
     columnHelper.accessor('isActive', {
       header: dictionary.navigation.status,
@@ -209,7 +407,9 @@ const TranslationsListTable = () => {
           size='small'
           color={row.original.isActive ? 'success' : 'secondary'}
         />
-      )
+      ),
+      filterFn: statusFilterFn,
+      enableColumnFilter: true
     }),
     {
       id: 'actions',
@@ -229,9 +429,10 @@ const TranslationsListTable = () => {
           </IconButton>
         </div>
       ),
-      enableSorting: false
+      enableSorting: false,
+      enableColumnFilter: false
     }
-  ], [data])
+  ], [data, dictionary])
 
   const table = useReactTable({
     data: filteredData,
@@ -240,7 +441,8 @@ const TranslationsListTable = () => {
       fuzzy: fuzzyFilter
     },
     state: {
-      globalFilter
+      globalFilter,
+      columnFilters
     },
     initialState: {
       pagination: {
@@ -249,6 +451,7 @@ const TranslationsListTable = () => {
     },
     enableRowSelection: true,
     globalFilterFn: fuzzyFilter,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
@@ -379,6 +582,8 @@ const TranslationsListTable = () => {
   }
 
   const handleExportToJSON = async () => {
+    setExportLoading(true)
+
     try {
       const response = await fetch('/api/admin/references/translations/export', {
         method: 'POST'
@@ -387,23 +592,23 @@ const TranslationsListTable = () => {
       if (response.ok) {
         const result = await response.json()
 
-        if (result.message === 'translationsExportSuccess') {
-          toast.success(dictionary.navigation.translationsExportSuccess.replace('${count}', result.exportedCount.toString()))
-        } else {
-          toast.success(result.message || 'Translations exported successfully')
-        }
+        toast.success(`Exported ${result.exportedCount} languages: ${result.exportedLanguages?.join(', ') || 'N/A'}`)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to export translations')
+        toast.error(error.error?.message || 'Failed to export translations')
       }
     } catch (error) {
       console.error('Error exporting translations:', error)
       toast.error('Failed to export translations')
+    } finally {
+      setExportLoading(false)
     }
   }
 
   const handleImportFromJSON = async () => {
+    setImportLoading(true)
+
     try {
       const response = await fetch('/api/admin/references/translations/import', {
         method: 'POST'
@@ -422,19 +627,17 @@ const TranslationsListTable = () => {
           setFilteredData(translations)
         }
 
-        if (result.message === 'translationsImportSuccess') {
-          toast.success(dictionary.navigation.translationsImportSuccess.replace('${count}', result.importedCount.toString()))
-        } else {
-          toast.success(result.message || 'Translations imported successfully')
-        }
+        toast.success(`Imported ${result.importedCount} translations for: ${result.languages?.join(', ') || 'N/A'}`)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to import translations')
+        toast.error(error.error?.message || 'Failed to import translations')
       }
     } catch (error) {
       console.error('Error importing translations:', error)
       toast.error('Failed to import translations')
+    } finally {
+      setImportLoading(false)
     }
   }
 
@@ -507,15 +710,27 @@ const TranslationsListTable = () => {
               value={globalFilter ?? ''}
               onChange={value => setGlobalFilter(String(value))}
               placeholder={dictionary.navigation.searchTranslations}
-              className='max-sm:is-full'
+              className='max-sm:is-full min-w-[250px]'
             />
           </div>
           <div className='flex gap-2'>
-            <Button variant='outlined' onClick={handleImportFromJSON} className='max-sm:is-full'>
-              {dictionary.navigation.importFromJSON}
+            <Button
+              variant='outlined'
+              onClick={handleImportFromJSON}
+              className='max-sm:is-full'
+              disabled={importLoading || exportLoading}
+              startIcon={importLoading ? <CircularProgress size={16} color='inherit' /> : null}
+            >
+              {importLoading ? (dictionary.navigation.importInProgress || 'Importing...') : dictionary.navigation.importFromJSON}
             </Button>
-            <Button variant='outlined' onClick={handleExportToJSON} className='max-sm:is-full'>
-              {dictionary.navigation.exportToJSON}
+            <Button
+              variant='outlined'
+              onClick={handleExportToJSON}
+              className='max-sm:is-full'
+              disabled={importLoading || exportLoading}
+              startIcon={exportLoading ? <CircularProgress size={16} color='inherit' /> : null}
+            >
+              {exportLoading ? (dictionary.navigation.exportInProgress || 'Exporting...') : dictionary.navigation.exportToJSON}
             </Button>
             <Button variant='contained' onClick={() => setAddTranslationOpen(true)} className='max-sm:is-full'>
               {dictionary.navigation.addNewTranslation}
@@ -530,19 +745,38 @@ const TranslationsListTable = () => {
                 {headerGroup.headers.map(header => (
                   <TableCell key={header.id}>
                     {header.isPlaceholder ? null : (
-                      <div
-                        className={classnames({
-                          'flex items-center': header.column.getIsSorted(),
-                          'cursor-pointer select-none': header.column.getCanSort()
-                        })}
-                        onClick={header.column.getToggleSortingHandler()}
-                      >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
-                        {{
-                          asc: <i className='ri-arrow-up-s-line text-xl' />,
-                          desc: <i className='ri-arrow-down-s-line text-xl' />
-                        }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
-                      </div>
+                      <>
+                        <div
+                          className={classnames({
+                            'flex items-center': header.column.getIsSorted(),
+                            'cursor-pointer select-none': header.column.getCanSort()
+                          })}
+                          onClick={header.column.getToggleSortingHandler()}
+                        >
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {{
+                            asc: <i className='ri-arrow-up-s-line text-xl' />,
+                            desc: <i className='ri-arrow-down-s-line text-xl' />
+                          }[header.column.getIsSorted() as 'asc' | 'desc'] ?? null}
+                        </div>
+                        {header.column.getCanFilter() && (
+                          <div className='mt-2'>
+                            <ColumnFilter
+                              column={header.column}
+                              placeholder={
+                                header.column.id === 'key'
+                                  ? dictionary.navigation.filterByKey || 'Filter by key...'
+                                  : header.column.id === 'value'
+                                    ? dictionary.navigation.filterByValue || 'Filter by value...'
+                                    : ''
+                              }
+                              dictionary={dictionary}
+                              languageOptions={languageOptions}
+                              namespaceOptions={namespaceOptions}
+                            />
+                          </div>
+                        )}
+                      </>
                     )}
                   </TableCell>
                 ))}

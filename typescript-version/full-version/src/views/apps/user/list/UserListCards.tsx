@@ -15,6 +15,7 @@ import type { UserDataType } from '@components/card-statistics/HorizontalWithSub
 import HorizontalWithSubtitle from '@components/card-statistics/HorizontalWithSubtitle'
 import { usePresence } from '@/contexts/PresenceProvider'
 import { useUnreadByContact } from '@/hooks/useUnreadByContact'
+import { useTranslation } from '@/contexts/TranslationContext'
 
 // Vars
 const staticData: UserDataType[] = [
@@ -50,6 +51,7 @@ const staticData: UserDataType[] = [
 const UserListCards = () => {
   const [activeUsers, setActiveUsers] = useState<number>(0)
   const [loading, setLoading] = useState(true)
+  const dictionary = useTranslation()
   const { statuses: presenceStatuses } = usePresence()
   const { userStatuses: unreadStatuses } = useUnreadByContact()
 
@@ -75,14 +77,14 @@ const UserListCards = () => {
     setActiveUsers(onlineCount)
     setLoading(false)
   }, [onlineCount])
-
+  
   const data: UserDataType[] = [
     {
-      title: 'Активные пользователи',
+      title: dictionary.navigation.activeUsers || 'Active Users',
       stats: loading ? '...' : activeUsers.toString(),
       avatarIcon: 'ri-group-line',
       avatarColor: 'primary',
-      subtitle: 'Сейчас онлайн'
+      subtitle: dictionary.navigation.onlineNow || 'Online now'
     },
     ...staticData
   ]

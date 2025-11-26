@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -13,9 +13,21 @@ import IconButton from '@mui/material/IconButton'
 import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Autocomplete from '@mui/material/Autocomplete'
+import Typography from '@mui/material/Typography'
+import Divider from '@mui/material/Divider'
+import Alert from '@mui/material/Alert'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
+
+// Pluralization Imports
+import {
+  getRequiredPluralForms,
+  languageNeedsComplexPlural,
+  isPluralValue,
+  type PluralForm,
+  type PluralValue
+} from '@/utils/translations/pluralization'
 
 type Translation = {
   id: string
@@ -34,6 +46,16 @@ type AddTranslationDialogProps = {
   onUpdate?: (data: { id: string; key: string; language: string; value: string; namespace: string; isActive: boolean }) => void
 }
 
+// Названия форм для UI
+const PLURAL_FORM_LABELS: Record<PluralForm, { ru: string; en: string; example: string }> = {
+  zero: { ru: 'Ноль', en: 'Zero', example: '0' },
+  one: { ru: 'Один', en: 'One', example: '1, 21, 31...' },
+  two: { ru: 'Два', en: 'Two', example: '2' },
+  few: { ru: 'Несколько', en: 'Few', example: '2-4, 22-24...' },
+  many: { ru: 'Много', en: 'Many', example: '0, 5-20, 25-30...' },
+  other: { ru: 'Другое', en: 'Other', example: 'остальное' }
+}
+
 const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, onUpdate }: AddTranslationDialogProps) => {
   // Hooks
   const dictionary = useTranslation()
@@ -45,6 +67,10 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
     namespace: 'common',
     isActive: true
   })
+
+  // Plural mode state
+  const [isPluralMode, setIsPluralMode] = useState(false)
+  const [pluralForms, setPluralForms] = useState<Partial<Record<PluralForm, string>>>({})
 
   const [errors, setErrors] = useState<{[key: string]: string}>({})
 
@@ -65,7 +91,19 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
     { value: 'validation', label: 'Validation' }
   ]
 
-  // Populate form data when editing
+  // Get required plural forms for selected language
+  const requiredForms = useMemo(() => {
+    if (!formData.language) return ['one', 'other'] as PluralForm[]
+
+    return getRequiredPluralForms(formData.language)
+  }, [formData.language])
+
+  // Check if language needs complex plural
+  const needsComplexPlural = useMemo(() => {
+    return formData.language ? languageNeedsComplexPlural(formData.language) : false
+  }, [formData.language])
+
+  // Parse existing value when editing
   useEffect(() => {
     if (editTranslation) {
       setFormData({
@@ -75,6 +113,22 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
         namespace: editTranslation.namespace,
         isActive: editTranslation.isActive
       })
+
+      // Check if value is plural JSON
+      try {
+        const parsed = JSON.parse(editTranslation.value)
+
+        if (isPluralValue(parsed)) {
+          setIsPluralMode(true)
+          setPluralForms(parsed)
+        } else {
+          setIsPluralMode(false)
+          setPluralForms({})
+        }
+      } catch {
+        setIsPluralMode(false)
+        setPluralForms({})
+      }
     } else {
       setFormData({
         key: '',
@@ -83,8 +137,27 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
         namespace: 'common',
         isActive: true
       })
+      setIsPluralMode(false)
+      setPluralForms({})
     }
   }, [editTranslation])
+
+  // Build value from plural forms
+  const buildPluralValue = (): string => {
+    const nonEmptyForms: Partial<Record<PluralForm, string>> = {}
+
+    Object.entries(pluralForms).forEach(([form, value]) => {
+      if (value && value.trim()) {
+        nonEmptyForms[form as PluralForm] = value
+      }
+    })
+
+    if (Object.keys(nonEmptyForms).length === 0) {
+      return ''
+    }
+
+    return JSON.stringify(nonEmptyForms)
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -100,7 +173,14 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
       newErrors.language = 'Language is required'
     }
 
-    if (!formData.value.trim()) {
+    // Validate value based on mode
+    if (isPluralMode) {
+      const pluralValue = buildPluralValue()
+
+      if (!pluralValue) {
+        newErrors.value = 'At least one plural form is required'
+      }
+    } else if (!formData.value.trim()) {
       newErrors.value = 'Translation value is required'
     }
 
@@ -111,23 +191,39 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
       return
     }
 
+    // Get final value
+    const finalValue = isPluralMode ? buildPluralValue() : formData.value
+
     if (isEditMode && onUpdate && editTranslation) {
-      onUpdate({ ...formData, id: editTranslation.id })
+      onUpdate({ ...formData, value: finalValue, id: editTranslation.id })
     } else {
-      onSubmit(formData)
+      onSubmit({ ...formData, value: finalValue })
     }
 
-    handleClose()
+    handleCloseDialog()
   }
 
   const handleCloseDialog = () => {
-    setFormData({ key: '', language: 'en', value: '', namespace: 'common', isActive: true })
+    setFormData({ key: '', language: '', value: '', namespace: 'common', isActive: true })
     setErrors({})
+    setIsPluralMode(false)
+    setPluralForms({})
     handleClose()
   }
 
+  const handlePluralFormChange = (form: PluralForm, value: string) => {
+    setPluralForms(prev => ({
+      ...prev,
+      [form]: value
+    }))
+
+    if (errors.value) {
+      setErrors({ ...errors, value: '' })
+    }
+  }
+
   return (
-    <Dialog fullWidth open={open} onClose={handleCloseDialog} maxWidth='sm'>
+    <Dialog fullWidth open={open} onClose={handleCloseDialog} maxWidth='md'>
       <DialogTitle>{isEditMode ? dictionary.navigation.editTranslationTitle : dictionary.navigation.addNewTranslationTitle}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
@@ -135,7 +231,7 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
             <i className='ri-close-line text-textSecondary' />
           </IconButton>
           <Grid container spacing={4}>
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label={dictionary.navigation.translationKey}
@@ -153,7 +249,7 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
                 required
               />
             </Grid>
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Autocomplete
                 options={languages}
                 getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
@@ -181,8 +277,7 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
                 renderOption={(props, option) => {
                   const { key, ...otherProps } = props
 
-                  
-return (
+                  return (
                     <li key={option.code} {...otherProps}>
                       {option.name}
                     </li>
@@ -191,27 +286,8 @@ return (
                 fullWidth
               />
             </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label={dictionary.navigation.translationValue}
-                placeholder='Dashboards'
-                value={formData.value}
-                onChange={e => {
-                  setFormData({ ...formData, value: e.target.value })
 
-                  if (errors.value) {
-                    setErrors({ ...errors, value: '' })
-                  }
-                }}
-                error={!!errors.value}
-                helperText={errors.value}
-                required
-                multiline
-                rows={3}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <Autocomplete
                 options={namespaces}
                 getOptionLabel={(option) => typeof option === 'string' ? option : option.label}
@@ -232,8 +308,7 @@ return (
                 renderOption={(props, option) => {
                   const { key, ...otherProps } = props
 
-                  
-return (
+                  return (
                     <li key={option.value} {...otherProps}>
                       {option.label}
                     </li>
@@ -242,7 +317,8 @@ return (
                 fullWidth
               />
             </Grid>
-            <Grid size={{ xs: 12 }}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControlLabel
                 control={
                   <Switch
@@ -253,6 +329,96 @@ return (
                 label={formData.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
               />
             </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <Divider className='my-2' />
+            </Grid>
+
+            {/* Plural mode toggle */}
+            <Grid size={{ xs: 12 }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isPluralMode}
+                    onChange={e => setIsPluralMode(e.target.checked)}
+                  />
+                }
+                label={
+                  <Typography variant='body1'>
+                    Множественные формы (Plural)
+                    {needsComplexPlural && formData.language && (
+                      <Typography component='span' variant='caption' color='primary' className='ml-2'>
+                        Рекомендуется для {formData.language.toUpperCase()}
+                      </Typography>
+                    )}
+                  </Typography>
+                }
+              />
+            </Grid>
+
+            {/* Plural forms alert */}
+            {isPluralMode && formData.language && (
+              <Grid size={{ xs: 12 }}>
+                <Alert severity='info' className='mb-2'>
+                  <Typography variant='body2'>
+                    Для языка <strong>{formData.language.toUpperCase()}</strong> используются формы:{' '}
+                    {requiredForms.map(f => PLURAL_FORM_LABELS[f].ru).join(', ')}
+                  </Typography>
+                  <Typography variant='caption' color='textSecondary'>
+                    Используйте {'{{count}}'} для подстановки числа
+                  </Typography>
+                </Alert>
+              </Grid>
+            )}
+
+            {/* Translation value - simple mode */}
+            {!isPluralMode && (
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  label={dictionary.navigation.translationValue}
+                  placeholder='Dashboards'
+                  value={formData.value}
+                  onChange={e => {
+                    setFormData({ ...formData, value: e.target.value })
+
+                    if (errors.value) {
+                      setErrors({ ...errors, value: '' })
+                    }
+                  }}
+                  error={!!errors.value}
+                  helperText={errors.value}
+                  required
+                  multiline
+                  rows={3}
+                />
+              </Grid>
+            )}
+
+            {/* Plural forms - plural mode */}
+            {isPluralMode && requiredForms.map(form => (
+              <Grid size={{ xs: 12, md: 6 }} key={form}>
+                <TextField
+                  fullWidth
+                  label={`${PLURAL_FORM_LABELS[form].ru} (${form})`}
+                  placeholder={`{{count}} ${form === 'one' ? 'пользователь' : form === 'few' ? 'пользователя' : 'пользователей'}`}
+                  value={pluralForms[form] || ''}
+                  onChange={e => handlePluralFormChange(form, e.target.value)}
+                  helperText={`Примеры: ${PLURAL_FORM_LABELS[form].example}`}
+                  multiline
+                  rows={2}
+                />
+              </Grid>
+            ))}
+
+            {/* Validation error for plural */}
+            {isPluralMode && errors.value && (
+              <Grid size={{ xs: 12 }}>
+                <Typography color='error' variant='caption'>
+                  {errors.value}
+                </Typography>
+              </Grid>
+            )}
           </Grid>
         </DialogContent>
         <DialogActions>

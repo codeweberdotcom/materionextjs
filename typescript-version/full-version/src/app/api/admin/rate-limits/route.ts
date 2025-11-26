@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import { isSuperadmin, isAdmin } from '@/utils/permissions/permissions'
+import { isSuperadmin, isAdminByCode } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 import type { RateLimitStats } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(user) || isAdmin(user)
+    const hasPermission = isSuperadmin(user) || isAdminByCode(user)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
     if (view === 'events') {
       const moduleName = searchParams.get('module') || undefined
       const key = searchParams.get('key') || undefined
+      const eventTypeParam = (searchParams.get('eventType') || 'block').toLowerCase()
       const limitParam = searchParams.get('limit')
       const limit = limitParam ? Number.parseInt(limitParam, 10) : undefined
 
@@ -46,10 +47,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'module and key are required for events view' }, { status: 400 })
       }
 
+      const allowedEventTypes = ['warning', 'block'] as const
+      const eventType = allowedEventTypes.includes(eventTypeParam as any) ? (eventTypeParam as 'warning' | 'block') : 'block'
+
       const events = await rateLimitService.listEvents({
         module: moduleName,
         key,
-        eventType: 'block',
+        eventType,
         limit: Number.isFinite(limit) ? limit : 20
       })
 
@@ -57,7 +61,27 @@ export async function GET(request: NextRequest) {
     }
 
     const configs = await rateLimitService.getAllConfigs()
-    const modules: Array<'chat-messages' | 'ads' | 'upload' | 'auth'> = ['chat-messages', 'ads', 'upload', 'auth']
+    const modules: Array<
+      | 'chat-messages'
+      | 'chat-rooms'
+      | 'chat-connections'
+      | 'ads'
+      | 'upload'
+      | 'auth'
+      | 'registration-ip'
+      | 'registration-domain'
+      | 'registration-email'
+    > = [
+      'chat-messages',
+      'chat-rooms',
+      'chat-connections',
+      'ads',
+      'upload',
+      'auth',
+      'registration-ip',
+      'registration-domain',
+      'registration-email'
+    ]
     const stats = await Promise.all(modules.map(module => rateLimitService.getStats(module)))
     const filteredStats = stats.filter((stat): stat is RateLimitStats => Boolean(stat))
 
@@ -80,7 +104,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(user) || isAdmin(user)
+    const hasPermission = isSuperadmin(user) || isAdminByCode(user)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -181,9 +205,9 @@ export async function PUT(request: NextRequest) {
       updatePayload.storeIpInEvents = storeIpInEvents
     }
 
-    const previousConfig = rateLimitService.getConfig(module)
+    const previousConfig = await rateLimitService.getConfig(module)
     await rateLimitService.updateConfig(module, updatePayload)
-    const updatedConfig = rateLimitService.getConfig(module)
+    const updatedConfig = await rateLimitService.getConfig(module)
     if (
       updatedConfig?.mode === 'monitor' &&
       previousConfig?.mode === 'enforce'
@@ -207,7 +231,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const hasPermission = isSuperadmin(user) || isAdmin(user)
+    const hasPermission = isSuperadmin(user) || isAdminByCode(user)
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -230,5 +254,3 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
-
-

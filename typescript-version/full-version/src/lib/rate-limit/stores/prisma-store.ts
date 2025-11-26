@@ -28,7 +28,8 @@ export class PrismaRateLimitStore implements RateLimitStore {
       ipAddress,
       ipHash,
       ipPrefix,
-      hashVersion
+      hashVersion,
+      debugEmail
     } = params
 
     const outcome = await this.prisma.$transaction(async tx => {
@@ -192,13 +193,16 @@ export class PrismaRateLimitStore implements RateLimitStore {
                   ipHash,
                   ipPrefix,
                   hashVersion,
+                  debugEmail,
                   eventType: 'block',
                   mode,
                   count: newCount,
                   maxRequests: config.maxRequests,
                   windowStart: updatedState.windowStart,
                   windowEnd: updatedState.windowEnd,
-                  blockedUntil: mode === 'enforce' ? blockedUntil : null
+                  blockedUntil: mode === 'enforce' ? blockedUntil : null,
+                  createUserBlock: mode === 'enforce', // Save to UserBlock for long-term storage
+                  environment: params.environment // Передаем environment для различения тестовых и реальных событий
                 }
               : undefined,
           result:
@@ -232,13 +236,15 @@ export class PrismaRateLimitStore implements RateLimitStore {
               ipHash,
               ipPrefix,
               hashVersion,
+              debugEmail,
               eventType: 'warning',
               mode,
               count: newCount,
               maxRequests: config.maxRequests,
               windowStart: updatedState.windowStart,
               windowEnd: updatedState.windowEnd,
-              blockedUntil: null
+              blockedUntil: null,
+              environment: params.environment // Передаем environment для различения тестовых и реальных событий
             }
           : undefined,
         result: {
@@ -260,14 +266,77 @@ export class PrismaRateLimitStore implements RateLimitStore {
     return outcome.result
   }
 
-  async resetCache(): Promise<void> {
+  async resetCache(_key?: string, _module?: string): Promise<void> {
     // Prisma backend stores state in the database, nothing to clear
+    return
+  }
+
+  async setBlock(key: string, module: string, blockedUntil?: Date | null): Promise<void> {
+    const now = new Date()
+    const windowEnd = new Date(now.getTime() + 60_000)
+
+    await this.prisma.rateLimitState.upsert({
+      where: {
+        key_module: { key, module }
+      },
+      create: {
+        key,
+        module,
+        count: 0,
+        windowStart: now,
+        windowEnd,
+        blockedUntil: blockedUntil ?? null
+      },
+      update: {
+        blockedUntil: blockedUntil ?? null
+      }
+    })
+  }
+
+  async restoreStateFromDatabase(): Promise<void> {
+    // Prisma хранит состояние напрямую в БД, восстанавливать нечего
     return
   }
 
   async shutdown(): Promise<void> {
     // Nothing to dispose
     return
+  }
+
+  async syncBlocksFromDatabase(): Promise<void> {
+    // Prisma store is already in sync with database
+    return
+  }
+
+  async clearCacheCompletely(_key?: string, _module?: string): Promise<void> {
+    // Prisma backend stores state in the database, nothing to clear
+    return
+  }
+
+  async healthCheck(): Promise<{ healthy: boolean; latency?: number; error?: string }> {
+    const startTime = Date.now()
+
+    try {
+      // Simple query to test database connection
+      await this.prisma.rateLimitState.count({
+        where: {},
+        take: 1
+      })
+
+      const latency = Date.now() - startTime
+
+      return {
+        healthy: true,
+        latency
+      }
+    } catch (error) {
+      const latency = Date.now() - startTime
+      return {
+        healthy: false,
+        latency,
+        error: error instanceof Error ? error.message : 'Database connection error'
+      }
+    }
   }
 
   private calculateWindowStart(now: Date, windowMs: number) {

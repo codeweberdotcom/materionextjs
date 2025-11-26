@@ -78,8 +78,17 @@ if (!isClient) {
       typeof message === 'string' ? console.log(`[INFO] ${message}`, meta) : console.log('[INFO]', message, meta),
     warn: (message: string | LoggerData, meta?: LoggerData) =>
       typeof message === 'string' ? console.warn(`[WARN] ${message}`, meta) : console.warn('[WARN]', message, meta),
-    error: (message: string | LoggerData, meta?: LoggerData) =>
-      typeof message === 'string' ? console.error(`[ERROR] ${message}`, meta) : console.error('[ERROR]', JSON.stringify(message, null, 2), meta),
+    error: (message: string | LoggerData, meta?: LoggerData) => {
+      if (typeof message === 'string') {
+        console.error(`[ERROR] ${message}`, meta)
+      } else {
+        try {
+          console.error('[ERROR]', JSON.stringify(message, null, 2), meta)
+        } catch (e) {
+          console.error('[ERROR] [Non-serializable object]', message, meta)
+        }
+      }
+    },
     debug: (message: string | LoggerData, meta?: LoggerData) =>
       typeof message === 'string' ? console.debug(`[DEBUG] ${message}`, meta) : console.debug('[DEBUG]', message, meta),
     close: noop,
@@ -98,7 +107,7 @@ if (!isClient) {
 }
 
 const emitLog = (level: 'info' | 'warn' | 'error' | 'debug', message: string | LoggerData, meta?: LoggerData) => {
-  const normalizedMessage = typeof message === 'string' ? message : JSON.stringify(message)
+  const normalizedMessage = typeof message === 'string' ? message : safeStringify(message)
 
   switch (level) {
     case 'info':
@@ -113,6 +122,14 @@ const emitLog = (level: 'info' | 'warn' | 'error' | 'debug', message: string | L
     case 'debug':
       logger.debug(normalizedMessage, meta)
       break
+  }
+}
+
+const safeStringify = (obj: any): string => {
+  try {
+    return JSON.stringify(obj)
+  } catch (e) {
+    return '[Non-serializable object]'
   }
 }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
-import { isAdmin, isSuperadmin } from '@/utils/permissions/permissions'
+import { isAdminByCode, isSuperadmin } from '@/utils/permissions/permissions'
 import { getCronStatus, recordCronStatus, runRateLimitEventCleanup, getRetentionDays } from '@/lib/retention'
 import logger from '@/lib/logger'
 
@@ -10,7 +10,7 @@ const CRON_NAME = 'retention_cleanup'
 export async function GET(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
-    if (!user || (!isAdmin(user) && !isSuperadmin(user))) {
+    if (!user || (!isAdminByCode(user) && !isSuperadmin(user))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
-    if (!user || (!isAdmin(user) && !isSuperadmin(user))) {
+    if (!user || (!isAdminByCode(user) && !isSuperadmin(user))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

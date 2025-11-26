@@ -1,58 +1,39 @@
-import fs from 'fs'
-
 import { NextRequest, NextResponse } from 'next/server'
-import path from 'path'
-
 
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-
 import { prisma } from '@/libs/prisma'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
+import { buildTranslationError } from './utils/error-helper'
+import { validateTranslation } from '@/lib/validations/translation-schemas'
+import { exportTranslationsToJSON } from '@/utils/translations/export-helper'
+import {
+  markTranslationOperation,
+  recordTranslationOperationDuration,
+  markTranslationEvent
+} from '@/lib/metrics/translations'
 
-
-// Function to export translations to JSON
-async function exportTranslationsToJSON() {
-  const translations = await prisma.translation.findMany({
-    where: { isActive: true },
-    orderBy: [
-      { language: 'asc' },
-      { namespace: 'asc' },
-      { key: 'asc' }
-    ]
-  })
-
-  const jsonData: Record<string, Record<string, Record<string, string>>> = {}
-
-  translations.forEach(t => {
-    if (!jsonData[t.language]) jsonData[t.language] = {}
-    if (!jsonData[t.language][t.namespace]) jsonData[t.language][t.namespace] = {}
-    jsonData[t.language][t.namespace][t.key] = t.value
-  })
-
-  const dictionariesPath = path.join(process.cwd(), 'src/data/dictionaries')
-
-  for (const [language, namespaces] of Object.entries(jsonData)) {
-    const filePath = path.join(dictionariesPath, `${language}.json`)
-
-    fs.writeFileSync(filePath, JSON.stringify(namespaces, null, 2))
-  }
-}
+// Коды ролей с доступом к переводам
+const ALLOWED_ROLE_CODES = ['SUPERADMIN', 'ADMIN']
 
 // GET - Get all translations (admin only)
 export async function GET(request: NextRequest) {
-  try {
-    const { user, session } = await requireAuth(request)
+  const startTime = Date.now()
 
-    // Check if user is admin
+  try {
+    const { user } = await requireAuth(request)
+
+    // Check if user is admin by role code
     const currentUser = await prisma.user.findUnique({
       where: { email: user.email },
       include: { role: true }
     })
 
-    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
+    if (!currentUser || !currentUser.role?.code || !ALLOWED_ROLE_CODES.includes(currentUser.role.code)) {
+      markTranslationOperation('read', 'error')
+
       return NextResponse.json(
-        { message: 'Admin access required' },
+        buildTranslationError('TRANSLATION_PERMISSION_DENIED', 'Admin access required'),
         { status: 403 }
       )
     }
@@ -66,12 +47,18 @@ export async function GET(request: NextRequest) {
       ]
     })
 
+    const durationSeconds = (Date.now() - startTime) / 1000
+
+    markTranslationOperation('read', 'success')
+    recordTranslationOperationDuration('read', durationSeconds)
+
     return NextResponse.json(translations)
   } catch (error) {
     console.error('Error fetching translations:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
+    markTranslationOperation('read', 'error')
+
+    return NextResponse.json(
+      buildTranslationError('TRANSLATION_INTERNAL_ERROR', 'Internal server error'),
       { status: 500 }
     )
   }
@@ -79,18 +66,22 @@ return NextResponse.json(
 
 // POST - Create new translation (admin only)
 export async function POST(request: NextRequest) {
-  try {
-    const { user, session } = await requireAuth(request)
+  const startTime = Date.now()
 
-    // Check if user is admin
+  try {
+    const { user } = await requireAuth(request)
+
+    // Check if user is admin by role code
     const currentUser = await prisma.user.findUnique({
       where: { email: user.email },
       include: { role: true }
     })
 
-    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
+    if (!currentUser || !currentUser.role?.code || !ALLOWED_ROLE_CODES.includes(currentUser.role.code)) {
+      markTranslationOperation('create', 'error')
+
       return NextResponse.json(
-        { message: 'Admin access required' },
+        buildTranslationError('TRANSLATION_PERMISSION_DENIED', 'Admin access required'),
         { status: 403 }
       )
     }
@@ -99,18 +90,30 @@ export async function POST(request: NextRequest) {
 
     try {
       body = await request.json()
-    } catch (error) {
-      return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
-    }
+    } catch {
+      markTranslationOperation('create', 'error')
 
-    const { key, language, value, namespace = 'common', isActive = true } = body
-
-    if (!key || !language || !value) {
       return NextResponse.json(
-        { message: 'Key, language, and value are required' },
+        buildTranslationError('TRANSLATION_INVALID_JSON', 'Invalid JSON'),
         { status: 400 }
       )
     }
+
+    // Validate with Zod
+    const validation = validateTranslation(body)
+
+    if (!validation.success) {
+      markTranslationOperation('create', 'error')
+
+      return NextResponse.json(
+        buildTranslationError('TRANSLATION_KEY_REQUIRED', 'Validation failed', {
+          errors: validation.error?.errors
+        }),
+        { status: 400 }
+      )
+    }
+
+    const { key, language, value, namespace, isActive } = validation.data!
 
     // Check if translation already exists
     const existingTranslation = await prisma.translation.findUnique({
@@ -124,8 +127,10 @@ export async function POST(request: NextRequest) {
     })
 
     if (existingTranslation) {
+      markTranslationOperation('create', 'error')
+
       return NextResponse.json(
-        { message: 'Translation already exists for this key, language, and namespace' },
+        buildTranslationError('TRANSLATION_ALREADY_EXISTS', 'Translation already exists for this key, language, and namespace'),
         { status: 409 }
       )
     }
@@ -141,24 +146,44 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Record event
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'translationManagement',
+      module: 'translationManagement',
+      type: 'translation.created',
+      message: `Translation created: ${newTranslation.key} (${newTranslation.language})`,
+      severity: 'info',
+      userId: currentUser.id,
+      details: {
+        translationId: newTranslation.id,
+        key: newTranslation.key,
+        language: newTranslation.language,
+        namespace: newTranslation.namespace
+      }
+    }))
+
     // Automatically export to JSON
     try {
       await exportTranslationsToJSON()
     } catch (exportError) {
       console.error('Error exporting to JSON:', exportError)
-
       // Don't fail the main request if export fails
     }
+
+    const durationSeconds = (Date.now() - startTime) / 1000
+
+    markTranslationOperation('create', 'success')
+    recordTranslationOperationDuration('create', durationSeconds)
+    markTranslationEvent('translation.created', 'info')
 
     return NextResponse.json(newTranslation)
   } catch (error) {
     console.error('Error creating translation:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
+    markTranslationOperation('create', 'error')
+
+    return NextResponse.json(
+      buildTranslationError('TRANSLATION_INTERNAL_ERROR', 'Internal server error'),
       { status: 500 }
     )
   }
 }
-
-

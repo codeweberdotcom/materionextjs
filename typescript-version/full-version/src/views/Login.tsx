@@ -59,6 +59,9 @@ const Login = ({ mode }: { mode: Mode }) => {
   const [isPasswordShown, setIsPasswordShown] = useState(false)
   const [errorState, setErrorState] = useState<ErrorType | null>(null)
   const [loading, setLoading] = useState(false)
+  const [isBlocked, setIsBlocked] = useState(false)
+  const [blockTimeLeft, setBlockTimeLeft] = useState(0)
+  const [warningMessage, setWarningMessage] = useState<string | null>(null)
 
   // Vars
   const darkImg = '/images/pages/auth-v2-mask-dark.png'
@@ -76,7 +79,7 @@ const Login = ({ mode }: { mode: Mode }) => {
   const { login } = useAuth()
 
   // Dictionary
-  const [dictionary, setDictionary] = useState<any>(null)
+  const [dictionary, setDictionary] = useState<Record<string, any> | null>(null)
 
   useEffect(() => {
     import(`@/data/dictionaries/${locale}.json`).then(module => setDictionary(module.default))
@@ -118,7 +121,10 @@ const Login = ({ mode }: { mode: Mode }) => {
   const handleClickShowPassword = () => setIsPasswordShown(show => !show)
 
   const onSubmit: SubmitHandler<FormData> = async (data: FormData) => {
+    if (isBlocked) return // Не отправлять если заблокировано
+
     setLoading(true)
+    setWarningMessage(null) // Очистить warning при новой попытке
 
     try {
       await login(data.email, data.password)
@@ -128,7 +134,56 @@ const Login = ({ mode }: { mode: Mode }) => {
 
       window.location.href = getLocalizedUrl(redirectURL, locale as Locale)
     } catch (error: any) {
-      setErrorState({ message: [error.message || 'Login failed'] })
+      // Очистить предыдущие сообщения
+      setWarningMessage(null)
+
+      // Проверить на rate limit блокировку
+      if (error.message?.includes('Too many login attempts') && error.retryAfter) {
+        setIsBlocked(true)
+        setBlockTimeLeft(error.retryAfter)
+        const minutes = Math.floor(error.retryAfter / 60)
+        const seconds = error.retryAfter % 60
+        const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`
+        setErrorState({
+          message: [`Слишком много попыток. Попробуйте через: ${timeString}`]
+        })
+
+        // Запустить таймер
+        const timer = setInterval(() => {
+          setBlockTimeLeft(prev => {
+            if (prev <= 1) {
+              setIsBlocked(false)
+              setErrorState(null)
+              clearInterval(timer)
+              return 0
+            }
+            const mins = Math.floor(prev / 60)
+            const secs = prev % 60
+            const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`
+            setErrorState({
+              message: [`Слишком много попыток. Попробуйте через: ${timeStr}`]
+            })
+            return prev - 1
+          })
+        }, 1000)
+      } else {
+        // Проверить на warning в ответе
+        if (error.warning) {
+          setWarningMessage(error.warning)
+        }
+
+        // Извлекаем сообщение об ошибке, обрабатывая разные форматы
+        let errorMsg = 'Login failed'
+        if (error?.message) {
+          errorMsg = typeof error.message === 'string' ? error.message : String(error.message)
+        } else if (error && typeof error === 'object') {
+          // Если error это объект, попробуем извлечь message
+          errorMsg = (error as any)?.message || (error as any)?.error?.message || JSON.stringify(error)
+        } else if (error) {
+          errorMsg = String(error)
+        }
+        setErrorState({ message: [errorMsg] })
+      }
       setLoading(false)
     }
   }
@@ -171,6 +226,14 @@ const Login = ({ mode }: { mode: Mode }) => {
             </Typography>
           </Alert>
 
+          {warningMessage && (
+            <Alert severity='warning' variant='filled'>
+              <Typography variant='body2'>
+                {warningMessage}
+              </Typography>
+            </Alert>
+          )}
+
           <form
             noValidate
             action={() => {}}
@@ -189,7 +252,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                   autoFocus
                   type='email'
                   label={dictionary?.navigation?.emailLabel || 'Email'}
-                  disabled={loading}
+                  disabled={loading || isBlocked}
                   onChange={e => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)
@@ -213,7 +276,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                   id='login-password'
                   type={isPasswordShown ? 'text' : 'password'}
                   autoComplete='current-password'
-                  disabled={loading}
+                  disabled={loading || isBlocked}
                   onChange={e => {
                     field.onChange(e.target.value)
                     errorState !== null && setErrorState(null)
@@ -228,7 +291,7 @@ const Login = ({ mode }: { mode: Mode }) => {
                             onClick={handleClickShowPassword}
                             onMouseDown={e => e.preventDefault()}
                             aria-label='toggle password visibility'
-                            disabled={loading}
+                            disabled={loading || isBlocked}
                           >
                             <i className={isPasswordShown ? 'ri-eye-off-line' : 'ri-eye-line'} />
                           </IconButton>
@@ -246,8 +309,13 @@ const Login = ({ mode }: { mode: Mode }) => {
                 {dictionary?.navigation?.forgotPassword || 'Forgot password?'}
               </Typography>
             </div>
-            <Button fullWidth variant='contained' type='submit' disabled={loading}>
-              {loading ? dictionary?.navigation?.loggingIn || 'Logging in...' : dictionary?.navigation?.login || 'Log In'}
+            <Button fullWidth variant='contained' type='submit' disabled={loading || isBlocked}>
+              {isBlocked
+                ? `Заблокировано (${Math.floor(blockTimeLeft / 60)}:${(blockTimeLeft % 60).toString().padStart(2, '0')})`
+                : loading
+                  ? dictionary?.navigation?.loggingIn || 'Logging in...'
+                  : dictionary?.navigation?.login || 'Log In'
+              }
             </Button>
             <div className='flex justify-center items-center flex-wrap gap-2'>
               <Typography>{dictionary?.navigation?.newUser || 'New on our platform?'}</Typography>

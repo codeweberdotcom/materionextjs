@@ -1,14 +1,1 @@
-{
-  "mcpServers": {
-    "sqlite": {
-      "command": "node",
-      "args": [
-        "c:/Users/web/AppData/Roaming/Kilo-Code/MCP/sqlite-server/build/index.js",
-        "--db-path",
-        "c:/laragon/www/materionextjs/typescript-version/full-version/src/prisma/dev3.db"
-      ],
-      "disabled": true,
-      "alwaysAllow": []
-    }
-  }
-}
+{"mcpServers":{}}

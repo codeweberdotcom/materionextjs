@@ -15,90 +15,210 @@
     "zipCode": "الرمز البريدي"
   },
   "navigation": {
-    "welcomeMessage": "مرحبا بك في ${templateName}!👋🏻",
-    "signInDescription": "يرجى تسجيل الدخول إلى حسابك وبدء المغامرة",
-    "demoCredentials": "البريد الإلكتروني: admin@example.com / كلمة المرور: admin123",
-    "emailLabel": "البريد الإلكتروني:",
-    "passwordLabel": "كلمة المرور",
-    "rememberMe": "تذكرني",
-    "newUser": "جديد على منصتنا؟",
-    "createAccount": "إنشاء حساب",
-    "or": "أو",
-    "signInWithGoogle": "تسجيل الدخول باستخدام Google",
     "academy": "أكاديمية",
     "account": "الحساب",
     "accountSettings": "إعدادت الحساب",
-    "actions": "أجراءات",
+    "action": "الإجراء",
+    "actions": "الإجراءات",
     "activate": "تفعيل",
     "activateConfirmMessage": "لن تتمكن من التراجع عن هذا!",
     "activateConfirmTitle": "هل أنت متأكد؟",
-    "add": "يضيف",
+    "active": "نشط",
+    "activity": "النشاط",
+    "add": "إضافة",
+    "addCity": "إضافة مدينة",
+    "addCityTitle": "إضافة مدينة جديدة",
+    "addCountry": "إضافة بلد",
+    "addCountryTitle": "إضافة بلد جديد",
+    "addCurrency": "إضافة عملة",
+    "addCurrencyTitle": "إضافة عملة جديدة",
+    "addDistrict": "إضافة منطقة",
+    "addDistrictTitle": "إضافة منطقة جديدة",
+    "addLanguage": "إضافة لغة",
+    "addLanguageTitle": "إضافة لغة جديدة",
+    "addNewCity": "إضافة مدينة جديدة",
+    "addNewCountry": "إضافة بلد جديد",
+    "addNewCurrency": "إضافة عملة جديدة",
+    "addNewDistrict": "إضافة منطقة جديدة",
+    "addNewLanguage": "إضافة لغة جديدة",
+    "addNewPermission": "إضافة إذن جديد",
+    "addNewRole": "إضافة دور جديد",
+    "addNewState": "إضافة ولاية جديدة",
+    "addNewTranslation": "إضافة ترجمة جديدة",
+    "addNewTranslationTitle": "إضافة ترجمة جديدة",
+    "addNewUser": "إضافة مستخدم جديد",
+    "addPermission": "إضافة إذن",
+    "addPermissionTitle": "إضافة إذن جديد",
     "addRole": "إضافة دور",
     "addRoleDescription": "أضف دورًا جديدًا، إذا لم يكن موجودًا.",
+    "addRoleTitle": "إضافة دور جديد",
+    "addState": "إضافة ولاية",
+    "addStateTitle": "إضافة ولاية جديدة",
+    "addTranslation": "إضافة ترجمة",
+    "addUser": "إضافة مستخدم",
+    "addUserTitle": "إضافة مستخدم جديد",
     "adminAccess": "وصول المسؤول",
     "adminAndSettings": "الإدارة والإعدادات",
     "ads": "الإعلانات",
     "advanced": "متقدم",
-    "auth": "المصادقة",
+    "all": "الكل",
     "allowedImageFormats": "مسموح بـ JPG، GIF أو PNG. الحد الأقصى للحجم 800K",
     "analytics": "تحليلات",
-    "upload": "تحميل الملفات",
+    "animalsNature": "الحيوانات والطبيعة",
+    "anonymization": "إخفاء الهوية",
+    "anonymize": "إخفاء الهوية",
+    "anonymizeTooltip": "سيتم استبدال البيانات الشخصية، لكن المستخدم سيبقى في النظام",
     "apex": "ذروة",
     "apps": "التطبيقات",
     "appsPages": "التطبيقات والصفحات",
+    "archived": "مؤرشف",
+    "assignedTo": "مخصص لـ",
+    "auth": "المصادقة",
     "authPages": "صفحات المصادقة",
+    "avatar": "الصورة الرمزية",
     "basic": "أساسي",
+    "beget": "Beget",
     "billingPlans": "الفواتير والخطط",
-    "calendar": "تقويم",
+    "blocking": "الحظر",
+    "bulkActivate": "تفعيل",
+    "bulkActivateConfirmMessage": "سيتم تفعيل المستخدمين المحددين ويمكنهم الوصول إلى النظام.",
+    "bulkDeactivate": "إلغاء تفعيل",
+    "bulkDeactivateConfirmMessage": "سيتم إلغاء تفعيل المستخدمين المحددين ولن يتمكنوا من الوصول إلى النظام.",
+    "bulkDelete": "حذف",
+    "bulkDeleteConfirmMessage": "لا يمكن التراجع عن هذا الإجراء. سيتم حذف جميع بيانات المستخدمين المحددين نهائياً.",
+    "bulkOperationFailed": "فشلت العملية",
+    "bulkOperationPartialSuccess": "تم إكمال العملية لـ ${successCount} من ${totalCount} مستخدمين",
+    "bulkOperationSuccess": "تم إكمال العملية بنجاح لـ ${successCount} مستخدمين",
+    "calendar": "التقويم",
     "cancel": "إلغاء",
     "cancelSubscription": "إلغاء الاشتراك",
     "cancelled": "ملغى",
     "cancelledActivation": "تم إلغاء التفعيل :)",
     "cancelledSuspension": "تم إلغاء التعليق :)",
-    "category": "فئة",
+    "category": "الفئة",
     "changePassword": "تغيير كلمة المرور",
     "charts": "الرسوم البيانية",
     "chartsMisc": "الرسوم البيانية ومتفرقات",
     "chat": "الدردشة",
+    "chatManagement": "إدارة الدردشة",
+    "chatNoMessagesPlaceholder": "اختر جهة اتصال لبدء المحادثة.",
+    "checkInternetConnection": "تحقق من اتصال الإنترنت",
     "checkout": "الدفع",
-    "communications": "الاتصالات",
+    "cityManagement": "إدارة المدن",
+    "clearAllNotifications": "مسح جميع الإشعارات",
     "comingSoon": "قريبا",
+    "communications": "الاتصالات",
+    "company": "الشركة",
     "companyLabel": "الشركة:",
-    "components": "عناصر",
+    "components": "العناصر",
     "confirmAccountDeactivation": "أؤكد إلغاء تنشيط حسابي",
+    "confirmBulkActivate": "هل أنت متأكد من أنك تريد تفعيل ${count} مستخدمين محددين؟",
+    "confirmBulkDeactivate": "هل أنت متأكد من أنك تريد إلغاء تفعيل ${count} مستخدمين محددين؟",
+    "confirmBulkDelete": "هل أنت متأكد من أنك تريد حذف ${count} مستخدمين محددين؟",
     "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+    "connectionFailed": "فشل الاتصال",
+    "connectionSuccessful": "الاتصال ناجح!",
     "connections": "الاتصالات",
+    "contact": "الاتصال",
+    "countries": "البلدان",
+    "countriesAndStates": "البلدان والولايات",
+    "countriesManagement": "إدارة البلدان",
+    "country": "البلد",
+    "countryCode": "رمز البلد",
     "countryLabel": "البلد:",
+    "countryManagement": "إدارة البلدان",
+    "countryName": "اسم البلد",
     "courseDetails": "تفاصيل الدورة",
     "create": "إنشاء",
+    "createAccount": "إنشاء حساب",
     "createDeal": "إنشاء صفقة",
+    "createTemplate": "إنشاء قالب",
+    "createdDate": "تاريخ الإنشاء",
     "crm": "إدارة علاقات العملاء",
+    "cron": "Cron",
+    "currencies": "العملات",
+    "currenciesManagement": "إدارة العملات",
+    "currency": "العملة",
+    "currencyCode": "رمز العملة",
+    "currencyManagement": "إدارة العملات",
+    "currencyName": "اسم العملة",
+    "currencySymbol": "رمز العملة",
     "currentPassword": "كلمة المرور الحالية",
     "currentPlan": "الخطة الحالية",
     "customers": "العملاء",
+    "dark": "داكن",
+    "darkMode": "الوضع الداكن",
     "dashboard": "لوحة القيادة",
     "dashboards": "لوحات القيادة",
+    "daysAgo": "{{count}} يوم",
     "deactivateAccount": "إلغاء تنشيط الحساب",
     "delete": "حذف",
     "deleteAccount": "حذف الحساب",
+    "deleteCity": "حذف المدينة",
+    "deleteCityConfirm": "هل أنت متأكد من أنك تريد حذف المدينة \"${name}\"?",
+    "deleteCountryConfirm": "هل أنت متأكد من أنك تريد حذف البلد \"${name}\"?",
+    "deleteCountryMessage": "لن تتمكن من التراجع عن البلد!",
+    "deleteCurrencyConfirm": "هل أنت متأكد من أنك تريد حذف العملة \"${name}\"?",
+    "deleteCurrencyMessage": "لن تتمكن من التراجع عن العملة!",
+    "deleteDistrict": "حذف المنطقة",
+    "deleteDistrictConfirm": "هل أنت متأكد من أنك تريد حذف المنطقة \"${name}\"?",
     "deleteRole": "حذف الدور",
     "deleteRoleConfirm": "هل أنت متأكد من أنك تريد حذف الدور \"${name}\"?",
-    "details": "تفاصيل",
+    "deleteTemplate": "حذف القالب",
+    "deleteTooltip": "سيتم حذف جميع بيانات المستخدم نهائياً",
+    "deleteTranslation": "حذف الترجمة",
+    "deleteUser": "حذف المستخدم",
+    "deleteUserConfirm": "هل أنت متأكد من أنك تريد حذف المستخدم \"${name}\"?",
+    "demoCredentials": "البريد الإلكتروني: admin@example.com / كلمة المرور: admin123",
+    "details": "التفاصيل",
     "dialogExamples": "أمثلة الحوار",
     "disabledMenu": "قائمة المعوقين",
-    "documentation": "توثيق",
+    "district": "المنطقة",
+    "districtCode": "رمز المنطقة",
+    "districtManagement": "إدارة المناطق",
+    "districtName": "اسم المنطقة",
+    "districts": "المناطق",
+    "districtsManagement": "إدارة المناطق",
+    "documentation": "التوثيق",
+    "documentsVerification": "التحقق من المستندات",
+    "download": "تحميل",
     "eCommerce": "التجارة الإلكترونية",
-    "edit": "يحرر",
-    "editUserInformation": "تحرير معلومات المستخدم",
+    "edit": "تعديل",
+    "editCity": "تعديل المدينة",
+    "editCityTitle": "تعديل المدينة",
+    "editCountryTitle": "تعديل البلد",
+    "editCurrencyTitle": "تعديل العملة",
+    "editDistrict": "تعديل المنطقة",
+    "editDistrictTitle": "تعديل المنطقة",
+    "editLanguageTitle": "تعديل اللغة",
+    "editPermissionTitle": "تعديل الإذن",
+    "editRoleTitle": "تعديل الدور",
+    "editStateTitle": "تعديل الولاية",
+    "editTemplate": "تعديل القالب",
+    "editTranslation": "تعديل الترجمة",
+    "editTranslationTitle": "تعديل الترجمة",
+    "editUserInformation": "تعديل معلومات المستخدم",
+    "editUserTitle": "تعديل المستخدم",
     "email": "البريد الإلكتروني",
+    "emailLabel": "البريد الإلكتروني:",
+    "emailTemplates": "قوالب البريد الإلكتروني",
+    "emailTemplatesManagement": "إدارة قوالب البريد الإلكتروني",
+    "error": "خطأ",
     "esc": "[esc]",
+    "eventsJournal": "أحداث النظام",
     "export": "تصدير",
+    "exportToJSON": "تصدير إلى JSON",
     "externalLink": "رابط خارجي",
+    "failedToSendMessage": "فشل في إرسال الرسالة",
     "failedToUpdateUser": "فشل في تحديث المستخدم",
     "faq": "التعليمات",
+    "feature": "ميزة",
+    "fieldRequired": "هذا الحقل مطلوب.",
+    "filters": "الفلاتر",
     "findAdministrators": "ابحث عن جميع حسابات مسؤولي شركتك وأدوارهم المرتبطة.",
     "firstName": "الاسم الأول",
-    "fleet": "أسطول",
+    "fleet": "الأسطول",
+    "foodDrink": "الطعام والشراب",
     "forgotPassword": "هل نسيت كلمة السر",
     "forgotPasswordV1": "نسيت كلمة المرور v1",
     "forgotPasswordV2": "نسيت كلمة المرور v2",
@@ -108,619 +228,374 @@
     "formWizard": "معالج النماذج",
     "formsAndCharts": "النماذج والرسوم البيانية",
     "formsAndTables": "النماذج والجداول",
-    "foundation": "مؤسسة",
+    "foundation": "المؤسسة",
     "frontPages": "الصفحات الأولى",
+    "fullDeletion": "الحذف الكامل",
+    "fullName": "الاسم الكامل",
     "gamification": "التلعيب",
+    "gmail": "Gmail",
+    "goToChat": "الذهاب إلى الدردشة",
     "helpCenter": "مركز المساعدة",
-    "invoice": "فاتورة",
+    "hoursAgo": "{{count}} ساعة",
+    "importFromJSON": "استيراد من JSON",
+    "inactive": "غير نشط",
+    "invoice": "الفاتورة",
     "itemWithBadge": "العنصر مع شارة",
+    "justNow": "الآن",
     "kanban": "كانبان",
     "landing": "الهبوط",
+    "language": "اللغة",
+    "languageCode": "رمز اللغة",
+    "languageManagement": "إدارة اللغات",
+    "languageName": "اسم اللغة",
+    "languages": "اللغات",
+    "languagesManagement": "إدارة اللغات",
     "lastName": "الاسم الأخير",
-    "list": "قائمة",
+    "light": "فاتح",
+    "lightMode": "الوضع الفاتح",
+    "list": "القائمة",
+    "loading": "جارٍ التحميل...",
+    "loadingButton": "جارٍ التحميل...",
+    "loadingCities": "جارٍ تحميل المدن...",
     "loadingCountries": "جارٍ تحميل البلدان...",
+    "loadingCurrencies": "جارٍ تحميل العملات...",
+    "loadingDistricts": "جارٍ تحميل المناطق...",
+    "loadingLanguages": "جارٍ تحميل اللغات...",
+    "loadingMessages": "جارٍ تحميل الرسائل...",
+    "loadingPermissions": "جارٍ تحميل الأذونات...",
+    "loadingRoles": "جارٍ تحميل الأدوار...",
+    "loadingSmtpSettings": "جارٍ تحميل إعدادات SMTP...",
+    "loadingStates": "جارٍ تحميل الولايات...",
+    "loadingStatus": "جارٍ التحميل...",
+    "loadingTranslations": "جارٍ تحميل الترجمات...",
+    "loadingUserData": "جارٍ تحميل بيانات المستخدم...",
+    "loadingUsers": "جارٍ تحميل المستخدمين...",
+    "loggingIn": "جارٍ تسجيل الدخول...",
+    "loggingOut": "جارٍ تسجيل الخروج...",
     "login": "تسجيل الدخول",
     "loginV1": "تسجيل الدخول v1",
     "loginV2": "تسجيل الدخول الإصدار 2",
-    "loggingIn": "جارٍ تسجيل الدخول...",
-    "loggingOut": "جارٍ تسجيل الخروج...",
     "logistics": "اللوجستية",
     "logout": "تسجيل الخروج",
+    "longAgo": "منذ وقت طويل",
+    "mailru": "Mail.ru",
+    "maintenance": "Cron",
     "manageReviews": "إدارة المراجعات",
     "menuExamples": "أمثلة القائمة",
     "menuLevel2": "مستوى القائمة 2",
     "menuLevel3": "مستوى القائمة 3",
     "menuLevels": "مستويات القائمة",
+    "minutesAgo": "{{count}} دقيقة",
     "miscellaneous": "متفرقات",
     "moderation": "الإشراف",
+    "monitoring": "المراقبة",
+    "monitoringApplicationInsights": "رؤى التطبيق",
+    "monitoringDashboard": "لوحة المعلومات",
+    "monitoringErrorTracking": "تتبع الأخطاء",
+    "monitoringMetrics": "المؤشرات",
+    "monitoringTesting": "الاختبار",
     "muiTables": "جداول MUI",
     "myCourses": "دوراتي",
     "myProfile": "ملفي الشخصي",
+    "name": "الاسم",
+    "namespace": "مساحة الاسم",
     "newPassword": "كلمة مرور جديدة",
+    "newUser": "جديد على منصتنا؟",
     "noCountriesFound": "لم يتم العثور على بلدان",
     "noDataAvailable": "لا توجد بيانات متاحة",
     "noDescription": "لا يوجد وصف",
+    "noNotificationsFound": "لم يتم العثور على إشعارات!",
     "noResultFor": "لا توجد نتائج لـ \"${searchValue}\"",
+    "noTranslationsAvailable": "لا توجد ترجمات متاحة",
     "notAuthorized401": "غير مصرح به - 401",
     "notifications": "الإشعارات",
-    "totalNotifications": "إجمالي الإشعارات",
-    "clearAllNotifications": "مسح جميع الإشعارات",
-    "viewAllNotifications": "عرض جميع الإشعارات",
-    "searchNotifications": "البحث في الإشعارات",
-    "noNotificationsFound": "لم يتم العثور على إشعارات!",
-    "goToChat": "الذهاب إلى الدردشة",
-    "chatNoMessagesPlaceholder": "اختر جهة اتصال لبدء المحادثة.",
-    "all": "الكل",
-    "unread": "غير مقروء",
-    "read": "مقروء",
-    "archived": "مؤرشف",
-    "trash": "سلة المهملات",
-    "types": "الأنواع",
-    "system": "النظام",
-    "security": "الأمان",
-    "user": "المستعمل",
-    "update": "التحديث",
-    "error": "خطأ",
-    "feature": "ميزة",
-    "chatManagement": "إدارة الدردشة",
+    "objects": "الأشياء",
     "of": "من",
-    "unreadChatMessages": "لديك ${count} رسائل غير مقروءة في الدردشة.",
-    "unreadMessages": "رسائل غير مقروءة",
-    "restore": "استعادة",
-    "unreadChatTitle": "لديك رسائل غير مقروءة في الدردشة",
-    "orders": "أوامر",
-    "others": "آحرون",
+    "offline": "غير متصل",
+    "offlineLimitReached": "يمكنك تجهيز رسالة واحدة فقط في وضع عدم الاتصال. أعد الاتصال لإرسال المزيد.",
+    "online": "متصل",
+    "or": "أو",
+    "orders": "الطلبات",
+    "other": "آخر",
+    "others": "آخرون",
+    "outlook": "Outlook",
     "pageNotFound404": "الصفحة غير موجودة - 404",
     "pages": "الصفحات",
+    "passwordLabel": "كلمة المرور",
     "passwordRequirements": "متطلبات كلمة المرور:",
-    "payment": "قسط",
-    "permissions": "أذونات",
+    "payment": "الدفع",
+    "permissionDescription": "وصف الإذن",
+    "permissionName": "اسم الإذن",
+    "permissions": "الأذونات",
+    "permissionsManagement": "إدارة الأذونات",
+    "pickEmoji": "اختر رمز تعبيري…",
+    "plan": "الخطة",
     "planLabel": "الخطة:",
     "popularSearches": "عمليات البحث الشائعة",
     "preview": "معاينة",
+    "previewTemplate": "معاينة القالب",
     "pricing": "التسعير",
-    "products": "منتجات",
+    "products": "المنتجات",
     "projectDone": "المشاريع المكتملة",
     "propertyListing": "قائمة الممتلكات",
     "raiseSupport": "رفع الدعم",
-    "reactTable": "جدول رد الفعل",
+    "rambler": "Rambler",
+    "rateLimitCategory": "البلاكات",
+    "rateLimitEvents": "إحصائيات الحدود",
+    "rateLimitManagement": "إدارة حدود الطلبات",
+    "rateLimitMessage": "أنت ترسل الرسائل بشكل متكرر جداً، حاول مرة أخرى خلال ${countdown} ثانية",
+    "rateLimitMonitorWarning": "قد تُعتبر الرسائل المتكررة جداً رسائل مزعجة. يرجى الإبطاء.",
+    "rateLimitWarning": "أنت ترسل رسائل كثيراً. لم يتبق سوى ${countdown} رسائل قبل الحظر.",
+    "reactTable": "جدول React",
+    "read": "قراءة",
     "readPermission": "قراءة",
-    "refresh": "تحديث",
+    "recently": "مؤخراً",
     "recharts": "يعيد رسم الخرائط",
     "referrals": "الإحالات",
-    "register": "يسجل",
+    "refresh": "تحديث",
+    "register": "تسجيل",
     "registerMultiSteps": "تسجيل متعدد الخطوات",
     "registerV1": "تسجيل الإصدار 1",
     "registerV2": "تسجيل الإصدار 2",
+    "registrationModule": "التسجيلات",
+    "registrationSettings": "إعدادات التسجيل",
+    "regru": "Reg.ru",
+    "rememberMe": "تذكرني",
     "reset": "إعادة تعيين",
     "resetPassword": "إعادة تعيين كلمة المرور",
     "resetPasswordV1": "إعادة تعيين كلمة المرور v1",
     "resetPasswordV2": "إعادة تعيين كلمة المرور الإصدار 2",
-    "role": "دور",
+    "restore": "استعادة",
+    "role": "الدور",
+    "roleCreatedSuccessfully": "تم إنشاء الدور بنجاح",
     "roleDeleteError": "لا يمكن حذف الدور \"${roleName}\" لأن هناك مستخدمين مرتبطين بهذا الدور. يرجى تغيير الدور للمستخدمين التاليين أولاً:",
+    "roleDeleteFailed": "فشل في حذف الدور",
+    "roleDeletedSuccessfully": "تم حذف الدور \"${roleName}\" بنجاح",
+    "roleDescription": "وصف الدور",
     "roleLabel": "الدور:",
+    "roleManagement": "إدارة الأدوار",
+    "roleName": "اسم الدور",
     "roleRequired": "الدور مطلوب",
+    "roleUpdatedSuccessfully": "تم تحديث الدور بنجاح",
     "roles": "الأدوار",
     "rolesDescription": "يوفر الدور الوصول إلى القوائم والميزات المحددة مسبقًا بحيث يمكن للمسؤول، حسب الدور المخصص، الوصول إلى ما يحتاجه",
     "rolesList": "قائمة الأدوار",
+    "rolesManagement": "إدارة الأدوار",
     "rolesPermissions": "الأدوار والأذونات",
     "rowsPerPage": "صفوف في الصفحة",
     "saveChanges": "حفظ التغييرات",
     "saving": "حفظ...",
     "search": "بحث",
+    "searchCity": "البحث عن مدينة",
     "searchCountries": "البحث في البلدان...",
+    "searchCountry": "البحث عن بلد",
+    "searchCurrency": "البحث عن عملة",
+    "searchDistrict": "البحث عن منطقة",
+    "searchLanguage": "البحث عن لغة",
+    "searchNotifications": "البحث في الإشعارات",
+    "searchPermission": "البحث عن إذن",
+    "searchRole": "البحث عن دور",
     "searchShortcut": "بحث ⌘K",
+    "searchState": "البحث عن ولاية",
+    "searchTranslations": "البحث في الترجمات...",
     "searchUser": "البحث عن مستخدم",
+    "security": "الأمان",
+    "selectAll": "اختر الكل",
     "selectContact": "اختر جهة اتصال لبدء المحادثة.",
+    "selectCountry": "اختر البلد",
+    "selectDeletionMethod": "اختر طريقة حذف بيانات المستخدم:",
+    "selectPlan": "اختر الخطة",
+    "selectPlanFilter": "اختر الخطة",
+    "selectRole": "اختر الدور",
+    "selectRoleFilter": "اختر الدور",
+    "selectStatus": "اختر الحالة",
+    "selectStatusFilter": "اختر الحالة",
     "send": "إرسال",
     "sending": "جارٍ الإرسال...",
-    "failedToSendMessage": "فشل في إرسال الرسالة",
-    "checkInternetConnection": "تحقق من اتصال الإنترنت",
-    "offlineLimitReached": "يمكنك تجهيز رسالة واحدة فقط في وضع عدم الاتصال. أعد الاتصال لإرسال المزيد.",
-    "rateLimitMessage": "أنت ترسل الرسائل بشكل متكرر جداً، حاول مرة أخرى خلال ${countdown} ثانية",
-    "rateLimitWarning": "أنت ترسل رسائل كثيراً. لم يتبق سوى ${countdown} رسائل قبل الحظر.",
-    "rateLimitMonitorWarning": "قد تُعتبر الرسائل المتكررة جداً رسائل مزعجة. يرجى الإبطاء.",
-    "waitMessage": "انتظر ${countdown}ث",
-    "pickEmoji": "اختر رمز تعبيري…",
-    "smileysPeople": "الوجوه الضاحكة والأشخاص",
-    "animalsNature": "الحيوانات والطبيعة",
-    "foodDrink": "الطعام والشراب",
-    "activity": "النشاط",
-    "travelPlaces": "السفر والأماكن",
-    "objects": "الأشياء",
-    "symbols": "الرموز",
-    "light": "فاتح",
-    "dark": "داكن",
-    "lightMode": "الوضع الفاتح",
-    "darkMode": "الوضع الداكن",
-    "systemMode": "وضع النظام",
-    "loading": "جارٍ التحميل...",
-    "loadingMessages": "جارٍ تحميل الرسائل...",
-    "loadingButton": "جارٍ التحميل...",
-    "selectAll": "اختر الكل",
-    "selectPlanFilter": "اختر الخطة",
-    "selectRoleFilter": "اختر الدور",
-    "selectStatusFilter": "اختر الحالة",
     "setRolePermissions": "تعيين أذونات الدور",
-    "settings": "إعدادات",
-    "shortcuts": "اختصارات",
-    "statistics": "إحصائيات",
+    "settings": "الإعدادات",
+    "shortcuts": "الاختصارات",
+    "signInDescription": "يرجى تسجيل الدخول إلى حسابك وبدء المغامرة",
+    "signInWithGoogle": "تسجيل الدخول باستخدام Google",
+    "smileysPeople": "الوجوه الضاحكة والأشخاص",
+    "smsRuSettings": "إعدادات SMS.ru",
+    "smtpEncryption": "التشفير",
+    "smtpFromEmail": "البريد الإلكتروني المرسل",
+    "smtpFromName": "اسم المرسل",
+    "smtpHost": "مضيف SMTP",
+    "smtpManagement": "إدارة SMTP",
+    "smtpPassword": "كلمة مرور SMTP",
+    "smtpPort": "منفذ SMTP",
+    "smtpPresets": "الإعدادات المسبقة للموفر",
+    "smtpSettings": "إعدادات SMTP",
+    "smtpUsername": "اسم مستخدم SMTP",
+    "state": "الولاية",
+    "stateCode": "رمز الولاية",
+    "stateManagement": "إدارة الولايات",
+    "stateName": "اسم الولاية",
+    "states": "الولايات",
+    "statesManagement": "إدارة الولايات",
+    "statistics": "الإحصائيات",
+    "status": "الحالة",
     "statusLabel": "الحالة:",
+    "submit": "إرسال",
     "successfully": "بنجاح",
     "suspend": "تعليق",
     "suspendConfirmMessage": "لن تتمكن من التراجع عن هذا!",
     "suspendConfirmTitle": "هل أنت متأكد؟",
+    "symbols": "الرموز",
+    "system": "النظام",
+    "systemMode": "وضع النظام",
     "taskDone": "المهام المكتملة",
+    "templateContent": "محتوى البريد الإلكتروني",
+    "templateName": "اسم القالب",
+    "templateSubject": "موضوع البريد الإلكتروني",
+    "templateVariables": "متغيرات القالب",
+    "testConnection": "اختبار الاتصال",
+    "testingConnection": "جارٍ الاختبار...",
     "toClose": "للإغلاق",
     "toNavigate": "للتنقل",
     "toOpen": "للفتح",
+    "totalNotifications": "إجمالي الإشعارات",
     "totalUsers": "إجمالي ${count} مستخدمين",
     "totalUsersCount": "إجمالي ${count} مستخدمين",
     "totalUsersWithRoles": "إجمالي المستخدمين مع أدوارهم",
-    "typeMessage": "ابدأ في كتابة رسالة...",
+    "translation": "الترجمة",
+    "translationKey": "مفتاح الترجمة",
+    "translationManagement": "إدارة الترجمات",
+    "translationValue": "قيمة الترجمة",
+    "translations": "الترجمات",
+    "translationsImportSuccess": "تم استيراد الترجمات من JSON بنجاح. تم استيراد ${count} ترجمة.",
+    "trash": "سلة المهملات",
+    "travelPlaces": "السفر والأماكن",
     "trySearchingFor": "جرب البحث عن",
     "twoSteps": "خطوتين",
     "twoStepsV1": "خطوتين v1",
     "twoStepsV2": "خطوتان - الإصدار 2",
+    "typeMessage": "ابدأ في كتابة رسالة...",
+    "types": "الأنواع",
     "underMaintenance": "تحت الصيانة",
+    "unread": "غير مقروء",
+    "unreadChatMessages": "لديك ${count} رسائل غير مقروءة في الدردشة.",
+    "unreadChatTitle": "لديك رسائل غير مقروءة في الدردشة",
+    "unreadMessages": "رسائل غير مقروءة",
+    "update": "التحديث",
+    "updateCity": "تحديث المدينة",
+    "updateCountry": "تحديث البلد",
+    "updateCurrency": "تحديث العملة",
+    "updateDistrict": "تحديث المنطقة",
+    "updateLanguage": "تحديث اللغة",
+    "updatePermission": "تحديث الإذن",
+    "updateRole": "تحديث الدور",
+    "updateState": "تحديث الولاية",
+    "updateTranslation": "تحديث الترجمة",
+    "updateUser": "تحديث المستخدم",
     "updatingUserDetails": "سيتلقى تحديث تفاصيل المستخدم تدقيق الخصوصية.",
     "upgradePlan": "ترقية الخطة",
+    "upload": "تحميل الملفات",
     "uploadNewPhoto": "رفع صورة جديدة",
+    "user": "المستعمل",
     "userActivated": "تم تفعيل المستخدم.",
+    "userDeleted": "تم حذف المستخدم",
     "userProfile": "ملف تعريفي للمستخدم",
     "userSuspended": "تم تعليق المستخدم.",
     "userUpdatedSuccessfully": "تم تحديث المستخدم بنجاح!",
+    "username": "اسم المستخدم",
     "usernameLabel": "اسم المستخدم:",
     "usersList": "المستخدمين",
-    "roleManagement": "إدارة الأدوار",
-    "countryManagement": "إدارة البلدان",
-    "currencyManagement": "إدارة العملات",
-    "stateManagement": "إدارة الولايات",
-    "cityManagement": "إدارة المدن",
-    "districtManagement": "إدارة المناطق",
-    "languageManagement": "إدارة اللغات",
-    "translationManagement": "إدارة الترجمات",
-    "emailTemplatesManagement": "إدارة قوالب البريد الإلكتروني",
-    "smtpManagement": "إدارة SMTP",
-    "rateLimitCategory": "البلاكات",
-    "registrationModule": "التسجيلات",
-    "rateLimitManagement": "إدارة حدود الطلبات",
-    "rateLimitEvents": "إحصائيات الحدود",
-    "eventsJournal": "أحداث النظام",
     "verifyEmail": "التحقق من البريد الإلكتروني",
     "verifyEmailV1": "التحقق من البريد الإلكتروني الإصدار 1",
     "verifyEmailV2": "التحقق من البريد الإلكتروني الإصدار 2",
-    "view": "رأي",
+    "view": "عرض",
+    "viewAllNotifications": "عرض جميع الإشعارات",
+    "viewRole": "عرض الدور",
+    "viewRoleTitle": "عرض الدور",
+    "waitMessage": "انتظر ${countdown}ث",
+    "welcomeMessage": "مرحبا بك في ${templateName}!👋🏻",
     "widgetExamples": "أمثلة القطعة",
     "wizardExamples": "أمثلة على المعالج",
     "write": "كتابة",
-    "yesActivateUser": "نعم، فعل المستخدم!",
-    "yesDeleteRole": "نعم، احذف الدور!",
-    "yesSuspendUser": "نعم، علق المستخدم!",
-    "online": "متصل",
-    "offline": "غير متصل",
-    "loadingStatus": "جارٍ التحميل...",
-    "justNow": "الآن",
-    "recently": "مؤخراً",
-    "minutesAgo": "{{count}} دقيقة",
-    "hoursAgo": "{{count}} ساعة",
-    "daysAgo": "{{count}} يوم",
-    "longAgo": "منذ وقت طويل",
-    "blocking": "الحظر",
-    "districts": "المناطق",
-    "monitoring": "المراقبة",
-    "monitoringOverview": "نظرة عامة",
-    "monitoringMetrics": "المؤشرات",
-    "monitoringErrorTracking": "تتبع الأخطاء",
-    "monitoringApplicationInsights": "رؤى التطبيق",
-    "maintenance": "Cron",
-    "cron": "Cron",
-    "cities": "المدن",
-    "references": "المرجعيات",
-    "smtpSettings": "إعدادات SMTP",
-    "userList": "قائمة المستخدمين",
-    "countriesAndStates": "الدول والمناطق",
-    "states": "الولايات / المناطق",
-    "userSettings": "إعدادات المستخدم",
-    "currencies": "العملات",
-    "languages": "اللغات",
-    "emailTemplates": "قوالب البريد",
-    "translations": "الترجمات",
-    "countries": "الدول",
-    "Editor": "Editor",
-    "SEO": "SEO",
-    "Support": "Support",
-    "action": "Action",
-    "active": "Active",
-    "addCity": "Add City",
-    "addCityTitle": "Add New City",
-    "addCountry": "Add Country",
-    "addCountryTitle": "Add New Country",
-    "addCurrency": "Add Currency",
-    "addCurrencyTitle": "Add New Currency",
-    "addDistrict": "Add District",
-    "addDistrictTitle": "Add New District",
-    "addLanguage": "Add Language",
-    "addLanguageTitle": "Add New Language",
-    "addNewCity": "Add New City",
-    "addNewCountry": "Add New Country",
-    "addNewCurrency": "Add New Currency",
-    "addNewDistrict": "Add New District",
-    "addNewLanguage": "Add New Language",
-    "addNewPermission": "Add New Permission",
-    "addNewRole": "Add New Role",
-    "addNewState": "Add New State",
-    "addNewTranslation": "Add New Translation",
-    "addNewTranslationTitle": "Add New Translation",
-    "addNewUser": "Add New User",
-    "addPermission": "Add Permission",
-    "addPermissionTitle": "Add New Permission",
-    "addRoleTitle": "Add New Role",
-    "editRoleTitle": "Edit Role",
-    "submit": "Submit",
-    "addState": "Add State",
-    "addStateTitle": "Add New State",
-    "addTranslation": "Add Translation",
-    "addUser": "Add User",
-    "addUserTitle": "Add New User",
-    "assignedTo": "Assigned To",
-    "avatar": "Avatar",
-    "citiesManagement": "Cities Management",
-    "city": "City",
-    "cityCode": "City Code",
-    "cityName": "City Name",
-    "code": "Code",
-    "company": "Company",
-    "contact": "Contact",
-    "countriesManagement": "Countries Management",
-    "country": "Country",
-    "countryCode": "Country Code",
-    "countryName": "Country Name",
-    "createdDate": "Created Date",
-    "currenciesManagement": "Currencies Management",
-    "currency": "Currency",
-    "currencyCode": "Currency Code",
-    "currencyName": "Currency Name",
-    "currencySymbol": "Currency Symbol",
-    "deleteCity": "Delete City",
-    "deleteCityConfirm": "Are you sure you want to delete city \"${name}\"?",
-    "deleteCountryConfirm": "Are you sure you want to delete country \"${name}\"?",
-    "deleteCountryMessage": "You won't be able to revert country!",
-    "deleteCurrencyConfirm": "Are you sure you want to delete currency \"${name}\"?",
-    "deleteCurrencyMessage": "You won't be able to revert currency!",
-    "deleteDistrict": "Delete District",
-    "deleteDistrictConfirm": "Are you sure you want to delete district \"${name}\"?",
-    "deleteTranslation": "Delete Translation",
-    "deleteUser": "Delete User",
-    "deleteUserConfirm": "Are you sure you want to delete user \"${name}\"?",
-    "district": "District",
-    "districtCode": "District Code",
-    "districtName": "District Name",
-    "districtsManagement": "Districts Management",
-    "download": "Download",
-    "editCity": "Edit City",
-    "editCityTitle": "Edit City",
-    "editCountryTitle": "Edit Country",
-    "editCurrencyTitle": "Edit Currency",
-    "editDistrict": "Edit District",
-    "editDistrictTitle": "Edit District",
-    "editLanguageTitle": "Edit Language",
-    "editPermissionTitle": "Edit Permission",
-    "editStateTitle": "Edit State",
-    "editTranslation": "Edit Translation",
-    "editTranslationTitle": "Edit Translation",
-    "editUserTitle": "Edit User",
-    "exportToJSON": "Export to JSON",
-    "fieldRequired": "This field is required.",
-    "filters": "Filters",
-    "fullName": "Full Name",
-    "importFromJSON": "Import from JSON",
-    "inactive": "Inactive",
-    "language": "Language",
-    "languageCode": "Language Code",
-    "languageName": "Language Name",
-    "languagesManagement": "Languages Management",
-    "loadingCities": "Loading cities...",
-    "loadingCurrencies": "Loading currencies...",
-    "loadingDistricts": "Loading districts...",
-    "loadingLanguages": "Loading languages...",
-    "loadingPermissions": "Loading permissions...",
-    "loadingRoles": "Loading roles...",
-    "loadingStates": "Loading states...",
-    "loadingTranslations": "Loading translations...",
-    "loadingUserData": "Loading user data...",
-    "loadingUsers": "Loading users...",
-    "name": "Name",
-    "namespace": "Namespace",
-    "noTranslationsAvailable": "No translations available",
-    "permissionDescription": "Permission Description",
-    "permissionName": "Permission Name",
-    "permissionsManagement": "Permissions Management",
-    "plan": "Plan",
-    "roleDeletedSuccessfully": "Role \"${roleName}\" deleted successfully",
-    "roleCreatedSuccessfully": "Role created successfully",
-    "roleUpdatedSuccessfully": "Role updated successfully",
-    "roleDeleteFailed": "Failed to delete role",
-    "roleDescription": "Role Description",
-    "roleName": "Role Name",
-    "rolesManagement": "Roles Management",
-    "searchCity": "Search City",
-    "searchCountry": "Search Country",
-    "searchCurrency": "Search Currency",
-    "searchDistrict": "Search District",
-    "searchLanguage": "Search Language",
-    "searchPermission": "Search Permission",
-    "searchRole": "Search Role",
-    "searchState": "Search State",
-    "searchTranslations": "Search translations...",
-    "selectCountry": "Select Country",
-    "selectPlan": "Select Plan",
-    "selectRole": "Select Role",
-    "selectStatus": "selectStatus",
-    "smtpHost": "SMTP Host",
-    "smtpPort": "SMTP Port",
-    "smtpUsername": "SMTP Username",
-    "smtpPassword": "SMTP Password",
-    "smtpEncryption": "Encryption",
-    "smtpFromEmail": "From Email",
-    "smtpFromName": "From Name",
-    "loadingSmtpSettings": "Loading SMTP settings...",
-    "testConnection": "اختبار الاتصال",
-    "testingConnection": "جارٍ الاختبار...",
-    "connectionSuccessful": "Connection successful!",
-    "connectionFailed": "Connection failed",
-    "templateName": "Template Name",
-    "templateSubject": "Email Subject",
-    "templateContent": "Email Content",
-    "createTemplate": "Create Template",
-    "editTemplate": "Edit Template",
-    "deleteTemplate": "Delete Template",
-    "templateVariables": "Template Variables",
-    "previewTemplate": "Preview Template",
-    "smtpPresets": "Provider Presets",
-    "gmail": "Gmail",
-    "outlook": "Outlook",
-    "yandex": "Yandex",
-    "mailru": "Mail.ru",
-    "beget": "Beget",
     "yahoo": "Yahoo",
-    "regru": "Reg.ru",
-    "rambler": "Rambler",
-    "other": "Other",
-    "state": "State",
-    "stateCode": "State Code",
-    "stateName": "State Name",
-    "statesManagement": "States Management",
-    "status": "Status",
-    "translation": "Translation",
-    "translationKey": "Translation Key",
-    "translationValue": "Translation Value",
-    "translationsImportSuccess": "Translations imported from JSON successfully. Imported ${count} translations.",
-    "updateCity": "Update City",
-    "updateCountry": "Update Country",
-    "updateCurrency": "Update Currency",
-    "updateDistrict": "Update District",
-    "updateLanguage": "Update Language",
-    "updatePermission": "Update Permission",
-    "updateRole": "Update Role",
-    "updateState": "Update State",
-    "updateTranslation": "Update Translation",
-    "updateUser": "Update User",
-    "userEmail": "User Email",
-    "userManagement": "User Management",
-    "userName": "User Name",
-    "userRole": "User Role",
-    "username": "Username",
-    "yesDeleteCountry": "Yes, Delete Country!",
-    "yesDeleteCurrency": "Yes, Delete Currency!",
-    "monitoringTesting": "الاختبار"
+    "yandex": "Yandex",
+    "yesActivateUser": "نعم، فعل المستخدم!",
+    "yesDeleteCountry": "نعم، احذف البلد!",
+    "yesDeleteCurrency": "نعم، احذف العملة!",
+    "yesDeleteRole": "نعم، احذف الدور!",
+    "yesSuspendUser": "نعم، علق المستخدم!"
   },
   "rateLimit": {
-    "title": "إدارة حدود الطلبات",
-    "description": "راقب نوافذ التقييد وعمليات الحظر النشطة وأزل الحظر عند الحاجة.",
-    "refresh": "تحديث البيانات",
-    "summaryHeading": "ملخص الوحدة",
-    "summaryRequests": "الطلبات في كل نافذة",
-    "summaryBlocked": "المستخدمون المحظورون",
-    "summaryWindows": "النوافذ النشطة",
-    "windowSize": "النافذة: ${minutes} دقيقة",
-    "loadSummaryError": "تعذّر تحميل ملخص حدود الطلبات",
-    "loadError": "تعذّر تحميل بيانات حدود الطلبات",
-    "searchPlaceholder": "ابحث عن مستخدم أو معرف أو عنوان IP",
-    "moduleFilter": "الوحدة",
-    "moduleAll": "كل الوحدات",
-    "onlyBlocked": "محجوبون فقط",
-    "noData": "لا توجد سجلات حدود للمرشحات المحددة.",
-    "columnUser": "المستخدم / المفتاح",
-    "columnModule": "الوحدة",
-    "columnUsage": "الاستهلاك",
-    "columnWindow": "النافذة",
-    "columnStatus": "الحالة",
-    "columnActions": "الإجراءات",
-    "statusBlocked": "محظور",
-    "statusBlockedWithTimer": "محظور حتى ${time}",
-    "statusActive": "نشط",
-    "manualUsage": "حظر يدوي",
-    "manualReasonLabel": "السبب",
     "actionClear": "إلغاء الحظر",
-    "clearSuccess": "تمت إعادة ضبط الحد بنجاح",
-    "clearError": "تعذّر إعادة ضبط الحد",
-    "viewingLabel": "إظهار ${count} من ${total}",
-    "loadMore": "تحميل المزيد",
-    "noAccess": "ليست لديك صلاحية للوصول إلى هذا القسم.",
-    "blockListTitle": "حالات حدود الطلبات",
     "blockListSubtitle": "نوافذ نشطة، رسائل في الانتظار وحظر يدوي",
-    "configEditButton": "تعديل الحدود",
-    "configSectionTitle": "إعدادات الحد",
-    "configMaxRequests": "أقصى عدد للرسائل",
-    "configWindowMinutes": "النافذة (بالدقائق)",
+    "blockListTitle": "حالات حدود الطلبات",
+    "clearError": "تعذّر إعادة ضبط الحد",
+    "clearSuccess": "تمت إعادة ضبط الحد بنجاح",
+    "columnActions": "الإجراءات",
+    "columnModule": "الوحدة",
+    "columnStatus": "الحالة",
+    "columnUsage": "الاستهلاك",
+    "columnUser": "المستخدم / المفتاح",
+    "columnWindow": "النافذة",
     "configBlockMinutes": "مدة الحظر (بالدقائق)",
-    "configWarnThreshold": "حد التحذير",
-    "configWarnThresholdHint": "اختياري: عرض تحذير عندما يتبقى هذا العدد من الرسائل أو أقل.",
-    "configInfoTooltip": "كيفية عمل الإعدادات",
-    "configInfoTitle": "كيفية عمل إعدادات الحد",
+    "configCancel": "إلغاء",
+    "configDialogSubtitle": "قم بضبط إعدادات التقييد للوحدة المحددة.",
+    "configDialogTitle": "تعديل حد الطلبات",
+    "configEditButton": "تعديل الحدود",
+    "configInfoBlock": "مدة الحظر — الزمن الذي يبقى فيه المستخدم محظورًا بعد التجاوز.",
+    "configInfoClose": "إغلاق",
     "configInfoDescription": "كل وحدة تحسب الطلبات داخل النافذة المحددة. عند تجاوز الحد يتم حظر المستخدم لمدة الحظر.",
     "configInfoMaxRequests": "أقصى عدد للرسائل — عدد الأفعال المسموح بها لكل نافذة قبل بدء التقييد.",
-    "configInfoWindow": "النافذة (بالدقائق) — المدة التي نستمر فيها في احتساب الرسائل.",
-    "configInfoBlock": "مدة الحظر — الزمن الذي يبقى فيه المستخدم محظورًا بعد التجاوز.",
-    "configInfoWarn": "حد التحذير — تذكير اختياري عندما يتبقى عدد قليل من الرسائل.",
     "configInfoNote": "معلومة: وضع المراقبة يسجل التحذيرات فقط، وضع الحظر يطبق القيود فعليًا.",
-    "configInfoClose": "إغلاق",
-    "configDialogTitle": "تعديل حد الطلبات",
-    "configDialogSubtitle": "قم بضبط إعدادات التقييد للوحدة المحددة.",
-    "configSave": "حفظ",
-    "configSaving": "جارٍ الحفظ...",
-    "configCancel": "إلغاء",
-    "configValidationError": "يرجى إدخال قيم رقمية موجبة صحيحة لكل الحقول المطلوبة.",
-    "configUpdateSuccess": "تم تحديث الحد بنجاح.",
-    "configUpdateError": "تعذّر تحديث الحد.",
-    "minutesShort": "دقيقة",
-    "configWarnDisabled": "معطل",
+    "configInfoTitle": "كيفية عمل إعدادات الحد",
+    "configInfoTooltip": "كيفية عمل الإعدادات",
+    "configInfoWarn": "حد التحذير — تذكير اختياري عندما يتبقى عدد قليل من الرسائل.",
+    "configInfoWindow": "النافذة (بالدقائق) — المدة التي نستمر فيها في احتساب الرسائل.",
+    "configMaxRequests": "أقصى عدد للرسائل",
+    "configModeEnforce": "حظر",
+    "configModeEnforceShort": "حظر",
+    "configModeError": "تعذّر تحديث الوضع",
+    "configModeHelper": "وضع المراقبة يسجل التحذيرات دون حظر. وضع الحظر يطبق الحد ويوقف الطلبات.",
     "configModeLabel": "الوضع",
     "configModeMonitor": "مراقبة",
-    "configModeEnforce": "حظر",
     "configModeMonitorShort": "مراقبة",
-    "configModeEnforceShort": "حظر",
-    "configModeHelper": "وضع المراقبة يسجل التحذيرات دون حظر. وضع الحظر يطبق الحد ويوقف الطلبات.",
     "configModeSuccess": "تم تحديث وضع الحد",
-    "configModeError": "تعذّر تحديث الوضع",
-    "configStatusLabel": "الحالة",
+    "configSave": "حفظ",
+    "configSaving": "جارٍ الحفظ...",
+    "configSectionTitle": "إعدادات الحد",
     "configStatusActive": "نشط",
-    "configStatusInactive": "معطل",
-    "configStatusSuccess": "تم تحديث حالة الحد",
     "configStatusError": "تعذّر تحديث الحالة",
-    "modeMonitorHint": "Monitoring logs warnings without blocking users.",
-    "modeEnforceHint": "وضع الحظر يطبق الحد ويوقف الطلبات."
-  },
-  "rateLimitEvents": {
-    "title": "إحصائيات الحدود",
-    "description": "تابع التحذيرات وعمليات الحظر لكل وحدة وطبِّق الحظر اليدوي عند الحاجة.",
-    "refresh": "تحديث",
-    "manualBlockButton": "حظر يدوي",
-    "filterModule": "الوحدة",
-    "filterModuleAll": "جميع الوحدات",
-    "filterEventType": "نوع الحدث",
-    "filterEventAll": "كل الأحداث",
-    "filterEventWarning": "تحذيرات",
-    "filterEventBlock": "حظر",
-    "filterMode": "الوضع",
-    "filterModeAll": "جميع الأوضاع",
-    "filterModeMonitor": "مراقبة",
-    "filterModeEnforce": "حظر",
-    "searchPlaceholder": "ابحث حسب المستخدم أو البريد الإلكتروني أو عنوان IP",
-    "filterFrom": "من",
-    "filterTo": "إلى",
-    "resetFilters": "إعادة تعيين الفلاتر",
-    "tableTitle": "أحدث الأحداث",
-    "tableSubtitle": "إجمالي الأحداث: ${count}",
-    "columnCreatedAt": "الوقت",
-    "columnActor": "المستخدم / المفتاح",
-    "columnModule": "الوحدة",
-    "columnEvent": "الحدث",
-    "columnUsage": "الاستهلاك",
-    "columnIp": "عنوان IP",
-    "columnBlockedUntil": "محظور حتى",
-    "columnActions": "الإجراءات",
-    "loadError": "تعذّر تحميل سجل الأحداث.",
-    "deleteSuccess": "تم حذف الحدث.",
-    "deleteError": "تعذّر حذف الحدث.",
-    "prefillBlock": "إنشاء حظر يدوي",
-    "prefillReasonWarning": "تم الوصول إلى حد التحذير",
-    "prefillReasonBlock": "تم حظر المستخدم بسبب الحد",
-    "deleteEvent": "حذف الحدث",
-    "monitorNoBlock": "وضع المراقبة",
-    "blockedUntilNotSet": "غير محدد",
-    "modeMonitorLabel": "مراقبة",
-    "modeEnforceLabel": "حظر",
-    "eventTypeWarning": "تحذير",
-    "eventTypeBlock": "حظر",
-    "noData": "لا توجد أحداث مطابقة للفلاتر المحددة.",
-    "viewingLabel": "إظهار ${count} من ${total}",
+    "configStatusInactive": "معطل",
+    "configStatusLabel": "الحالة",
+    "configStatusSuccess": "تم تحديث حالة الحد",
+    "configUpdateError": "تعذّر تحديث الحد.",
+    "configUpdateSuccess": "تم تحديث الحد بنجاح.",
+    "configValidationError": "يرجى إدخال قيم رقمية موجبة صحيحة لكل الحقول المطلوبة.",
+    "configWarnDisabled": "معطل",
+    "configWarnThreshold": "حد التحذير",
+    "configWarnThresholdHint": "اختياري: عرض تحذير عندما يتبقى هذا العدد من الرسائل أو أقل.",
+    "configWindowMinutes": "النافذة (بالدقائق)",
+    "description": "راقب نوافذ التقييد وعمليات الحظر النشطة وأزل الحظر عند الحاجة.",
+    "loadError": "تعذّر تحميل بيانات حدود الطلبات",
     "loadMore": "تحميل المزيد",
+    "loadSummaryError": "تعذّر تحميل ملخص حدود الطلبات",
+    "manualReasonLabel": "السبب",
+    "manualUsage": "حظر يدوي",
+    "minutesShort": "دقيقة",
+    "moduleAll": "كل الوحدات",
+    "moduleFilter": "الوحدة",
     "noAccess": "ليست لديك صلاحية للوصول إلى هذا القسم.",
-    "manualBlockDialogTitle": "إنشاء حظر يدوي",
-    "manualBlockTarget": "الهدف",
-    "manualBlockTargetUser": "معرّف المستخدم",
-    "manualBlockTargetEmail": "البريد الإلكتروني",
-    "manualBlockTargetIp": "عنوان IP",
-    "manualBlockUserLabel": "معرّف المستخدم",
-    "manualBlockEmailLabel": "البريد الإلكتروني",
-    "manualBlockIpLabel": "عنوان IP",
-    "manualBlockReasonLabel": "السبب",
-    "manualBlockDurationLabel": "المدة (بالدقائق)",
-    "manualBlockDurationHint": "اتركه فارغاً أو 0 لحظر غير محدد.",
-    "manualBlockNotes": "ملاحظات",
-    "manualBlockValidationModule": "اختر وحدة.",
-    "manualBlockValidationReason": "السبب مطلوب.",
-    "manualBlockValidationUser": "يرجى إدخال معرّف المستخدم.",
-    "manualBlockValidationEmail": "يرجى إدخال البريد الإلكتروني.",
-    "manualBlockValidationIp": "يرجى إدخال عنوان IP.",
-    "manualBlockValidationDuration": "يجب أن تكون المدة رقماً موجباً.",
-    "manualBlockSuccess": "تم إنشاء الحظر اليدوي.",
-    "manualBlockError": "تعذّر إنشاء الحظر اليدوي.",
-    "manualBlockSaving": "جارٍ الحفظ...",
-    "manualBlockSave": "حفظ",
-    "manualBlockCancel": "إلغاء",
-    "userIdLabel": "المستخدم"
-  },
-  "eventsJournal": {
-    "title": "أحداث النظام",
-    "description": "سجل موحد لإشارات حدود الطلبات، الإشراف، المصادقة، الدردشة والوحدات الأخرى.",
-    "sourceLabel": "المصدر",
-    "moduleLabel": "الوحدة",
-    "typeLabel": "النوع",
-    "severityLabel": "الحدة",
-    "actorLabel": "الجهة",
-    "subjectLabel": "الموضوع",
-    "keyLabel": "المفتاح",
-    "searchPlaceholder": "رسالة أو مفتاح أو بيانات",
-    "fromLabel": "من",
-    "toLabel": "إلى",
-    "resetFilters": "إعادة التصفية",
-    "refresh": "تحديث",
-    "loadMore": "تحميل المزيد",
-    "tableColumnTimestamp": "الوقت",
-    "tableColumnSource": "المصدر",
-    "tableColumnModule": "الوحدة",
-    "tableColumnType": "النوع",
-    "tableColumnSeverity": "الحدة",
-    "tableColumnKey": "المفتاح",
-    "tableColumnActor": "الجهة",
-    "tableColumnSubject": "الموضوع",
-    "tableColumnMessage": "الرسالة",
-    "detailsTitle": "تفاصيل الحدث",
-    "detailsPayload": "البيانات",
-    "detailsMetadata": "البيانات الوصفية",
-    "noData": "لا توجد أحداث لهذه الفلاتر.",
-    "noAccess": "ليست لديك صلاحية للوصول إلى هذا القسم."
-  },
-  "testing": {
-    "title": "اختبار",
-    "subtitle": "تشغيل واستعراض الاختبارات الآلية",
-    "runAll": "تشغيل الكل",
-    "runHeadless": "تشغيل بدون واجهة",
-    "refresh": "تحديث",
-    "tableHeaderScript": "السكربت",
-    "tableHeaderFile": "الملف",
-    "tableHeaderStatus": "الحالة",
-    "tableHeaderDuration": "المدة",
-    "tableHeaderStarted": "وقت البدء",
-    "statusPassed": "ناجح",
-    "statusFailed": "فشل",
-    "noRuns": "لا توجد تشغيلات بعد",
-    "errorLoad": "فشل تحميل التشغيلات",
-    "errorRun": "فشل تشغيل الاختبارات",
-    "drawerTitle": "تفاصيل التشغيل",
-    "durationSeconds": "${seconds}ث",
-    "startedAt": "بدأ في ${datetime}",
-    "run": "تشغيل",
-    "tableHeaderType": "النوع",
-    "tableHeaderTotals": "الإجمالي/ناجح/فشل",
-    "tableHeaderActions": "إجراءات",
-    "statusNotRun": "غير مشغّل",
-    "runTests": "تشغيل الاختبارات",
-    "running": "جارٍ تشغيل الاختبارات...",
-    "exportResults": "تصدير النتائج",
-    "runHeaded": "تشغيل مع واجهة"
+    "noData": "لا توجد سجلات حدود للمرشحات المحددة.",
+    "onlyBlocked": "محجوبون فقط",
+    "refresh": "تحديث البيانات",
+    "searchPlaceholder": "ابحث عن مستخدم أو معرف أو عنوان IP",
+    "statusActive": "نشط",
+    "statusBlocked": "محظور",
+    "statusBlockedWithTimer": "محظور حتى ${time}",
+    "summaryBlocked": "المستخدمون المحظورون",
+    "summaryHeading": "ملخص الوحدة",
+    "summaryRequests": "الطلبات في كل نافذة",
+    "summaryWindows": "النوافذ النشطة",
+    "title": "إدارة حدود الطلبات",
+    "viewingLabel": "إظهار ${count} من ${total}",
+    "windowSize": "النافذة: ${minutes} دقيقة"
   }
 }

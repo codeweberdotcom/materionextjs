@@ -77,18 +77,6 @@ import { statusObj } from '@/utils/status'
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
-declare module '@tanstack/react-table' {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-    statusFilter: FilterFn<unknown>
-    roleFilter: FilterFn<unknown>
-    planFilter: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
-}
-
 type UsersTypeWithAction = UsersType & {
   action?: string
 }
@@ -103,9 +91,12 @@ type UserStatusType = {
 
 type Role = {
   id: string
+  code: string
   name: string
   description?: string | null
   permissions?: string | null
+  level: number
+  isSystem: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -267,7 +258,7 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
       },
       columnHelper.accessor('fullName', {
         header: dictionary.navigation.user,
-        filterFn: 'fuzzy',
+        filterFn: fuzzyFilter,
         cell: ({ row }) => (
           <div className='flex items-center gap-4'>
             {getAvatar({
@@ -288,12 +279,12 @@ const RolesTable = ({ tableData }: { tableData?: UsersType[] }) => {
       }),
       columnHelper.accessor('email', {
         header: dictionary.navigation.email,
-        filterFn: 'fuzzy',
+        filterFn: fuzzyFilter,
         cell: ({ row }) => <Typography>{row.original.email}</Typography>
       }),
       columnHelper.accessor('role', {
         header: dictionary.navigation.role,
-        filterFn: 'roleFilter',
+        filterFn: roleFilterFn,
         size: 170,
         cell: ({ row }) => {
           const roleInfo = userRoleObj[row.original.role] || userRoleObj.subscriber
@@ -317,7 +308,7 @@ return (
       }),
       columnHelper.accessor('currentPlan', {
         header: dictionary.navigation.plan,
-        filterFn: 'planFilter',
+        filterFn: planFilterFn,
         cell: ({ row }) => (
           <Typography className='capitalize' color='text.primary'>
             {row.original.currentPlan}
@@ -329,7 +320,7 @@ return (
         {
           id: 'status',
           header: dictionary.navigation.status,
-          filterFn: 'statusFilter',
+          filterFn: statusFilterFn,
           cell: ({ row }) => {
             const statusValue = (row.original as UsersTypeWithAction).status ?? (row.original.isActive ? 'active' : 'inactive')
 
@@ -426,10 +417,7 @@ return (
     data: filteredData as UsersType[],
     columns,
     filterFns: {
-      fuzzy: fuzzyFilter,
-      statusFilter: statusFilterFn,
-      roleFilter: roleFilterFn,
-      planFilter: planFilterFn
+      fuzzy: fuzzyFilter
     },
     state: {
       rowSelection,

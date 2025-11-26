@@ -114,8 +114,20 @@ const filterAdminSectionChild = (
     return checkPermission(user, 'smtpManagement', 'read')
   }
 
+  if (child.label === labels.smsRuSettings) {
+    return checkPermission(user, 'smtpManagement', 'read')
+  }
+
+  if (child.label === labels.telegramSettings) {
+    return checkPermission(user, 'smtpManagement', 'read')
+  }
+
   if (child.label === labels.emailTemplates) {
     return checkPermission(user, 'emailTemplatesManagement', 'read')
+  }
+
+  if (child.label === labels.notificationScenarios) {
+    return checkPermission(user, 'notificationScenarios', 'read')
   }
 
   if (child.label === labels.rateLimitCategory) {
@@ -135,11 +147,10 @@ const filterAdminSectionChild = (
   }
 
   const isMaintenanceNode =
-    typeof child.href === 'string' && child.href.startsWith('/admin/maintenance')
+    'href' in child && typeof (child as any).href === 'string' && (child as any).href.startsWith('/admin/maintenance')
 
   if (
     child.label === labels.monitoring ||
-    child.label === labels.monitoringOverview ||
     child.label === labels.monitoringMetrics ||
     child.label === labels.monitoringErrorTracking ||
     child.label === labels.monitoringApplicationInsights ||

@@ -34,12 +34,15 @@ Get all roles with caching support (admin/superadmin only).
 [
   {
     "id": "role-id",
+    "code": "ADMIN",
     "name": "admin",
     "description": "Administrator role",
     "permissions": {
       "userManagement": ["read", "create", "update", "delete"],
       "roleManagement": ["read"]
-    }
+    },
+    "level": 10,
+    "isSystem": true
   }
 ]
 ```
@@ -69,15 +72,19 @@ Create new role (admin/superadmin only).
 ```json
 {
   "id": "new-role-id",
+  "code": "EDITOR",
   "name": "editor",
   "description": "Content editor",
-  "permissions": "{\"content\":[\"read\",\"create\",\"update\"]}"
+  "permissions": "{\"content\":[\"read\",\"create\",\"update\"]}",
+  "level": 100,
+  "isSystem": false
 }
 ```
 
 **AI Agent Usage:**
 - Create custom roles with specific permissions
-- Permissions stored as JSON string in database
+- `code` автоматически генерируется из `name` (uppercase)
+- Кастомные роли получают `level: 100` и `isSystem: false`
 - Cache automatically cleared after creation
 
 ### GET `/api/admin/roles/[id]`
@@ -180,25 +187,56 @@ interface Permissions {
 - `update` - Modify existing resources
 - `delete` - Remove resources
 
-### Protected Roles
-The following roles cannot be deleted:
-- `superadmin`, `admin`, `user`, `subscriber`
-- `moderator`, `seo`, `editor`, `marketolog`, `support`, `manager`
+### Protected (System) Roles
+Системные роли (`isSystem: true`) не могут быть удалены:
+- `SUPERADMIN`, `ADMIN`, `MANAGER`, `EDITOR`
+- `MODERATOR`, `SEO`, `MARKETOLOG`, `SUPPORT`
+- `SUBSCRIBER`, `USER`
+
+**Важно:** Имена ролей (`name`) можно переименовывать, но `code` неизменяем.
 
 ## 🗄️ Database Schema
 
-### Role Model
+### Role Model (обновлено 2025-11-25)
 ```prisma
 model Role {
   id          String   @id @default(cuid())
-  name        String   @unique
+  code        String   @unique  // Неизменяемый код: 'SUPERADMIN', 'ADMIN', 'USER'
+  name        String   @unique  // Отображаемое имя (можно переименовывать)
   description String?
-  permissions String?  // JSON string
+  permissions String?  @default("{}")  // JSON string
+  level       Int      @default(100)   // Уровень иерархии (0 = высший)
+  isSystem    Boolean  @default(false) // Системная роль (нельзя удалить)
   users       User[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 ```
+
+### Поля модели Role
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `code` | String | Неизменяемый идентификатор роли (SUPERADMIN, ADMIN и т.д.) |
+| `name` | String | Отображаемое имя, **можно переименовывать** |
+| `level` | Int | Уровень иерархии (0 = высший приоритет) |
+| `isSystem` | Boolean | Системная роль (true = нельзя удалить) |
+
+### Иерархия ролей (по level)
+
+| code | level | isSystem |
+|------|-------|----------|
+| SUPERADMIN | 0 | true |
+| ADMIN | 10 | true |
+| MANAGER | 20 | true |
+| EDITOR | 30 | true |
+| MODERATOR | 40 | true |
+| SEO | 50 | true |
+| MARKETOLOG | 60 | true |
+| SUPPORT | 70 | true |
+| SUBSCRIBER | 80 | true |
+| USER | 90 | true |
+| (custom) | 100+ | false |
 
 ### User Model (Role Relationship)
 ```prisma
@@ -212,10 +250,11 @@ model User {
 ## 🛡️ Security Features
 
 ### Access Control
-- **Superadmin Bypass**: Superadmin users skip permission checks
+- **Superadmin Bypass**: Superadmin users (`code: 'SUPERADMIN'`) skip permission checks
 - **Role-based Permissions**: Granular permission system
 - **User Validation**: Current user verification on all operations
-- **Protected Roles**: System roles cannot be deleted
+- **Protected Roles**: System roles (`isSystem: true`) cannot be deleted
+- **Hierarchy Enforcement**: Roles can only modify roles with higher `level` value
 
 ### Data Validation
 - **Unique Names**: Role names must be unique

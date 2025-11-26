@@ -126,20 +126,52 @@ const extractToken = (socket: TypedSocket): string | null => {
   return null
 }
 
-const ROLE_MAP: Record<string, UserRole> = {
+// Map role codes/names to socket UserRole
+const ROLE_CODE_MAP: Record<string, UserRole> = {
+  // By code (preferred)
+  SUPERADMIN: 'admin',
+  ADMIN: 'admin',
+  MANAGER: 'admin',
+  MODERATOR: 'moderator',
+  EDITOR: 'moderator',
+  SEO: 'user',
+  MARKETOLOG: 'user',
+  SUPPORT: 'user',
+  SUBSCRIBER: 'user',
+  USER: 'user',
+  // By name (legacy fallback)
+  superadmin: 'admin',
   admin: 'admin',
+  manager: 'admin',
   moderator: 'moderator',
+  editor: 'moderator',
   user: 'user',
   guest: 'guest'
 }
 
+const mapRoleToSocketRole = (roleCode?: string | null, roleName?: string | null): UserRole => {
+  // Try code first (preferred)
+  if (roleCode && ROLE_CODE_MAP[roleCode]) {
+    return ROLE_CODE_MAP[roleCode]
+  }
+  
+  // Fall back to name
+  if (roleName) {
+    const normalized = roleName.toLowerCase()
+    return ROLE_CODE_MAP[normalized] ?? 'user'
+  }
+  
+  return 'user'
+}
+
+/** @deprecated Use mapRoleToSocketRole instead */
 const mapRoleName = (roleName?: string | null): UserRole => {
   if (!roleName) {
     return 'user'
   }
 
   const normalized = roleName.toLowerCase()
-  return ROLE_MAP[normalized] ?? 'user'
+  return ROLE_CODE_MAP[normalized] ?? 'user'
 }
 
 const getDefaultPermissions = (role: UserRole): Permission[] => {
@@ -165,10 +197,11 @@ const resolveUserRole = async (roleId?: string | null): Promise<UserRole> => {
   try {
     const role = await prisma.role.findUnique({
       where: { id: roleId },
-      select: { name: true }
+      select: { code: true, name: true }
     })
 
-    return mapRoleName(role?.name)
+    // Use code first, then name as fallback
+    return mapRoleToSocketRole(role?.code, role?.name)
   } catch (error) {
     authLogger.error('Failed to resolve role for socket user', {
       roleId,

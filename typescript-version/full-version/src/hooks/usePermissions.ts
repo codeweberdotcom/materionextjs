@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthProvider'
 import {
   checkPermission,
   hasRole,
-  isAdmin,
+  isAdminByCode,
   isModerator,
   isUser,
   isSuperadmin,
@@ -25,7 +25,7 @@ export function usePermissions() {
 
     // Role checks
     hasRole: (roleName: string) => hasRole(userWithRole || null, roleName),
-    isAdmin: isAdmin(userWithRole || null),
+    isAdmin: isAdminByCode(userWithRole || null),
     isModerator: isModerator(userWithRole || null),
     isUser: isUser(userWithRole || null),
     isSuperadmin: isSuperadmin(userWithRole || null),

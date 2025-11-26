@@ -31,6 +31,7 @@ import TableRow from '@mui/material/TableRow'
 import FormControl from '@mui/material/FormControl'
 import Select from '@mui/material/Select'
 import MenuItem from '@mui/material/MenuItem'
+import CircularProgress from '@mui/material/CircularProgress'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -63,13 +64,16 @@ import type { Locale } from '@configs/i18n'
 import AddUserDrawer from './AddUserDrawer'
 import OptionMenu from '@core/components/option-menu'
 import CustomAvatar from '@core/components/mui/Avatar'
-import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
+import UserDeletionDialog from '@components/dialogs/user-deletion-dialog'
 import AvatarWithBadge from '@views/apps/chat/AvatarWithBadge'
+import ExportButton from '@/components/export/ExportButton'
+import ImportDialog from '@/components/import/ImportDialog'
 import { statusObj } from '@/utils/status'
 import { usePresence } from '@/contexts/PresenceProvider'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
+import { useAuth } from '@/contexts/AuthProvider'
 
 // Hook Imports
 import { usePermissions } from '@/hooks/usePermissions'
@@ -81,18 +85,6 @@ import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
-
-declare module '@tanstack/react-table' {
-  interface FilterFns {
-    fuzzy: FilterFn<unknown>
-    statusFilter: FilterFn<unknown>
-    onlineFilter: FilterFn<unknown>
-    roleFilter: FilterFn<unknown>
-  }
-  interface FilterMeta {
-    itemRank: RankingInfo
-  }
-}
 
 type UsersTypeWithAction = UsersType & {
   action?: string
@@ -407,6 +399,9 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   // Hooks
   const dictionary = useTranslation()
   const { checkPermission } = usePermissions()
+  const { user } = useAuth()
+  const actorId = user?.id || null
+
   const { statuses: presenceStatuses } = usePresence()
   const { userStatuses: unreadStatuses } = useUnreadByContact()
 
@@ -435,6 +430,11 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   const [deleteUserName, setDeleteUserName] = useState<string>('')
   const [loading, setLoading] = useState(!tableData || tableData.length === 0)
   const [roleOptions, setRoleOptions] = useState<string[]>([])
+  const [togglingUsers, setTogglingUsers] = useState<Set<string>>(new Set())
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [activateLoading, setActivateLoading] = useState(false)
+  const [deactivateLoading, setDeactivateLoading] = useState(false)
+  const [importDialogOpen, setImportDialogOpen] = useState(false)
 
   // Hooks
   const { lang: locale } = useParams()
@@ -470,43 +470,90 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   // No role checks needed - all authenticated users can manage users
 
-  // Handle user deletion
-  const handleDeleteUser = async (userId: string, userName: string) => {
+  // Handle user deletion/anonymization
+  const handleDeleteUser = async (mode: 'delete' | 'anonymize', userId: string, userName: string) => {
     try {
-      const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'DELETE'
-      })
+      if (mode === 'delete') {
+        // Full deletion
+        const response = await fetch(`/api/admin/users/${userId}`, {
+          method: 'DELETE'
+        })
 
-      if (response.ok) {
-        // Refresh data from server
-        const refreshResponse = await fetch('/api/admin/users')
+        if (response.ok) {
+          // Refresh data from server
+          const refreshResponse = await fetch('/api/admin/users')
 
-        if (refreshResponse.ok) {
-          const updatedUsers = await refreshResponse.json()
+          if (refreshResponse.ok) {
+            const updatedUsers = await refreshResponse.json()
+            setData([...updatedUsers]) // Create new array reference
+          } else {
+            // If refresh fails, just remove from local data
+            setData([...(data?.filter(user => user.id !== userId) || [])]) // Create new array reference
+          }
 
-          setData(updatedUsers)
+          toast.success(dictionary.navigation.deleteUser + ' ' + dictionary.navigation.successfully)
         } else {
-          // If refresh fails, just remove from local data
-          setData(data?.filter(user => user.id !== userId))
+          const error = await response.json()
+          // Removed error toast notification for user deletion
         }
+      } else if (mode === 'anonymize') {
+        // Anonymization using DataSanitizationService
+        const response = await fetch('/api/admin/data-sanitization', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            target: { userId },
+            options: {
+              mode: 'anonymize',
+              reason: 'User requested anonymization',
+              requestedBy: 'admin'
+            }
+          })
+        })
 
-        toast.success(dictionary.navigation.deleteUser + ' ' + dictionary.navigation.successfully)
-      } else {
-        const error = await response.json()
+        if (response.ok) {
+          // Refresh data from server
+          const refreshResponse = await fetch('/api/admin/users')
 
-        // Removed error toast notification for user deletion
+          if (refreshResponse.ok) {
+            const updatedUsers = await refreshResponse.json()
+            setData([...updatedUsers]) // Create new array reference
+          }
+
+          toast.success(dictionary.navigation.userDeleted || 'User Deleted')
+        } else {
+          const error = await response.json()
+          toast.error('Ошибка анонимизации: ' + (error.message || 'Неизвестная ошибка'))
+        }
       }
     } catch (error) {
-      console.error('Error deleting user:', error)
-      toast.error(error instanceof Error ? error.message : dictionary.navigation.deleteUser + ' failed')
+      console.error('Error processing user:', error)
+      const action = mode === 'delete' ? dictionary.navigation.deleteUser : 'анонимизации'
+      toast.error(error instanceof Error ? error.message : `${action} failed`)
     }
   }
 
   // Handle user status toggle
-  const handleToggleUserStatus = async (userId: string) => {
+  const resolveUserById = (userId: string) => (data || []).find(user => String(user.id) === String(userId))
+
+  const handleToggleUserStatus = async (userId: string, desiredStatus?: boolean) => {
+    // Add user to loading set immediately for visual feedback
+    setTogglingUsers(prev => new Set(prev).add(userId))
+
+    const nextStatus =
+      typeof desiredStatus === 'boolean'
+        ? desiredStatus
+        : !((resolveUserById(userId)?.isActive ?? true))
+
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PATCH'
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ isActive: nextStatus })
       })
 
       if (response.ok) {
@@ -516,9 +563,13 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           user.id === updatedUser.id ? updatedUser : user
         )
 
-        setData(updatedData)
-        setFilteredData(updatedData)
-        toast.success(`${dictionary.navigation.user} ${updatedUser.isActive ? dictionary.navigation.active : dictionary.navigation.inactive} ${dictionary.navigation.successfully}`)
+        setData([...updatedData]) // Create new array reference
+        setFilteredData([...updatedData]) // Create new array reference
+        toast.success(
+          `${dictionary.navigation.user} ${
+            updatedUser.isActive ? dictionary.navigation.active : dictionary.navigation.inactive
+          } ${dictionary.navigation.successfully}`
+        )
       } else {
         const error = await response.json()
 
@@ -527,31 +578,222 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     } catch (error) {
       console.error('Error toggling user status:', error)
       toast.error(error instanceof Error ? error.message : 'Failed to toggle user status')
+    } finally {
+      // Remove user from loading set
+      setTogglingUsers(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(userId)
+        return newSet
+      })
     }
   }
 
-  const getOnlineStatus = (user: UsersTypeWithAction) => {
-    const presenceEntry = presenceStatuses?.[String(user.id)]
-    const fallbackEntry = unreadStatuses?.[String(user.id)]
+  // Bulk operations
+  const getSelectedUsers = () => {
+    const selectedIds = Object.keys(rowSelection).filter(id => rowSelection[id])
+    // Since getRowId returns String(row.id), we need to find users by ID
+    return selectedIds
+      .map(id => filteredData.find(user => String(user.id) === id))
+      .filter(Boolean) as UsersType[]
+  }
 
-    let resolvedOnline = presenceEntry?.isOnline
+  const getFilteredSelectedUsers = () => {
+    return getSelectedUsers().filter(user => user.role.toLowerCase() !== 'superadmin')
+  }
 
-    if (resolvedOnline === undefined && fallbackEntry) {
-      resolvedOnline = fallbackEntry.isOnline
-    }
+  const handleBulkDelete = async (mode: 'delete' | 'anonymize') => {
+    const selectedUsers = getFilteredSelectedUsers()
+    if (selectedUsers.length === 0) return
 
-    if (resolvedOnline === undefined) {
-      if (user.lastSeen) {
-        const lastSeenDate = new Date(user.lastSeen as string)
+    const userIds = selectedUsers.map(u => String(u.id))
 
-        resolvedOnline = Date.now() - lastSeenDate.getTime() < 30_000
+    setDeleteLoading(true)
+    try {
+      // Use bulk delete endpoint for delete mode
+      // Note: anonymize mode still uses the old endpoint as it requires different logic
+      if (mode === 'delete') {
+        const response = await fetch('/api/admin/users/bulk/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userIds })
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.message || 'Bulk delete failed')
+        }
+
+        const result = await response.json()
+
+        // Show success message
+        if (result.deleted > 0) {
+          if (result.skipped > 0) {
+            toast.success(
+              dictionary.navigation.bulkOperationPartialSuccess
+                .replace('${successCount}', result.deleted.toString())
+                .replace('${totalCount}', userIds.length.toString())
+            )
+          } else {
+            toast.success(
+              dictionary.navigation.bulkOperationSuccess.replace('${successCount}', result.deleted.toString())
+            )
+          }
+        } else {
+          toast.error(dictionary.navigation.bulkOperationFailed)
+        }
+
+        // Refresh data
+        const refreshResponse = await fetch('/api/admin/users')
+        if (refreshResponse.ok) {
+          const updatedUsers = await refreshResponse.json()
+          setData([...updatedUsers])
+          setFilteredData([...updatedUsers])
+        }
+
+        // Clear selection
+        setRowSelection({})
       } else {
-        resolvedOnline = user.isOnline ?? false
+        // Anonymize mode - still use old endpoint for now
+        const results = await Promise.allSettled(
+          selectedUsers.map(user =>
+            fetch('/api/admin/data-sanitization', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                target: { userId: user.id },
+                options: {
+                  mode: 'anonymize',
+                  reason: 'Bulk anonymization',
+                  requestedBy: 'admin'
+                }
+              })
+            })
+          )
+        )
+
+        const successCount = results.filter(result => result.status === 'fulfilled' && result.value.ok).length
+        const failedCount = results.length - successCount
+
+        if (successCount === selectedUsers.length) {
+          toast.success(dictionary.navigation.bulkOperationSuccess.replace('${successCount}', successCount.toString()))
+        } else if (successCount > 0) {
+          toast.success(
+            dictionary.navigation.bulkOperationPartialSuccess
+              .replace('${successCount}', successCount.toString())
+              .replace('${totalCount}', selectedUsers.length.toString())
+          )
+        } else {
+          toast.error(dictionary.navigation.bulkOperationFailed)
+        }
+
+        // Refresh data
+        const refreshResponse = await fetch('/api/admin/users')
+        if (refreshResponse.ok) {
+          const updatedUsers = await refreshResponse.json()
+          setData([...updatedUsers])
+          setFilteredData([...updatedUsers])
+        }
+
+        // Clear selection
+        setRowSelection({})
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error('Bulk delete error:', error)
+      toast.error(errorMessage || dictionary.navigation.bulkOperationFailed)
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const handleBulkStatusChange = async (activate: boolean) => {
+    const selectedUsers = getFilteredSelectedUsers()
+    if (selectedUsers.length === 0) return
+
+    const userIds = selectedUsers.map(u => String(u.id))
+    const endpoint = activate ? '/api/admin/users/bulk/activate' : '/api/admin/users/bulk/deactivate'
+
+    if (activate) {
+      setActivateLoading(true)
+    } else {
+      setDeactivateLoading(true)
+    }
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userIds })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Bulk status change failed')
+      }
+
+      const result = await response.json()
+
+      // Show success message
+      if (result.activated || result.deactivated) {
+        const count = result.activated || result.deactivated
+        if (result.skipped > 0) {
+          toast.success(
+            dictionary.navigation.bulkOperationPartialSuccess
+              .replace('${successCount}', count.toString())
+              .replace('${totalCount}', userIds.length.toString())
+          )
+        } else {
+          toast.success(dictionary.navigation.bulkOperationSuccess.replace('${successCount}', count.toString()))
+        }
+      } else {
+        toast.error(dictionary.navigation.bulkOperationFailed)
+      }
+
+      // Refresh data from server
+      const refreshResponse = await fetch('/api/admin/users')
+      if (refreshResponse.ok) {
+        const updatedUsers = await refreshResponse.json()
+        setData([...updatedUsers])
+        setFilteredData([...updatedUsers])
+      }
+
+      // Clear selection
+      setRowSelection({})
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.error('Bulk status change error:', error)
+      toast.error(errorMessage || dictionary.navigation.bulkOperationFailed)
+    } finally {
+      if (activate) {
+        setActivateLoading(false)
+      } else {
+        setDeactivateLoading(false)
       }
     }
-
-    return resolvedOnline
   }
+
+   const getOnlineStatus = (user: UsersTypeWithAction) => {
+     const presenceEntry = presenceStatuses?.[String(user.id)]
+     const fallbackEntry = unreadStatuses?.[String(user.id)]
+
+     let resolvedOnline = presenceEntry?.isOnline
+
+     if (resolvedOnline === undefined && fallbackEntry) {
+       resolvedOnline = fallbackEntry.isOnline
+     }
+
+     if (resolvedOnline === undefined) {
+       if (user.lastSeen) {
+         const lastSeenDate = new Date(user.lastSeen as string)
+
+         resolvedOnline = Date.now() - lastSeenDate.getTime() < 30_000
+       } else {
+         resolvedOnline = user.isOnline ?? false
+       }
+     }
+
+     return resolvedOnline
+   }
+
 
   const columns = useMemo<ColumnDef<UsersTypeWithAction, any>[]>(
     () => [
@@ -581,29 +823,63 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       },
       columnHelper.accessor('fullName', {
         header: dictionary.navigation.user,
-        filterFn: 'fuzzy',
-        size: 360,
+        filterFn: fuzzyFilter,
+        size: 280,
+        minSize: 200,
+        maxSize: 320,
         cell: ({ row }) => (
-          <div className='flex items-center gap-4'>
+          <div className='flex items-center gap-4' style={{ minWidth: 0 }}>
             {getAvatar(row.original)}
-            <div className='flex flex-col'>
-              <Typography className='font-medium' color='text.primary'>
+            <div className='flex flex-col' style={{ minWidth: 0, flex: 1 }}>
+              <Typography 
+                className='font-medium' 
+                color='text.primary'
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '200px'
+                }}
+              >
                 {row.original.fullName}
               </Typography>
-              <Typography variant='body2'>{row.original.username}</Typography>
+              <Typography 
+                variant='body2'
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '200px'
+                }}
+              >
+                {row.original.username}
+              </Typography>
             </div>
           </div>
         )
       }),
       columnHelper.accessor('email', {
         header: dictionary.navigation.email,
-        filterFn: 'fuzzy',
-        size: 360,
-        cell: ({ row }) => <Typography>{row.original.email}</Typography>
+        filterFn: fuzzyFilter,
+        size: 280,
+        minSize: 200,
+        maxSize: 320,
+        cell: ({ row }) => (
+          <Typography
+            sx={{
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              maxWidth: '280px'
+            }}
+          >
+            {row.original.email}
+          </Typography>
+        )
       }),
       columnHelper.accessor('role', {
         header: dictionary.navigation.role,
-        filterFn: 'roleFilter',
+        filterFn: roleFilterFn,
         size: 170,
         cell: ({ row }) => {
           const roleInfo = userRoleObj[row.original.role] || userRoleObj.subscriber
@@ -630,7 +906,7 @@ return (
         {
           id: 'status',
           header: dictionary.navigation.status,
-          filterFn: 'statusFilter',
+          filterFn: statusFilterFn,
           size: 180,
           cell: ({ row }) => {
             const statusValue = row.original.status ?? (row.original.isActive ? 'active' : 'inactive')
@@ -668,7 +944,7 @@ return (
         {
           id: 'onlineStatus',
           header: dictionary.navigation.online || 'Online',
-          filterFn: 'onlineFilter',
+          filterFn: onlineFilterFn,
           size: 180,
           cell: ({ row }) => {
             const isOnline = getOnlineStatus(row.original)
@@ -688,7 +964,7 @@ return (
       ),
       columnHelper.accessor('currentPlan', {
         header: dictionary.navigation.plan,
-        filterFn: 'planFilter',
+        filterFn: planFilterFn,
         size: 160,
         cell: ({ row }) => (
           <Typography className='capitalize' color='text.primary'>
@@ -702,6 +978,7 @@ return (
           <div className='flex items-center'>
             {canDelete && row.original.role.toLowerCase() !== 'superadmin' && (
               <IconButton
+                aria-label={dictionary.navigation.deleteUser || 'Delete user'}
                 onClick={() => {
                   setDeleteUserId(String(row.original.id))
                   setDeleteUserName(row.original.fullName)
@@ -711,16 +988,19 @@ return (
                 <i className='ri-delete-bin-line text-textSecondary' />
               </IconButton>
             )}
-            <IconButton>
-              <Link href={getLocalizedUrl(`/apps/user/view?id=${row.original.id}`, locale as Locale)} className='flex'>
-                <i className='ri-eye-line text-textSecondary' />
-              </Link>
+            <IconButton
+              component={Link}
+              href={getLocalizedUrl(`/apps/user/view?id=${row.original.id}`, locale as Locale)}
+              aria-label={dictionary.navigation.viewUser || 'View user'}
+            >
+              <i className='ri-eye-line text-textSecondary' />
             </IconButton>
             {canUpdate && row.original.role.toLowerCase() !== 'superadmin' && (
               <Switch
                 checked={row.original.isActive}
-                onChange={() => handleToggleUserStatus(String(row.original.id))}
+                onChange={() => handleToggleUserStatus(String(row.original.id), !row.original.isActive)}
                 size='small'
+                disabled={togglingUsers.has(String(row.original.id))}
               />
             )}
             <OptionMenu
@@ -761,11 +1041,7 @@ return (
     columns,
     defaultColumn,
     filterFns: {
-      fuzzy: fuzzyFilter,
-      statusFilter: statusFilterFn,
-      onlineFilter: onlineFilterFn,
-      roleFilter: roleFilterFn,
-      planFilter: planFilterFn
+      fuzzy: fuzzyFilter
     },
     state: {
       rowSelection,
@@ -779,6 +1055,7 @@ return (
     },
     enableRowSelection: true, //enable row selection for all rows
     // enableRowSelection: row => row.original.age > 18, // or enable row selection conditionally per row
+    getRowId: (row) => String(row.id), // Use user ID instead of row index
     globalFilterFn: fuzzyFilter,
     onRowSelectionChange: setRowSelection,
     onColumnFiltersChange: setColumnFilters,
@@ -840,7 +1117,7 @@ return (
         <Divider />
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
           <Skeleton width={100} height={36} />
-          <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
+          <div className='flex items-center gap-4 flex-col max-sm:w-full sm:flex-row'>
             <Skeleton width={300} height={40} />
             <Skeleton width={150} height={36} />
           </div>
@@ -915,18 +1192,72 @@ return (
           }
         />
         <Divider />
+
         <div className='flex justify-between p-5 gap-4 flex-col items-start sm:flex-row sm:items-center'>
-          <Button
-            color='secondary'
-            variant='outlined'
-            startIcon={<i className='ri-upload-2-line text-xl' />}
-            className='max-sm:is-full'
-          >
-            {dictionary.navigation.export}
-          </Button>
-          <div className='flex items-center gap-x-4 gap-4 flex-col max-sm:is-full sm:flex-row'>
+           <div className='flex items-center gap-2 max-sm:w-full sm:flex-row'>
+               <ExportButton
+                 entityType="users"
+                 availableFormats={['xlsx', 'csv']}
+                 filters={{}}
+                 selectedIds={Object.keys(rowSelection).filter(id => rowSelection[id])}
+                 onError={(error) => toast.error(`Export failed: ${error.message}`)}
+               />
+               <Button
+                 color='primary'
+                 variant='outlined'
+                 startIcon={<i className='ri-download-2-line text-xl' />}
+                 onClick={() => setImportDialogOpen(true)}
+                 className='max-sm:w-full'
+               >
+                 {dictionary.navigation.import || 'Import'}
+               </Button>
+              {canDelete && (
+                <Button
+                  color='error'
+                  variant='outlined'
+                  onClick={() => {
+                    const selectedUsers = getFilteredSelectedUsers()
+                    if (selectedUsers.length > 0) {
+                      setDeleteUserId('bulk')
+                      setDeleteUserName(`${selectedUsers.length} users`)
+                      setDeleteDialogOpen(true)
+                    }
+                  }}
+                  disabled={deleteLoading || activateLoading || deactivateLoading || getFilteredSelectedUsers().length === 0}
+                  startIcon={deleteLoading ? <CircularProgress size={16} /> : <i className='ri-delete-bin-line text-xl' />}
+                  className='max-sm:w-full'
+                >
+                  {deleteLoading ? 'Удаление...' : dictionary.navigation.bulkDelete}
+                </Button>
+              )}
+              {canUpdate && (
+                <>
+                  <Button
+                    color='success'
+                    variant='outlined'
+                    onClick={() => handleBulkStatusChange(true)}
+                    disabled={deleteLoading || activateLoading || deactivateLoading || getFilteredSelectedUsers().length === 0}
+                    startIcon={activateLoading ? <CircularProgress size={16} /> : <i className='ri-check-line text-xl' />}
+                    className='max-sm:w-full'
+                  >
+                    {activateLoading ? 'Активация...' : dictionary.navigation.bulkActivate}
+                  </Button>
+                  <Button
+                    color='warning'
+                    variant='outlined'
+                    onClick={() => handleBulkStatusChange(false)}
+                    disabled={deleteLoading || activateLoading || deactivateLoading || getFilteredSelectedUsers().length === 0}
+                    startIcon={deactivateLoading ? <CircularProgress size={16} /> : <i className='ri-pause-line text-xl' />}
+                    className='max-sm:w-full'
+                  >
+                    {deactivateLoading ? 'Деактивация...' : dictionary.navigation.bulkDeactivate}
+                  </Button>
+                </>
+              )}
+            </div>
+          <div className='flex items-center gap-4 flex-col max-sm:w-full sm:flex-row'>
             {canCreate && (
-              <Button variant='contained' onClick={() => setAddUserOpen(!addUserOpen)} className='max-sm:is-full'>
+              <Button variant='contained' onClick={() => setAddUserOpen(!addUserOpen)} className='max-sm:w-full'>
                 {dictionary.navigation.addNewUser}
               </Button>
             )}
@@ -1003,8 +1334,7 @@ return (
               <TableBody>
                 {table
                   .getRowModel()
-                  .rows.slice(0, table.getState().pagination.pageSize)
-                  .map(row => {
+                  .rows.map(row => {
                     return (
                       <TableRow key={row.id} className={classnames({ selected: row.getIsSelected() })}>
                         {row.getVisibleCells().map(cell => (
@@ -1023,7 +1353,7 @@ return (
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[10, 25, 50]}
+          rowsPerPageOptions={[10, 25, 50, 100]}
           component='div'
           className='border-bs'
           count={table.getFilteredRowModel().rows.length}
@@ -1045,16 +1375,35 @@ return (
         setData={setData}
         editUser={editUser || undefined}
       />
-      <ConfirmationDialog
+      <UserDeletionDialog
         open={deleteDialogOpen}
         setOpen={setDeleteDialogOpen}
-        type='delete-user'
-        name={deleteUserName}
-        onConfirm={async (value) => {
-          if (value) {
-            await handleDeleteUser(deleteUserId, deleteUserName)
+        userName={deleteUserName}
+        onConfirm={async (mode) => {
+          if (deleteUserId === 'bulk') {
+            await handleBulkDelete(mode)
+          } else {
+            await handleDeleteUser(mode, deleteUserId, deleteUserName)
           }
         }}
+      />
+      <ImportDialog
+        open={importDialogOpen}
+        onClose={() => setImportDialogOpen(false)}
+        entityType="users"
+        mode="create"
+        dialogMaxWidth="lg"
+        onSuccess={async (result) => {
+          // ImportDialog already shows success toast with proper i18n
+          // Refresh data
+          const refreshResponse = await fetch('/api/admin/users')
+          if (refreshResponse.ok) {
+            const updatedUsers = await refreshResponse.json()
+            setData([...updatedUsers])
+            setFilteredData([...updatedUsers])
+          }
+        }}
+        onError={(error) => toast.error(`Import failed: ${error.message}`)}
       />
     </>
   )

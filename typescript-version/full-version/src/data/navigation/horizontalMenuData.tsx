@@ -68,6 +68,10 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
             href: '/apps/user/view'
           },
           {
+            label: dictionary['navigation'].documentsVerification || 'Подтверждение документов',
+            href: '/apps/user/documents-verification'
+          },
+          {
             label: dictionary['navigation'].roles,
             href: '/apps/roles'
           },
@@ -132,6 +136,21 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
         label: dictionary['navigation'].emailTemplates,
         icon: 'ri-file-text-line',
         href: '/apps/settings/email-templates'
+      },
+      {
+        label: dictionary['navigation'].registrationSettings || 'Настройки регистрации',
+        icon: 'ri-user-add-line',
+        href: '/apps/settings/registration'
+      },
+      {
+        label: dictionary['navigation'].smsRuSettings || 'Настройки SMS.ru',
+        icon: 'ri-message-3-line',
+        href: '/apps/settings/sms-ru'
+      },
+      {
+        label: dictionary['navigation'].externalServices || 'External Services',
+        icon: 'ri-server-line',
+        href: '/admin/settings/services'
       }
     ]
   },  {
@@ -139,10 +158,11 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
     icon: 'ri-bar-chart-line',
     children: [
       {
-        label: dictionary['navigation'].monitoringOverview,
-        icon: 'ri-eye-line',
-        href: '/admin/monitoring/overview'
+        label: dictionary['navigation'].monitoringDashboard || 'Dashboard',
+        icon: 'ri-dashboard-line',
+        href: '/admin/monitoring/dashboard'
       },
+      {
       {
         label: dictionary['navigation'].monitoringMetrics,
         icon: 'ri-bar-chart-2-line',
@@ -415,55 +435,70 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
         target: '_blank'
       }
     ]
-  },  {
-            label: dictionary['navigation'].charts,
-            href: '/pages/widget-examples/charts'
-          },
-          {
-            label: dictionary['navigation'].gamification,
-            href: '/pages/widget-examples/gamification'
-          },
-          {
-            label: dictionary['navigation'].actions,
-            href: '/pages/widget-examples/actions'
-          }
-        ]
+  },
+  {
+    label: dictionary['navigation'].widgetExamples,
+    icon: 'ri-bar-chart-box-line',
+    children: [
+      {
+        label: dictionary['navigation'].basic,
+        href: '/pages/widget-examples/basic'
       },
       {
-        label: dictionary['navigation'].frontPages,
-        icon: 'ri-file-copy-line',
-        children: [
-          {
-            label: dictionary['navigation'].landing,
-            href: '/front-pages/landing-page',
-            target: '_blank',
-            excludeLang: true
-          },
-          {
-            label: dictionary['navigation'].pricing,
-            href: '/front-pages/pricing',
-            target: '_blank',
-            excludeLang: true
-          },
-          {
-            label: dictionary['navigation'].payment,
-            href: '/front-pages/payment',
-            target: '_blank',
-            excludeLang: true
-          },
-          {
-            label: dictionary['navigation'].checkout,
-            href: '/front-pages/checkout',
-            target: '_blank',
-            excludeLang: true
-          },
-          {
-            label: dictionary['navigation'].helpCenter,
-            href: '/front-pages/help-center',
-            target: '_blank',
-            excludeLang: true
-          }
-        ]
+        label: dictionary['navigation'].advanced,
+        href: '/pages/widget-examples/advanced'
+      },
+      {
+        label: dictionary['navigation'].statistics,
+        href: '/pages/widget-examples/statistics'
+      },
+      {
+        label: dictionary['navigation'].charts,
+        href: '/pages/widget-examples/charts'
+      },
+      {
+        label: dictionary['navigation'].gamification,
+        href: '/pages/widget-examples/gamification'
+      },
+      {
+        label: dictionary['navigation'].actions,
+        href: '/pages/widget-examples/actions'
+      }
+    ]
+  },
+  {
+    label: dictionary['navigation'].frontPages,
+    icon: 'ri-file-copy-line',
+    children: [
+      {
+        label: dictionary['navigation'].landing,
+        href: '/front-pages/landing-page',
+        target: '_blank',
+        excludeLang: true
+      },
+      {
+        label: dictionary['navigation'].pricing,
+        href: '/front-pages/pricing',
+        target: '_blank',
+        excludeLang: true
+      },
+      {
+        label: dictionary['navigation'].payment,
+        href: '/front-pages/payment',
+        target: '_blank',
+        excludeLang: true
+      },
+      {
+        label: dictionary['navigation'].checkout,
+        href: '/front-pages/checkout',
+        target: '_blank',
+        excludeLang: true
+      },
+      {
+        label: dictionary['navigation'].helpCenter,
+        href: '/front-pages/help-center',
+        target: '_blank',
+        excludeLang: true
       }
     ]
   },

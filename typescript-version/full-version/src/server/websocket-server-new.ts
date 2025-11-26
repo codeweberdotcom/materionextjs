@@ -14,15 +14,15 @@ const dev = !isProduction
 const app = next({ dev })
 const handle = app.getRequestHandler()
 
-app.prepare().then(() => {
+app.prepare().then(async () => {
   // Создаем HTTP сервер
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url || '/', true)
     handle(req, res, parsedUrl)
   })
 
-  // Инициализируем Socket.IO сервер с новой архитектурой
-  const io = initializeSocketServer(server);
+  // Инициализируем Socket.IO сервер с новой архитектурой (async)
+  const io = await initializeSocketServer(server);
 
   // Сохраняем ссылку на io для использования в приложении
   globalThis.io = io;

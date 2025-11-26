@@ -40,9 +40,10 @@ Notifications синхронизируются через Socket.IO namespace `/
 - `notificationUpdate` — изменение статуса/metadata.
 - `notificationDeleted` — удаление уведомления.
 - `notificationsRead` — массовое чтение (mark-all).
+- `presence:sync` — синхронизация статусов онлайн пользователей.
 
 ### Клиент → Сервер
-- `markAsRead`, `markAllAsRead`, `deleteNotification` — вызываются хуком `useNotifications`, который автоматически использует Socket.IO либо REST.
+- `markAsRead`, `markAllAsRead`, `deleteNotification`, `presence:sync` — вызываются хуком `useNotifications`, который автоматически использует Socket.IO либо REST.
 - AI-агентам предпочтительнее REST API, поскольку оно даёт детерминированные ответы; сокет служит для live-обновлений UI.
 
 ## 📡 API Endpoints
@@ -531,6 +532,7 @@ interface Notification {
 - `notificationUpdate`
 - `notificationDeleted`
 - `notificationsRead`
+- `presence:sync`
 
 ### Virtual Notifications
 - Generated client-side for chat unread messages

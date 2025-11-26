@@ -18,6 +18,7 @@ import LanguageDropdown from '@components/layout/shared/LanguageDropdown'
 import ModeDropdown from '@components/layout/shared/ModeDropdown'
 import ShortcutsDropdown from '@components/layout/shared/ShortcutsDropdown'
 import NotificationsDropdown from '@components/layout/shared/NotificationsDropdown'
+import AccountSwitcher from '@components/accounts/AccountSwitcher'
 import UserDropdown from '@components/layout/shared/UserDropdown'
 
 // Hook Imports
@@ -139,8 +140,9 @@ const NavbarContent = () => {
         <ModeDropdown />
         <ShortcutsDropdown shortcuts={shortcuts} />
         <NotificationsDropdown notifications={notifications} />
+        <AccountSwitcher />
         <UserDropdown />
-        {/* Language Dropdown, Notification Dropdown, quick access menu dropdown, user dropdown will be placed here */}
+        {/* Language Dropdown, Notification Dropdown, quick access menu dropdown, account switcher, user dropdown will be placed here */}
       </div>
     </div>
   )

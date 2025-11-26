@@ -21,6 +21,7 @@ type RedisInstance = {
   psetex(key: string, ttl: number, value: string): Promise<'OK' | null>
   del(...keys: string[]): Promise<number>
   scan(cursor: string, matchCmd: 'MATCH', pattern: string, countCmd: 'COUNT', count: number): Promise<[string, string[]]>
+  set(key: string, value: string): Promise<string | null>
 }
 
 type RedisConstructor = new (url: string, options?: Record<string, unknown>) => RedisInstance
@@ -47,6 +48,7 @@ const ensureRedisDependency = (): RedisConstructor => {
 export class RedisRateLimitStore implements RateLimitStore {
   private redis: RedisInstance
   private ready = false
+  private connecting: Promise<void> | null = null
 
   constructor(url: string, tls?: boolean) {
     const RedisLib = ensureRedisDependency()
@@ -58,13 +60,27 @@ export class RedisRateLimitStore implements RateLimitStore {
 
   private async ensureConnected() {
     if (this.ready) return
-    try {
-      await this.redis.connect()
-      this.ready = true
-    } catch (error) {
-      console.error('[rate-limit] Failed to connect to Redis, falling back to Prisma store.', error)
-      throw error
+    
+    // Если уже идет подключение, ждем его завершения
+    if (this.connecting) {
+      await this.connecting
+      return
     }
+
+    // Создаем промис подключения
+    this.connecting = (async () => {
+      try {
+        await this.redis.connect()
+        this.ready = true
+        this.connecting = null
+      } catch (error) {
+        this.connecting = null
+        console.error('[rate-limit] Failed to connect to Redis, falling back to Prisma store.', error)
+        throw error
+      }
+    })()
+
+    await this.connecting
   }
 
   async consume(params: RateLimitConsumeParams): Promise<RateLimitResult> {
@@ -80,10 +96,12 @@ export class RedisRateLimitStore implements RateLimitStore {
       now,
       userId,
       email,
+      emailHash,
       ipAddress,
       ipHash,
       ipPrefix,
       hashVersion,
+      debugEmail,
       recordEvent
     } = params
 
@@ -157,13 +175,16 @@ export class RedisRateLimitStore implements RateLimitStore {
           ipHash,
           ipPrefix,
           hashVersion,
+          debugEmail,
           eventType: 'block',
           mode,
           count: newCount,
           maxRequests: config.maxRequests,
           windowStart,
           windowEnd,
-          blockedUntil: mode === 'enforce' ? blockedUntil : null
+          blockedUntil: mode === 'enforce' ? blockedUntil : null,
+          createUserBlock: mode === 'enforce', // Save to UserBlock for long-term storage
+          environment: params.environment // Передаем environment для различения тестовых и реальных событий
         })
         if (blockMetaKey) {
           await this.redis.psetex(blockMetaKey, metaTtl, '1')
@@ -205,7 +226,9 @@ export class RedisRateLimitStore implements RateLimitStore {
         ipHash,
         ipPrefix,
         hashVersion,
+        debugEmail,
         eventType: 'warning',
+        environment: params.environment, // Передаем environment для различения тестовых и реальных событий
         mode,
         count: newCount,
         maxRequests: config.maxRequests,
@@ -221,6 +244,39 @@ export class RedisRateLimitStore implements RateLimitStore {
       resetTime: windowEnd.getTime(),
       warning: shouldWarnAfter ? { remaining: remainingAfter } : undefined
     }
+  }
+
+  async setBlock(key: string, module: string, blockedUntil?: Date | null): Promise<void> {
+    await this.ensureConnected()
+    const blockKey = this.blockKey(module, key)
+    if (blockedUntil) {
+      const ttl = Math.max(0, blockedUntil.getTime() - Date.now())
+      if (ttl <= 0) {
+        await this.redis.del(blockKey)
+        return
+      }
+      await this.redis.psetex(blockKey, ttl, blockedUntil.getTime().toString())
+      return
+    }
+    await this.redis.del(blockKey)
+  }
+
+  async restoreStateFromDatabase(params: { key: string; module: string; count: number; blockedUntil?: Date | null }) {
+    await this.ensureConnected()
+    const { key, module, count, blockedUntil } = params
+    const countKey = this.countKey(module, key)
+    const blockKey = this.blockKey(module, key)
+
+    const pipeline = this.redis.multi()
+    pipeline.set(countKey, count.toString())
+
+    if (blockedUntil) {
+      const ttl = Math.max(1000, blockedUntil.getTime() - Date.now())
+      pipeline.psetex(blockKey, ttl, blockedUntil.getTime().toString())
+    } else {
+      pipeline.del(blockKey)
+    }
+    await pipeline.exec()
   }
 
   async resetCache(key?: string, module?: string): Promise<void> {
@@ -260,6 +316,40 @@ export class RedisRateLimitStore implements RateLimitStore {
       this.ready = false
     } else {
       this.redis.disconnect()
+    }
+  }
+
+  async syncBlocksFromDatabase(): Promise<void> {
+    // Redis store doesn't need to sync blocks from database
+    // Blocks are stored directly in Redis
+    return
+  }
+
+  async clearCacheCompletely(key?: string, module?: string): Promise<void> {
+    await this.resetCache(key, module)
+  }
+
+  async healthCheck(): Promise<{ healthy: boolean; latency?: number; error?: string }> {
+    const startTime = Date.now()
+
+    try {
+      await this.ensureConnected()
+
+      // Simple ping-pong test
+      const pingResult = await this.redis.get('__health_check__')
+      const latency = Date.now() - startTime
+
+      return {
+        healthy: true,
+        latency
+      }
+    } catch (error) {
+      const latency = Date.now() - startTime
+      return {
+        healthy: false,
+        latency,
+        error: error instanceof Error ? error.message : 'Unknown Redis error'
+      }
     }
   }
 

@@ -15,6 +15,7 @@ This guide will help you set up the Materio MUI Next.js Admin Template for devel
 - **Node.js**: 20.x LTS (tested with v20.19.0)
 - **Package Manager**: pnpm (highly recommended for speed)
 - **Database**: PostgreSQL 15+ (for production)
+- **Docker**: Обязательно установлен и запущен (для Redis и мониторинга)
 - **Memory**: 2GB RAM or more
 - **Storage**: 1GB+ free space
 
@@ -25,6 +26,21 @@ This guide will help you set up the Materio MUI Next.js Admin Template for devel
 - **OS**: Windows 11, macOS, Linux
 
 ## 🚀 Quick Start
+
+### ⚠️ Важно: Команда запуска
+
+**Основная команда для запуска приложения:**
+
+```bash
+pnpm dev:with-socket:monitoring:with-redis
+```
+
+**⚠️ Обязательно:**
+- Docker должен быть запущен перед выполнением команды
+- Команда автоматически запускает Docker контейнеры (Redis и мониторинг)
+- Обеспечивает полную функциональность всех модулей
+
+---
 
 ### 1. Download & Setup
 
@@ -53,6 +69,9 @@ DATABASE_URL="file:./prisma/dev.db"
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-generated-secret-here"
 
+# Rate Limiting (Required for Production)
+RATE_LIMIT_SECRET="your-rate-limit-secret-minimum-32-characters-long"
+
 # OAuth Providers (optional - for full-version)
 GOOGLE_CLIENT_ID="your-google-client-id"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
@@ -64,9 +83,13 @@ SMTP_USER="your-email@gmail.com"
 SMTP_PASS="your-app-password"
 ```
 
-**Security Note**: Generate a secure `NEXTAUTH_SECRET` using:
+**Security Note**: Generate secure secrets using:
 ```bash
+# Generate NEXTAUTH_SECRET
 openssl rand -base64 32
+
+# Generate RATE_LIMIT_SECRET (minimum 32 characters)
+openssl rand -hex 32
 ```
 
 ### 3. Install Dependencies
@@ -99,7 +122,25 @@ npm run seed
 
 ### 5. Development Server
 
-Launch the development server:
+**⚠️ ВАЖНО: Основная команда для запуска приложения**
+
+Для полной функциональности приложения (включая мониторинг, Redis и Socket.IO) **обязательно** используйте:
+
+```bash
+# Основная команда запуска (РЕКОМЕНДУЕТСЯ)
+pnpm dev:with-socket:monitoring:with-redis
+```
+
+**Эта команда автоматически:**
+- ✅ Запускает Docker контейнеры (Redis и мониторинг)
+- ✅ Запускает Next.js приложение с Socket.IO
+- ✅ Обеспечивает полную функциональность чата, уведомлений и событий
+
+**⚠️ Обязательно:** Убедитесь, что Docker запущен перед выполнением команды!
+
+---
+
+**Альтернативные команды (для разработки без Docker):**
 
 ```bash
 # Next.js application only (port 3000)
@@ -107,21 +148,29 @@ pnpm run dev
 
 # Next.js application with Socket.IO (port 3000)
 pnpm run dev:with-socket
+
+# С мониторингом (требует Docker)
+pnpm run dev:with-socket:monitoring
 ```
 
-Alternative commands if pnpm is not available:
+**Для npm/yarn:**
 
 ```bash
 # npm
+npm run dev:with-socket:monitoring:with-redis
 npm run dev
 npm run dev:with-socket
 
 # yarn
+yarn dev:with-socket:monitoring:with-redis
 yarn dev
 yarn dev:with-socket
 ```
 
-**Note**: Use `dev:with-socket` for full functionality with chat and notifications. The `dev` script runs only Next.js.
+**Note**: 
+- **Основная команда:** `pnpm dev:with-socket:monitoring:with-redis` - используйте для полной функциональности
+- `dev:with-socket` - для разработки с Socket.IO, но без Docker
+- `dev` - только Next.js, без Socket.IO и Docker
 
 Visit `http://localhost:3000` to see the application.
 
@@ -156,6 +205,73 @@ Environment variables are key-value pairs that configure your application outsid
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `DATABASE_URL` | Database connection string | `file:./prisma/dev.db` |
+
+#### Rate Limit Security Variables (Required for Production)
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `RATE_LIMIT_SECRET` | HMAC-SHA256 secret for hashing IP addresses and emails | `a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890abcd` |
+
+#### Service Configuration Encryption (Required for External Services)
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `ENCRYPTION_KEY` | AES-256-GCM encryption key for service credentials (32 bytes, 64 hex characters) | `a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890abcd` |
+
+**Note**: This key is used to encrypt passwords, tokens, and API keys stored in the Service Configuration module. **Required if using external service configurations through the admin panel.**
+
+**Generate Encryption Key**:
+```bash
+# Using Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# Or using OpenSSL
+openssl rand -hex 32
+```
+
+**Security**: 
+- Never commit this key to version control
+- Store securely in production environment variables
+- If the key is lost, all encrypted credentials in the database cannot be recovered
+
+#### Logging Configuration Variables
+
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `LOG_LEVEL` | Winston log level (`error`, `warn`, `info`, `debug`) | `info` | `debug` |
+| `LOG_DIR` | Directory for rotated log files | `logs` | `logs` |
+| `LOG_MAX_SIZE` | Max size of a log file before rotation (supports `m`, `k`, etc.) | `20m` | `50m` |
+| `LOG_MAX_FILES` | How long to keep rotated files (e.g., `14d`, `30d`) | `14d` | `30d` |
+
+#### Event Retention Policy Variables (Optional)
+
+| Variable | Description | Default | Example |
+|----------|-------------|---------|---------|
+| `EVENT_RETENTION_DEFAULT_DAYS` | Default retention period for all event sources (days) | `90` | `90` |
+| `EVENT_RETENTION_RATE_LIMIT_DAYS` | Retention for rate_limit events (days) | `30` | `30` |
+| `EVENT_RETENTION_AUTH_DAYS` | Retention for auth events (days) | `90` | `90` |
+| `EVENT_RETENTION_REGISTRATION_DAYS` | Retention for registration events (days) | `90` | `90` |
+| `EVENT_RETENTION_MODERATION_DAYS` | Retention for moderation events (days) | `365` | `365` |
+| `EVENT_RETENTION_BLOCK_DAYS` | Retention for block events (days) | `365` | `365` |
+| `EVENT_RETENTION_CHAT_DAYS` | Retention for chat events (days) | `90` | `90` |
+| `EVENT_RETENTION_ADS_DAYS` | Retention for ads events (days) | `90` | `90` |
+| `EVENT_RETENTION_NOTIFICATIONS_DAYS` | Retention for notifications events (days) | `90` | `90` |
+| `EVENT_RETENTION_SYSTEM_DAYS` | Retention for system events (days) | `90` | `90` |
+| `EVENT_RETENTION_BATCH_SIZE` | Number of events to delete per batch | `1000` | `1000` |
+| `EVENT_RETENTION_ENABLED` | Enable/disable retention cleanup | `true` | `true` |
+
+**Note**: Events older than the configured TTL will be automatically deleted. Use the API endpoint `/api/admin/events/retention` to run cleanup manually or set up a cron job.
+
+**Security Note**: Generate a secure `RATE_LIMIT_SECRET` using:
+```bash
+# Generate 64-character hex string (32 bytes)
+openssl rand -hex 32
+
+# Or using Node.js
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**Important**: This secret is used for HMAC-SHA256 hashing of personally identifiable information (PII) like IP addresses and email addresses in rate limiting. Without it, the system falls back to development defaults and logs warnings.
 
 #### Email Variables (Optional)
 
@@ -577,24 +693,39 @@ The application uses an integrated Socket.IO server for real-time chat functiona
 
 ### Running the Server
 
-For full functionality with chat and notifications, run the integrated server:
+**⚠️ ОСНОВНАЯ КОМАНДА ДЛЯ ЗАПУСКА:**
+
+Для полной функциональности приложения (чат, уведомления, мониторинг, Redis, Events) **обязательно** используйте:
 
 ```bash
-# Next.js application with Socket.IO (port 3000)
+# Основная команда запуска (РЕКОМЕНДУЕТСЯ)
+pnpm dev:with-socket:monitoring:with-redis
+```
+
+**⚠️ ВАЖНО:** 
+- Docker должен быть запущен перед выполнением команды
+- Команда автоматически запускает необходимые Docker контейнеры (Redis и мониторинг)
+- Обеспечивает полную функциональность всех модулей
+
+**Альтернативные команды:**
+
+```bash
+# С Socket.IO и мониторингом (требует Docker)
+pnpm run dev:with-socket:monitoring
+
+# Только с Socket.IO (без Docker)
 pnpm run dev:with-socket
+
+# Только Next.js (без Socket.IO и Docker)
+pnpm run dev
 ```
 
-Alternative commands if pnpm is not available:
+**Для npm/yarn:**
 
 ```bash
-# npm
-npm run dev:with-socket
-
-# yarn
-yarn run dev:with-socket
+npm run dev:with-socket:monitoring:with-redis
+yarn dev:with-socket:monitoring:with-redis
 ```
-
-For development without Socket.IO, use `pnpm run dev`.
 
 ### Production Deployment
 
