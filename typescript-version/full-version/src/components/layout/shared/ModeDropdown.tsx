@@ -20,7 +20,17 @@ import type { Mode } from '@core/types'
 import { useSettings } from '@core/hooks/useSettings'
 
 // Context Imports
-import { useTranslation } from '@/contexts/TranslationContext'
+import { useTranslationSafe } from '@/contexts/TranslationContext'
+
+// Fallback labels when TranslationProvider is not available
+const fallbackLabels = {
+  light: 'Light',
+  dark: 'Dark',
+  system: 'System',
+  lightMode: 'Light Mode',
+  darkMode: 'Dark Mode',
+  systemMode: 'System Mode'
+}
 
 const ModeDropdown = () => {
   // States
@@ -32,7 +42,7 @@ const ModeDropdown = () => {
 
   // Hooks
   const { settings, updateSettings } = useSettings()
-  const dictionary = useTranslation()
+  const dictionary = useTranslationSafe()
 
   const handleClose = () => {
     setOpen(false)
@@ -63,12 +73,19 @@ const ModeDropdown = () => {
 
   const getModeTooltip = () => {
     if (settings.mode === 'system') {
-      return dictionary.navigation.systemMode
+      return dictionary?.navigation?.systemMode ?? fallbackLabels.systemMode
     } else if (settings.mode === 'dark') {
-      return dictionary.navigation.darkMode
+      return dictionary?.navigation?.darkMode ?? fallbackLabels.darkMode
     } else {
-      return dictionary.navigation.lightMode
+      return dictionary?.navigation?.lightMode ?? fallbackLabels.lightMode
     }
+  }
+
+  // Labels with fallback
+  const labels = {
+    light: dictionary?.navigation?.light ?? fallbackLabels.light,
+    dark: dictionary?.navigation?.dark ?? fallbackLabels.dark,
+    system: dictionary?.navigation?.system ?? fallbackLabels.system
   }
 
   return (
@@ -106,7 +123,7 @@ const ModeDropdown = () => {
                     selected={settings.mode === 'light'}
                   >
                     <i className='ri-sun-line' />
-                    {dictionary.navigation.light}
+                    {labels.light}
                   </MenuItem>
                   <MenuItem
                     className='gap-3'
@@ -114,7 +131,7 @@ const ModeDropdown = () => {
                     selected={settings.mode === 'dark'}
                   >
                     <i className='ri-moon-clear-line' />
-                    {dictionary.navigation.dark}
+                    {labels.dark}
                   </MenuItem>
                   <MenuItem
                     className='gap-3'
@@ -122,7 +139,7 @@ const ModeDropdown = () => {
                     selected={settings.mode === 'system'}
                   >
                     <i className='ri-computer-line' />
-                    {dictionary.navigation.system}
+                    {labels.system}
                   </MenuItem>
                 </MenuList>
               </ClickAwayListener>

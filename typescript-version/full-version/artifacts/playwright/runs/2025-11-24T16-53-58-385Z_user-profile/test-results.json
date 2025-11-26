@@ -1,0 +1,264 @@
+{
+  "config": {
+    "configFile": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\playwright.config.ts",
+    "rootDir": "C:/laragon/www/materionextjs/typescript-version/full-version/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 3
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "reports/e2e/test-results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "open": "never",
+          "outputFolder": "reports/e2e/html"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/laragon/www/materionextjs/typescript-version/full-version/reports/e2e/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/laragon/www/materionextjs/typescript-version/full-version/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.1",
+    "workers": 6,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "user\\user-profile.spec.ts",
+      "file": "user/user-profile.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "User Profile E2E",
+          "file": "user/user-profile.spec.ts",
+          "line": 4,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should view and update user profile",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 17267,
+                      "error": {
+                        "message": "Error: Failed to create test user: 500 - {}",
+                        "stack": "Error: Failed to create test user: 500 - {}\n    at createTestUserViaAPI (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts:67:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\user\\user-profile.spec.ts:25:22",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts",
+                          "column": 11,
+                          "line": 67
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers\\user-helpers.ts:67\n\n\u001b[0m \u001b[90m 65 |\u001b[39m   \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mresponse\u001b[33m.\u001b[39mok()) {\n \u001b[90m 66 |\u001b[39m     \u001b[36mconst\u001b[39m errorData \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m response\u001b[33m.\u001b[39mjson()\u001b[33m.\u001b[39m\u001b[36mcatch\u001b[39m(() \u001b[33m=>\u001b[39m ({}))\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 67 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 68 |\u001b[39m       \u001b[32m`Failed to create test user: ${response.status()} - ${JSON.stringify(errorData)}`\u001b[39m\n \u001b[90m 69 |\u001b[39m     )\n \u001b[90m 70 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts",
+                            "column": 11,
+                            "line": 67
+                          },
+                          "message": "Error: Failed to create test user: 500 - {}\n\n   at helpers\\user-helpers.ts:67\n\n  65 |   if (!response.ok()) {\n  66 |     const errorData = await response.json().catch(() => ({}))\n> 67 |     throw new Error(\n     |           ^\n  68 |       `Failed to create test user: ${response.status()} - ${JSON.stringify(errorData)}`\n  69 |     )\n  70 |   }\n    at createTestUserViaAPI (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts:67:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\user\\user-profile.spec.ts:25:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T16:53:39.304Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts",
+                        "column": 11,
+                        "line": 67
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "dc05da85e26847654a49-266d9cfe867fc3537247",
+              "file": "user/user-profile.spec.ts",
+              "line": 23,
+              "column": 7
+            },
+            {
+              "title": "should change password",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "failed",
+                      "duration": 17271,
+                      "error": {
+                        "message": "Error: Failed to create test user: 500 - {}",
+                        "stack": "Error: Failed to create test user: 500 - {}\n    at createTestUserViaAPI (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts:67:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\user\\user-profile.spec.ts:116:22",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts",
+                          "column": 11,
+                          "line": 67
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers\\user-helpers.ts:67\n\n\u001b[0m \u001b[90m 65 |\u001b[39m   \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mresponse\u001b[33m.\u001b[39mok()) {\n \u001b[90m 66 |\u001b[39m     \u001b[36mconst\u001b[39m errorData \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m response\u001b[33m.\u001b[39mjson()\u001b[33m.\u001b[39m\u001b[36mcatch\u001b[39m(() \u001b[33m=>\u001b[39m ({}))\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 67 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 68 |\u001b[39m       \u001b[32m`Failed to create test user: ${response.status()} - ${JSON.stringify(errorData)}`\u001b[39m\n \u001b[90m 69 |\u001b[39m     )\n \u001b[90m 70 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts",
+                            "column": 11,
+                            "line": 67
+                          },
+                          "message": "Error: Failed to create test user: 500 - {}\n\n   at helpers\\user-helpers.ts:67\n\n  65 |   if (!response.ok()) {\n  66 |     const errorData = await response.json().catch(() => ({}))\n> 67 |     throw new Error(\n     |           ^\n  68 |       `Failed to create test user: ${response.status()} - ${JSON.stringify(errorData)}`\n  69 |     )\n  70 |   }\n    at createTestUserViaAPI (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts:67:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\user\\user-profile.spec.ts:116:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T16:53:39.306Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts",
+                        "column": 11,
+                        "line": 67
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "dc05da85e26847654a49-6521bbd320f8872ae2b9",
+              "file": "user/user-profile.spec.ts",
+              "line": 114,
+              "column": 7
+            },
+            {
+              "title": "should upload avatar",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 17265,
+                      "error": {
+                        "message": "Error: Failed to create test user: 500 - {}",
+                        "stack": "Error: Failed to create test user: 500 - {}\n    at createTestUserViaAPI (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts:67:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\user\\user-profile.spec.ts:187:22",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts",
+                          "column": 11,
+                          "line": 67
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhelpers\\user-helpers.ts:67\n\n\u001b[0m \u001b[90m 65 |\u001b[39m   \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mresponse\u001b[33m.\u001b[39mok()) {\n \u001b[90m 66 |\u001b[39m     \u001b[36mconst\u001b[39m errorData \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m response\u001b[33m.\u001b[39mjson()\u001b[33m.\u001b[39m\u001b[36mcatch\u001b[39m(() \u001b[33m=>\u001b[39m ({}))\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 67 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 68 |\u001b[39m       \u001b[32m`Failed to create test user: ${response.status()} - ${JSON.stringify(errorData)}`\u001b[39m\n \u001b[90m 69 |\u001b[39m     )\n \u001b[90m 70 |\u001b[39m   }\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts",
+                            "column": 11,
+                            "line": 67
+                          },
+                          "message": "Error: Failed to create test user: 500 - {}\n\n   at helpers\\user-helpers.ts:67\n\n  65 |   if (!response.ok()) {\n  66 |     const errorData = await response.json().catch(() => ({}))\n> 67 |     throw new Error(\n     |           ^\n  68 |       `Failed to create test user: ${response.status()} - ${JSON.stringify(errorData)}`\n  69 |     )\n  70 |   }\n    at createTestUserViaAPI (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts:67:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\user\\user-profile.spec.ts:187:22"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T16:53:39.300Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\user-helpers.ts",
+                        "column": 11,
+                        "line": 67
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "dc05da85e26847654a49-48cfd123d271ee6bf0ab",
+              "file": "user/user-profile.spec.ts",
+              "line": 185,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-24T16:53:37.893Z",
+    "duration": 20432.504,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

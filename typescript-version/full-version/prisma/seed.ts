@@ -652,6 +652,125 @@ async function main() {
     }
   })
 
+  // Tariff expiration reminder templates
+  await prisma.emailTemplate.upsert({
+    where: { name: 'tariff-expiring-7-days' },
+    update: {},
+    create: {
+      name: 'tariff-expiring-7-days',
+      subject: 'Ваш тариф истекает через 7 дней',
+      content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #333;">Напоминание о тарифе</h1>
+          <p>Здравствуйте, {name}!</p>
+          <p>Ваш тариф <strong>{tariffName}</strong> истекает через <strong>7 дней</strong> ({expirationDate}).</p>
+          <div style="background-color: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #ffc107;">
+            <h3 style="color: #856404; margin-top: 0;">Что произойдёт при истечении:</h3>
+            <ul style="color: #856404;">
+              <li>Аккаунт будет переведён на бесплатный тариф FREE</li>
+              <li>Некоторые функции станут недоступны</li>
+              <li>Лимиты будут снижены</li>
+            </ul>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{renewUrl}" style="background-color: #28a745; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+              Продлить тариф
+            </a>
+          </div>
+          <p>С уважением,<br>Команда поддержки</p>
+        </div>
+      `
+    }
+  })
+
+  await prisma.emailTemplate.upsert({
+    where: { name: 'tariff-expiring-3-days' },
+    update: {},
+    create: {
+      name: 'tariff-expiring-3-days',
+      subject: '⚠️ Ваш тариф истекает через 3 дня',
+      content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #dc3545;">Срочно: тариф скоро истекает!</h1>
+          <p>Здравствуйте, {name}!</p>
+          <p>Ваш тариф <strong>{tariffName}</strong> истекает через <strong>3 дня</strong> ({expirationDate}).</p>
+          <div style="background-color: #f8d7da; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #dc3545;">
+            <h3 style="color: #721c24; margin-top: 0;">Не упустите момент!</h3>
+            <p style="color: #721c24;">Продлите тариф сейчас, чтобы не потерять доступ к функциям:</p>
+            <ul style="color: #721c24;">
+              <li>Публикация объявлений</li>
+              <li>Управление менеджерами</li>
+              <li>Расширенная статистика</li>
+            </ul>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{renewUrl}" style="background-color: #dc3545; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+              Продлить тариф сейчас
+            </a>
+          </div>
+          <p>С уважением,<br>Команда поддержки</p>
+        </div>
+      `
+    }
+  })
+
+  await prisma.emailTemplate.upsert({
+    where: { name: 'tariff-expiring-1-day' },
+    update: {},
+    create: {
+      name: 'tariff-expiring-1-day',
+      subject: '🚨 Последний день тарифа!',
+      content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #dc3545;">🚨 Тариф истекает завтра!</h1>
+          <p>Здравствуйте, {name}!</p>
+          <p>Ваш тариф <strong>{tariffName}</strong> истекает <strong>завтра</strong> ({expirationDate}).</p>
+          <div style="background-color: #dc3545; color: white; padding: 20px; margin: 20px 0; border-radius: 5px;">
+            <h3 style="margin-top: 0;">⏰ Осталось менее 24 часов!</h3>
+            <p>После истечения тарифа вы будете переведены на бесплатный план FREE с ограниченными возможностями.</p>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{renewUrl}" style="background-color: #28a745; color: white; padding: 20px 40px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; font-size: 18px;">
+              Продлить тариф немедленно
+            </a>
+          </div>
+          <p>С уважением,<br>Команда поддержки</p>
+        </div>
+      `
+    }
+  })
+
+  await prisma.emailTemplate.upsert({
+    where: { name: 'tariff-expired' },
+    update: {},
+    create: {
+      name: 'tariff-expired',
+      subject: 'Ваш тариф истёк - переход на FREE',
+      content: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #6c757d;">Тариф истёк</h1>
+          <p>Здравствуйте, {name}!</p>
+          <p>Ваш тариф <strong>{previousTariffName}</strong> истёк.</p>
+          <div style="background-color: #e9ecef; padding: 20px; margin: 20px 0; border-radius: 5px;">
+            <h3 style="margin-top: 0;">Ваш аккаунт переведён на бесплатный тариф FREE</h3>
+            <p>Теперь вам доступны ограниченные возможности:</p>
+            <ul>
+              <li>До 5 объявлений</li>
+              <li>1 аккаунт</li>
+              <li>Базовая поддержка</li>
+            </ul>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="{upgradeUrl}" style="background-color: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+              Выбрать новый тариф
+            </a>
+          </div>
+          <p>С уважением,<br>Команда поддержки</p>
+        </div>
+      `
+    }
+  })
+
   // Create sample notifications for superadmin user
   const sampleNotifications = [
     {
@@ -1497,6 +1616,627 @@ async function main() {
   }
 
   console.log(`✅ Created ${tariffPlans.length} tariff plans`)
+
+  // ==========================================
+  // Create demo user accounts
+  // ==========================================
+
+  // Get tariff plans for accounts
+  const freePlan = await prisma.tariffPlan.findUnique({ where: { code: 'FREE' } })
+  const basicPlan = await prisma.tariffPlan.findUnique({ where: { code: 'BASIC' } })
+  const proPlan = await prisma.tariffPlan.findUnique({ where: { code: 'PRO' } })
+
+  if (freePlan && basicPlan && proPlan) {
+    // Get users for accounts
+    const adminUser = await prisma.user.findUnique({ where: { email: 'admin@example.com' } })
+    const regularUser = await prisma.user.findUnique({ where: { email: 'user@example.com' } })
+    const moderatorUser = await prisma.user.findUnique({ where: { email: 'moderator@example.com' } })
+    const editorUser = await prisma.user.findUnique({ where: { email: 'editor@example.com' } })
+
+    if (adminUser && regularUser && moderatorUser && editorUser) {
+      // Даты для демо тарифов
+      const now = new Date()
+      const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+      const in5Days = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000)   // Для теста напоминания за 3 дня
+      const in2Days = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000)   // Для теста напоминания за 1 день
+      const yesterday = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000)  // Для теста истекшего тарифа
+
+      // Create NETWORK account for admin (PRO tariff) - истекает через 30 дней
+      const adminAccount = await prisma.userAccount.upsert({
+        where: {
+          id: 'demo-account-admin-network'
+        },
+        update: {
+          name: 'Сеть компаний Admin',
+          description: 'Демо-аккаунт типа "Сеть компаний" с PRO тарифом',
+          type: 'NETWORK',
+          tariffPlanId: proPlan.id,
+          status: 'active',
+          tariffStartedAt: now,
+          tariffPaidUntil: in30Days,
+          tariffAutoRenew: true
+        },
+        create: {
+          id: 'demo-account-admin-network',
+          userId: adminUser.id,
+          ownerId: adminUser.id,
+          name: 'Сеть компаний Admin',
+          description: 'Демо-аккаунт типа "Сеть компаний" с PRO тарифом',
+          type: 'NETWORK',
+          tariffPlanId: proPlan.id,
+          status: 'active',
+          tariffStartedAt: now,
+          tariffPaidUntil: in30Days,
+          tariffAutoRenew: true
+        }
+      })
+
+      // Create LISTING account for regular user (FREE tariff) - пробный период 30 дней
+      const userAccount = await prisma.userAccount.upsert({
+        where: {
+          id: 'demo-account-user-listing'
+        },
+        update: {
+          name: 'Мои объявления',
+          description: 'Демо-аккаунт для публикации объявлений',
+          type: 'LISTING',
+          tariffPlanId: freePlan.id,
+          status: 'active',
+          tariffStartedAt: now,
+          tariffPaidUntil: in5Days, // Истекает через 5 дней (тест напоминания)
+          tariffAutoRenew: false
+        },
+        create: {
+          id: 'demo-account-user-listing',
+          userId: regularUser.id,
+          ownerId: regularUser.id,
+          name: 'Мои объявления',
+          description: 'Демо-аккаунт для публикации объявлений',
+          type: 'LISTING',
+          tariffPlanId: freePlan.id,
+          status: 'active',
+          tariffStartedAt: now,
+          tariffPaidUntil: in5Days,
+          tariffAutoRenew: false
+        }
+      })
+
+      // Create COMPANY account for moderator (BASIC tariff) - истекает через 2 дня (тест срочного напоминания)
+      const moderatorAccount = await prisma.userAccount.upsert({
+        where: {
+          id: 'demo-account-moderator-company'
+        },
+        update: {
+          name: 'Компания Модератора',
+          description: 'Демо-аккаунт компании с BASIC тарифом',
+          type: 'COMPANY',
+          tariffPlanId: basicPlan.id,
+          status: 'active',
+          tariffStartedAt: new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000), // Начался 28 дней назад
+          tariffPaidUntil: in2Days, // Истекает через 2 дня (тест срочного напоминания)
+          tariffAutoRenew: true
+        },
+        create: {
+          id: 'demo-account-moderator-company',
+          userId: moderatorUser.id,
+          ownerId: moderatorUser.id,
+          name: 'Компания Модератора',
+          description: 'Демо-аккаунт компании с BASIC тарифом',
+          type: 'COMPANY',
+          tariffPlanId: basicPlan.id,
+          status: 'active',
+          tariffStartedAt: new Date(now.getTime() - 28 * 24 * 60 * 60 * 1000),
+          tariffPaidUntil: in2Days,
+          tariffAutoRenew: true
+        }
+      })
+
+      // Create LISTING account for editor (FREE tariff) - бессрочный (после downgrade)
+      const editorAccount = await prisma.userAccount.upsert({
+        where: {
+          id: 'demo-account-editor-listing'
+        },
+        update: {
+          name: 'Объявления редактора',
+          description: 'Демо-аккаунт редактора для объявлений (бессрочный FREE)',
+          type: 'LISTING',
+          tariffPlanId: freePlan.id,
+          status: 'active',
+          tariffStartedAt: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000), // Начался 60 дней назад
+          tariffPaidUntil: null, // Бессрочный FREE (после downgrade)
+          tariffAutoRenew: false
+        },
+        create: {
+          id: 'demo-account-editor-listing',
+          userId: editorUser.id,
+          ownerId: editorUser.id,
+          name: 'Объявления редактора',
+          description: 'Демо-аккаунт редактора для объявлений (бессрочный FREE)',
+          type: 'LISTING',
+          tariffPlanId: freePlan.id,
+          status: 'active',
+          tariffStartedAt: new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000),
+          tariffPaidUntil: null,
+          tariffAutoRenew: false
+        }
+      })
+
+      console.log('✅ Created 4 demo user accounts')
+
+      // Assign editor as manager of admin's NETWORK account
+      await prisma.accountManager.upsert({
+        where: {
+          accountId_userId: {
+            accountId: adminAccount.id,
+            userId: editorUser.id
+          }
+        },
+        update: {
+          canEdit: true,
+          canManage: false,
+          canDelete: false
+        },
+        create: {
+          accountId: adminAccount.id,
+          userId: editorUser.id,
+          assignedBy: adminUser.id,
+          canEdit: true,
+          canManage: false,
+          canDelete: false
+        }
+      })
+
+      console.log('✅ Created 1 demo account manager (editor → admin account)')
+
+      // Create demo transfer request from moderator to user
+      const existingTransfer = await prisma.accountTransfer.findFirst({
+        where: {
+          fromAccountId: moderatorAccount.id,
+          toUserId: regularUser.id
+        }
+      })
+
+      if (!existingTransfer) {
+        await prisma.accountTransfer.create({
+          data: {
+            fromAccountId: moderatorAccount.id,
+            toUserId: regularUser.id,
+            requestedBy: moderatorUser.id,
+            status: 'pending'
+          }
+        })
+      }
+
+      console.log('✅ Created 1 demo account transfer request (moderator → user)')
+    }
+  }
+
+  // ==========================================
+  // Workflow & Rules Engine Demo Data
+  // ==========================================
+
+  // Create listing categories
+  const listingCategories = [
+    {
+      name: 'Недвижимость',
+      slug: 'real-estate',
+      description: 'Квартиры, дома, земельные участки',
+      icon: 'ri-home-line',
+      sortOrder: 1
+    },
+    {
+      name: 'Транспорт',
+      slug: 'transport',
+      description: 'Автомобили, мотоциклы, спецтехника',
+      icon: 'ri-car-line',
+      sortOrder: 2
+    },
+    {
+      name: 'Электроника',
+      slug: 'electronics',
+      description: 'Телефоны, компьютеры, техника',
+      icon: 'ri-smartphone-line',
+      sortOrder: 3
+    },
+    {
+      name: 'Услуги',
+      slug: 'services',
+      description: 'Ремонт, строительство, консалтинг',
+      icon: 'ri-briefcase-line',
+      sortOrder: 4
+    },
+    {
+      name: 'Работа',
+      slug: 'jobs',
+      description: 'Вакансии и резюме',
+      icon: 'ri-user-search-line',
+      sortOrder: 5
+    }
+  ]
+
+  const createdCategories: Record<string, string> = {}
+
+  for (const category of listingCategories) {
+    const created = await prisma.listingCategory.upsert({
+      where: { slug: category.slug },
+      update: category,
+      create: category
+    })
+    createdCategories[category.slug] = created.id
+  }
+
+  console.log(`✅ Created ${listingCategories.length} listing categories`)
+
+  // Get users for listings
+  const listingOwner = await prisma.user.findUnique({ where: { email: 'user@example.com' } })
+  const listingModerator = await prisma.user.findUnique({ where: { email: 'moderator@example.com' } })
+
+  if (listingOwner && listingModerator) {
+    // Create demo listings with different workflow states
+    const demoListings = [
+      {
+        id: 'demo-listing-draft',
+        title: 'Квартира 2-комнатная (черновик)',
+        description: 'Просторная двухкомнатная квартира в центре города. Хороший ремонт, тихий двор.',
+        price: 5500000,
+        currency: 'RUB',
+        categoryId: createdCategories['real-estate'],
+        status: 'draft',
+        ownerId: listingOwner.id,
+        location: 'Москва, Центральный район',
+        contacts: JSON.stringify({ phone: '+7 999 123-45-67', email: 'owner@example.com' }),
+        images: JSON.stringify(['https://picsum.photos/800/600?random=1']),
+        metadata: JSON.stringify({ area: 65, rooms: 2, floor: 5 })
+      },
+      {
+        id: 'demo-listing-pending',
+        title: 'Toyota Camry 2020 (на модерации)',
+        description: 'Отличное состояние, один владелец, полный комплект документов.',
+        price: 2800000,
+        currency: 'RUB',
+        categoryId: createdCategories['transport'],
+        status: 'pending',
+        ownerId: listingOwner.id,
+        location: 'Санкт-Петербург',
+        contacts: JSON.stringify({ phone: '+7 999 234-56-78' }),
+        images: JSON.stringify(['https://picsum.photos/800/600?random=2']),
+        metadata: JSON.stringify({ year: 2020, mileage: 45000, engine: '2.5L' })
+      },
+      {
+        id: 'demo-listing-active',
+        title: 'iPhone 15 Pro Max 256GB (активное)',
+        description: 'Новый телефон в заводской упаковке. Гарантия 1 год.',
+        price: 145000,
+        currency: 'RUB',
+        categoryId: createdCategories['electronics'],
+        status: 'active',
+        ownerId: listingOwner.id,
+        moderatorId: listingModerator.id,
+        moderatedAt: new Date(),
+        publishedAt: new Date(),
+        location: 'Москва',
+        contacts: JSON.stringify({ telegram: '@seller' }),
+        images: JSON.stringify(['https://picsum.photos/800/600?random=3']),
+        viewsCount: 156
+      },
+      {
+        id: 'demo-listing-rejected',
+        title: 'Услуги по ремонту (отклонено)',
+        description: 'Качественный ремонт квартир под ключ.',
+        price: null,
+        currency: 'RUB',
+        categoryId: createdCategories['services'],
+        status: 'rejected',
+        ownerId: listingOwner.id,
+        moderatorId: listingModerator.id,
+        moderatedAt: new Date(),
+        rejectionReason: 'Недостаточно информации о компании и портфолио работ',
+        location: 'Екатеринбург',
+        contacts: JSON.stringify({ phone: '+7 999 345-67-89' })
+      },
+      {
+        id: 'demo-listing-sold',
+        title: 'MacBook Pro M3 (продано)',
+        description: 'Ноутбук в отличном состоянии, использовался 6 месяцев.',
+        price: 185000,
+        currency: 'RUB',
+        categoryId: createdCategories['electronics'],
+        status: 'sold',
+        ownerId: listingOwner.id,
+        moderatorId: listingModerator.id,
+        moderatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        publishedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        soldAt: new Date(),
+        location: 'Новосибирск',
+        viewsCount: 342
+      },
+      {
+        id: 'demo-listing-archived',
+        title: 'Вакансия: Frontend разработчик (архив)',
+        description: 'Ищем опытного React разработчика в команду.',
+        price: 250000,
+        currency: 'RUB',
+        categoryId: createdCategories['jobs'],
+        status: 'archived',
+        ownerId: listingOwner.id,
+        archivedAt: new Date(),
+        location: 'Удаленно',
+        viewsCount: 89
+      }
+    ]
+
+    for (const listing of demoListings) {
+      await prisma.listing.upsert({
+        where: { id: listing.id },
+        update: listing,
+        create: listing
+      })
+    }
+
+    console.log(`✅ Created ${demoListings.length} demo listings with different workflow states`)
+
+    // Create WorkflowInstance for active listings
+    const workflowInstances = [
+      {
+        type: 'listing',
+        entityId: 'demo-listing-draft',
+        state: 'draft',
+        context: JSON.stringify({ createdAt: new Date().toISOString() })
+      },
+      {
+        type: 'listing',
+        entityId: 'demo-listing-pending',
+        state: 'pending',
+        context: JSON.stringify({ submittedAt: new Date().toISOString() })
+      },
+      {
+        type: 'listing',
+        entityId: 'demo-listing-active',
+        state: 'active',
+        context: JSON.stringify({ approvedAt: new Date().toISOString(), moderatorId: listingModerator.id })
+      },
+      {
+        type: 'listing',
+        entityId: 'demo-listing-rejected',
+        state: 'rejected',
+        context: JSON.stringify({ rejectedAt: new Date().toISOString(), reason: 'Недостаточно информации' })
+      },
+      {
+        type: 'listing',
+        entityId: 'demo-listing-sold',
+        state: 'sold',
+        context: JSON.stringify({ soldAt: new Date().toISOString() })
+      },
+      {
+        type: 'listing',
+        entityId: 'demo-listing-archived',
+        state: 'archived',
+        context: JSON.stringify({ archivedAt: new Date().toISOString() })
+      }
+    ]
+
+    for (const instance of workflowInstances) {
+      await prisma.workflowInstance.upsert({
+        where: {
+          type_entityId: {
+            type: instance.type,
+            entityId: instance.entityId
+          }
+        },
+        update: instance,
+        create: instance
+      })
+    }
+
+    console.log(`✅ Created ${workflowInstances.length} workflow instances`)
+  }
+
+  // Create demo business rules
+  const businessRules = [
+    {
+      name: 'auto-block-on-spam-reports',
+      description: 'Автоблокировка пользователя при 5+ жалобах на спам',
+      category: 'blocking',
+      conditions: JSON.stringify({
+        all: [
+          { fact: 'userStats', operator: 'greaterThanInclusive', value: 5, path: '$.reportsCount' }
+        ]
+      }),
+      event: JSON.stringify({
+        type: 'user.block',
+        params: { reason: 'auto-block-spam-reports', notify: true }
+      }),
+      priority: 100,
+      enabled: true
+    },
+    {
+      name: 'auto-suspend-on-excessive-listings',
+      description: 'Автоприостановка при создании 10+ объявлений за час',
+      category: 'blocking',
+      conditions: JSON.stringify({
+        all: [
+          { fact: 'userStats', operator: 'greaterThanInclusive', value: 10, path: '$.listingsLastHour' }
+        ]
+      }),
+      event: JSON.stringify({
+        type: 'user.suspend',
+        params: { reason: 'auto-suspend-excessive-listings', duration: 3600000 }
+      }),
+      priority: 90,
+      enabled: true
+    },
+    {
+      name: 'welcome-email-on-registration',
+      description: 'Отправка приветственного письма при регистрации',
+      category: 'notification',
+      conditions: JSON.stringify({
+        all: [
+          { fact: 'event.source', operator: 'equal', value: 'auth' },
+          { fact: 'event.type', operator: 'equal', value: 'user.registered' }
+        ]
+      }),
+      event: JSON.stringify({
+        type: 'notification.send',
+        params: { channels: ['email'], templateId: 'welcome', delay: 0 }
+      }),
+      priority: 50,
+      enabled: true
+    },
+    {
+      name: 'listing-approved-notification',
+      description: 'Уведомление владельцу при одобрении объявления',
+      category: 'notification',
+      conditions: JSON.stringify({
+        all: [
+          { fact: 'event.source', operator: 'equal', value: 'workflow' },
+          { fact: 'event.type', operator: 'equal', value: 'listing.approved' }
+        ]
+      }),
+      event: JSON.stringify({
+        type: 'notification.send',
+        params: { channels: ['email', 'browser'], templateId: 'listing-approved', delay: 0 }
+      }),
+      priority: 50,
+      enabled: true
+    },
+    {
+      name: 'listing-rejected-notification',
+      description: 'Уведомление владельцу при отклонении объявления',
+      category: 'notification',
+      conditions: JSON.stringify({
+        all: [
+          { fact: 'event.source', operator: 'equal', value: 'workflow' },
+          { fact: 'event.type', operator: 'equal', value: 'listing.rejected' }
+        ]
+      }),
+      event: JSON.stringify({
+        type: 'notification.send',
+        params: { channels: ['email', 'browser'], templateId: 'listing-rejected', delay: 0 }
+      }),
+      priority: 50,
+      enabled: true
+    },
+    {
+      name: 'tariff-expiring-7-days',
+      description: 'Напоминание об истечении тарифа за 7 дней',
+      category: 'notification',
+      conditions: JSON.stringify({
+        all: [
+          { fact: 'event', operator: 'equal', value: 'scheduler', path: '$.source' },
+          { fact: 'event', operator: 'equal', value: 'tariff.check_expiration', path: '$.type' },
+          { fact: 'account', operator: 'equal', value: true, path: '$.needsReminder7Days' },
+          { fact: 'account', operator: 'notEqual', value: 'FREE', path: '$.tariffPlanCode' }
+        ]
+      }),
+      event: JSON.stringify({
+        type: 'notification.send',
+        params: { channels: ['email', 'browser'], templateId: 'tariff-expiring-7-days', delay: 0 }
+      }),
+      priority: 80,
+      enabled: true
+    },
+    {
+      name: 'tariff-expiring-3-days',
+      description: 'Напоминание об истечении тарифа за 3 дня',
+      category: 'notification',
+      conditions: JSON.stringify({
+        all: [
+          { fact: 'event', operator: 'equal', value: 'scheduler', path: '$.source' },
+          { fact: 'event', operator: 'equal', value: 'tariff.check_expiration', path: '$.type' },
+          { fact: 'account', operator: 'equal', value: true, path: '$.needsReminder3Days' },
+          { fact: 'account', operator: 'notEqual', value: 'FREE', path: '$.tariffPlanCode' }
+        ]
+      }),
+      event: JSON.stringify({
+        type: 'notification.send',
+        params: { channels: ['email', 'browser'], templateId: 'tariff-expiring-3-days', delay: 0 }
+      }),
+      priority: 85,
+      enabled: true
+    },
+    {
+      name: 'tariff-expiring-1-day',
+      description: 'Срочное напоминание об истечении тарифа за 1 день',
+      category: 'notification',
+      conditions: JSON.stringify({
+        all: [
+          { fact: 'event', operator: 'equal', value: 'scheduler', path: '$.source' },
+          { fact: 'event', operator: 'equal', value: 'tariff.check_expiration', path: '$.type' },
+          { fact: 'account', operator: 'equal', value: true, path: '$.needsReminder1Day' },
+          { fact: 'account', operator: 'notEqual', value: 'FREE', path: '$.tariffPlanCode' }
+        ]
+      }),
+      event: JSON.stringify({
+        type: 'notification.send',
+        params: { channels: ['email', 'browser', 'sms'], templateId: 'tariff-expiring-1-day', delay: 0 }
+      }),
+      priority: 90,
+      enabled: true
+    },
+    {
+      name: 'tariff-expired',
+      description: 'Уведомление об истечении тарифа и переходе на FREE',
+      category: 'notification',
+      conditions: JSON.stringify({
+        all: [
+          { fact: 'event', operator: 'equal', value: 'scheduler', path: '$.source' },
+          { fact: 'event', operator: 'equal', value: 'tariff.expired', path: '$.type' },
+          { fact: 'account', operator: 'equal', value: true, path: '$.tariffExpired' }
+        ]
+      }),
+      event: JSON.stringify({
+        type: 'notification.send',
+        params: { channels: ['email', 'browser'], templateId: 'tariff-expired', delay: 0 }
+      }),
+      priority: 100,
+      enabled: true
+    },
+    {
+      name: 'new-message-notification',
+      description: 'Уведомление о новом сообщении в чате',
+      category: 'notification',
+      conditions: JSON.stringify({
+        all: [
+          { fact: 'event.source', operator: 'equal', value: 'chat' },
+          { fact: 'event.type', operator: 'equal', value: 'message.received' }
+        ]
+      }),
+      event: JSON.stringify({
+        type: 'notification.send',
+        params: { channels: ['browser'], delay: 0 }
+      }),
+      priority: 30,
+      enabled: true
+    },
+    {
+      name: 'password-reset-email',
+      description: 'Отправка письма для сброса пароля',
+      category: 'notification',
+      conditions: JSON.stringify({
+        all: [
+          { fact: 'event.source', operator: 'equal', value: 'auth' },
+          { fact: 'event.type', operator: 'equal', value: 'password_reset_requested' }
+        ]
+      }),
+      event: JSON.stringify({
+        type: 'notification.send',
+        params: { channels: ['email'], templateId: 'password-reset', delay: 0 }
+      }),
+      priority: 100,
+      enabled: true
+    }
+  ]
+
+  for (const rule of businessRules) {
+    await prisma.businessRule.upsert({
+      where: { name: rule.name },
+      update: rule,
+      create: rule
+    })
+  }
+
+  console.log(`✅ Created ${businessRules.length} demo business rules`)
+
   console.log('Database seeded successfully!')
   console.log('Users created:')
   console.log('- Email: superadmin@example.com, Password: admin123, Role: superadmin (DEFAULT ADMIN)')
@@ -1506,6 +2246,254 @@ async function main() {
   console.log('- Email: support.demo@example.com, Password: DemoSupport123!, Role: support')
   console.log('- Email: editor.demo@example.com, Password: DemoEditor123!, Role: editor')
   console.log('- Email: marketer.demo@example.com, Password: DemoMarketer123!, Role: marketolog')
+  console.log('')
+  console.log('Demo accounts created:')
+  console.log('- admin@example.com → NETWORK account (PRO tariff)')
+  console.log('- user@example.com → LISTING account (FREE tariff)')
+  console.log('- moderator@example.com → COMPANY account (BASIC tariff)')
+  console.log('- editor@example.com → LISTING account (FREE tariff) + manager of admin account')
+  console.log('')
+  console.log('Demo transfers:')
+  console.log('- moderator@example.com → user@example.com (pending)')
+  console.log('')
+  console.log('Workflow & Rules Engine demo data:')
+  console.log('- 5 listing categories (real-estate, transport, electronics, services, jobs)')
+  console.log('- 6 demo listings with different workflow states (draft, pending, active, rejected, sold, archived)')
+  console.log('- 6 workflow instances for listings')
+  console.log('- 8 business rules (blocking + notification)')
+
+  // ========================================
+  // Media Module - Настройки изображений
+  // ========================================
+  console.log('Seeding Media Module...')
+
+  // Глобальные настройки медиа
+  await prisma.mediaGlobalSettings.upsert({
+    where: { id: 'global-media-settings' },
+    update: {},
+    create: {
+      id: 'global-media-settings',
+      defaultStorageStrategy: 'local_first',
+      s3DefaultBucket: null,
+      s3DefaultRegion: 'us-east-1',
+      s3PublicUrlPrefix: null,
+      localUploadPath: '/uploads',
+      localPublicUrlPrefix: '/uploads',
+      organizeByDate: true,
+      organizeByEntityType: true,
+      globalMaxFileSize: 20 * 1024 * 1024, // 20MB
+      globalDailyUploadLimit: null,
+      autoDeleteOrphans: false,
+      orphanRetentionDays: 30,
+      autoSyncEnabled: false,
+      autoSyncDelayMinutes: 30,
+      autoCleanupLocalEnabled: false,
+      keepLocalDays: 7,
+      defaultQuality: 85,
+      defaultConvertToWebP: true,
+      processingConcurrency: 3,
+    }
+  })
+
+  console.log('✅ Created global media settings')
+
+  // Настройки по типам сущностей
+  const imageSettingsData = [
+    {
+      entityType: 'user_avatar',
+      displayName: 'Аватар пользователя',
+      description: 'Фотография профиля пользователя',
+      maxFileSize: 5 * 1024 * 1024,
+      maxFilesPerEntity: 1,
+      allowedMimeTypes: 'image/jpeg,image/png,image/webp',
+      variants: JSON.stringify([
+        { name: 'thumb', width: 48, height: 48, fit: 'cover', quality: 85 },
+        { name: 'small', width: 96, height: 96, fit: 'cover', quality: 85 },
+        { name: 'medium', width: 256, height: 256, fit: 'cover', quality: 90 },
+      ]),
+      convertToWebP: true,
+      stripMetadata: true,
+      quality: 85,
+      watermarkEnabled: false,
+      storageStrategy: 'local_first',
+      namingStrategy: 'slug',
+    },
+    {
+      entityType: 'company_logo',
+      displayName: 'Логотип компании',
+      description: 'Логотип организации или компании',
+      maxFileSize: 2 * 1024 * 1024,
+      maxFilesPerEntity: 1,
+      allowedMimeTypes: 'image/jpeg,image/png,image/webp,image/svg+xml',
+      variants: JSON.stringify([
+        { name: 'thumb', width: 64, height: 64, fit: 'contain', quality: 90 },
+        { name: 'small', width: 128, height: 128, fit: 'contain', quality: 90 },
+        { name: 'medium', width: 256, height: 256, fit: 'contain', quality: 95 },
+      ]),
+      convertToWebP: true,
+      stripMetadata: true,
+      quality: 90,
+      watermarkEnabled: false,
+      storageStrategy: 'local_first',
+      namingStrategy: 'slug',
+    },
+    {
+      entityType: 'company_banner',
+      displayName: 'Баннер компании',
+      description: 'Баннер или обложка профиля компании',
+      maxFileSize: 10 * 1024 * 1024,
+      maxFilesPerEntity: 1,
+      allowedMimeTypes: 'image/jpeg,image/png,image/webp',
+      variants: JSON.stringify([
+        { name: 'thumb', width: 400, height: 150, fit: 'cover', quality: 80 },
+        { name: 'medium', width: 800, height: 300, fit: 'cover', quality: 85 },
+        { name: 'large', width: 1920, height: 480, fit: 'cover', quality: 90 },
+      ]),
+      convertToWebP: true,
+      stripMetadata: true,
+      quality: 85,
+      watermarkEnabled: false,
+      storageStrategy: 'local_first',
+      namingStrategy: 'slug',
+    },
+    {
+      entityType: 'company_photo',
+      displayName: 'Фото компании',
+      description: 'Фотографии офиса, продукции, команды',
+      maxFileSize: 10 * 1024 * 1024,
+      maxFilesPerEntity: 20,
+      allowedMimeTypes: 'image/jpeg,image/png,image/webp',
+      variants: JSON.stringify([
+        { name: 'thumb', width: 150, height: 150, fit: 'cover', quality: 80 },
+        { name: 'medium', width: 600, height: 400, fit: 'cover', quality: 85 },
+        { name: 'large', width: 1200, height: 800, fit: 'inside', quality: 90 },
+      ]),
+      convertToWebP: true,
+      stripMetadata: true,
+      quality: 85,
+      watermarkEnabled: true,
+      watermarkPosition: 'bottom-right',
+      watermarkOpacity: 0.25,
+      watermarkScale: 0.12,
+      watermarkOnVariants: 'medium,large',
+      storageStrategy: 'local_first',
+      namingStrategy: 'slug',
+    },
+    {
+      entityType: 'listing_image',
+      displayName: 'Фото объявления',
+      description: 'Изображения для объявлений',
+      maxFileSize: 10 * 1024 * 1024,
+      maxFilesPerEntity: 10,
+      allowedMimeTypes: 'image/jpeg,image/png,image/webp',
+      variants: JSON.stringify([
+        { name: 'thumb', width: 150, height: 150, fit: 'cover', quality: 80 },
+        { name: 'medium', width: 600, height: 400, fit: 'cover', quality: 85 },
+        { name: 'large', width: 1200, height: 800, fit: 'inside', quality: 90 },
+      ]),
+      convertToWebP: true,
+      stripMetadata: true,
+      quality: 85,
+      watermarkEnabled: true,
+      watermarkPosition: 'bottom-right',
+      watermarkOpacity: 0.3,
+      watermarkScale: 0.15,
+      watermarkOnVariants: 'medium,large',
+      storageStrategy: 'local_first',
+      namingStrategy: 'slug',
+    },
+    {
+      entityType: 'site_logo',
+      displayName: 'Логотип сайта',
+      description: 'Логотип и фавикон сайта',
+      maxFileSize: 1 * 1024 * 1024,
+      maxFilesPerEntity: 1,
+      allowedMimeTypes: 'image/png,image/svg+xml,image/x-icon',
+      variants: JSON.stringify([
+        { name: 'favicon', width: 32, height: 32, fit: 'contain', quality: 100 },
+        { name: 'favicon-lg', width: 192, height: 192, fit: 'contain', quality: 100 },
+        { name: 'small', width: 120, height: 40, fit: 'contain', quality: 95 },
+        { name: 'medium', width: 240, height: 80, fit: 'contain', quality: 95 },
+      ]),
+      convertToWebP: false,
+      stripMetadata: true,
+      quality: 95,
+      watermarkEnabled: false,
+      storageStrategy: 'both',
+      namingStrategy: 'slug',
+    },
+    {
+      entityType: 'watermark',
+      displayName: 'Водяной знак',
+      description: 'PNG изображение с прозрачностью для водяного знака',
+      maxFileSize: 1 * 1024 * 1024,
+      maxFilesPerEntity: 1,
+      allowedMimeTypes: 'image/png',
+      variants: JSON.stringify([
+        { name: 'original', width: 1000, height: 1000, fit: 'inside', quality: 100 },
+      ]),
+      convertToWebP: false,
+      stripMetadata: true,
+      quality: 100,
+      watermarkEnabled: false,
+      storageStrategy: 'both',
+      namingStrategy: 'slug',
+    },
+    {
+      entityType: 'document',
+      displayName: 'Документ',
+      description: 'Сканы документов, паспортов и т.д.',
+      maxFileSize: 15 * 1024 * 1024,
+      maxFilesPerEntity: 10,
+      allowedMimeTypes: 'image/jpeg,image/png,image/webp,application/pdf',
+      variants: JSON.stringify([
+        { name: 'thumb', width: 200, height: 200, fit: 'cover', quality: 75 },
+        { name: 'preview', width: 800, height: 1200, fit: 'inside', quality: 85 },
+      ]),
+      convertToWebP: true,
+      stripMetadata: false,
+      quality: 90,
+      watermarkEnabled: false,
+      storageStrategy: 's3_only',
+      namingStrategy: 'uuid',
+    },
+  ]
+
+  for (const settings of imageSettingsData) {
+    await prisma.imageSettings.upsert({
+      where: { entityType: settings.entityType },
+      update: settings,
+      create: settings,
+    })
+  }
+
+  console.log(`✅ Created ${imageSettingsData.length} image settings presets`)
+
+  // Демо водяной знак (без медиа файла, нужно загрузить вручную)
+  await prisma.watermark.upsert({
+    where: { name: 'default' },
+    update: {},
+    create: {
+      name: 'default',
+      displayName: 'Водяной знак по умолчанию',
+      description: 'Стандартный водяной знак для изображений объявлений',
+      mediaId: null, // Нужно загрузить PNG файл через админку
+      defaultPosition: 'bottom-right',
+      defaultOpacity: 0.3,
+      defaultScale: 0.15,
+      entityTypes: JSON.stringify(['listing_image', 'company_photo']),
+      isDefault: true,
+      isActive: true,
+    }
+  })
+
+  console.log('✅ Created default watermark (upload PNG via admin panel)')
+
+  console.log('')
+  console.log('Media Module:')
+  console.log('- Global settings created')
+  console.log(`- ${imageSettingsData.length} image settings presets`)
+  console.log('- Default watermark placeholder (upload PNG via /admin/media/settings)')
 }
 
 main()

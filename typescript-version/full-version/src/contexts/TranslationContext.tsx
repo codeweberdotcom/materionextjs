@@ -15,6 +15,10 @@ export const TranslationProvider = ({ children, dictionary }: { children: ReactN
   return <TranslationContext.Provider value={dictionary}>{children}</TranslationContext.Provider>
 }
 
+/**
+ * Строгий хук useTranslation - выбрасывает ошибку если нет провайдера
+ * Используется в компонентах, которые гарантированно находятся внутри TranslationProvider
+ */
 export const useTranslation = () => {
   const context = useContext(TranslationContext)
 
@@ -22,6 +26,13 @@ export const useTranslation = () => {
     throw new Error('useTranslation must be used within a TranslationProvider')
   }
 
-  
-return context
+  return context
+}
+
+/**
+ * Безопасный хук useTranslationSafe - возвращает null если нет провайдера
+ * Используется в компонентах, которые могут рендериться как внутри, так и вне TranslationProvider
+ */
+export const useTranslationSafe = (): Dictionary | null => {
+  return useContext(TranslationContext)
 }

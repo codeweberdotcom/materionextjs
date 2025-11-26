@@ -1,0 +1,336 @@
+{
+  "config": {
+    "configFile": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\playwright.config.ts",
+    "rootDir": "C:/laragon/www/materionextjs/typescript-version/full-version/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 3
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "reports/e2e/test-results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "open": "never",
+          "outputFolder": "reports/e2e/html"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/laragon/www/materionextjs/typescript-version/full-version/reports/e2e/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/laragon/www/materionextjs/typescript-version/full-version/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.1",
+    "workers": 6,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rate-limit\\chat-messages.spec.ts",
+      "file": "rate-limit/chat-messages.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Rate Limit - Chat Messages",
+          "file": "rate-limit/chat-messages.spec.ts",
+          "line": 9,
+          "column": 6,
+          "specs": [
+            {
+              "title": "allows messages within rate limit",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 60021,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:15:8",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                          "column": 8,
+                          "line": 15
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 13 |\u001b[39m   }\n \u001b[90m 14 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 15 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 16 |\u001b[39m     \u001b[90m// Логин как админ для настройки конфигурации\u001b[39m\n \u001b[90m 17 |\u001b[39m     \u001b[36mawait\u001b[39m loginAsAdmin(page)\n \u001b[90m 18 |\u001b[39m     \u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                            "column": 8,
+                            "line": 15
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  13 |   }\n  14 |\n> 15 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  16 |     // Логин как админ для настройки конфигурации\n  17 |     await loginAsAdmin(page)\n  18 |     \n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:15:8"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                            "column": 8,
+                            "line": 37
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"afterEach\" hook.\u001b[39m\n\n  35 |   })\n  36 |\n> 37 |   test.afterEach(async ({ page }) => {\n     |        ^\n  38 |     // Очистить лимиты после теста\n  39 |     await resetRateLimits(page, 'chat-messages')\n  40 |   })\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:37:8"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts",
+                            "column": 45,
+                            "line": 110
+                          },
+                          "message": "Error: apiRequestContext.delete: Request context disposed.\nCall log:\n\u001b[2m  - → DELETE http://localhost:3000/api/admin/rate-limits?module=chat-messages\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\u001b[2m    - cookie: colorPref=light\u001b[22m\n\n\n   at helpers\\rate-limit-helpers.ts:110\n\n  108 |   \n  109 |   const url = `/api/admin/rate-limits${params.toString() ? '?' + params.toString() : ''}`\n> 110 |   const response = await page.request.delete(url)\n      |                                             ^\n  111 |   \n  112 |   return response\n  113 | }\n    at resetRateLimits (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts:110:45)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:39:26"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts",
+                            "column": 39,
+                            "line": 87
+                          },
+                          "message": "Error: apiRequestContext.put: Request context disposed.\nCall log:\n\u001b[2m  - → PUT http://localhost:3000/api/admin/rate-limits\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\u001b[2m    - content-type: application/json\u001b[22m\n\u001b[2m    - content-length: 126\u001b[22m\n\u001b[2m    - cookie: colorPref=light; auth_session=oulcax4gqhcibrmft3hmpn576gc4oc2qjneuhocv\u001b[22m\n\n\n   at helpers\\rate-limit-helpers.ts:87\n\n  85 |   config: RateLimitConfig\n  86 | ) {\n> 87 |   const response = await page.request.put('/api/admin/rate-limits', {\n     |                                       ^\n  88 |     data: {\n  89 |       module,\n  90 |       ...config\n    at setupRateLimitConfig (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts:87:39)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:21:31"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T00:37:00.341Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                        "column": 8,
+                        "line": 15
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c88971a28d2abbf5c60b-55c5a1dbb9430dfa1cd7",
+              "file": "rate-limit/chat-messages.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "blocks messages after exceeding rate limit",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "timedOut",
+                      "duration": 60036,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:15:8",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                          "column": 8,
+                          "line": 15
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 13 |\u001b[39m   }\n \u001b[90m 14 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 15 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 16 |\u001b[39m     \u001b[90m// Логин как админ для настройки конфигурации\u001b[39m\n \u001b[90m 17 |\u001b[39m     \u001b[36mawait\u001b[39m loginAsAdmin(page)\n \u001b[90m 18 |\u001b[39m     \u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                            "column": 8,
+                            "line": 15
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  13 |   }\n  14 |\n> 15 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  16 |     // Логин как админ для настройки конфигурации\n  17 |     await loginAsAdmin(page)\n  18 |     \n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:15:8"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                            "column": 8,
+                            "line": 37
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"afterEach\" hook.\u001b[39m\n\n  35 |   })\n  36 |\n> 37 |   test.afterEach(async ({ page }) => {\n     |        ^\n  38 |     // Очистить лимиты после теста\n  39 |     await resetRateLimits(page, 'chat-messages')\n  40 |   })\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:37:8"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts",
+                            "column": 45,
+                            "line": 110
+                          },
+                          "message": "Error: apiRequestContext.delete: Request context disposed.\nCall log:\n\u001b[2m  - → DELETE http://localhost:3000/api/admin/rate-limits?module=chat-messages\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\u001b[2m    - cookie: colorPref=light\u001b[22m\n\n\n   at helpers\\rate-limit-helpers.ts:110\n\n  108 |   \n  109 |   const url = `/api/admin/rate-limits${params.toString() ? '?' + params.toString() : ''}`\n> 110 |   const response = await page.request.delete(url)\n      |                                             ^\n  111 |   \n  112 |   return response\n  113 | }\n    at resetRateLimits (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts:110:45)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:39:26"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts",
+                            "column": 39,
+                            "line": 87
+                          },
+                          "message": "Error: apiRequestContext.put: Request context disposed.\nCall log:\n\u001b[2m  - → PUT http://localhost:3000/api/admin/rate-limits\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\u001b[2m    - content-type: application/json\u001b[22m\n\u001b[2m    - content-length: 126\u001b[22m\n\u001b[2m    - cookie: colorPref=light; auth_session=q25jvchccy73ajpyqv5iywpflemzjzymnmwlvnqk\u001b[22m\n\n\n   at helpers\\rate-limit-helpers.ts:87\n\n  85 |   config: RateLimitConfig\n  86 | ) {\n> 87 |   const response = await page.request.put('/api/admin/rate-limits', {\n     |                                       ^\n  88 |     data: {\n  89 |       module,\n  90 |       ...config\n    at setupRateLimitConfig (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts:87:39)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:21:31"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T00:37:00.563Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                        "column": 8,
+                        "line": 15
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c88971a28d2abbf5c60b-d5d1c649a28b3fdc044f",
+              "file": "rate-limit/chat-messages.spec.ts",
+              "line": 78,
+              "column": 7
+            },
+            {
+              "title": "shows warning when approaching limit",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "timedOut",
+                      "duration": 60039,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:15:8",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                          "column": 8,
+                          "line": 15
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 13 |\u001b[39m   }\n \u001b[90m 14 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 15 |\u001b[39m   test\u001b[33m.\u001b[39mbeforeEach(\u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\n \u001b[90m    |\u001b[39m        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 16 |\u001b[39m     \u001b[90m// Логин как админ для настройки конфигурации\u001b[39m\n \u001b[90m 17 |\u001b[39m     \u001b[36mawait\u001b[39m loginAsAdmin(page)\n \u001b[90m 18 |\u001b[39m     \u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                            "column": 8,
+                            "line": 15
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"beforeEach\" hook.\u001b[39m\n\n  13 |   }\n  14 |\n> 15 |   test.beforeEach(async ({ page }) => {\n     |        ^\n  16 |     // Логин как админ для настройки конфигурации\n  17 |     await loginAsAdmin(page)\n  18 |     \n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:15:8"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                            "column": 8,
+                            "line": 37
+                          },
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded while running \"afterEach\" hook.\u001b[39m\n\n  35 |   })\n  36 |\n> 37 |   test.afterEach(async ({ page }) => {\n     |        ^\n  38 |     // Очистить лимиты после теста\n  39 |     await resetRateLimits(page, 'chat-messages')\n  40 |   })\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:37:8"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts",
+                            "column": 45,
+                            "line": 110
+                          },
+                          "message": "Error: apiRequestContext.delete: Request context disposed.\nCall log:\n\u001b[2m  - → DELETE http://localhost:3000/api/admin/rate-limits?module=chat-messages\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\u001b[2m    - cookie: colorPref=light\u001b[22m\n\n\n   at helpers\\rate-limit-helpers.ts:110\n\n  108 |   \n  109 |   const url = `/api/admin/rate-limits${params.toString() ? '?' + params.toString() : ''}`\n> 110 |   const response = await page.request.delete(url)\n      |                                             ^\n  111 |   \n  112 |   return response\n  113 | }\n    at resetRateLimits (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts:110:45)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:39:26"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts",
+                            "column": 39,
+                            "line": 87
+                          },
+                          "message": "Error: apiRequestContext.put: Request context disposed.\nCall log:\n\u001b[2m  - → PUT http://localhost:3000/api/admin/rate-limits\u001b[22m\n\u001b[2m    - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.37 Safari/537.36\u001b[22m\n\u001b[2m    - accept: */*\u001b[22m\n\u001b[2m    - accept-encoding: gzip,deflate,br\u001b[22m\n\u001b[2m    - content-type: application/json\u001b[22m\n\u001b[2m    - content-length: 126\u001b[22m\n\u001b[2m    - cookie: colorPref=light; auth_session=safq2zpdmijrt5bobtwce6xlcex5vhfyhzmyobkq\u001b[22m\n\n\n   at helpers\\rate-limit-helpers.ts:87\n\n  85 |   config: RateLimitConfig\n  86 | ) {\n> 87 |   const response = await page.request.put('/api/admin/rate-limits', {\n     |                                       ^\n  88 |     data: {\n  89 |       module,\n  90 |       ...config\n    at setupRateLimitConfig (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts:87:39)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:21:31"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T00:37:00.326Z",
+                      "annotations": [],
+                      "attachments": [],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts",
+                        "column": 8,
+                        "line": 15
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c88971a28d2abbf5c60b-742c05703b596a36436b",
+              "file": "rate-limit/chat-messages.spec.ts",
+              "line": 127,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-24T00:36:56.703Z",
+    "duration": 71800.605,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

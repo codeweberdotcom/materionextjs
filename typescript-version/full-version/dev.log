@@ -1,0 +1,19 @@
+
+> materio-mui-nextjs-admin-template@5.0.0 predev C:\laragon\www\materionextjs\typescript-version\full-version
+> tsx src/scripts/generate-languages.ts
+
+Generated languages.json with 4 languages: ar, en, fr, ru
+
+> materio-mui-nextjs-admin-template@5.0.0 dev C:\laragon\www\materionextjs\typescript-version\full-version
+> next dev
+
+ ⚠ Port 3000 is in use, trying 3001 instead.
+   ▲ Next.js 15.1.2
+   - Local:        http://localhost:3001
+   - Network:      http://10.8.0.14:3001
+   - Environments: .env
+
+ ✓ Starting...
+ ✓ Ready in 800.2s
+
+C:\laragon\www\materionextjs\typescript-version\full-version>

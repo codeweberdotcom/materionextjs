@@ -539,7 +539,13 @@ volumes:
 
 ## 📊 Grafana дашборды
 
-### **Основной дашборд**
+> **Реальные дашборды проекта:** см. [monitoring-stack.md](./monitoring-stack.md#grafana-dashboards)
+> - `rate-limit-dashboard.json` — Rate Limit метрики
+> - `notifications-dashboard.json` — Bull Queue / Notifications метрики
+> - `redis-dashboard.json` — Redis метрики
+> - `socket-dashboard.json` — Socket.IO метрики
+
+### **Пример: Основной дашборд**
 ```json
 {
   "dashboard": {

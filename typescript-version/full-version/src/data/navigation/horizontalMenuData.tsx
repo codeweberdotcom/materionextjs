@@ -51,7 +51,40 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
         href: '/apps/notifications'
       }
     ]
-  },  {
+  },
+  // Accounts Section
+  {
+    label: dictionary['navigation'].accounts || 'Аккаунты',
+    icon: 'ri-user-settings-line',
+    children: [
+      {
+        label: dictionary['navigation'].myAccounts || 'Мои аккаунты',
+        icon: 'ri-account-box-line',
+        href: '/accounts'
+      },
+      {
+        label: dictionary['navigation'].tariffPlans || 'Тарифные планы',
+        icon: 'ri-vip-crown-line',
+        href: '/accounts/tariffs'
+      },
+      {
+        label: dictionary['navigation'].accountManagers || 'Менеджеры',
+        icon: 'ri-user-add-line',
+        href: '/accounts/managers'
+      },
+      {
+        label: dictionary['navigation'].accountTransfers || 'Передача аккаунтов',
+        icon: 'ri-share-forward-line',
+        href: '/accounts/transfers'
+      },
+      {
+        label: dictionary['navigation'].createAccount || 'Создать аккаунт',
+        icon: 'ri-add-circle-line',
+        href: '/accounts/create'
+      }
+    ]
+  },
+  {
     label: dictionary['navigation'].adminAndSettings,
     icon: 'ri-settings-5-line',
     children: [
@@ -153,7 +186,34 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
         href: '/admin/settings/services'
       }
     ]
-  },  {
+  },  // Media Section
+  {
+    label: dictionary['navigation'].media || 'Медиа',
+    icon: 'ri-image-line',
+    children: [
+      {
+        label: dictionary['navigation'].mediaLibrary || 'Медиатека',
+        icon: 'ri-gallery-line',
+        href: '/admin/media'
+      },
+      {
+        label: dictionary['navigation'].mediaSettings || 'Настройки',
+        icon: 'ri-settings-3-line',
+        href: '/admin/media/settings'
+      },
+      {
+        label: dictionary['navigation'].mediaSync || 'Синхронизация',
+        icon: 'ri-refresh-line',
+        href: '/admin/media/sync'
+      },
+      {
+        label: dictionary['navigation'].mediaWatermarks || 'Водяные знаки',
+        icon: 'ri-drop-line',
+        href: '/admin/media/watermarks'
+      }
+    ]
+  },
+  {
     label: dictionary['navigation'].monitoring,
     icon: 'ri-bar-chart-line',
     children: [

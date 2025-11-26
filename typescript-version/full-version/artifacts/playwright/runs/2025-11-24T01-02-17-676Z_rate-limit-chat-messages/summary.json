@@ -1,0 +1,44 @@
+{
+  "runId": "2025-11-24T01-02-17-676Z_rate-limit-chat-messages",
+  "label": "Rate Limit - Chat Messages",
+  "testId": "rate-limit-chat-messages",
+  "status": "failed",
+  "startedAt": "2025-11-24T01:01:43.199Z",
+  "finishedAt": "2025-11-24T01:02:17.692Z",
+  "scripts": [
+    {
+      "runId": "2025-11-24T01-02-17-676Z_rate-limit-chat-messages",
+      "scriptId": "rate-limit-chat-messages",
+      "title": "allows messages within rate limit",
+      "file": "rate-limit/chat-messages.spec.ts",
+      "status": "failed",
+      "duration": 32129,
+      "startedAt": "2025-11-24T01:01:44.789Z",
+      "finishedAt": "2025-11-24T01:02:16.918Z",
+      "timeout": 120000
+    },
+    {
+      "runId": "2025-11-24T01-02-17-676Z_rate-limit-chat-messages",
+      "scriptId": "rate-limit-chat-messages",
+      "title": "blocks messages after exceeding rate limit",
+      "file": "rate-limit/chat-messages.spec.ts",
+      "status": "failed",
+      "duration": 32044,
+      "startedAt": "2025-11-24T01:01:44.783Z",
+      "finishedAt": "2025-11-24T01:02:16.827Z",
+      "timeout": 120000
+    },
+    {
+      "runId": "2025-11-24T01-02-17-676Z_rate-limit-chat-messages",
+      "scriptId": "rate-limit-chat-messages",
+      "title": "shows warning when approaching limit",
+      "file": "rate-limit/chat-messages.spec.ts",
+      "status": "failed",
+      "duration": 32025,
+      "startedAt": "2025-11-24T01:01:44.832Z",
+      "finishedAt": "2025-11-24T01:02:16.857Z",
+      "timeout": 120000
+    }
+  ],
+  "artifactsPath": "artifacts\\playwright\\runs\\2025-11-24T01-02-17-676Z_rate-limit-chat-messages"
+}

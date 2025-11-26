@@ -3,6 +3,16 @@ import { Server } from 'socket.io'
 import logger from '../logger'
 import { websocketConnections } from '../metrics'
 import { serviceConfigResolver } from '../config'
+import {
+  setSocketActiveConnections,
+  setSocketActiveUsers,
+  setSocketActiveRooms,
+  setSocketServerUptime,
+  recordSocketConnection,
+  recordSocketDisconnect,
+  recordSocketError,
+  recordSocketAuthEvent
+} from '../metrics/socket'
 import { authenticateSocket } from './middleware/auth'
 import { errorHandler, handleDisconnect, heartbeat } from './middleware/errorHandler'
 import { initializeChatNamespace } from './namespaces/chat'
@@ -210,8 +220,25 @@ const syncMetrics = () => {
   const environment = process.env.NODE_ENV || 'development'
   websocketConnections.set({ environment }, realConnections)
   
+  // Prometheus метрики
+  setSocketActiveConnections(realConnections, '/', environment)
+  setSocketActiveUsers(activeUsers.size, '/', environment)
+  
+  // Подсчёт активных комнат
+  let totalRooms = 0
+  io._nsps.forEach((nsp) => {
+    totalRooms += nsp.adapter.rooms.size
+  })
+  setSocketActiveRooms(totalRooms, '/', environment)
+  
+  // Uptime
+  const uptimeSeconds = Math.floor((Date.now() - metrics.startTime) / 1000)
+  setSocketServerUptime(uptimeSeconds, environment)
+  
   logger.debug('Metrics synced', {
     realConnections,
+    activeUsers: activeUsers.size,
+    totalRooms,
     metricsActiveConnections: metrics.activeConnections
   })
 }
@@ -221,6 +248,9 @@ const syncMetrics = () => {
  */
 const handleConnection = (socket: TypedSocket) => {
   metrics.totalConnections++
+
+  // Записываем метрику подключения
+  recordSocketConnection(true, '/')
 
   // Синхронизируем метрики с реальным количеством
   syncMetrics()
@@ -245,10 +275,16 @@ const handleConnection = (socket: TypedSocket) => {
       lastActivity: new Date(),
       role: userRole
     })
+    // Записываем успешную аутентификацию
+    recordSocketAuthEvent('success')
   }
 
   // Обработка отключения
   socket.on('disconnect', reason => {
+    // Записываем метрику отключения
+    const disconnectReason = mapDisconnectReason(reason)
+    recordSocketDisconnect(disconnectReason, '/')
+    
     // Синхронизируем метрики с реальным количеством (после отключения)
     syncMetrics()
 
@@ -257,6 +293,12 @@ const handleConnection = (socket: TypedSocket) => {
     }
 
     handleDisconnect(reason, socket)
+  })
+  
+  // Обработка ошибок сокета
+  socket.on('error', (error) => {
+    recordSocketError('other', '/')
+    logger.error('Socket error', { socketId: socket.id, error: error.message })
   })
 
   // Ping для поддержания соединения
@@ -410,6 +452,27 @@ export const sendMessageToRoom = <TEvent extends keyof ServerToClientEvents>(
     return false;
   }
 };
+
+/**
+ * Маппинг причины отключения Socket.IO в категорию метрики
+ */
+const mapDisconnectReason = (reason: string): 'client' | 'server' | 'timeout' | 'error' | 'transport' => {
+  switch (reason) {
+    case 'client namespace disconnect':
+    case 'client disconnect':
+      return 'client'
+    case 'server namespace disconnect':
+    case 'server disconnect':
+      return 'server'
+    case 'ping timeout':
+      return 'timeout'
+    case 'transport close':
+    case 'transport error':
+      return 'transport'
+    default:
+      return 'error'
+  }
+}
 
 // Экспорт для использования в других модулях
 export { activeUsers, metrics };

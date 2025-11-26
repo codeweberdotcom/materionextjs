@@ -70,9 +70,9 @@ model User {
   blocks                  UserBlock[]
   verificationCodes       VerificationCode[]
   ownedAccounts           UserAccount[]      @relation("OwnedAccounts")
-  ownedAccountsByOwner    UserAccount[]     @relation("OwnedAccountsByOwner")
+  ownedAccountsByOwner    UserAccount[]      @relation("OwnedAccountsByOwner")
   managedAccounts         AccountManager[]   @relation("ManagedAccounts")
-  accountTransfers        AccountTransfer[] @relation("AccountTransfers")
+  accountTransfers        AccountTransfer[]  @relation("AccountTransfers")
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @updatedAt
   // Constraint: хотя бы email или phone должен быть заполнен (проверяется на уровне приложения)
@@ -515,8 +515,8 @@ model RegistrationSettings {
 // ========================================
 
 model ServiceConfiguration {
-  id          String        @id @default(cuid())
-  name        String        @unique // Уникальный код: 'redis', 'prometheus', 'loki', 'grafana', 'sentry'
+  id          String  @id @default(cuid())
+  name        String  @unique // Уникальный код: 'redis', 'prometheus', 'loki', 'grafana', 'sentry'
   displayName String // Отображаемое имя: "Redis Server", "Prometheus"
   type        String // ServiceType: REDIS, POSTGRESQL, PROMETHEUS, LOKI, GRAFANA, SENTRY, SMTP, S3, ELASTICSEARCH
   host        String // Хост сервера
@@ -525,11 +525,11 @@ model ServiceConfiguration {
   basePath    String? // Базовый путь API: /api/v1
 
   // Аутентификация (зашифровано AES-256-GCM)
-  username  String? // Имя пользователя
-  password  String? // Пароль (зашифровано)
-  token     String? // API токен (зашифровано)
+  username   String? // Имя пользователя
+  password   String? // Пароль (зашифровано)
+  token      String? // API токен (зашифровано)
   tlsEnabled Boolean @default(false) // Использовать TLS
-  tlsCert   String? // Сертификат TLS (зашифровано)
+  tlsCert    String? // Сертификат TLS (зашифровано)
 
   // Статус подключения
   enabled   Boolean   @default(true) // Активен ли сервис
@@ -538,7 +538,7 @@ model ServiceConfiguration {
   lastError String? // Последняя ошибка
 
   // Дополнительные настройки
-  metadata  String? @default("{}") // JSON с дополнительными настройками
+  metadata  String?  @default("{}") // JSON с дополнительными настройками
   createdBy String? // ID администратора, создавшего конфигурацию
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -555,9 +555,9 @@ model ServiceConfiguration {
 
 model WorkflowInstance {
   id        String   @id @default(cuid())
-  type      String   // 'listing', 'user', 'company', 'verification'
-  entityId  String   // ID сущности
-  state     String   // Текущее состояние
+  type      String // 'listing', 'user', 'company', 'verification'
+  entityId  String // ID сущности
+  state     String // Текущее состояние
   context   String?  @default("{}") // Контекст машины (JSON)
   version   Int      @default(1) // Для optimistic locking
   createdAt DateTime @default(now())
@@ -576,9 +576,9 @@ model WorkflowTransition {
   instanceId String
   fromState  String
   toState    String
-  event      String   // Событие, вызвавшее переход
-  actorId    String?  // Кто инициировал
-  actorType  String?  // 'user', 'system', 'cron'
+  event      String // Событие, вызвавшее переход
+  actorId    String? // Кто инициировал
+  actorType  String? // 'user', 'system', 'cron'
   metadata   String?  @default("{}") // JSON с дополнительными данными
   createdAt  DateTime @default(now())
 
@@ -595,9 +595,9 @@ model BusinessRule {
   id          String   @id @default(cuid())
   name        String   @unique
   description String?
-  category    String   // 'tariff', 'limit', 'blocking', 'notification', 'discount'
-  conditions  String   // JSON: { all: [...], any: [...] }
-  event       String   // JSON: { type: '...', params: {...} }
+  category    String // 'tariff', 'limit', 'blocking', 'notification', 'discount'
+  conditions  String // JSON: { all: [...], any: [...] }
+  event       String // JSON: { type: '...', params: {...} }
   priority    Int      @default(0)
   enabled     Boolean  @default(true)
   createdBy   String?
@@ -615,10 +615,10 @@ model BusinessRule {
 model RuleExecution {
   id        String   @id @default(cuid())
   ruleId    String
-  facts     String   // JSON: входные данные
-  result    String   // JSON: результат (events)
+  facts     String // JSON: входные данные
+  result    String // JSON: результат (events)
   success   Boolean  @default(true)
-  duration  Int      // ms
+  duration  Int // ms
   error     String?
   actorId   String?
   createdAt DateTime @default(now())
@@ -643,8 +643,8 @@ model Listing {
   currency        String    @default("RUB")
   categoryId      String?
   status          String    @default("draft") // Управляется через XState: draft, pending, active, rejected, sold, archived, deleted
-  ownerId         String    // ID владельца (User.id)
-  moderatorId     String?   // ID модератора
+  ownerId         String // ID владельца (User.id)
+  moderatorId     String? // ID модератора
   moderatedAt     DateTime?
   rejectionReason String?
   images          String?   @default("[]") // JSON массив URL
@@ -674,7 +674,7 @@ model ListingCategory {
   name        String   @unique
   slug        String   @unique
   description String?
-  parentId    String?  // Для иерархии
+  parentId    String? // Для иерархии
   icon        String?
   sortOrder   Int      @default(0)
   isActive    Boolean  @default(true)
@@ -702,62 +702,70 @@ model TariffPlan {
   price       Float    @default(0) // Месячная стоимость
   currency    String   @default("RUB")
   features    String   @default("{}") // JSON с возможностями
-  maxAccounts Int?     // Максимум аккаунтов (для NETWORK)
+  maxAccounts Int? // Максимум аккаунтов (для NETWORK)
   isActive    Boolean  @default(true)
   isSystem    Boolean  @default(false) // Системный тариф (нельзя удалить)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
-  accounts    UserAccount[]
-  
+
+  accounts UserAccount[]
+
   @@index([code])
   @@index([isActive])
   @@map("tariff_plans")
 }
 
 model UserAccount {
-  id          String   @id @default(cuid())
-  userId      String   // Владелец аккаунта
-  ownerId     String   // Основной владелец (для переданных аккаунтов)
-  type        String   // 'LISTING', 'COMPANY', 'NETWORK'
-  name        String   // Название аккаунта
-  description String?
+  id           String     @id @default(cuid())
+  userId       String // Владелец аккаунта
+  ownerId      String // Основной владелец (для переданных аккаунтов)
+  type         String // 'LISTING', 'COMPANY', 'NETWORK'
+  name         String // Название аккаунта
+  description  String?
   tariffPlanId String
-  tariffPlan  TariffPlan @relation(fields: [tariffPlanId], references: [id])
-  user        User     @relation("OwnedAccounts", fields: [userId], references: [id], onDelete: Cascade)
-  owner       User     @relation("OwnedAccountsByOwner", fields: [ownerId], references: [id])
-  status      String   @default("active") // 'active', 'suspended', 'archived'
-  metadata    String?  @default("{}") // JSON: дополнительные данные
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  managers    AccountManager[]
-  transfers   AccountTransfer[] @relation("TransferFrom")
-  
+  tariffPlan   TariffPlan @relation(fields: [tariffPlanId], references: [id])
+  user         User       @relation("OwnedAccounts", fields: [userId], references: [id], onDelete: Cascade)
+  owner        User       @relation("OwnedAccountsByOwner", fields: [ownerId], references: [id])
+  status       String     @default("active") // 'active', 'suspended', 'archived'
+
+  // Тарифная подписка
+  tariffStartedAt      DateTime  @default(now()) // Дата начала текущего тарифа
+  tariffPaidUntil      DateTime? // Оплачено до (null = бессрочно для FREE после downgrade)
+  tariffReminderSentAt DateTime? // Когда последнее напоминание отправлено
+  tariffAutoRenew      Boolean   @default(true) // Автопродление
+
+  metadata  String?  @default("{}") // JSON: дополнительные данные
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  managers  AccountManager[]
+  transfers AccountTransfer[] @relation("TransferFrom")
+
   @@index([userId])
   @@index([ownerId])
   @@index([type])
   @@index([status])
   @@index([tariffPlanId])
+  @@index([tariffPaidUntil]) // Для cron-запросов по истекающим тарифам
   @@map("user_accounts")
 }
 
 model AccountManager {
-  id        String   @id @default(cuid())
-  accountId String
-  userId    String   // Назначенный пользователь
-  account   UserAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  user      User     @relation("ManagedAccounts", fields: [userId], references: [id], onDelete: Cascade)
-  canManage Boolean  @default(true) // Может ли управлять
-  canEdit   Boolean  @default(true) // Может ли редактировать
-  canDelete Boolean  @default(false) // Может ли удалять
-  assignedAt DateTime @default(now())
-  assignedBy String   // Кто назначил
+  id         String      @id @default(cuid())
+  accountId  String
+  userId     String // Назначенный пользователь
+  account    UserAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user       User        @relation("ManagedAccounts", fields: [userId], references: [id], onDelete: Cascade)
+  canManage  Boolean     @default(true) // Может ли управлять
+  canEdit    Boolean     @default(true) // Может ли редактировать
+  canDelete  Boolean     @default(false) // Может ли удалять
+  assignedAt DateTime    @default(now())
+  assignedBy String // Кто назначил
   revokedAt  DateTime?
   revokedBy  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
   @@unique([accountId, userId])
   @@index([userId])
   @@index([accountId])
@@ -766,22 +774,253 @@ model AccountManager {
 }
 
 model AccountTransfer {
-  id          String   @id @default(cuid())
+  id            String      @id @default(cuid())
   fromAccountId String
-  toUserId    String   // Кому передается
-  fromAccount UserAccount @relation("TransferFrom", fields: [fromAccountId], references: [id], onDelete: Cascade)
-  toUser      User     @relation("AccountTransfers", fields: [toUserId], references: [id], onDelete: Cascade)
-  status      String   @default("pending") // 'pending', 'accepted', 'rejected', 'cancelled'
-  requestedBy String   // Кто запросил передачу
-  acceptedAt  DateTime?
-  rejectedAt  DateTime?
-  cancelledAt DateTime?
-  reason      String?  // Причина отклонения/отмены
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  toUserId      String // Кому передается
+  fromAccount   UserAccount @relation("TransferFrom", fields: [fromAccountId], references: [id], onDelete: Cascade)
+  toUser        User        @relation("AccountTransfers", fields: [toUserId], references: [id], onDelete: Cascade)
+  status        String      @default("pending") // 'pending', 'accepted', 'rejected', 'cancelled'
+  requestedBy   String // Кто запросил передачу
+  acceptedAt    DateTime?
+  rejectedAt    DateTime?
+  cancelledAt   DateTime?
+  reason        String? // Причина отклонения/отмены
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
   @@index([fromAccountId])
   @@index([toUserId])
   @@index([status])
   @@map("account_transfers")
+}
+
+// ========================================
+// Media Module - Управление изображениями
+// ========================================
+
+model Media {
+  id String @id @default(cuid())
+
+  // Идентификация файла
+  filename String // Оригинальное имя: "photo.jpg"
+  slug     String @unique // Уникальный slug: "abc123xyz"
+
+  // Хранение
+  localPath String? // Локальный путь: "/uploads/2025/11/abc123xyz.webp"
+  s3Key     String? // S3 ключ: "media/2025/11/abc123xyz.webp"
+  s3Bucket  String? // Bucket: "my-bucket"
+
+  // Статусы хранения
+  storageStatus String @default("local_only")
+  // 'local_only' | 'synced' | 's3_only' | 'sync_pending' | 'sync_error'
+
+  // Метаданные файла
+  mimeType         String // image/webp, image/jpeg
+  originalMimeType String? // Оригинальный тип до конвертации
+  size             Int // Размер в байтах
+  width            Int?
+  height           Int?
+
+  // Варианты (JSON)
+  variants String @default("{}")
+  // { "thumb": { "localPath": "...", "s3Key": "...", "width": 150 }, ... }
+
+  // Связь с сущностью
+  entityType String // 'user_avatar', 'listing_image', etc.
+  entityId   String? // ID связанной сущности
+  position   Int     @default(0) // Порядок для галерей
+
+  // Водяной знак
+  hasWatermark     Boolean   @default(false)
+  watermarkApplied DateTime?
+
+  // Обработка
+  isProcessed     Boolean   @default(false)
+  processingError String?
+  processedAt     DateTime?
+
+  // EXIF данные (очищены, но сохранены для справки)
+  originalExif String? @default("{}") // JSON
+
+  // Аудит
+  uploadedBy String?
+  alt        String? // SEO alt текст
+  title      String?
+
+  // Синхронизация
+  lastSyncAt DateTime?
+  syncError  String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Soft delete
+
+  @@index([entityType, entityId])
+  @@index([storageStatus])
+  @@index([isProcessed])
+  @@index([slug])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("media")
+}
+
+model ImageSettings {
+  id          String  @id @default(cuid())
+  entityType  String  @unique // 'user_avatar', 'company_logo', etc.
+  displayName String // "Аватар пользователя"
+  description String?
+
+  // Ограничения загрузки
+  maxFileSize       Int    @default(5242880) // 5MB в байтах
+  maxFilesPerEntity Int    @default(1) // Сколько файлов на сущность
+  allowedMimeTypes  String @default("image/jpeg,image/png,image/webp,image/gif")
+
+  // Размеры вариантов (JSON массив)
+  variants String @default("[]")
+  // [{"name": "thumb", "width": 150, "height": 150, "fit": "cover", "quality": 85}]
+
+  // Обработка
+  convertToWebP Boolean @default(true)
+  stripMetadata Boolean @default(true)
+  quality       Int     @default(85) // 1-100
+
+  // Водяной знак
+  watermarkEnabled    Boolean @default(false)
+  watermarkMediaId    String? // ID Media с водяным знаком
+  watermarkPosition   String? @default("bottom-right") // 'center', 'bottom-right', etc.
+  watermarkOpacity    Float   @default(0.3) // 0.0 - 1.0
+  watermarkScale      Float   @default(0.15) // Размер относительно изображения
+  watermarkOnVariants String  @default("large") // На какие варианты накладывать
+
+  // Хранение
+  storageStrategy String  @default("local_first")
+  // 'local_only' | 'local_first' | 's3_only' | 'both'
+  s3Bucket        String? // Переопределение bucket для типа
+  s3Prefix        String? // Префикс пути в S3: "avatars/"
+
+  // Именование файлов
+  namingStrategy String @default("slug") // 'slug' | 'uuid' | 'original' | 'entity_id'
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("image_settings")
+}
+
+model MediaSyncJob {
+  id String @id @default(cuid())
+
+  // Тип операции
+  operation String // 'upload_to_s3' | 'download_from_s3' | 'delete_local' | 'delete_s3'
+
+  // Область применения
+  scope      String  @default("selected") // 'all' | 'entity_type' | 'selected'
+  entityType String? // Фильтр по типу сущности
+  mediaIds   String? // JSON массив ID для 'selected'
+
+  // Опции
+  deleteSource    Boolean @default(false) // Удалять исходные файлы после синхронизации
+  overwrite       Boolean @default(false) // Перезаписывать существующие
+  includeVariants Boolean @default(true) // Включать варианты размеров
+
+  // Прогресс
+  status         String @default("pending") // 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+  totalFiles     Int    @default(0)
+  processedFiles Int    @default(0)
+  failedFiles    Int    @default(0)
+
+  // Результаты
+  results String? @default("[]") // JSON с детальными результатами
+  error   String?
+
+  // Размеры (в байтах, используем Int для SQLite)
+  totalBytes     Int @default(0)
+  processedBytes Int @default(0)
+
+  // Исполнение
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdBy   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([operation])
+  @@index([createdAt])
+  @@map("media_sync_jobs")
+}
+
+model Watermark {
+  id          String  @id @default(cuid())
+  name        String  @unique // 'default', 'premium', 'company_x'
+  displayName String
+  description String?
+
+  // Файл водяного знака
+  mediaId String? // Связь с Media (PNG с прозрачностью)
+
+  // Настройки по умолчанию
+  defaultPosition String @default("bottom-right")
+  defaultOpacity  Float  @default(0.3)
+  defaultScale    Float  @default(0.15)
+
+  // Применимость
+  entityTypes String @default("[]") // JSON: ["listing_image", "company_photo"]
+
+  isDefault Boolean @default(false) // Водяной знак по умолчанию
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("watermarks")
+}
+
+// Глобальные настройки медиа
+model MediaGlobalSettings {
+  id String @id @default(cuid())
+
+  // Стратегия хранения по умолчанию
+  defaultStorageStrategy String @default("local_first")
+
+  // S3 настройки
+  s3DefaultBucket   String?
+  s3DefaultRegion   String?
+  s3PublicUrlPrefix String? // CDN URL: "https://cdn.example.com"
+
+  // Локальное хранилище
+  localUploadPath      String @default("/uploads")
+  localPublicUrlPrefix String @default("/uploads")
+
+  // Организация файлов
+  organizeByDate       Boolean @default(true) // /uploads/2025/11/file.webp
+  organizeByEntityType Boolean @default(true) // /uploads/avatars/file.webp
+
+  // Лимиты
+  globalMaxFileSize      Int  @default(20971520) // 20MB
+  globalDailyUploadLimit Int? // Лимит загрузки в день (байты)
+
+  // Очистка
+  autoDeleteOrphans   Boolean @default(false) // Удалять несвязанные файлы
+  orphanRetentionDays Int     @default(30)
+
+  // Автосинхронизация
+  autoSyncEnabled         Boolean @default(false)
+  autoSyncDelayMinutes    Int     @default(30)
+  autoCleanupLocalEnabled Boolean @default(false)
+  keepLocalDays           Int     @default(7)
+
+  // Обработка
+  defaultQuality       Int     @default(85)
+  defaultConvertToWebP Boolean @default(true)
+
+  // Очередь
+  processingConcurrency Int @default(3) // Параллельная обработка
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("media_global_settings")
 }

@@ -1,0 +1,92 @@
+# Bull Queue Server - Docker Compose для локальной разработки
+# 
+# Включает:
+# - Redis 7 (основа для Bull очередей) - ОПЦИОНАЛЬНО, если уже не запущен
+# - Bull Board (UI для мониторинга очередей)
+# - Redis Commander (опционально, для просмотра данных Redis)
+#
+# ВАРИАНТЫ ЗАПУСКА:
+# 
+# 1. Если Redis УЖЕ запущен (например, через redis/docker-compose.yml):
+#    docker compose -f queues/docker-compose.yml up -d bull-board
+#
+# 2. Если Redis НЕ запущен (полный стек):
+#    docker compose -f queues/docker-compose.yml up -d
+#
+# 3. С Redis Commander (инструменты разработки):
+#    docker compose -f queues/docker-compose.yml --profile tools up -d
+#
+# Остановка: docker compose -f queues/docker-compose.yml down
+# Логи: docker compose -f queues/docker-compose.yml logs -f
+
+services:
+  # Redis - хранилище для Bull очередей
+  # Можно пропустить, если уже запущен через redis/docker-compose.yml
+  redis:
+    image: redis:7-alpine
+    container_name: materio-bull-redis
+    restart: unless-stopped
+    command: >
+      redis-server 
+      --appendonly yes 
+      --maxmemory 256mb 
+      --maxmemory-policy allkeys-lru
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bull-network
+    profiles:
+      - with-redis  # Запускается только с флагом --profile with-redis
+
+  # Bull Board - UI для мониторинга очередей
+  # Доступен по адресу: http://localhost:3030
+  bull-board:
+    image: deadly0/bull-board
+    container_name: materio-bull-board
+    restart: unless-stopped
+    ports:
+      - '3030:3000'
+    environment:
+      # Подключение к локальному Redis (работает и с host.docker.internal)
+      REDIS_HOST: ${REDIS_HOST:-host.docker.internal}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_USE_TLS: 'false'
+      # Список очередей для мониторинга (через запятую)
+      BULL_PREFIX: 'bull'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - bull-network
+
+  # Redis Commander - веб-интерфейс для Redis (опционально)
+  # Доступен по адресу: http://localhost:8081
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: materio-redis-commander
+    restart: unless-stopped
+    ports:
+      - '8081:8081'
+    environment:
+      REDIS_HOSTS: local:${REDIS_HOST:-host.docker.internal}:${REDIS_PORT:-6379}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - bull-network
+    profiles:
+      - tools  # Запускается только с флагом --profile tools
+
+volumes:
+  redis-data:
+    name: materio-bull-redis-data
+
+networks:
+  bull-network:
+    name: materio-bull-network
+    driver: bridge

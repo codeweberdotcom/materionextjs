@@ -1,0 +1,33 @@
+{
+  "runId": "2025-11-24T01-48-45-519Z_rate-limit-auth",
+  "label": "Rate Limit - Authentication",
+  "testId": "rate-limit-auth",
+  "status": "failed",
+  "startedAt": "2025-11-24T01:48:05.206Z",
+  "finishedAt": "2025-11-24T01:48:45.531Z",
+  "scripts": [
+    {
+      "runId": "2025-11-24T01-48-45-519Z_rate-limit-auth",
+      "scriptId": "rate-limit-auth",
+      "title": "blocks brute force login attempts",
+      "file": "rate-limit/auth.spec.ts",
+      "status": "failed",
+      "duration": 33893,
+      "startedAt": "2025-11-24T01:48:06.400Z",
+      "finishedAt": "2025-11-24T01:48:40.293Z",
+      "timeout": 120000
+    },
+    {
+      "runId": "2025-11-24T01-48-45-519Z_rate-limit-auth",
+      "scriptId": "rate-limit-auth",
+      "title": "allows login after rate limit window expires",
+      "file": "rate-limit/auth.spec.ts",
+      "status": "failed",
+      "duration": 34658,
+      "startedAt": "2025-11-24T01:48:06.390Z",
+      "finishedAt": "2025-11-24T01:48:41.048Z",
+      "timeout": 120000
+    }
+  ],
+  "artifactsPath": "artifacts\\playwright\\runs\\2025-11-24T01-48-45-519Z_rate-limit-auth"
+}

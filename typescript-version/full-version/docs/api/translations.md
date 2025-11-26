@@ -69,7 +69,7 @@ The translations system provides comprehensive internationalization (i18n) suppo
 ## 📡 Core Functions
 
 ### useTranslation Hook
-Main hook for accessing translations in React components.
+Main hook for accessing translations in React components. **Throws an error** if used outside of `TranslationProvider`.
 
 ```typescript
 const dictionary = useTranslation()
@@ -78,6 +78,29 @@ const dictionary = useTranslation()
 const dashboardTitle = dictionary?.navigation?.dashboard
 const welcomeMessage = dictionary?.messages?.welcome
 ```
+
+### useTranslationSafe Hook
+Safe version that returns `null` instead of throwing when used outside of `TranslationProvider`. Use this in shared components that may render both inside and outside the provider.
+
+```typescript
+import { useTranslationSafe } from '@/contexts/TranslationContext'
+
+const ModeDropdown = () => {
+  const dictionary = useTranslationSafe()
+  
+  // Fallback labels when provider is not available
+  const label = dictionary?.navigation?.light ?? 'Light'
+  
+  return <span>{label}</span>
+}
+```
+
+**When to use which hook:**
+
+| Hook | Use case | Behavior without provider |
+|------|----------|---------------------------|
+| `useTranslation` | Components inside dashboard/private routes | Throws error |
+| `useTranslationSafe` | Shared components (headers, mode switchers) | Returns `null` |
 
 ### getDictionary Utility
 Server-side function for loading dictionaries.

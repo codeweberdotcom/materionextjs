@@ -1,0 +1,10 @@
+{
+  "runId": "2025-11-24T00-27-27-831Z_rate-limit-modes",
+  "label": "Rate Limit - Modes (Enforce/Monitor)",
+  "testId": "rate-limit-modes",
+  "status": "passed",
+  "startedAt": "2025-11-24T00:26:34.008Z",
+  "finishedAt": "2025-11-24T00:27:27.926Z",
+  "scripts": [],
+  "artifactsPath": "artifacts\\playwright\\runs\\2025-11-24T00-27-27-831Z_rate-limit-modes"
+}

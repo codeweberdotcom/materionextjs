@@ -1,0 +1,258 @@
+{
+  "config": {
+    "configFile": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\playwright.config.ts",
+    "rootDir": "C:/laragon/www/materionextjs/typescript-version/full-version/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 3
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "reports/e2e/test-results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "open": "never",
+          "outputFolder": "reports/e2e/html"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/laragon/www/materionextjs/typescript-version/full-version/reports/e2e/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 3
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/laragon/www/materionextjs/typescript-version/full-version/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.1",
+    "workers": 6,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rate-limit\\chat-messages.spec.ts",
+      "file": "rate-limit/chat-messages.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Rate Limit - Chat Messages",
+          "file": "rate-limit/chat-messages.spec.ts",
+          "line": 9,
+          "column": 6,
+          "specs": [
+            {
+              "title": "allows messages within rate limit",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 32178,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts",
+                            "column": 14,
+                            "line": 63
+                          },
+                          "message": "Error: page.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[name=email]')\u001b[22m\n\n\n   at helpers\\rate-limit-helpers.ts:63\n\n  61 | export async function loginAsUser(page: Page, email: string, password: string) {\n  62 |   await page.goto('/login?redirectTo=/en/dashboards/crm')\n> 63 |   await page.fill('[name=email]', email)\n     |              ^\n  64 |   await page.fill('[name=password]', password)\n  65 |   await page.click('[type=submit]')\n  66 |   \n    at loginAsUser (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts:63:14)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:44:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T00:35:11.232Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\reports\\e2e\\artifacts\\rate-limit-chat-messages-R-6855c--messages-within-rate-limit-chromium\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c88971a28d2abbf5c60b-55c5a1dbb9430dfa1cd7",
+              "file": "rate-limit/chat-messages.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "blocks messages after exceeding rate limit",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "timedOut",
+                      "duration": 32187,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts",
+                            "column": 14,
+                            "line": 63
+                          },
+                          "message": "Error: page.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[name=email]')\u001b[22m\n\n\n   at helpers\\rate-limit-helpers.ts:63\n\n  61 | export async function loginAsUser(page: Page, email: string, password: string) {\n  62 |   await page.goto('/login?redirectTo=/en/dashboards/crm')\n> 63 |   await page.fill('[name=email]', email)\n     |              ^\n  64 |   await page.fill('[name=password]', password)\n  65 |   await page.click('[type=submit]')\n  66 |   \n    at loginAsUser (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts:63:14)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:80:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T00:35:11.265Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\reports\\e2e\\artifacts\\rate-limit-chat-messages-R-6a24f--after-exceeding-rate-limit-chromium\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c88971a28d2abbf5c60b-d5d1c649a28b3fdc044f",
+              "file": "rate-limit/chat-messages.spec.ts",
+              "line": 78,
+              "column": 7
+            },
+            {
+              "title": "shows warning when approaching limit",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "timedOut",
+                      "duration": 32090,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts",
+                            "column": 14,
+                            "line": 63
+                          },
+                          "message": "Error: page.fill: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('[name=email]')\u001b[22m\n\n\n   at helpers\\rate-limit-helpers.ts:63\n\n  61 | export async function loginAsUser(page: Page, email: string, password: string) {\n  62 |   await page.goto('/login?redirectTo=/en/dashboards/crm')\n> 63 |   await page.fill('[name=email]', email)\n     |              ^\n  64 |   await page.fill('[name=password]', password)\n  65 |   await page.click('[type=submit]')\n  66 |   \n    at loginAsUser (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\rate-limit-helpers.ts:63:14)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\chat-messages.spec.ts:138:5"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T00:35:11.217Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\reports\\e2e\\artifacts\\rate-limit-chat-messages-R-483fd-ning-when-approaching-limit-chromium\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "c88971a28d2abbf5c60b-742c05703b596a36436b",
+              "file": "rate-limit/chat-messages.spec.ts",
+              "line": 127,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-24T00:35:07.573Z",
+    "duration": 38199.616,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "runId": "2025-11-24T16-53-58-385Z_user-profile",
+  "label": "User Profile - Profile Management",
+  "testId": "user-profile",
+  "status": "failed",
+  "startedAt": "2025-11-24T16:53:37.893Z",
+  "finishedAt": "2025-11-24T16:53:58.392Z",
+  "scripts": [
+    {
+      "runId": "2025-11-24T16-53-58-385Z_user-profile",
+      "scriptId": "user-profile",
+      "title": "should view and update user profile",
+      "file": "user/user-profile.spec.ts",
+      "status": "failed",
+      "duration": 17267,
+      "startedAt": "2025-11-24T16:53:39.304Z",
+      "finishedAt": "2025-11-24T16:53:56.571Z",
+      "timeout": 90000
+    },
+    {
+      "runId": "2025-11-24T16-53-58-385Z_user-profile",
+      "scriptId": "user-profile",
+      "title": "should change password",
+      "file": "user/user-profile.spec.ts",
+      "status": "failed",
+      "duration": 17271,
+      "startedAt": "2025-11-24T16:53:39.306Z",
+      "finishedAt": "2025-11-24T16:53:56.577Z",
+      "timeout": 90000
+    },
+    {
+      "runId": "2025-11-24T16-53-58-385Z_user-profile",
+      "scriptId": "user-profile",
+      "title": "should upload avatar",
+      "file": "user/user-profile.spec.ts",
+      "status": "failed",
+      "duration": 17265,
+      "startedAt": "2025-11-24T16:53:39.300Z",
+      "finishedAt": "2025-11-24T16:53:56.565Z",
+      "timeout": 90000
+    }
+  ],
+  "artifactsPath": "artifacts\\playwright\\runs\\2025-11-24T16-53-58-385Z_user-profile"
+}

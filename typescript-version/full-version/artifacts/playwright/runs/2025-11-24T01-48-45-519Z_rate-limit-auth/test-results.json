@@ -1,0 +1,190 @@
+{
+  "config": {
+    "configFile": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\playwright.config.ts",
+    "rootDir": "C:/laragon/www/materionextjs/typescript-version/full-version/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 2
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "reports/e2e/test-results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "open": "never",
+          "outputFolder": "reports/e2e/html"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/laragon/www/materionextjs/typescript-version/full-version/reports/e2e/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 2
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/laragon/www/materionextjs/typescript-version/full-version/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.1",
+    "workers": 6,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rate-limit\\auth.spec.ts",
+      "file": "rate-limit/auth.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Rate Limit - Authentication",
+          "file": "rate-limit/auth.spec.ts",
+          "line": 9,
+          "column": 6,
+          "specs": [
+            {
+              "title": "blocks brute force login attempts",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "timedOut",
+                      "duration": 33893,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\auth.spec.ts",
+                            "column": 16,
+                            "line": 36
+                          },
+                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/login\", waiting until \"load\"\u001b[22m\n\n\n  34 |\n  35 |   test('blocks brute force login attempts', async ({ page, request }) => {\n> 36 |     await page.goto('/login')\n     |                ^\n  37 |     \n  38 |     const emailInput = page.locator('[name=email]')\n  39 |     const passwordInput = page.locator('[name=password]')\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\auth.spec.ts:36:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T01:48:06.400Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "af21c6437f308275bc7d-c38feb2b744b2647d02f",
+              "file": "rate-limit/auth.spec.ts",
+              "line": 35,
+              "column": 7
+            },
+            {
+              "title": "allows login after rate limit window expires",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "timedOut",
+                      "duration": 34658,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\auth.spec.ts",
+                            "column": 16,
+                            "line": 88
+                          },
+                          "message": "Error: page.goto: Test timeout of 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"http://localhost:3000/login\", waiting until \"load\"\u001b[22m\n\n\n  86 |     })\n  87 |     \n> 88 |     await page.goto('/login')\n     |                ^\n  89 |     \n  90 |     const emailInput = page.locator('[name=email]')\n  91 |     const passwordInput = page.locator('[name=password]')\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\rate-limit\\auth.spec.ts:88:16"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T01:48:06.390Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "af21c6437f308275bc7d-e03b9e5e7ea69569b1fb",
+              "file": "rate-limit/auth.spec.ts",
+              "line": 78,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-24T01:48:05.206Z",
+    "duration": 40205.819,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

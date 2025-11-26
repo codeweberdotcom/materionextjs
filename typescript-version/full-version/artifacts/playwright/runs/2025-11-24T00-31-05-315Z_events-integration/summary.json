@@ -1,0 +1,10 @@
+{
+  "runId": "2025-11-24T00-31-05-315Z_events-integration",
+  "label": "Events Integration Verification",
+  "testId": "events-integration",
+  "status": "passed",
+  "startedAt": "2025-11-24T00:29:33.798Z",
+  "finishedAt": "2025-11-24T00:31:05.354Z",
+  "scripts": [],
+  "artifactsPath": "artifacts\\playwright\\runs\\2025-11-24T00-31-05-315Z_events-integration"
+}

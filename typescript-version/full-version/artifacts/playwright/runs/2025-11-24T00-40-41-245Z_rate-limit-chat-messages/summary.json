@@ -1,0 +1,10 @@
+{
+  "runId": "2025-11-24T00-40-41-245Z_rate-limit-chat-messages",
+  "label": "Rate Limit - Chat Messages",
+  "testId": "rate-limit-chat-messages",
+  "status": "passed",
+  "startedAt": "2025-11-24T00:39:47.335Z",
+  "finishedAt": "2025-11-24T00:40:45.563Z",
+  "scripts": [],
+  "artifactsPath": "artifacts\\playwright\\runs\\2025-11-24T00-40-41-245Z_rate-limit-chat-messages"
+}

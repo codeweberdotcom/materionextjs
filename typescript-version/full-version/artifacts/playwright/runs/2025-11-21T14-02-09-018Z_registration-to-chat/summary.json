@@ -1,0 +1,22 @@
+{
+  "runId": "2025-11-21T14-02-09-018Z_registration-to-chat",
+  "label": "Registration -> Chat Flow",
+  "testId": "registration-to-chat",
+  "status": "failed",
+  "startedAt": "2025-11-21T13:54:09.066Z",
+  "finishedAt": "2025-11-21T14:02:09.041Z",
+  "scripts": [
+    {
+      "runId": "2025-11-21T14-02-09-018Z_registration-to-chat",
+      "scriptId": "registration-to-chat",
+      "title": "chat functionality works end-to-end",
+      "file": "chat.spec.ts",
+      "status": "failed",
+      "duration": 30416,
+      "startedAt": "2025-11-21T13:54:10.223Z",
+      "finishedAt": "2025-11-21T13:54:40.639Z",
+      "timeout": 30000
+    }
+  ],
+  "artifactsPath": "artifacts\\playwright\\runs\\2025-11-21T14-02-09-018Z_registration-to-chat"
+}

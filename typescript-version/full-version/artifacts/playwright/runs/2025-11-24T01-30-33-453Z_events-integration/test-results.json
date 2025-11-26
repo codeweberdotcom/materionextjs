@@ -1,0 +1,602 @@
+{
+  "config": {
+    "configFile": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\playwright.config.ts",
+    "rootDir": "C:/laragon/www/materionextjs/typescript-version/full-version/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\helpers\\global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 6
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "reports/e2e/test-results.json"
+        }
+      ],
+      [
+        "html",
+        {
+          "open": "never",
+          "outputFolder": "reports/e2e/html"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "C:/laragon/www/materionextjs/typescript-version/full-version/reports/e2e/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 6
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/laragon/www/materionextjs/typescript-version/full-version/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "shard": null,
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.56.1",
+    "workers": 6,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "events-integration.spec.ts",
+      "file": "events-integration.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Events Integration",
+          "file": "events-integration.spec.ts",
+          "line": 52,
+          "column": 6,
+          "specs": [
+            {
+              "title": "should record export events",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 45138,
+                      "error": {
+                        "message": "Error: Failed to fetch events: 403",
+                        "stack": "Error: Failed to fetch events: 403\n    at getEvents (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:18:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:104:27",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                          "column": 11,
+                          "line": 18
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 16 |\u001b[39m   \n \u001b[90m 17 |\u001b[39m   \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mresponse\u001b[33m.\u001b[39mok()) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 18 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to fetch events: ${response.status()}`\u001b[39m)\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 19 |\u001b[39m   }\n \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   \u001b[36mconst\u001b[39m data \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m response\u001b[33m.\u001b[39mjson()\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                            "column": 11,
+                            "line": 18
+                          },
+                          "message": "Error: Failed to fetch events: 403\n\n  16 |   \n  17 |   if (!response.ok()) {\n> 18 |     throw new Error(`Failed to fetch events: ${response.status()}`)\n     |           ^\n  19 |   }\n  20 |\n  21 |   const data = await response.json()\n    at getEvents (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:18:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:104:27"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T01:29:19.753Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\reports\\e2e\\artifacts\\events-integration-Events--72a08-should-record-export-events-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                        "column": 11,
+                        "line": 18
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9897485bcb18d386f7ab-91f12f09ba14c967881b",
+              "file": "events-integration.spec.ts",
+              "line": 98,
+              "column": 7
+            },
+            {
+              "title": "should record import preview event",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "timedOut",
+                      "duration": 62665,
+                      "error": {
+                        "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m",
+                        "stack": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                      },
+                      "errors": [
+                        {
+                          "message": "\u001b[31mTest timeout of 60000ms exceeded.\u001b[39m"
+                        },
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                            "column": 24,
+                            "line": 161
+                          },
+                          "message": "Error: locator.click: Test timeout of 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('button:has-text(\"Импорт\"), button:has-text(\"Import\")').first()\u001b[22m\n\n\n  159 |     const importButton = page.locator('button:has-text(\"Импорт\"), button:has-text(\"Import\")').first()\n  160 |     await expect(importButton).toBeVisible()\n> 161 |     await importButton.click()\n      |                        ^\n  162 |\n  163 |     // Wait for import dialog\n  164 |     await page.waitForSelector('[role=\"dialog\"]', { timeout: 5000 })\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:161:24"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T01:29:19.616Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\reports\\e2e\\artifacts\\events-integration-Events--6870b-record-import-preview-event-chromium\\error-context.md"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9897485bcb18d386f7ab-a4e79119c5bc285d8822",
+              "file": "events-integration.spec.ts",
+              "line": 153,
+              "column": 7
+            },
+            {
+              "title": "should record bulk operation events",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "passed",
+                      "duration": 56129,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [
+                        {
+                          "text": "Bulk operation event check failed: Error: Failed to fetch events: 403\n    at getEvents \u001b[90m(C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\\u001b[39mtests\\e2e\\events-integration.spec.ts:18:11\u001b[90m)\u001b[39m\n    at waitForEvent \u001b[90m(C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\\u001b[39mtests\\e2e\\events-integration.spec.ts:35:20\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\\u001b[39mtests\\e2e\\events-integration.spec.ts:205:33\n    at \u001b[90mC:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\\u001b[39mnode_modules\\\u001b[4m.pnpm\u001b[24m\\playwright@1.56.1\\node_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:310:9\n    at \u001b[90mC:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\\u001b[39mnode_modules\\\u001b[4m.pnpm\u001b[24m\\playwright@1.56.1\\node_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:305:11\n    at TimeoutManager.withRunnable \u001b[90m(C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\\u001b[39mnode_modules\\\u001b[4m.pnpm\u001b[24m\\playwright@1.56.1\\node_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\\u001b[39mnode_modules\\\u001b[4m.pnpm\u001b[24m\\playwright@1.56.1\\node_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\testInfo.js:303:7\u001b[90m)\u001b[39m\n    at \u001b[90mC:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\\u001b[39mnode_modules\\\u001b[4m.pnpm\u001b[24m\\playwright@1.56.1\\node_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:308:7\n    at WorkerMain._runTest \u001b[90m(C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\\u001b[39mnode_modules\\\u001b[4m.pnpm\u001b[24m\\playwright@1.56.1\\node_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:283:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\\u001b[39mnode_modules\\\u001b[4m.pnpm\u001b[24m\\playwright@1.56.1\\node_modules\\\u001b[4mplaywright\u001b[24m\\lib\\worker\\workerMain.js:198:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\\u001b[39mnode_modules\\\u001b[4m.pnpm\u001b[24m\\playwright@1.56.1\\node_modules\\\u001b[4mplaywright\u001b[24m\\lib\\common\\process.js:65:22\u001b[90m)\u001b[39m\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2025-11-24T01:29:19.897Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9897485bcb18d386f7ab-16be0b9e1498741a05ae",
+              "file": "events-integration.spec.ts",
+              "line": 179,
+              "column": 7
+            },
+            {
+              "title": "should verify event structure and correlation",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 37847,
+                      "error": {
+                        "message": "Error: Failed to fetch events: 403",
+                        "stack": "Error: Failed to fetch events: 403\n    at getEvents (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:18:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:241:20",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                          "column": 11,
+                          "line": 18
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 16 |\u001b[39m   \n \u001b[90m 17 |\u001b[39m   \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mresponse\u001b[33m.\u001b[39mok()) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 18 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to fetch events: ${response.status()}`\u001b[39m)\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 19 |\u001b[39m   }\n \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   \u001b[36mconst\u001b[39m data \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m response\u001b[33m.\u001b[39mjson()\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                            "column": 11,
+                            "line": 18
+                          },
+                          "message": "Error: Failed to fetch events: 403\n\n  16 |   \n  17 |   if (!response.ok()) {\n> 18 |     throw new Error(`Failed to fetch events: ${response.status()}`)\n     |           ^\n  19 |   }\n  20 |\n  21 |   const data = await response.json()\n    at getEvents (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:18:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:241:20"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T01:29:19.900Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\reports\\e2e\\artifacts\\events-integration-Events--8af80-t-structure-and-correlation-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                        "column": 11,
+                        "line": 18
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9897485bcb18d386f7ab-e0ff6c9ca1431d53e256",
+              "file": "events-integration.spec.ts",
+              "line": 239,
+              "column": 7
+            },
+            {
+              "title": "should verify actorId is recorded for authenticated operations",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "failed",
+                      "duration": 37751,
+                      "error": {
+                        "message": "Error: Failed to fetch events: 403",
+                        "stack": "Error: Failed to fetch events: 403\n    at getEvents (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:18:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:270:20",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                          "column": 11,
+                          "line": 18
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 16 |\u001b[39m   \n \u001b[90m 17 |\u001b[39m   \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mresponse\u001b[33m.\u001b[39mok()) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 18 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to fetch events: ${response.status()}`\u001b[39m)\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 19 |\u001b[39m   }\n \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   \u001b[36mconst\u001b[39m data \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m response\u001b[33m.\u001b[39mjson()\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                            "column": 11,
+                            "line": 18
+                          },
+                          "message": "Error: Failed to fetch events: 403\n\n  16 |   \n  17 |   if (!response.ok()) {\n> 18 |     throw new Error(`Failed to fetch events: ${response.status()}`)\n     |           ^\n  19 |   }\n  20 |\n  21 |   const data = await response.json()\n    at getEvents (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:18:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:270:20"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T01:29:19.759Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\reports\\e2e\\artifacts\\events-integration-Events--43fb4-or-authenticated-operations-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                        "column": 11,
+                        "line": 18
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9897485bcb18d386f7ab-1837b49daf89b61dcb5c",
+              "file": "events-integration.spec.ts",
+              "line": 268,
+              "column": 7
+            },
+            {
+              "title": "should export events to CSV",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 36742,
+                      "error": {
+                        "message": "Error: Failed to fetch events: 403",
+                        "stack": "Error: Failed to fetch events: 403\n    at getEvents (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:18:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:287:20",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                          "column": 11,
+                          "line": 18
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 16 |\u001b[39m   \n \u001b[90m 17 |\u001b[39m   \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mresponse\u001b[33m.\u001b[39mok()) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 18 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to fetch events: ${response.status()}`\u001b[39m)\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 19 |\u001b[39m   }\n \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   \u001b[36mconst\u001b[39m data \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m response\u001b[33m.\u001b[39mjson()\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                            "column": 11,
+                            "line": 18
+                          },
+                          "message": "Error: Failed to fetch events: 403\n\n  16 |   \n  17 |   if (!response.ok()) {\n> 18 |     throw new Error(`Failed to fetch events: ${response.status()}`)\n     |           ^\n  19 |   }\n  20 |\n  21 |   const data = await response.json()\n    at getEvents (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:18:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:287:20"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T01:29:19.895Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\reports\\e2e\\artifacts\\events-integration-Events--e6d8f-should-export-events-to-CSV-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                        "column": 11,
+                        "line": 18
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9897485bcb18d386f7ab-75b51552dba5946db3e7",
+              "file": "events-integration.spec.ts",
+              "line": 285,
+              "column": 7
+            },
+            {
+              "title": "should export events to JSON",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 4,
+                      "status": "failed",
+                      "duration": 24263,
+                      "error": {
+                        "message": "Error: Failed to fetch events: 403",
+                        "stack": "Error: Failed to fetch events: 403\n    at getEvents (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:18:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:316:20",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                          "column": 11,
+                          "line": 18
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 16 |\u001b[39m   \n \u001b[90m 17 |\u001b[39m   \u001b[36mif\u001b[39m (\u001b[33m!\u001b[39mresponse\u001b[33m.\u001b[39mok()) {\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 18 |\u001b[39m     \u001b[36mthrow\u001b[39m \u001b[36mnew\u001b[39m \u001b[33mError\u001b[39m(\u001b[32m`Failed to fetch events: ${response.status()}`\u001b[39m)\n \u001b[90m    |\u001b[39m           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 19 |\u001b[39m   }\n \u001b[90m 20 |\u001b[39m\n \u001b[90m 21 |\u001b[39m   \u001b[36mconst\u001b[39m data \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m response\u001b[33m.\u001b[39mjson()\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                            "column": 11,
+                            "line": 18
+                          },
+                          "message": "Error: Failed to fetch events: 403\n\n  16 |   \n  17 |   if (!response.ok()) {\n> 18 |     throw new Error(`Failed to fetch events: ${response.status()}`)\n     |           ^\n  19 |   }\n  20 |\n  21 |   const data = await response.json()\n    at getEvents (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:18:11)\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:316:20"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T01:30:02.145Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\reports\\e2e\\artifacts\\events-integration-Events--0e73c-hould-export-events-to-JSON-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                        "column": 11,
+                        "line": 18
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9897485bcb18d386f7ab-164e5be38f7725e8ee6a",
+              "file": "events-integration.spec.ts",
+              "line": 314,
+              "column": 7
+            },
+            {
+              "title": "should apply filters when exporting events",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 27303,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:342:27",
+                        "location": {
+                          "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                          "column": 27,
+                          "line": 342
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 340 |\u001b[39m     \n \u001b[90m 341 |\u001b[39m     \u001b[36mconst\u001b[39m response \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mrequest\u001b[33m.\u001b[39m\u001b[36mget\u001b[39m(exportUrl\u001b[33m.\u001b[39mpathname \u001b[33m+\u001b[39m exportUrl\u001b[33m.\u001b[39msearch)\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 342 |\u001b[39m     expect(response\u001b[33m.\u001b[39mok())\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\n \u001b[90m     |\u001b[39m                           \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 343 |\u001b[39m\n \u001b[90m 344 |\u001b[39m     \u001b[36mconst\u001b[39m csvContent \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m response\u001b[33m.\u001b[39mtext()\n \u001b[90m 345 |\u001b[39m     \u001b[36mconst\u001b[39m lines \u001b[33m=\u001b[39m csvContent\u001b[33m.\u001b[39msplit(\u001b[32m'\\n'\u001b[39m)\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                            "column": 27,
+                            "line": 342
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  340 |     \n  341 |     const response = await page.request.get(exportUrl.pathname + exportUrl.search)\n> 342 |     expect(response.ok()).toBe(true)\n      |                           ^\n  343 |\n  344 |     const csvContent = await response.text()\n  345 |     const lines = csvContent.split('\\n')\n    at C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts:342:27"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T01:30:04.921Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\reports\\e2e\\artifacts\\events-integration-Events--d2970-lters-when-exporting-events-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\tests\\e2e\\events-integration.spec.ts",
+                        "column": 27,
+                        "line": 342
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "9897485bcb18d386f7ab-78d3bfb784af60ae780b",
+              "file": "events-integration.spec.ts",
+              "line": 336,
+              "column": 7
+            },
+            {
+              "title": "should require export permission",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 3,
+                      "status": "passed",
+                      "duration": 24373,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-11-24T01:30:07.832Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "9897485bcb18d386f7ab-0acb82588522c60205c6",
+              "file": "events-integration.spec.ts",
+              "line": 359,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2025-11-24T01:29:15.968Z",
+    "duration": 77391.308,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 7,
+    "flaky": 0
+  }
+}

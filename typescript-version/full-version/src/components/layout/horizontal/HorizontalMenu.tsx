@@ -121,6 +121,25 @@ const HorizontalMenu = ({ dictionary, locale: propLocale }: HorizontalMenuProps)
             {dictionary['navigation'].notifications}
           </MenuItem>
         </SubMenu>
+
+        <SubMenu label={dictionary['navigation'].accounts || 'Аккаунты'} icon={<i className='ri-user-settings-line' />}>
+          <MenuItem href={`/${locale}/accounts`} icon={<i className='ri-account-box-line' />}>
+            {dictionary['navigation'].myAccounts || 'Мои аккаунты'}
+          </MenuItem>
+          <MenuItem href={`/${locale}/accounts/tariffs`} icon={<i className='ri-vip-crown-line' />}>
+            {dictionary['navigation'].tariffPlans || 'Тарифные планы'}
+          </MenuItem>
+          <MenuItem href={`/${locale}/accounts/managers`} icon={<i className='ri-user-add-line' />}>
+            {dictionary['navigation'].accountManagers || 'Менеджеры'}
+          </MenuItem>
+          <MenuItem href={`/${locale}/accounts/transfers`} icon={<i className='ri-share-forward-line' />}>
+            {dictionary['navigation'].accountTransfers || 'Передача аккаунтов'}
+          </MenuItem>
+          <MenuItem href={`/${locale}/accounts/create`} icon={<i className='ri-add-circle-line' />}>
+            {dictionary['navigation'].createAccount || 'Создать аккаунт'}
+          </MenuItem>
+        </SubMenu>
+
 <SubMenu label={dictionary['navigation'].adminAndSettings} icon={<i className='ri-settings-5-line' />}>
           <SubMenu label={dictionary['navigation'].userSettings} icon={<i className='ri-user-settings-line' />}>
             <MenuItem href={`/${locale}/apps/user/list`}>{dictionary['navigation'].userList}</MenuItem>
@@ -183,6 +202,21 @@ const HorizontalMenu = ({ dictionary, locale: propLocale }: HorizontalMenuProps)
             {(dictionary['navigation'] as any)?.cron || dictionary['navigation'].maintenance || 'Cron'}
           </MenuItem>
         </SubMenu>
+<SubMenu label={dictionary['navigation'].media || 'Медиа'} icon={<i className='ri-image-line' />}>
+          <MenuItem href={`/${locale}/admin/media`} icon={<i className='ri-gallery-line' />}>
+            {dictionary['navigation'].mediaLibrary || 'Медиатека'}
+          </MenuItem>
+          <MenuItem href={`/${locale}/admin/media/settings`} icon={<i className='ri-settings-3-line' />}>
+            {dictionary['navigation'].mediaSettings || 'Настройки'}
+          </MenuItem>
+          <MenuItem href={`/${locale}/admin/media/sync`} icon={<i className='ri-refresh-line' />}>
+            {dictionary['navigation'].mediaSync || 'Синхронизация'}
+          </MenuItem>
+          <MenuItem href={`/${locale}/admin/media/watermarks`} icon={<i className='ri-drop-line' />}>
+            {dictionary['navigation'].mediaWatermarks || 'Водяные знаки'}
+          </MenuItem>
+        </SubMenu>
+
 <SubMenu label={dictionary['navigation'].blocking} icon={<i className='ri-shield-check-line' />}>
           <MenuItem href={`/${locale}/admin/rate-limits`} icon={<i className='ri-timer-flash-line' />}>
             {dictionary['navigation'].rateLimitManagement}

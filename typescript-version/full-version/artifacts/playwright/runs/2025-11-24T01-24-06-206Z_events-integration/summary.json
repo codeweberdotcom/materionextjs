@@ -1,0 +1,110 @@
+{
+  "runId": "2025-11-24T01-24-06-206Z_events-integration",
+  "label": "Events Integration Verification",
+  "testId": "events-integration",
+  "status": "failed",
+  "startedAt": "2025-11-24T01:22:11.136Z",
+  "finishedAt": "2025-11-24T01:24:06.232Z",
+  "scripts": [
+    {
+      "runId": "2025-11-24T01-24-06-206Z_events-integration",
+      "scriptId": "events-integration",
+      "title": "should record export events",
+      "file": "events-integration.spec.ts",
+      "status": "failed",
+      "duration": 60244,
+      "startedAt": "2025-11-24T01:22:13.876Z",
+      "finishedAt": "2025-11-24T01:23:14.120Z",
+      "timeout": 60000
+    },
+    {
+      "runId": "2025-11-24T01-24-06-206Z_events-integration",
+      "scriptId": "events-integration",
+      "title": "should record import preview event",
+      "file": "events-integration.spec.ts",
+      "status": "failed",
+      "duration": 60192,
+      "startedAt": "2025-11-24T01:22:13.877Z",
+      "finishedAt": "2025-11-24T01:23:14.069Z",
+      "timeout": 60000
+    },
+    {
+      "runId": "2025-11-24T01-24-06-206Z_events-integration",
+      "scriptId": "events-integration",
+      "title": "should record bulk operation events",
+      "file": "events-integration.spec.ts",
+      "status": "failed",
+      "duration": 60284,
+      "startedAt": "2025-11-24T01:22:13.895Z",
+      "finishedAt": "2025-11-24T01:23:14.179Z",
+      "timeout": 60000
+    },
+    {
+      "runId": "2025-11-24T01-24-06-206Z_events-integration",
+      "scriptId": "events-integration",
+      "title": "should verify event structure and correlation",
+      "file": "events-integration.spec.ts",
+      "status": "failed",
+      "duration": 60393,
+      "startedAt": "2025-11-24T01:22:14.163Z",
+      "finishedAt": "2025-11-24T01:23:14.556Z",
+      "timeout": 60000
+    },
+    {
+      "runId": "2025-11-24T01-24-06-206Z_events-integration",
+      "scriptId": "events-integration",
+      "title": "should verify actorId is recorded for authenticated operations",
+      "file": "events-integration.spec.ts",
+      "status": "failed",
+      "duration": 60255,
+      "startedAt": "2025-11-24T01:22:14.112Z",
+      "finishedAt": "2025-11-24T01:23:14.367Z",
+      "timeout": 60000
+    },
+    {
+      "runId": "2025-11-24T01-24-06-206Z_events-integration",
+      "scriptId": "events-integration",
+      "title": "should export events to CSV",
+      "file": "events-integration.spec.ts",
+      "status": "failed",
+      "duration": 60473,
+      "startedAt": "2025-11-24T01:22:13.968Z",
+      "finishedAt": "2025-11-24T01:23:14.441Z",
+      "timeout": 60000
+    },
+    {
+      "runId": "2025-11-24T01-24-06-206Z_events-integration",
+      "scriptId": "events-integration",
+      "title": "should export events to JSON",
+      "file": "events-integration.spec.ts",
+      "status": "failed",
+      "duration": 38064,
+      "startedAt": "2025-11-24T01:23:20.969Z",
+      "finishedAt": "2025-11-24T01:23:59.033Z",
+      "timeout": 60000
+    },
+    {
+      "runId": "2025-11-24T01-24-06-206Z_events-integration",
+      "scriptId": "events-integration",
+      "title": "should apply filters when exporting events",
+      "file": "events-integration.spec.ts",
+      "status": "failed",
+      "duration": 42580,
+      "startedAt": "2025-11-24T01:23:20.966Z",
+      "finishedAt": "2025-11-24T01:24:03.546Z",
+      "timeout": 60000
+    },
+    {
+      "runId": "2025-11-24T01-24-06-206Z_events-integration",
+      "scriptId": "events-integration",
+      "title": "should require export permission",
+      "file": "events-integration.spec.ts",
+      "status": "passed",
+      "duration": 41849,
+      "startedAt": "2025-11-24T01:23:21.360Z",
+      "finishedAt": "2025-11-24T01:24:03.209Z",
+      "timeout": 60000
+    }
+  ],
+  "artifactsPath": "artifacts\\playwright\\runs\\2025-11-24T01-24-06-206Z_events-integration"
+}
