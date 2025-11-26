@@ -101,7 +101,24 @@ export class MediaService {
       const relativePath = `${options.entityType}/${datePath}/${slug}${extension}`
 
       // Обрабатываем изображение
-      const variants = (settings?.variants ? JSON.parse(settings.variants) : preset.variants) as ImageVariantConfig[]
+      // Всегда добавляем оригинал с единым максимумом 1920×1280
+      const ORIGINAL_MAX_WIDTH = 1920
+      const ORIGINAL_MAX_HEIGHT = 1280
+      
+      const entityVariants = (settings?.variants ? JSON.parse(settings.variants) : preset.variants) as ImageVariantConfig[]
+      
+      // Фильтруем existing 'original' если есть и добавляем наш стандартный
+      const variants: ImageVariantConfig[] = [
+        {
+          name: 'original',
+          width: ORIGINAL_MAX_WIDTH,
+          height: ORIGINAL_MAX_HEIGHT,
+          fit: 'inside', // Сохраняем пропорции, не обрезаем
+          quality: settings?.quality ?? preset.quality ?? 90,
+        },
+        ...entityVariants.filter(v => v.name !== 'original'),
+      ]
+      
       const processingResult = await this.imageProcessingService.processImage(buffer, variants, {
         convertToWebP: settings?.convertToWebP ?? preset.convertToWebP,
         stripMetadata: settings?.stripMetadata ?? preset.stripMetadata,
@@ -173,8 +190,8 @@ export class MediaService {
           mimeType: originalVariant?.mimeType || mimeType,
           originalMimeType: mimeType,
           size: originalVariant?.size || buffer.length,
-          width: metadata.width,
-          height: metadata.height,
+          width: originalVariant?.width || metadata.width,
+          height: originalVariant?.height || metadata.height,
           variants: JSON.stringify(mediaVariants),
           entityType: options.entityType,
           entityId: options.entityId,
@@ -256,7 +273,16 @@ export class MediaService {
   async getById(id: string): Promise<Media | null> {
     return prisma.media.findUnique({
       where: { id, deletedAt: null },
-    })
+      include: {
+        uploadedUser: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
+      },
+    }) as Promise<Media | null>
   }
 
   /**
@@ -289,6 +315,15 @@ export class MediaService {
         skip: (page - 1) * limit,
         take: limit,
         orderBy: { [sortBy]: sortOrder },
+        include: {
+          uploadedUser: {
+            select: {
+              id: true,
+              name: true,
+              image: true,
+            },
+          },
+        },
       }),
       prisma.media.count({ where }),
     ])
@@ -593,4 +628,5 @@ export function getMediaService(): MediaService {
   }
   return mediaServiceInstance
 }
+
 

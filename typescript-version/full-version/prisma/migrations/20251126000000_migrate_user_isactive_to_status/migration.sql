@@ -16,3 +16,4 @@ CREATE INDEX "User_status_idx" ON "User"("status");
 -- ALTER TABLE "User" DROP COLUMN "isActive";
 
 
+

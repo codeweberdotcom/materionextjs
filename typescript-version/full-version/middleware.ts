@@ -2,9 +2,15 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { lucia } from '@/libs/lucia'
 import { checkPermission, isSuperadmin, getUserPermissions } from '@/utils/permissions/permissions'
-import { httpRequestDuration } from '@/lib/metrics'
 import { prisma } from '@/libs/prisma'
 import { canViewAdmin, canManage } from '@/utils/verification'
+import {
+  incrementHttpRequests,
+  startHttpRequestTimer,
+  incrementActiveRequests,
+  decrementActiveRequests,
+  incrementHttpErrors
+} from '@/lib/metrics/http'
 
 // Define protected routes and required permissions
 const protectedRoutes = {
@@ -30,21 +36,48 @@ const protectedRoutes = {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-  const startTime = Date.now()
+  const method = request.method
+  const environment = process.env.NODE_ENV || 'development'
 
   // Пропускаем сбор метрик для /api/metrics чтобы избежать рекурсии
   const shouldCollectMetrics = !pathname.startsWith('/api/metrics')
+  
+  // Start HTTP metrics tracking
+  let stopTimer: (() => void) | null = null
+  if (shouldCollectMetrics) {
+    stopTimer = startHttpRequestTimer(method, pathname, environment)
+    incrementActiveRequests(environment)
+  }
+
+  // Helper to finish metrics
+  const finishMetrics = (statusCode: number) => {
+    if (shouldCollectMetrics) {
+      stopTimer?.()
+      decrementActiveRequests(environment)
+      incrementHttpRequests(method, pathname, statusCode, environment)
+      if (statusCode >= 400) {
+        const errorType = statusCode >= 500 ? 'server_error' : 'client_error'
+        incrementHttpErrors(method, pathname, errorType, environment)
+      }
+    }
+  }
   
   // Skip middleware for static files
   if (
     pathname.startsWith('/_next') ||
     pathname.includes('favicon.ico')
   ) {
+    if (shouldCollectMetrics) {
+      decrementActiveRequests(environment)
+    }
     return NextResponse.next()
   }
 
   // Для API routes пропускаем middleware (метрики собираются в самих route handlers)
   if (pathname.startsWith('/api')) {
+    if (shouldCollectMetrics) {
+      decrementActiveRequests(environment)
+    }
     return NextResponse.next()
   }
 
@@ -55,25 +88,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/register') ||
     pathname.startsWith('/forgot-password')
   ) {
-    const response = NextResponse.next()
-    
-    // Собираем метрики для публичных страниц
-    if (shouldCollectMetrics) {
-      const duration = (Date.now() - startTime) / 1000
-      const method = request.method
-      const statusCode = '200'
-      const environment = process.env.NODE_ENV || 'development'
-      
-      try {
-        httpRequestDuration
-          .labels(method, pathname, statusCode, environment)
-          .observe(duration)
-      } catch (error) {
-        console.error('Failed to collect metrics:', error)
-      }
-    }
-    
-    return response
+    finishMetrics(200)
+    return NextResponse.next()
   }
 
   try {
@@ -85,25 +101,8 @@ export async function middleware(request: NextRequest) {
     if (!session) {
       const loginUrl = new URL('/login', request.url)
       loginUrl.searchParams.set('callbackUrl', pathname)
-      const response = NextResponse.redirect(loginUrl)
-      
-      // Собираем метрики для редиректа
-      if (shouldCollectMetrics) {
-        const duration = (Date.now() - startTime) / 1000
-        const method = request.method
-        const statusCode = '302'
-        const environment = process.env.NODE_ENV || 'development'
-        
-        try {
-          httpRequestDuration
-            .labels(method, pathname, statusCode, environment)
-            .observe(duration)
-        } catch (error) {
-          console.error('Failed to collect metrics:', error)
-        }
-      }
-      
-      return response
+      finishMetrics(302)
+      return NextResponse.redirect(loginUrl)
     }
 
     // Check permissions for protected routes
@@ -139,20 +138,8 @@ export async function middleware(request: NextRequest) {
             const locale = pathname.split('/')[1] || 'ru'
             const verifyUrl = new URL(`/${locale}/pages/auth/verify-email`, request.url)
             verifyUrl.searchParams.set('callbackUrl', pathname)
-            const response = NextResponse.redirect(verifyUrl)
-            
-            if (shouldCollectMetrics) {
-              const duration = (Date.now() - startTime) / 1000
-              try {
-                httpRequestDuration
-                  .labels(request.method, pathname, '302', process.env.NODE_ENV || 'development')
-                  .observe(duration)
-              } catch (error) {
-                console.error('Failed to collect metrics:', error)
-              }
-            }
-            
-            return response
+            finishMetrics(302)
+            return NextResponse.redirect(verifyUrl)
           }
 
           // Добавляем информацию о верификации в заголовки для использования на клиенте
@@ -160,18 +147,7 @@ export async function middleware(request: NextRequest) {
           response.headers.set('X-Verification-Email', user.emailVerified ? 'true' : 'false')
           response.headers.set('X-Verification-Phone', user.phoneVerified ? 'true' : 'false')
           response.headers.set('X-Verification-Can-Manage', canManage(user) ? 'true' : 'false')
-          
-          if (shouldCollectMetrics) {
-            const duration = (Date.now() - startTime) / 1000
-            try {
-              httpRequestDuration
-                .labels(request.method, pathname, '200', process.env.NODE_ENV || 'development')
-                .observe(duration)
-            } catch (error) {
-              console.error('Failed to collect metrics:', error)
-            }
-          }
-          
+          finishMetrics(200)
           return response
         }
       } catch (error) {
@@ -180,48 +156,13 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    const response = NextResponse.next()
-    
-    // Собираем метрики для защищенных страниц
-    if (shouldCollectMetrics) {
-      const duration = (Date.now() - startTime) / 1000
-      const method = request.method
-      const statusCode = '200'
-      const environment = process.env.NODE_ENV || 'development'
-      
-      try {
-        httpRequestDuration
-          .labels(method, pathname, statusCode, environment)
-          .observe(duration)
-      } catch (error) {
-        console.error('Failed to collect metrics:', error)
-      }
-    }
-
-    return response
+    finishMetrics(200)
+    return NextResponse.next()
   } catch (error) {
     console.error('Middleware error:', error)
-    
-    const response = NextResponse.next()
-    
-    // Собираем метрики даже при ошибке
-    if (shouldCollectMetrics) {
-      const duration = (Date.now() - startTime) / 1000
-      const method = request.method
-      const statusCode = '500'
-      const environment = process.env.NODE_ENV || 'development'
-      
-      try {
-        httpRequestDuration
-          .labels(method, pathname, statusCode, environment)
-          .observe(duration)
-      } catch (err) {
-        console.error('Failed to collect metrics:', err)
-      }
-    }
-    
+    finishMetrics(500)
     // On error, allow access to prevent blocking
-    return response
+    return NextResponse.next()
   }
 }
 

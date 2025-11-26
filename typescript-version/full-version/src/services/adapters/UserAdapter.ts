@@ -1,6 +1,18 @@
 import { IEntityAdapter, ExportField, ImportField, ValidationError, ImportResult, DuplicateInfo, ImportMode } from '@/types/export-import'
 import type { UsersType } from '@/types/apps/userTypes'
 
+// Helper to get base URL for client-side fetch
+const getBaseUrl = () => ''
+
+// Lazy load prisma only on server
+const getPrisma = async () => {
+  if (typeof window === 'undefined') {
+    const { prisma } = await import('@/libs/prisma')
+    return prisma
+  }
+  return null
+}
+
 /**
  * Адаптер для экспорта/импорта пользователей
  */
@@ -32,8 +44,50 @@ export class UserAdapter implements IEntityAdapter {
    */
   async getDataForExport(filters?: Record<string, any>): Promise<UsersType[]> {
     try {
+      // On server, use Prisma directly
+      const prisma = await getPrisma()
+      if (prisma) {
+        console.log('Export: Using Prisma directly on server')
+        
+        const where: any = {}
+        
+        if (filters?.role) {
+          where.role = { code: filters.role.toUpperCase() }
+        }
+        if (filters?.status) {
+          where.status = filters.status
+        }
+        if (filters?.q) {
+          where.OR = [
+            { name: { contains: filters.q } },
+            { email: { contains: filters.q } }
+          ]
+        }
+        
+        const users = await prisma.user.findMany({
+          where,
+          include: { role: true },
+          orderBy: { createdAt: 'desc' }
+        })
+        
+        // Transform to UsersType format
+        // Note: Prisma schema has 'name' field, not 'fullName'
+        return users.map(user => ({
+          id: user.id,
+          fullName: user.name || '',
+          username: user.email?.split('@')[0] || '', // Use email prefix as username
+          email: user.email || '',
+          role: user.role?.name || 'user',
+          status: user.status || 'active',
+          currentPlan: 'basic',
+          isActive: user.status === 'active',
+          avatar: user.image || '',
+          createdAt: user.createdAt?.toISOString() || ''
+        })) as UsersType[]
+      }
+      
+      // On client, use API
       const queryParams = new URLSearchParams()
-
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
@@ -42,7 +96,7 @@ export class UserAdapter implements IEntityAdapter {
         })
       }
 
-      const url = `/api/admin/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+      const url = `${getBaseUrl()}/api/admin/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
       console.log('Export: Fetching users from:', url)
       
       const response = await fetch(url, {
@@ -263,113 +317,89 @@ export class UserAdapter implements IEntityAdapter {
       totalProcessed: data.length
     }
 
+    // Log incoming data for debugging
+    console.log('[UserAdapter] saveImportedData called with:', {
+      mode,
+      dataCount: data.length,
+      firstRow: data[0] ? JSON.stringify(data[0]) : 'no data'
+    })
+
+    // Use Prisma directly on server
+    const prisma = await getPrisma()
+    
     for (let i = 0; i < data.length; i++) {
       const row = data[i]
 
       try {
-        let response: Response
-
-        if (mode === 'create') {
-          // Создание нового пользователя
-          // API ожидает FormData, а не JSON
-          const formData = new FormData()
-          formData.append('fullName', row.fullName || '')
-          formData.append('username', row.username || '')
-          formData.append('email', row.email || '')
-          formData.append('role', row.role || 'user')
-          formData.append('plan', row.currentPlan || 'basic')
-          formData.append('status', row.isActive ? 'active' : 'inactive')
-          formData.append('company', '')
-          formData.append('country', '')
-          formData.append('contact', '')
+        if (prisma) {
+          // Server-side: use Prisma directly
+          // Find role by name or code
+          const roleName = (row.role || 'user').toLowerCase()
+          const roleCode = roleName.toUpperCase()
+          const role = await prisma.role.findFirst({
+            where: { 
+              OR: [
+                { name: roleName },
+                { code: roleCode }
+              ]
+            }
+          })
           
-          response = await fetch('/api/admin/users', {
-            method: 'POST',
-            body: formData
-          })
-        } else if (mode === 'update') {
-          // Обновление существующего пользователя (по email)
-          response = await fetch(`/api/admin/users/update-by-email`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              email: row.email,
-              fullName: row.fullName,
-              username: row.username,
-              role: row.role,
-              currentPlan: row.currentPlan,
-              isActive: row.isActive
-            })
-          })
-        } else {
-          // Upsert - попытка обновить, если не существует - создать
-          response = await fetch(`/api/admin/users/upsert`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              fullName: row.fullName,
-              username: row.username,
-              email: row.email,
-              role: row.role,
-              currentPlan: row.currentPlan || 'basic',
-              isActive: row.isActive ?? true
-            })
-          })
-        }
+          if (!role) {
+            throw new Error(`Role "${roleName}" not found`)
+          }
 
-        if (response.ok) {
+          const baseData = {
+            name: row.fullName || row.name || '', // Prisma uses 'name' field
+            email: row.email || '',
+            roleId: role.id,
+            status: row.isActive === true || row.isActive === 'true' ? 'active' : 'inactive'
+          }
+
+          if (mode === 'create') {
+            // Generate a random temporary password for new users
+            const tempPassword = Math.random().toString(36).slice(-12) + 'A1!'
+            const bcrypt = await import('bcryptjs')
+            const hashedPassword = await bcrypt.hash(tempPassword, 10)
+            
+            await prisma.user.create({ 
+              data: { ...baseData, password: hashedPassword } 
+            })
+          } else if (mode === 'update') {
+            // Update without changing password
+            await prisma.user.update({
+              where: { email: row.email },
+              data: baseData
+            })
+          } else {
+            // Upsert - need password for create case
+            const tempPassword = Math.random().toString(36).slice(-12) + 'A1!'
+            const bcrypt = await import('bcryptjs')
+            const hashedPassword = await bcrypt.hash(tempPassword, 10)
+            
+            await prisma.user.upsert({
+              where: { email: row.email },
+              create: { ...baseData, password: hashedPassword },
+              update: baseData
+            })
+          }
           results.successCount++
         } else {
-          let errorMessage = `Failed to ${mode} user`
-          let errorDetails: any = null
-          
-          try {
-            // Пытаемся получить JSON с ошибкой
-            const contentType = response.headers.get('content-type')
-            if (contentType && contentType.includes('application/json')) {
-              errorDetails = await response.json()
-              errorMessage = errorDetails?.message || errorDetails?.error || errorDetails?.details || errorMessage
-            } else {
-              // Если не JSON, пытаемся получить текст
-              const errorText = await response.text()
-              if (errorText && errorText.trim()) {
-                errorMessage = errorText
-              } else {
-                errorMessage = `HTTP ${response.status}: ${response.statusText}`
-              }
-            }
-          } catch (parseError) {
-            // Если не удалось распарсить, используем статус
-            errorMessage = `HTTP ${response.status}: ${response.statusText || 'Unknown error'}`
-          }
-          
-          results.errorCount++
-          results.errors.push({
-            field: 'general',
-            message: errorMessage,
-            row: i + 1,
-            value: JSON.stringify(row)
-          })
-          
-          // Логируем только если есть реальная информация об ошибке
-          const logData: any = {
-            status: response.status,
-            statusText: response.statusText,
-            errorMessage,
-            rowData: row
-          }
-          if (errorDetails && Object.keys(errorDetails).length > 0) {
-            logData.errorDetails = errorDetails
-          }
-          
-          console.error(`[UserAdapter] Failed to ${mode} user at row ${i + 1}:`, logData)
+          // Client-side: use API (this branch shouldn't be reached in normal flow)
+          throw new Error('Import must be performed on server')
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error) || 'Unknown error'
+        let errorMessage = error instanceof Error ? error.message : String(error) || 'Unknown error'
+        
+        // Make error messages user-friendly
+        if (errorMessage.includes('Unique constraint failed') && errorMessage.includes('email')) {
+          errorMessage = `Email "${row.email}" already exists. Use "Upsert" mode to update existing users.`
+        } else if (errorMessage.includes('Unique constraint failed')) {
+          errorMessage = `Duplicate record found for row ${i + 1}. Use "Upsert" mode to update existing records.`
+        } else if (errorMessage.includes('Role') && errorMessage.includes('not found')) {
+          errorMessage = `Role "${row.role}" not found. Check available roles.`
+        }
+        
         results.errorCount++
         results.errors.push({
           field: 'general',
@@ -410,56 +440,38 @@ export class UserAdapter implements IEntityAdapter {
 
       // Получаем уникальные email для проверки
       const uniqueEmails = [...new Set(emails.map(e => e.email))]
-      const checkedEmails = new Map<string, { exists: boolean; userId?: string }>()
       
       try {
-        // Проверяем каждый email через API (можно оптимизировать позже batch запросом)
-        // Используем кэширование результатов для одинаковых email
-        for (const email of uniqueEmails) {
-          if (checkedEmails.has(email)) {
-            continue // Уже проверен
-          }
-
-          try {
-            // Проверяем существование пользователя по email через поиск
-            const response = await fetch(`/api/admin/users?email=${encodeURIComponent(email)}&limit=1`, {
-              credentials: 'include',
-              headers: {
-                'Content-Type': 'application/json'
-              }
-            })
-
-            if (response.ok) {
-              const users: UsersType[] = await response.json()
-              const exists = Array.isArray(users) && users.length > 0 && users.some(u => u.email?.toLowerCase()?.trim() === email)
-              checkedEmails.set(email, {
-                exists,
-                userId: exists ? users.find(u => u.email?.toLowerCase()?.trim() === email)?.id ? String(users.find(u => u.email?.toLowerCase()?.trim() === email)!.id) : undefined : undefined
-              })
-            } else {
-              // Если запрос не удался, считаем что дубликата нет (не блокируем импорт)
-              checkedEmails.set(email, { exists: false })
-            }
-          } catch (error) {
-            // Если ошибка при проверке одного email, пропускаем его
-            checkedEmails.set(email, { exists: false })
-            console.warn(`[UserAdapter] Failed to check email ${email}:`, error)
-          }
-        }
+        // Use Prisma directly on server
+        const prisma = await getPrisma()
         
-        // Находим дубликаты на основе проверенных email
-        emails.forEach(({ email, rowIndex }) => {
-          const checkResult = checkedEmails.get(email!)
-          if (checkResult?.exists) {
-            duplicates.push({
-              row: rowIndex,
-              field: 'email',
-              value: email,
-              existingRecordId: checkResult.userId,
-              message: `User with email "${email}" already exists`
-            })
-          }
-        })
+        if (prisma) {
+          // Check all emails at once
+          const existingUsers = await prisma.user.findMany({
+            where: {
+              email: { in: uniqueEmails }
+            },
+            select: { id: true, email: true }
+          })
+          
+          const existingEmailMap = new Map(
+            existingUsers.map(u => [u.email?.toLowerCase(), u.id])
+          )
+          
+          // Находим дубликаты
+          emails.forEach(({ email, rowIndex }) => {
+            const existingId = existingEmailMap.get(email!)
+            if (existingId) {
+              duplicates.push({
+                row: rowIndex,
+                field: 'email',
+                value: email,
+                existingRecordId: existingId,
+                message: `User with email "${email}" already exists`
+              })
+            }
+          })
+        }
       } catch (error) {
         // Если не удалось проверить дубликаты, логируем ошибку, но не блокируем импорт
         console.warn('[UserAdapter] Failed to check duplicates:', error)

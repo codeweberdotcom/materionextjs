@@ -14,6 +14,7 @@
 | `STATUS_INDEX.md` | Индекс статусов: что в планах, в работе, сделано, требует улучшений |
 | `AI_WORKFLOW_GUIDE.md` | Инструкция для AI: процесс работы (АНАЛИЗ → ПЛАН → РЕАЛИЗАЦИЯ → ОТЧЕТ → ДОКУМЕНТАЦИЯ) |
 | `AI_MODULE_STANDARDS.md` | Чек-лист для AI: требования к созданию/доработке модулей |
+| `UI_UX_PATTERNS.md` | Образцы UI/UX элементов: компоненты, паттерны дизайна, цветовая палитра |
 
 ---
 
@@ -421,6 +422,8 @@ model ServiceConfiguration {
 | `src/modules/settings/services/connectors/LokiConnector.ts` | Коннектор Loki |
 | `src/modules/settings/services/connectors/GrafanaConnector.ts` | Коннектор Grafana |
 | `src/modules/settings/services/connectors/SentryConnector.ts` | Коннектор Sentry |
+| `src/modules/settings/services/connectors/ElasticsearchConnector.ts` | Коннектор Elasticsearch |
+| `src/modules/settings/services/connectors/SMTPConnector.ts` | Коннектор SMTP |
 | **API endpoints** |
 | `src/app/api/admin/settings/services/route.ts` | GET (список), POST (создание) |
 | `src/app/api/admin/settings/services/[id]/route.ts` | GET, PUT, DELETE |
@@ -476,9 +479,9 @@ const source = await serviceConfigResolver.getConfigSource('redis')
 | Loki | `LOKI_URL` | `http://localhost:3100` | ✅ LokiConnector |
 | Grafana | `GRAFANA_URL` | `http://localhost:3001` | ✅ GrafanaConnector |
 | Sentry | `SENTRY_DSN` | - | ✅ SentryConnector |
-| SMTP | `SMTP_URL` | `smtp://localhost:1025` | ⏳ Планируется |
+| SMTP | `SMTP_URL` | `smtp://localhost:1025` | ✅ SMTPConnector |
 | S3 | `S3_ENDPOINT` | `http://localhost:9000` | ✅ S3Connector |
-| Elasticsearch | `ELASTICSEARCH_URL` | `http://localhost:9200` | ⏳ Планируется |
+| Elasticsearch | `ELASTICSEARCH_URL` | `http://localhost:9200` | ✅ ElasticsearchConnector |
 
 ### S3 Custom конфигурация
 
@@ -1047,32 +1050,85 @@ model BusinessRule {
 
 ### Назначение
 
-Централизованная система управления изображениями с возможностями:
+Централизованная система управления изображениями в стиле WordPress с возможностями:
 - **Обработка изображений** (sharp) — ресайз, конвертация в WebP, очистка EXIF
+- **Единый максимум оригинала** — 1920×1280 для ВСЕХ типов сущностей
+- **Гибкие варианты** — разные размеры для разных типов (баннеры, аватары, товары)
 - **Водяные знаки** — наложение на определённые типы сущностей
 - **Гибкое хранение** — Local, S3, или гибридное (local_first)
 - **Синхронизация** — пакетная выгрузка/загрузка между хранилищами
+- **SEO-поля** — alt, title, caption, description для каждого файла
+- **Lightbox** — просмотр изображений в полном размере
+
+### Обработка изображений
+
+#### Единый стандарт оригинала
+
+Все загруженные изображения автоматически обрабатываются:
+
+```
+Загружено: photo.jpg (любой размер, например 7360×4912)
+     ↓
+1. ОРИГИНАЛ: максимум 1920×1280 (fit: inside, сохраняет пропорции)
+     ↓
+2. ВАРИАНТЫ по настройкам типа сущности:
+   - Баннер: 1920×480, 800×300, 400×150
+   - Аватар: 200×200
+   - Товар: 1200×900, 600×450, 150×150
+```
+
+**Правила:**
+- Оригинал ВСЕГДА ≤ 1920×1280 (единый максимум для всех типов)
+- Пропорции сохраняются (`fit: inside`)
+- Варианты создаются из обработанного оригинала
+- EXIF-данные удаляются для безопасности
+- Изображения конвертируются в WebP для оптимизации
+
+#### Безопасность загрузки
+
+| Аспект | Реализация |
+|--------|------------|
+| Имя файла | Генерируется уникальный slug (nanoid), оригинал сохраняется в БД |
+| EXIF/метаданные | Полностью удаляются |
+| Размер | Ограничен настройками entityType (5-15 MB) |
+| Формат | Валидация MIME-type, конвертация в WebP |
+| Путь | Изолированная структура `uploads/{entityType}/{year}/{month}/` |
 
 ### Модели данных
 
 ```prisma
 model Media {
   id              String   @id @default(cuid())
-  filename        String   // Оригинальное имя
-  slug            String   @unique // Уникальный идентификатор
+  filename        String   // Оригинальное имя (для истории)
+  slug            String   @unique // Уникальный безопасный идентификатор
   localPath       String?  // Путь в локальном хранилище
   s3Key           String?  // Ключ в S3
   storageStatus   String   @default("local_only") // local_only, synced, s3_only
   mimeType        String
+  originalMimeType String? // Исходный MIME до конвертации
   size            Int
-  width           Int?
+  width           Int?     // Размеры обработанного оригинала (≤1920×1280)
   height          Int?
   variants        String   @default("{}") // JSON с вариантами размеров
   entityType      String   // user_avatar, listing_image, etc.
   entityId        String?  // ID связанной сущности
+  position        Int      @default(0)
   hasWatermark    Boolean  @default(false)
   isProcessed     Boolean  @default(false)
+  // SEO поля
+  alt             String?  // Alt-текст для изображения
+  title           String?  // Title атрибут
+  caption         String?  // Подпись к изображению
+  description     String?  // Развёрнутое описание
+  // Автор
+  uploadedBy      String?
+  uploadedUser    User?    @relation("UploadedMedia", fields: [uploadedBy], references: [id])
+  // Лицензии
+  licenses        MediaLicenseItem[]
+  
   @@index([entityType, entityId])
+  @@index([storageStatus])
+  @@index([slug])
   @@map("media")
 }
 
@@ -1080,11 +1136,16 @@ model ImageSettings {
   id                String   @id @default(cuid())
   entityType        String   @unique // user_avatar, listing_image
   displayName       String
+  description       String?
   maxFileSize       Int      @default(5242880) // 5MB
   maxFilesPerEntity Int      @default(1)
   allowedMimeTypes  String
-  variants          String   // JSON: размеры вариантов
+  variants          String   // JSON: размеры вариантов (кроме original)
+  convertToWebP     Boolean  @default(true)
+  stripMetadata     Boolean  @default(true)
+  quality           Int      @default(85)
   watermarkEnabled  Boolean  @default(false)
+  watermarkId       String?
   watermarkPosition String?
   watermarkOpacity  Float    @default(0.3)
   storageStrategy   String   @default("local_first")
@@ -1120,7 +1181,7 @@ model Watermark {
 | Путь | Назначение |
 |------|------------|
 | **Сервисы** |
-| `src/services/media/MediaService.ts` | CRUD операции с медиа |
+| `src/services/media/MediaService.ts` | CRUD операции, upload с единым оригиналом 1920×1280 |
 | `src/services/media/ImageProcessingService.ts` | Обработка изображений (sharp) |
 | `src/services/media/WatermarkService.ts` | Водяные знаки |
 | `src/services/media/storage/StorageService.ts` | Абстракция хранилища |
@@ -1128,29 +1189,71 @@ model Watermark {
 | `src/services/media/storage/S3Adapter.ts` | S3 хранилище |
 | `src/services/media/sync/MediaSyncService.ts` | Синхронизация хранилищ |
 | **API endpoints** |
-| `src/app/api/admin/media/route.ts` | GET (список), POST (загрузка) |
-| `src/app/api/admin/media/[id]/route.ts` | GET, PUT, DELETE |
+| `src/app/api/admin/media/route.ts` | GET (список с uploadedUser), POST (загрузка) |
+| `src/app/api/admin/media/[id]/route.ts` | GET (с uploadedUser), PUT (SEO-поля), DELETE |
 | `src/app/api/admin/media/sync/route.ts` | POST (создать sync job), GET (список) |
 | `src/app/api/admin/media/sync/[jobId]/route.ts` | GET (статус), DELETE (отмена) |
 | `src/app/api/admin/media/settings/route.ts` | GET, PUT, POST настроек |
 | `src/app/api/admin/media/watermarks/route.ts` | CRUD водяных знаков |
 | `src/app/api/admin/media/watermarks/[id]/preview/route.ts` | Превью с водяным знаком |
+| **UI компоненты** |
+| `src/views/admin/media/MediaLibrary.tsx` | Медиатека — сетка и таблица, два режима отображения |
+| `src/views/admin/media/MediaDetailSidebar.tsx` | Боковая панель: SEO-поля, доступные размеры, Lightbox |
+| `src/views/admin/media/MediaSettings.tsx` | Настройки обработки изображений |
+| `src/views/admin/media/MediaSync.tsx` | Управление синхронизацией |
+| `src/views/admin/media/MediaWatermarks.tsx` | Управление водяными знаками |
+| `src/views/admin/media/MediaLicenses.tsx` | Список лицензий |
+| `src/views/admin/media/MediaLicenseForm.tsx` | Форма создания/редактирования лицензии |
+| `src/components/ImageWithLightbox.tsx` | Переиспользуемый компонент: изображение с Lightbox |
 | **Типы и пресеты** |
 | `src/services/media/types.ts` | TypeScript типы |
 | `src/services/media/presets.ts` | Предустановленные настройки |
 
+### UI медиатеки (WordPress-style)
+
+#### Drag & Drop загрузка
+
+- **react-dropzone** — множественная загрузка файлов
+- **Прогресс-бар** — для каждого файла (XMLHttpRequest)
+- **Превью** — до загрузки (URL.createObjectURL)
+- **Валидация** — типы файлов, размер (до 15 MB)
+
+#### Режимы отображения
+
+| Режим | Описание |
+|-------|----------|
+| **Grid** | Сетка изображений 6 колонок, равная ширина, checkbox выбора |
+| **List** | Таблица: превью, имя, размер, тип, статус, дата, действия |
+
+#### MediaDetailSidebar
+
+Боковая панель деталей (Drawer) с адаптивной шириной:
+
+| Секция | Содержимое |
+|--------|------------|
+| **Изображение** | Превью с Lightbox (клик по плюсу) |
+| **Информация о файле** | Имя (копируемое), размер, разрешение, тип, статус |
+| **URL файла** | Полный путь (копируемый с доменом) |
+| **SEO-поля** | Alt, Title, Caption, Description — редактируемые |
+| **Автор** | uploadedUser (имя, email) |
+| **Доступные размеры** | Оригинал + варианты с разрешением, копирование URL, открытие в Lightbox |
+| **Действия** | Сохранить, Удалить, На S3 (для local_only) |
+
 ### Типы сущностей (entityType)
 
-| entityType | Описание | Макс. размер | Водяной знак |
-|------------|----------|--------------|--------------|
-| `user_avatar` | Аватар пользователя | 5 MB | ❌ |
-| `company_logo` | Логотип компании | 2 MB | ❌ |
-| `company_banner` | Баннер компании | 10 MB | ❌ |
-| `company_photo` | Фото компании | 10 MB | ✅ |
-| `listing_image` | Фото объявления | 10 MB | ✅ |
-| `site_logo` | Логотип сайта | 1 MB | ❌ |
-| `watermark` | Водяной знак | 1 MB | ❌ |
-| `document` | Документы | 15 MB | ❌ |
+| entityType | Описание | Макс. файл | Варианты | Водяной знак |
+|------------|----------|------------|----------|--------------|
+| `user_avatar` | Аватар пользователя | 5 MB | 200×200 | ❌ |
+| `company_logo` | Логотип компании | 2 MB | 200×200, 100×100, 50×50 | ❌ |
+| `company_banner` | Баннер компании | 10 MB | 1920×480, 800×300, 400×150 | ❌ |
+| `company_photo` | Фото компании | 10 MB | 1200×900, 600×450, 150×150 | ✅ |
+| `listing_image` | Фото объявления | 10 MB | 1200×900, 600×450, 150×150 | ✅ |
+| `site_logo` | Логотип сайта | 1 MB | 200×80, 100×40 | ❌ |
+| `watermark` | Водяной знак | 1 MB | — | ❌ |
+| `document` | Документы | 15 MB | — | ❌ |
+| `other` | Прочие файлы | 10 MB | 1200×800, 600×400, 150×150 | ❌ |
+
+**Важно:** Оригинал ВСЕГДА обрабатывается до 1920×1280 независимо от типа сущности.
 
 ### Стратегии хранения (storageStrategy)
 
@@ -1179,7 +1282,7 @@ model Watermark {
 | Сущность | Количество | Описание |
 |----------|------------|----------|
 | `MediaGlobalSettings` | 1 | Глобальные настройки |
-| `ImageSettings` | 8 | Пресеты для всех типов сущностей |
+| `ImageSettings` | 9 | Пресеты для всех типов сущностей (включая `other`) |
 | `Watermark` | 1 | Дефолтный водяной знак (placeholder) |
 
 ### Зависимости
@@ -1197,12 +1300,15 @@ model Watermark {
 import { getMediaService, getMediaSyncService } from '@/services/media'
 
 // Загрузка изображения
+// Автоматически: оригинал → 1920×1280, варианты по entityType
 const mediaService = getMediaService()
 const result = await mediaService.upload(buffer, 'photo.jpg', 'image/jpeg', {
   entityType: 'listing_image',
   entityId: 'listing-123',
   uploadedBy: 'user-456',
 })
+
+// Результат: original (1920×1280), large (1200×900), medium (600×450), thumb (150×150)
 
 // Синхронизация на S3
 const syncService = getMediaSyncService()
@@ -1212,6 +1318,87 @@ const job = await syncService.uploadToS3KeepLocal({
   createdBy: 'admin-789',
 })
 ```
+
+### Модуль лицензий медиа (добавлено 2025-11-26)
+
+Управление лицензиями на изображения и видео для фиксации правовой информации.
+
+#### Модели данных
+
+```prisma
+model MediaLicense {
+  id              String   @id @default(cuid())
+  licenseType     String   // royalty_free, rights_managed, creative_commons, editorial, exclusive, custom
+  licenseTypeName String?  // Название для custom типа
+  licensorName    String   // Автор/правообладатель
+  licensorEmail   String?
+  licensorUrl     String?
+  licenseeName    String   // Получатель лицензии
+  licenseeEmail   String?
+  documentPath    String?  // Путь к PDF/документу
+  documentName    String?
+  documentSize    Int?
+  documentMime    String?
+  validFrom       DateTime?
+  validUntil      DateTime?
+  territory       String?  // Территория действия
+  usageRights     String?  // Права использования
+  restrictions    String?  // Ограничения
+  price           Decimal?
+  currency        String?  @default("RUB")
+  notes           String?
+  uploadedBy      String?
+  uploadedAt      DateTime @default(now())
+  mediaItems      MediaLicenseItem[]
+  @@map("media_licenses")
+}
+
+model MediaLicenseItem {
+  id          String       @id @default(cuid())
+  licenseId   String
+  mediaId     String
+  license     MediaLicense @relation(...)
+  media       Media        @relation(...)
+  @@unique([licenseId, mediaId])
+  @@map("media_license_items")
+}
+```
+
+#### API endpoints
+
+| Метод | Endpoint | Описание |
+|-------|----------|----------|
+| GET | `/api/admin/media/licenses` | Список с фильтрацией |
+| POST | `/api/admin/media/licenses` | Создание |
+| GET | `/api/admin/media/licenses/[id]` | Получение |
+| PUT | `/api/admin/media/licenses/[id]` | Обновление |
+| DELETE | `/api/admin/media/licenses/[id]` | Удаление |
+| POST | `/api/admin/media/licenses/[id]/document` | Загрузка документа |
+| GET | `/api/admin/media/licenses/[id]/document` | Скачивание документа |
+
+#### UI страницы
+
+| Страница | Путь | Компонент |
+|----------|------|-----------|
+| Список | `/admin/media/licenses` | `MediaLicenses.tsx` |
+| Форма | `/admin/media/licenses/[id]` | `MediaLicenseForm.tsx` |
+
+#### Типы лицензий
+
+| Тип | Описание |
+|-----|----------|
+| `royalty_free` | Разовый платёж, неограниченное использование |
+| `rights_managed` | Оплата за каждое использование |
+| `creative_commons` | Свободная лицензия с условиями |
+| `editorial` | Только редакционное использование |
+| `exclusive` | Эксклюзивные права |
+| `custom` | Пользовательский тип |
+
+#### Хранение документов
+
+Документы лицензий хранятся в: `public/uploads/licenses/`
+
+Поддерживаемые форматы: PDF, JPG, PNG (до 10 MB)
 
 ---
 

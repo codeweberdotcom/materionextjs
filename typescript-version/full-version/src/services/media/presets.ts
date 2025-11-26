@@ -253,3 +253,4 @@ export function isFileSizeAllowed(entityType: string, size: number): boolean {
   return size <= (preset.maxFileSize || DEFAULT_GLOBAL_SETTINGS.globalMaxFileSize!)
 }
 
+

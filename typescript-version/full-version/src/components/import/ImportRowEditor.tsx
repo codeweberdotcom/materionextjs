@@ -114,8 +114,24 @@ export default function ImportRowEditor({
     }
 
     // Проверка паттерна (для email и т.д.)
-    if (field.pattern && typeof value === 'string' && !field.pattern.test(value)) {
-      return `Неверный формат ${field.label.toLowerCase()}`
+    if (field.pattern && typeof value === 'string') {
+      // Pattern может быть RegExp или строкой (из JSON API)
+      let regex: RegExp
+      if (field.pattern instanceof RegExp) {
+        regex = field.pattern
+      } else if (typeof field.pattern === 'string') {
+        try {
+          regex = new RegExp(field.pattern)
+        } catch {
+          // Invalid pattern string, skip validation
+          regex = /.*/
+        }
+      } else {
+        regex = /.*/
+      }
+      if (!regex.test(value)) {
+        return `Неверный формат ${field.label.toLowerCase()}`
+      }
     }
 
     // Проверка enum

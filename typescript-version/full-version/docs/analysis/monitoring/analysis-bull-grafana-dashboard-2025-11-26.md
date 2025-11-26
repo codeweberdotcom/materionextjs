@@ -174,3 +174,4 @@
 
 После утверждения анализа → Создать план реализации в `docs/plans/active/plan-bull-grafana-dashboard-2025-11-26.md`
 
+

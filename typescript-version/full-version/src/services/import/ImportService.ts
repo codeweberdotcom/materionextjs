@@ -115,6 +115,23 @@ export class ImportService implements IImportService {
         // Используем отредактированные данные
         dataToProcess = options.editedData.map(row => row.data)
       }
+      
+      // Apply row updates if provided (from inline editing)
+      if (options.rowUpdates && Object.keys(options.rowUpdates).length > 0) {
+        logger.info('ImportService: Applying row updates', {
+          entityType,
+          correlationId,
+          updatesCount: Object.keys(options.rowUpdates).length
+        })
+        dataToProcess = dataToProcess.map((row, index) => {
+          const rowIndex = index + 1 // rowIndex is 1-based
+          const updates = options.rowUpdates?.[rowIndex]
+          if (updates) {
+            return { ...row, ...updates }
+          }
+          return row
+        })
+      }
 
       // Валидируем данные через адаптер
       let validationErrors: ValidationError[] = []
@@ -376,80 +393,69 @@ export class ImportService implements IImportService {
    * Парсит Excel файл
    */
   private async parseExcelFile(file: File): Promise<Record<string, any>[]> {
-    // Динамический импорт xlsx для клиентского кода
-    // Используем динамический импорт, чтобы webpack создал отдельный чанк
-    const xlsxModule = await import('xlsx')
-    const XLSX = xlsxModule.default || xlsxModule
-    
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
+    try {
+      const xlsxModule = await import('xlsx')
+      const XLSX = xlsxModule.default || xlsxModule
+      
+      // Use arrayBuffer() which works in both browser and Node.js
+      const arrayBuffer = await file.arrayBuffer()
+      const data = new Uint8Array(arrayBuffer)
+      const workbook = XLSX.read(data, { type: 'array' })
 
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer)
-          const workbook = XLSX.read(data, { type: 'array' })
+      // Берем первый лист
+      const sheetName = workbook.SheetNames[0]
+      const worksheet = workbook.Sheets[sheetName]
 
-          // Берем первый лист
-          const sheetName = workbook.SheetNames[0]
-          const worksheet = workbook.Sheets[sheetName]
+      // Конвертируем в JSON
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+        header: 1,
+        defval: ''
+      }) as any[][]
 
-          // Конвертируем в JSON
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, {
-            header: 1,
-            defval: ''
-          }) as any[][]
+      // Если есть заголовки в первой строке, используем их как ключи
+      if (jsonData.length > 0) {
+        const headers = jsonData[0] as string[]
+        const rows = jsonData.slice(1)
 
-          // Если есть заголовки в первой строке, используем их как ключи
-          if (jsonData.length > 0) {
-            const headers = jsonData[0] as string[]
-            const rows = jsonData.slice(1)
-
-            const result = rows.map(row => {
-              const obj: Record<string, any> = {}
-              headers.forEach((header, index) => {
-                obj[header] = row[index] || ''
-              })
-              return obj
-            })
-
-            resolve(result)
-          } else {
-            resolve([])
-          }
-        } catch (error) {
-          reject(error)
-        }
+        return rows.map(row => {
+          const obj: Record<string, any> = {}
+          headers.forEach((header, index) => {
+            obj[header] = row[index] || ''
+          })
+          return obj
+        })
       }
-
-      reader.onerror = () => reject(new Error('Failed to read file'))
-      reader.readAsArrayBuffer(file)
-    })
+      return []
+    } catch (error) {
+      throw new Error(`Failed to parse Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   /**
    * Парсит CSV файл
    */
   private async parseCsvFile(file: File): Promise<Record<string, any>[]> {
-    // Динамический импорт papaparse для клиентского кода
-    const papaparseModule = await import('papaparse')
-    const Papa = papaparseModule.default || papaparseModule
-    
-    return new Promise((resolve, reject) => {
-      Papa.parse(file, {
+    try {
+      // Read file as text - works in both browser and Node.js
+      const csvText = await file.text()
+      
+      const papaparseModule = await import('papaparse')
+      const Papa = papaparseModule.default || papaparseModule
+      
+      // Parse synchronously from string
+      const results = Papa.parse(csvText, {
         header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          if (results.errors.length > 0) {
-            reject(new Error(`CSV parsing error: ${results.errors[0].message}`))
-          } else {
-            resolve(results.data as Record<string, any>[])
-          }
-        },
-        error: (error) => {
-          reject(new Error(`CSV parsing error: ${error.message}`))
-        }
+        skipEmptyLines: true
       })
-    })
+      
+      if (results.errors && results.errors.length > 0) {
+        throw new Error(`CSV parsing error: ${results.errors[0].message}`)
+      }
+      
+      return results.data as Record<string, any>[]
+    } catch (error) {
+      throw new Error(`Failed to parse CSV file: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   /**

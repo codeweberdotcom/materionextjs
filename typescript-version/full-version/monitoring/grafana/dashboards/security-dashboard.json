@@ -1,0 +1,301 @@
+{
+  "id": null,
+  "uid": "materio-security",
+  "title": "Materio Security Overview",
+  "description": "Authentication and Storage monitoring: logins, sessions, uploads, downloads",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "tags": ["security", "auth", "authentication", "s3", "storage"],
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "type": "custom",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "options": [
+          { "selected": true, "text": "All", "value": "$__all" },
+          { "selected": false, "text": "development", "value": "development" },
+          { "selected": false, "text": "production", "value": "production" }
+        ],
+        "includeAll": true,
+        "multi": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "🔐 Authentication Overview",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "Login Success (5m)",
+      "gridPos": { "x": 0, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(auth_login_total{status=\"success\",environment=~\"$environment\"}[5m]))", "legendFormat": "Success", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Login Failed (5m)",
+      "gridPos": { "x": 4, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 20 }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(auth_login_total{status=\"failed\",environment=~\"$environment\"}[5m]))", "legendFormat": "Failed", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Active Sessions",
+      "gridPos": { "x": 8, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(auth_active_sessions{environment=~\"$environment\"})", "legendFormat": "Sessions", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Registrations (5m)",
+      "gridPos": { "x": 12, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "purple", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(auth_registration_total{status=\"success\",environment=~\"$environment\"}[5m]))", "legendFormat": "Registrations", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Password Resets (5m)",
+      "gridPos": { "x": 16, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "orange", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(auth_password_reset_total{environment=~\"$environment\"}[5m]))", "legendFormat": "Resets", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Token Refreshes (5m)",
+      "gridPos": { "x": 20, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(auth_token_refresh_total{environment=~\"$environment\"}[5m]))", "legendFormat": "Refreshes", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "📈 Auth Activity",
+      "gridPos": { "x": 0, "y": 5, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Logins Over Time",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(auth_login_total{status=\"success\",environment=~\"$environment\"}[5m])) * 60", "legendFormat": "Success", "refId": "A" },
+        { "expr": "sum(rate(auth_login_total{status=\"failed\",environment=~\"$environment\"}[5m])) * 60", "legendFormat": "Failed", "refId": "B" }
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Login Success Rate",
+      "gridPos": { "x": 12, "y": 6, "w": 6, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }, "pieType": "donut" },
+      "targets": [{ "expr": "sum(increase(auth_login_total{environment=~\"$environment\"}[1h])) by (status)", "legendFormat": "{{status}}", "refId": "A" }]
+    },
+    {
+      "type": "piechart",
+      "title": "Logins by Provider",
+      "gridPos": { "x": 18, "y": 6, "w": 6, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }, "pieType": "pie" },
+      "targets": [{ "expr": "sum(increase(auth_login_total{status=\"success\",environment=~\"$environment\"}[1h])) by (provider)", "legendFormat": "{{provider}}", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "🔄 Sessions",
+      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Session Duration Distribution",
+      "gridPos": { "x": 0, "y": 15, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum(rate(auth_session_duration_seconds_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(auth_session_duration_seconds_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "p95", "refId": "B" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Sessions Created/Expired",
+      "gridPos": { "x": 12, "y": 15, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(auth_session_created_total{environment=~\"$environment\"}[5m])) * 60", "legendFormat": "Created", "refId": "A" },
+        { "expr": "sum(rate(auth_session_expired_total{environment=~\"$environment\"}[5m])) * 60", "legendFormat": "Expired", "refId": "B" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "📦 Storage Overview",
+      "gridPos": { "x": 0, "y": 23, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "Uploads (5m)",
+      "gridPos": { "x": 0, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(s3_operations_total{operation=\"upload\",environment=~\"$environment\"}[5m]))", "legendFormat": "Uploads", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Downloads (5m)",
+      "gridPos": { "x": 4, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(s3_operations_total{operation=\"download\",environment=~\"$environment\"}[5m]))", "legendFormat": "Downloads", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Storage Errors (5m)",
+      "gridPos": { "x": 8, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(s3_errors_total{environment=~\"$environment\"}[5m]))", "legendFormat": "Errors", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Active Uploads",
+      "gridPos": { "x": 12, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 10 }, { "color": "red", "value": 50 }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(s3_active_uploads{environment=~\"$environment\"})", "legendFormat": "Active", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Bytes Uploaded (5m)",
+      "gridPos": { "x": 16, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "purple", "value": null }] },
+          "unit": "bytes"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(s3_bytes_uploaded_total{environment=~\"$environment\"}[5m]))", "legendFormat": "Uploaded", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Bytes Downloaded (5m)",
+      "gridPos": { "x": 20, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "unit": "bytes"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(s3_bytes_downloaded_total{environment=~\"$environment\"}[5m]))", "legendFormat": "Downloaded", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "📈 Storage Activity",
+      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Storage Operations Over Time",
+      "gridPos": { "x": 0, "y": 29, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(s3_operations_total{operation=\"upload\",environment=~\"$environment\"}[5m])) * 60", "legendFormat": "Upload", "refId": "A" },
+        { "expr": "sum(rate(s3_operations_total{operation=\"download\",environment=~\"$environment\"}[5m])) * 60", "legendFormat": "Download", "refId": "B" },
+        { "expr": "sum(rate(s3_operations_total{operation=\"delete\",environment=~\"$environment\"}[5m])) * 60", "legendFormat": "Delete", "refId": "C" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "File Sizes (Upload/Download)",
+      "gridPos": { "x": 12, "y": 29, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "bytes" } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum(rate(s3_upload_size_bytes_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "Upload p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(s3_upload_size_bytes_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "Upload p95", "refId": "B" },
+        { "expr": "histogram_quantile(0.5, sum(rate(s3_download_size_bytes_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "Download p50", "refId": "C" }
+      ]
+    }
+  ]
+}
+

@@ -102,6 +102,10 @@ export interface ExportResult {
   filename?: string
   recordCount: number
   error?: string
+  /** Base64 encoded file content (for API responses) */
+  base64?: string
+  /** MIME type of the file */
+  mimeType?: string
 }
 
 // ==================== ИМПОРТ ====================
@@ -122,6 +126,10 @@ export interface ImportOptions {
   importOnlyValid?: boolean
   /** Предварительно отредактированные данные (если были изменения) */
   editedData?: RowWithValidation[]
+  /** Обновления для конкретных строк (из inline редактирования) */
+  rowUpdates?: Record<number, Record<string, unknown>>
+  /** Выбранные строки для импорта */
+  selectedRows?: number[]
 }
 
 /**

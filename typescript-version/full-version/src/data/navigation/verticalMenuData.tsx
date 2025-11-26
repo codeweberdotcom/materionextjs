@@ -261,6 +261,11 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         label: dictionary['navigation'].mediaWatermarks || 'Водяные знаки',
         icon: 'ri-drop-line',
         href: '/admin/media/watermarks'
+      },
+      {
+        label: dictionary['navigation'].mediaLicenses || 'Лицензии',
+        icon: 'ri-file-shield-2-line',
+        href: '/admin/media/licenses'
       }
     ]
   },

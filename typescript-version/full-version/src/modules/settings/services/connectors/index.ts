@@ -12,6 +12,8 @@ export { LokiConnector } from './LokiConnector'
 export { GrafanaConnector } from './GrafanaConnector'
 export { SentryConnector } from './SentryConnector'
 export { S3Connector } from './S3Connector'
+export { ElasticsearchConnector } from './ElasticsearchConnector'
+export { SMTPConnector } from './SMTPConnector'
 
 import type { ServiceConfigurationModel, ServiceType } from '@/lib/config/types'
 import { BaseConnector } from './BaseConnector'
@@ -22,6 +24,8 @@ import { LokiConnector } from './LokiConnector'
 import { GrafanaConnector } from './GrafanaConnector'
 import { SentryConnector } from './SentryConnector'
 import { S3Connector } from './S3Connector'
+import { ElasticsearchConnector } from './ElasticsearchConnector'
+import { SMTPConnector } from './SMTPConnector'
 
 /**
  * Фабрика для создания коннектора по типу сервиса
@@ -60,10 +64,11 @@ export function createConnector(config: ServiceConfigurationModel): BaseConnecto
     case 'S3':
       return new S3Connector(config)
 
-    // Для других типов можно добавить коннекторы позже
-    case 'SMTP':
     case 'ELASTICSEARCH':
-      throw new Error(`Коннектор для типа "${type}" ещё не реализован`)
+      return new ElasticsearchConnector(config)
+
+    case 'SMTP':
+      return new SMTPConnector(config)
 
     default:
       throw new Error(`Неизвестный тип сервиса: ${type}`)

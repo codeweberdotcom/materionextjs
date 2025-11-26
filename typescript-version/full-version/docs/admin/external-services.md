@@ -196,15 +196,37 @@ Click **"Save"** to create the configuration.
 
 **Basic Configuration:**
 - **Host**: `smtp.gmail.com` or `mail.example.com`
-- **Port**: `587` (TLS) or `465` (SSL)
+- **Port**: `587` (TLS/STARTTLS) or `465` (SSL)
 - **Protocol**: `smtp://`
-- **Username**: Email username
-- **Password**: Email password
+- **Username**: Email username or API key
+- **Password**: Email password or API secret
 - **TLS Enabled**: Check for TLS/STARTTLS
+
+**Advanced Metadata:**
+```json
+{
+  "secure": true,
+  "from": "noreply@example.com",
+  "pool": true,
+  "maxConnections": 5,
+  "connectionTimeout": 10000
+}
+```
+
+**Popular Providers:**
+| Provider | Host | Port | Auth |
+|----------|------|------|------|
+| SendGrid | `smtp.sendgrid.net` | 587 | API Key |
+| Mailgun | `smtp.mailgun.org` | 587 | API Key |
+| AWS SES | `email-smtp.{region}.amazonaws.com` | 587 | IAM |
+| Gmail | `smtp.gmail.com` | 587 | App Password |
+| Outlook | `smtp-mail.outlook.com` | 587 | Password |
 
 **Use Cases:**
 - Email notifications
 - Transactional emails
+- Marketing campaigns
+- Password reset emails
 
 ### Elasticsearch
 
@@ -214,9 +236,32 @@ Click **"Save"** to create the configuration.
 - **Protocol**: `http://` or `https://`
 - **TLS Enabled**: Check for HTTPS
 
+**Authentication Options:**
+1. **Basic Auth**: Username + Password
+2. **API Key**: Set in metadata as `{"apiKeyId": "...", "apiKey": "..."}`
+3. **Bearer Token**: Set in Token field
+
+**Advanced Metadata:**
+```json
+{
+  "index": "logs-*",
+  "apiKeyId": "your-api-key-id",
+  "apiKey": "your-api-key",
+  "caFingerprint": "..."
+}
+```
+
+**Test Connection Shows:**
+- Cluster name and health status (green/yellow/red)
+- Number of nodes and active shards
+- Total indices and documents count
+- Storage size
+
 **Use Cases:**
 - Search functionality
 - Log indexing
+- Full-text search
+- Analytics
 
 ## 🔍 Testing Connections
 

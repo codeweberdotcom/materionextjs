@@ -1,0 +1,300 @@
+{
+  "id": null,
+  "uid": "materio-system",
+  "title": "Materio System Overview",
+  "description": "HTTP API and Database monitoring: requests, latency, queries, connections",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "tags": ["system", "http", "api", "database", "prisma"],
+  "templating": {
+    "list": [
+      {
+        "name": "environment",
+        "type": "custom",
+        "current": { "selected": true, "text": "All", "value": "$__all" },
+        "options": [
+          { "selected": true, "text": "All", "value": "$__all" },
+          { "selected": false, "text": "development", "value": "development" },
+          { "selected": false, "text": "production", "value": "production" }
+        ],
+        "includeAll": true,
+        "multi": false
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "row",
+      "title": "📊 HTTP Overview",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "Total Requests (5m)",
+      "gridPos": { "x": 0, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(http_requests_total{environment=~\"$environment\"}[5m]))", "legendFormat": "Requests", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Error Rate (5m)",
+      "gridPos": { "x": 4, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] },
+          "unit": "percent"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(http_errors_total{environment=~\"$environment\"}[5m])) / sum(increase(http_requests_total{environment=~\"$environment\"}[5m])) * 100", "legendFormat": "Error Rate", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Active Requests",
+      "gridPos": { "x": 8, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 100 }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(http_active_requests{environment=~\"$environment\"})", "legendFormat": "Active", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Avg Response Time",
+      "gridPos": { "x": 12, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.5 }, { "color": "red", "value": 1 }] },
+          "unit": "s"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["mean"] } },
+      "targets": [{ "expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "p50", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Server Errors (5m)",
+      "gridPos": { "x": 16, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(http_errors_total{error_type=\"server_error\",environment=~\"$environment\"}[5m]))", "legendFormat": "5xx", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Client Errors (5m)",
+      "gridPos": { "x": 20, "y": 1, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 10 }, { "color": "orange", "value": 50 }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(http_errors_total{error_type=\"client_error\",environment=~\"$environment\"}[5m]))", "legendFormat": "4xx", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "📈 HTTP Traffic",
+      "gridPos": { "x": 0, "y": 5, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Requests Over Time",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "reqps" } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum(rate(http_requests_total{environment=~\"$environment\"}[5m]))", "legendFormat": "Total", "refId": "A" },
+        { "expr": "sum(rate(http_requests_total{status=~\"2..\",environment=~\"$environment\"}[5m]))", "legendFormat": "2xx", "refId": "B" },
+        { "expr": "sum(rate(http_requests_total{status=~\"4..\",environment=~\"$environment\"}[5m]))", "legendFormat": "4xx", "refId": "C" },
+        { "expr": "sum(rate(http_requests_total{status=~\"5..\",environment=~\"$environment\"}[5m]))", "legendFormat": "5xx", "refId": "D" }
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Requests by Status",
+      "gridPos": { "x": 12, "y": 6, "w": 6, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }, "pieType": "pie" },
+      "targets": [{ "expr": "sum(increase(http_requests_total{environment=~\"$environment\"}[1h])) by (status)", "legendFormat": "{{status}}", "refId": "A" }]
+    },
+    {
+      "type": "piechart",
+      "title": "Requests by Method",
+      "gridPos": { "x": 18, "y": 6, "w": 6, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } },
+      "options": { "legend": { "displayMode": "table", "placement": "right", "values": ["value", "percent"] }, "pieType": "pie" },
+      "targets": [{ "expr": "sum(increase(http_requests_total{environment=~\"$environment\"}[1h])) by (method)", "legendFormat": "{{method}}", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "⚡ HTTP Performance",
+      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Response Time Percentiles",
+      "gridPos": { "x": 0, "y": 15, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum(rate(http_request_duration_seconds_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "p95", "refId": "B" },
+        { "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "p99", "refId": "C" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Response Size",
+      "gridPos": { "x": 12, "y": 15, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "bytes" } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum(rate(http_response_size_bytes_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(http_response_size_bytes_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "p95", "refId": "B" }
+      ]
+    },
+    {
+      "type": "row",
+      "title": "🗄️ Database Overview",
+      "gridPos": { "x": 0, "y": 23, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "stat",
+      "title": "Total Queries (5m)",
+      "gridPos": { "x": 0, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(prisma_query_total{environment=~\"$environment\"}[5m]))", "legendFormat": "Queries", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Query Errors (5m)",
+      "gridPos": { "x": 4, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1 }, { "color": "red", "value": 5 }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(prisma_query_total{status=\"error\",environment=~\"$environment\"}[5m]))", "legendFormat": "Errors", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Active Connections",
+      "gridPos": { "x": 8, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 20 }, { "color": "red", "value": 50 }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(prisma_connections_active{environment=~\"$environment\"})", "legendFormat": "Active", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Slow Queries (5m)",
+      "gridPos": { "x": 12, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 5 }, { "color": "red", "value": 20 }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(prisma_slow_queries_total{environment=~\"$environment\"}[5m]))", "legendFormat": "Slow", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Transactions (5m)",
+      "gridPos": { "x": 16, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "purple", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(increase(prisma_transaction_total{environment=~\"$environment\"}[5m]))", "legendFormat": "Transactions", "refId": "A" }]
+    },
+    {
+      "type": "stat",
+      "title": "Pool Size",
+      "gridPos": { "x": 20, "y": 24, "w": 4, "h": 4 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] },
+          "unit": "short"
+        }
+      },
+      "options": { "colorMode": "value", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [{ "expr": "sum(prisma_pool_size{environment=~\"$environment\"})", "legendFormat": "Pool", "refId": "A" }]
+    },
+    {
+      "type": "row",
+      "title": "📈 Database Performance",
+      "gridPos": { "x": 0, "y": 28, "w": 24, "h": 1 },
+      "collapsed": false
+    },
+    {
+      "type": "timeseries",
+      "title": "Query Duration Percentiles",
+      "gridPos": { "x": 0, "y": 29, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "s" } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "histogram_quantile(0.5, sum(rate(prisma_query_duration_seconds_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "p50", "refId": "A" },
+        { "expr": "histogram_quantile(0.95, sum(rate(prisma_query_duration_seconds_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "p95", "refId": "B" },
+        { "expr": "histogram_quantile(0.99, sum(rate(prisma_query_duration_seconds_bucket{environment=~\"$environment\"}[5m])) by (le))", "legendFormat": "p99", "refId": "C" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Queries by Model",
+      "gridPos": { "x": 12, "y": 29, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" } },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [{ "expr": "sum(rate(prisma_query_total{environment=~\"$environment\"}[5m])) by (model) * 60", "legendFormat": "{{model}}", "refId": "A" }]
+    }
+  ]
+}
+

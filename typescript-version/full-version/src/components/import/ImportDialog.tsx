@@ -34,10 +34,9 @@ import {
   formatFileSize,
   ValidationPreview,
   RowWithValidation,
-  ImportResult
+  ImportResult,
+  ImportField
 } from '@/types/export-import'
-import { importService } from '@/services/import/ImportService'
-import { importAdapterFactory } from '@/services/import/ImportAdapterFactory'
 import { useAuth } from '@/contexts/AuthProvider'
 import { useTranslation } from '@/contexts/TranslationContext'
 import ImportStatistics from './ImportStatistics'
@@ -65,7 +64,7 @@ export default function ImportDialog({
   const dictionary = useTranslation()
   const nav = dictionary.navigation || {}
   const formatMessage = (template?: string, params?: Record<string, string | number>) => {
-    if (!template) return ''
+    if (!template || typeof template !== 'string') return ''
     let result = template
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
@@ -76,7 +75,6 @@ export default function ImportDialog({
     }
     return result
   }
-  const actorId = user?.id || null
   const [step, setStep] = useState<StepType>('select')
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
@@ -90,7 +88,22 @@ export default function ImportDialog({
   const [editingRow, setEditingRow] = useState<RowWithValidation | null>(null)
   const [previewTab, setPreviewTab] = useState(0)
   const [importMode, setImportMode] = useState<ImportMode>(mode)
+  const [importFields, setImportFields] = useState<ImportField[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Load import fields when dialog opens
+  useEffect(() => {
+    if (open && entityType) {
+      fetch(`/api/import?entityType=${entityType}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.importFields) {
+            setImportFields(data.importFields)
+          }
+        })
+        .catch(err => console.error('Failed to load import fields:', err))
+    }
+  }, [open, entityType])
 
   // Сбрасываем состояние при закрытии
   useEffect(() => {
@@ -145,11 +158,22 @@ export default function ImportDialog({
     setPreviewLoading(true)
 
     try {
-      // Загружаем предпросмотр
-      const previewData = await importService.previewImport(selectedFile, entityType, {
-        maxPreviewRows: 50,
-        actorId // Передаем ID текущего пользователя для записи в события
+      // Загружаем предпросмотр через API
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+      formData.append('entityType', entityType)
+      formData.append('mode', importMode)
+
+      const response = await fetch('/api/import/preview', {
+        method: 'POST',
+        body: formData
       })
+
+      const previewData: ValidationPreview = await response.json()
+
+      if (!response.ok) {
+        throw new Error((previewData as any).error || 'Preview failed')
+      }
 
       setPreview(previewData)
       setEditableData(previewData.previewData)
@@ -238,14 +262,35 @@ export default function ImportDialog({
     setProgress(0)
 
     try {
-      const adapter = importAdapterFactory.getAdapter(entityType)
-      const result = await importService.importData(entityType, file, {
-        mode: importMode,
-        importOnlyValid,
-        editedData: editableData.length > 0 ? editableData : undefined,
-        onProgress: (progressValue: number) => setProgress(progressValue),
-        actorId // Передаем ID текущего пользователя для записи в события
+      // Build form data for API call
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('entityType', entityType)
+      formData.append('mode', importMode)
+      formData.append('skipValidation', String(!importOnlyValid))
+      
+      if (editableData.length > 0) {
+        // Send selected rows and their updates
+        const selectedRows = editableData.map(r => r.rowIndex)
+        formData.append('selectedRows', JSON.stringify(selectedRows))
+        
+        const rowUpdates: Record<number, Record<string, unknown>> = {}
+        editableData.forEach(row => {
+          rowUpdates[row.rowIndex] = row.data
+        })
+        formData.append('rowUpdates', JSON.stringify(rowUpdates))
+      }
+
+      const response = await fetch('/api/import', {
+        method: 'POST',
+        body: formData
       })
+
+      const result: ImportResult = await response.json()
+
+      if (!response.ok) {
+        throw new Error((result as any).error || 'Import failed')
+      }
 
       // Показываем предупреждения о дубликатах, если есть
       if (result.warnings && result.warnings.length > 0) {
@@ -260,26 +305,31 @@ export default function ImportDialog({
         }
       }
 
-      if (result.successCount > 0) {
+      // Log full result for debugging
+      console.log('[ImportDialog] Import result:', JSON.stringify(result, null, 2))
+      
+      if (result.successCount > 0 || (result.errorCount > 0 && result.totalProcessed > 0)) {
+        // Some records were processed
         setImportResultState(result)
-        const importedLabel =
-          formatMessage(nav.recordsImported, { count: result.successCount }) ||
-          `Records imported: ${result.successCount}`
-        const failedLabel =
-          formatMessage(nav.recordsFailed, { count: result.errorCount }) ||
-          `Records failed: ${result.errorCount}`
-        toast.success(`${nav.importSuccess || 'Import completed successfully'} ${importedLabel}, ${failedLabel}`)
-        onSuccess?.(result)
+        const importedLabel = `Records imported: ${result.successCount || 0}`
+        const failedLabel = `Records failed: ${result.errorCount || 0}`
+        
+        if (result.successCount > 0) {
+          toast.success(`Import completed. ${importedLabel}, ${failedLabel}`)
+          onSuccess?.(result)
+        } else {
+          toast.warning(`Import completed with errors. ${failedLabel}`)
+        }
         setStep('result')
       } else {
-        // Показываем детали ошибок
+        // No records processed - show error details
         const errorDetails = result.errors && result.errors.length > 0
-          ? result.errors.slice(0, 3).map(e => e.message || nav.unknownError || 'Unknown error').join(', ')
-          : nav.unknownError || 'Unknown error'
-        const errorMessage = `${nav.importFailed || 'Import failed'}: ${errorDetails}${
+          ? result.errors.slice(0, 3).map(e => e.message || 'Unknown error').join('; ')
+          : 'No records were imported'
+        const errorMessage = `Import failed: ${errorDetails}${
           result.errors && result.errors.length > 3 ? '...' : ''
         }`
-        console.error('[ImportDialog] Import failed:', result)
+        console.error('[ImportDialog] Import failed:', errorMessage, result)
         toast.error(errorMessage)
         onError?.(errorMessage)
         setStep('preview')
@@ -754,7 +804,7 @@ export default function ImportDialog({
                       setEditingRow(row)
                     }
                   }}
-                  importFields={importAdapterFactory.getAdapter(entityType)?.importFields}
+                  importFields={importFields}
                 />
               </Box>
             )}
@@ -880,7 +930,7 @@ export default function ImportDialog({
           open={!!editingRow}
           onClose={() => setEditingRow(null)}
           row={editingRow}
-          importFields={importAdapterFactory.getAdapter(entityType)?.importFields || []}
+          importFields={importFields}
           onSave={handleSaveEditedRow}
         />
       )}

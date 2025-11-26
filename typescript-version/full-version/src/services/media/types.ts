@@ -351,3 +351,4 @@ export interface MediaSyncEventPayload {
 
 export type { Media, ImageSettings, MediaSyncJob, Watermark, MediaGlobalSettings }
 
+

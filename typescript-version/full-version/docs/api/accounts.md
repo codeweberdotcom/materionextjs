@@ -651,3 +651,4 @@ await fetch(`/api/accounts/transfers/${transferId}/accept`, {
 - [ROOT_FILES_DESCRIPTION.md](../ROOT_FILES_DESCRIPTION.md) — Описание модуля
 - [План реализации](../plans/active/plan-user-accounts-system-2025-01-25.md)
 
+

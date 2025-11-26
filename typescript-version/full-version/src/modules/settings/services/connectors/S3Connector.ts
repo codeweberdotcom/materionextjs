@@ -16,6 +16,7 @@ import { BaseConnector } from './BaseConnector'
 import type { ConnectionTestResult } from '@/lib/config/types'
 import { decrypt } from '@/lib/config/encryption'
 import logger from '@/lib/logger'
+import { trackS3OperationSuccess, trackS3OperationError, startS3OperationTimer } from '@/lib/metrics/storage'
 
 /**
  * Типы S3-совместимых хранилищ
@@ -194,10 +195,14 @@ export class S3Connector extends BaseConnector {
       let testBucketError: string | null = null
 
       // Пробуем получить список бакетов
+      const stopListTimer = startS3OperationTimer('list')
       try {
         const listResult = await client.send(new ListBucketsCommand({}))
         buckets = listResult.Buckets || []
+        stopListTimer()
+        trackS3OperationSuccess('list', 'default')
       } catch (listError) {
+        stopListTimer()
         // Некоторые S3-совместимые хранилища не поддерживают ListBuckets
         logger.warn('[S3Connector] ListBuckets not supported', {
           storageType: metadata.storageType,
@@ -208,9 +213,12 @@ export class S3Connector extends BaseConnector {
       // Если указан bucket, проверяем его доступность
       const testBucket = metadata.bucket
       if (testBucket) {
+        const stopHeadTimer = startS3OperationTimer('head')
         try {
           await client.send(new HeadBucketCommand({ Bucket: testBucket }))
           bucketExists = true
+          stopHeadTimer()
+          trackS3OperationSuccess('head', testBucket)
 
           // Пробуем получить локацию bucket
           try {
@@ -220,7 +228,12 @@ export class S3Connector extends BaseConnector {
             // Некоторые провайдеры не поддерживают GetBucketLocation
           }
         } catch (headError: any) {
+          stopHeadTimer()
           bucketExists = false
+          const errorType = headError.name === 'NotFound' ? 'not_found' : 
+                           headError.name === 'Forbidden' ? 'forbidden' : 'unknown'
+          trackS3OperationError('head', testBucket, errorType)
+          
           if (headError.name === 'NotFound' || headError.$metadata?.httpStatusCode === 404) {
             testBucketError = `Bucket "${testBucket}" не найден`
           } else if (headError.name === 'Forbidden' || headError.$metadata?.httpStatusCode === 403) {

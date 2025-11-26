@@ -198,6 +198,75 @@ export class ExportService implements IExportService {
   }
 
   /**
+   * Экспортирует данные сущности с возвратом buffer (для API)
+   */
+  async exportDataWithBuffer(
+    entityType: string,
+    options: ExportOptions & { actorId?: string }
+  ): Promise<ExportResult & { buffer?: Buffer }> {
+    const correlationId = generateUUID()
+    const actorId = options.actorId || null
+
+    try {
+      // Получаем адаптер для сущности
+      const adapter = this.adapterFactory.getAdapter(entityType)
+      if (!adapter) {
+        throw new Error(`Adapter for entity type '${entityType}' not found`)
+      }
+
+      // Получаем данные через адаптер
+      const data = await adapter.getDataForExport(options.filters)
+      logger.info('ExportService: Raw data from adapter', {
+        entityType,
+        correlationId,
+        itemCount: data.length,
+        sampleItem: data[0] ? JSON.stringify(data[0]).substring(0, 500) : 'no data'
+      })
+
+      // Фильтруем по selectedIds если указаны
+      let filteredData = data
+      if (options.selectedIds && options.selectedIds.length > 0) {
+        filteredData = data.filter(item => {
+          const itemIdString = String(item.id)
+          return options.selectedIds!.includes(itemIdString)
+        })
+      }
+
+      // Трансформируем данные для экспорта
+      const exportData = adapter.transformForExport(filteredData)
+      logger.info('ExportService: Transformed data', {
+        entityType,
+        correlationId,
+        itemCount: exportData.length,
+        sampleItem: exportData[0] ? JSON.stringify(exportData[0]).substring(0, 500) : 'no data'
+      })
+
+      // Генерируем файл
+      const filename = options.filename || generateFileName(entityType, options.format)
+      const fileData = await this.generateFile(exportData, adapter.exportFields, options)
+      
+      // Преобразуем ArrayBuffer в Buffer если нужно
+      const buffer = fileData instanceof ArrayBuffer 
+        ? Buffer.from(fileData)
+        : fileData
+
+      return {
+        success: true,
+        filename,
+        recordCount: exportData.length,
+        buffer
+      }
+    } catch (error) {
+      logger.error('Export error', { entityType, format: options.format, error })
+      return {
+        success: false,
+        recordCount: 0,
+        error: error instanceof Error ? error.message : 'Export failed'
+      }
+    }
+  }
+
+  /**
    * Определяет тип ошибки экспорта
    */
   private getErrorType(error: unknown, entityType: string): string {

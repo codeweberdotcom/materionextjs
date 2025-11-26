@@ -283,8 +283,6 @@ export async function GET(request: NextRequest) {
         logger.warn('[role-cache] Failed to save to cache', { error: err })
       })
     })
-      logger.warn('[role-cache] Failed to save to cache', { error: err })
-    })
 
     // Метрики
     const duration = (Date.now() - startTime) / 1000

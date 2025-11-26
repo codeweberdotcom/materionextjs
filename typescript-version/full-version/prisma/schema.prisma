@@ -73,6 +73,7 @@ model User {
   ownedAccountsByOwner    UserAccount[]      @relation("OwnedAccountsByOwner")
   managedAccounts         AccountManager[]   @relation("ManagedAccounts")
   accountTransfers        AccountTransfer[]  @relation("AccountTransfers")
+  uploadedMedia           Media[]            @relation("UserUploadedMedia")
   createdAt               DateTime           @default(now())
   updatedAt               DateTime           @updatedAt
   // Constraint: хотя бы email или phone должен быть заполнен (проверяется на уровне приложения)
@@ -843,9 +844,12 @@ model Media {
   originalExif String? @default("{}") // JSON
 
   // Аудит
-  uploadedBy String?
-  alt        String? // SEO alt текст
-  title      String?
+  uploadedBy   String?
+  uploadedUser User?   @relation("UserUploadedMedia", fields: [uploadedBy], references: [id])
+  alt          String? // SEO alt текст
+  title        String?
+  caption      String? // Подпись изображения
+  description  String? // Описание для SEO
 
   // Синхронизация
   lastSyncAt DateTime?
@@ -854,6 +858,9 @@ model Media {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime? // Soft delete
+
+  // Связь с лицензиями
+  licenses MediaLicenseItem[]
 
   @@index([entityType, entityId])
   @@index([storageStatus])
@@ -1023,4 +1030,74 @@ model MediaGlobalSettings {
   updatedAt DateTime @updatedAt
 
   @@map("media_global_settings")
+}
+
+// Лицензии медиа
+model MediaLicense {
+  id String @id @default(cuid())
+
+  // Тип лицензии
+  licenseType     String // 'royalty_free', 'rights_managed', 'creative_commons', 'editorial', 'exclusive', 'custom'
+  licenseTypeName String? // Название если custom
+
+  // Стороны лицензии
+  licensorName  String // Автор/Владелец прав (лицензиар)
+  licensorEmail String?
+  licensorUrl   String?
+
+  licenseeName  String // Получатель лицензии (лицензиат)
+  licenseeEmail String?
+
+  // Привязка к товару/сущности
+  entityType String? // 'product', 'listing', 'company'
+  entityId   String?
+  entityName String? // Название товара для отображения
+  entityUrl  String? // URL-адрес товара
+
+  // Документ лицензии
+  documentPath String? // Путь к PDF/документу
+  documentName String? // Оригинальное имя файла
+  documentSize Int? // Размер в байтах
+  documentMime String? // application/pdf, image/jpeg...
+
+  // Срок действия
+  validFrom  DateTime? // Дата начала действия
+  validUntil DateTime? // Дата окончания (null = бессрочная)
+  territory  String? // Территория действия
+
+  // Примечания
+  notes String?
+
+  // Аудит
+  uploadedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связь с медиафайлами
+  mediaItems MediaLicenseItem[]
+
+  @@index([licenseType])
+  @@index([licensorName])
+  @@index([entityType, entityId])
+  @@index([validUntil])
+  @@index([createdAt])
+  @@map("media_licenses")
+}
+
+// Связь лицензии с медиафайлами (many-to-many)
+model MediaLicenseItem {
+  id        String @id @default(cuid())
+  licenseId String
+  mediaId   String
+
+  license MediaLicense @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  media   Media        @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([licenseId, mediaId])
+  @@index([licenseId])
+  @@index([mediaId])
+  @@map("media_license_items")
 }

@@ -2489,11 +2489,59 @@ async function main() {
 
   console.log('✅ Created default watermark (upload PNG via admin panel)')
 
+  // Демо лицензии
+  const demoLicenses = [
+    {
+      id: 'demo-license-1',
+      licenseType: 'royalty_free',
+      licensorName: 'Shutterstock',
+      licensorEmail: 'license@shutterstock.com',
+      licensorUrl: 'https://www.shutterstock.com',
+      licenseeName: 'ООО "Моя Компания"',
+      licenseeEmail: 'admin@example.com',
+      territory: 'Весь мир',
+      notes: 'Демо-лицензия Royalty-Free для тестирования',
+    },
+    {
+      id: 'demo-license-2',
+      licenseType: 'creative_commons',
+      licensorName: 'John Doe',
+      licensorEmail: 'john@example.com',
+      licenseeName: 'ООО "Моя Компания"',
+      licenseeEmail: 'admin@example.com',
+      territory: 'Россия',
+      validUntil: new Date('2025-12-31'),
+      notes: 'Creative Commons BY-SA 4.0',
+    },
+    {
+      id: 'demo-license-3',
+      licenseType: 'exclusive',
+      licensorName: 'Фотограф Иван Петров',
+      licensorEmail: 'ivan@photo.ru',
+      licenseeName: 'ООО "Моя Компания"',
+      territory: 'СНГ',
+      validFrom: new Date('2024-01-01'),
+      validUntil: new Date('2026-01-01'),
+      notes: 'Эксклюзивная лицензия на фото продукта',
+    },
+  ]
+
+  for (const licenseData of demoLicenses) {
+    await prisma.mediaLicense.upsert({
+      where: { id: licenseData.id },
+      update: {},
+      create: licenseData,
+    })
+  }
+
+  console.log(`✅ Created ${demoLicenses.length} demo licenses`)
+
   console.log('')
   console.log('Media Module:')
   console.log('- Global settings created')
   console.log(`- ${imageSettingsData.length} image settings presets`)
   console.log('- Default watermark placeholder (upload PNG via /admin/media/settings)')
+  console.log(`- ${demoLicenses.length} demo licenses`)
 }
 
 main()

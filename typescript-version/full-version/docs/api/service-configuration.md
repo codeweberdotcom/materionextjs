@@ -365,10 +365,63 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ### SMTP
 - **Default**: `smtp://localhost:1025`
 - **ENV Variable**: `SMTP_URL`
+- **Connector**: `SMTPConnector`
+- **Authentication**: Basic Auth (LOGIN), OAuth2
+- **Metadata options**:
+  - `secure` - использовать SSL/TLS (автоматически true для порта 465)
+  - `ignoreTLS` - игнорировать STARTTLS
+  - `requireTLS` - требовать STARTTLS
+  - `connectionTimeout` - таймаут подключения (мс)
+  - `greetingTimeout` - таймаут приветствия (мс)
+  - `from` - email отправителя для тестового письма
+  - `pool` - использовать пул соединений
+  - `maxConnections` - максимум соединений в пуле
+
+**Test Connection Response**:
+```json
+{
+  "success": true,
+  "latency": 120,
+  "details": {
+    "host": "smtp.example.com",
+    "port": 587,
+    "secure": false,
+    "authMethod": "LOGIN",
+    "tls": true
+  }
+}
+```
+
+**Supported Providers**: SendGrid, Mailgun, AWS SES, Postmark, Gmail, Outlook, любой SMTP-сервер
 
 ### Elasticsearch
 - **Default**: `http://localhost:9200`
 - **ENV Variable**: `ELASTICSEARCH_URL`
+- **Connector**: `ElasticsearchConnector`
+- **Authentication**: Basic Auth, API Key, Bearer Token, TLS Certificate
+- **Metadata options**:
+  - `index` - Test index name for verification
+  - `apiKeyId` - API Key ID (alternative to username/password)
+  - `apiKey` - API Key value (encrypted)
+  - `caFingerprint` - CA fingerprint for TLS
+
+**Test Connection Response**:
+```json
+{
+  "success": true,
+  "latency": 45,
+  "version": "8.11.0",
+  "details": {
+    "clusterName": "my-cluster",
+    "clusterHealth": "green",
+    "numberOfNodes": 3,
+    "activeShards": 150,
+    "indicesCount": 25,
+    "documentsCount": 1500000,
+    "storageSize": "2.5 GB"
+  }
+}
+```
 
 ## 🔄 Integration with ServiceConfigResolver
 

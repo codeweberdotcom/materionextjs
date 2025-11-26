@@ -70,3 +70,4 @@ export const timeOfDayOperator: CustomOperator = {
 export const customOperators: CustomOperator[] = [betweenOperator, olderThanDaysOperator, timeOfDayOperator]
 
 
+

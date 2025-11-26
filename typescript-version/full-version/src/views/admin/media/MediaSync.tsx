@@ -472,8 +472,8 @@ export default function MediaSync() {
             )}
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Отмена</Button>
+        <DialogActions sx={{ px: 3, pb: 3, gap: 2 }}>
+          <Button onClick={() => setDialogOpen(false)} variant="outlined">Отмена</Button>
           <Button 
             variant="contained" 
             onClick={createJob}

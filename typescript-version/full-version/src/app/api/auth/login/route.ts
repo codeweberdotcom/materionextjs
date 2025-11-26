@@ -8,6 +8,7 @@ import { rateLimitService } from '@/lib/rate-limit'
 import { createErrorResponse } from '@/utils/apiError'
 import { eventService } from '@/services/events'
 import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
+import { trackLoginSuccess, trackLoginFailed, trackSessionCreated, startLoginTimer } from '@/lib/metrics/auth'
 
 const MIN_RESPONSE_DURATION_MS = 200
 
@@ -33,14 +34,19 @@ export async function POST(request: NextRequest) {
     return Math.max(0, Math.ceil(diffMs / 1000))
   }
 
+  // Start login duration timer
+  const stopLoginTimer = startLoginTimer('credentials')
+  
   try {
-    logger.info('рџ”ђ [LOGIN] Login attempt started')
+    logger.info('рџ"ђ [LOGIN] Login attempt started')
 
     const { email, password } = await request.json()
     logger.info('рџ”ђ [LOGIN] Login data:', { email, hasPassword: !!password })
 
     if (!email || !password) {
       logger.info('вќЊ [LOGIN] Missing email or password')
+      stopLoginTimer()
+      trackLoginFailed('credentials')
       const { payload, init } = createErrorResponse({
         status: 400,
         code: 'AUTH_MISSING_FIELDS',
@@ -75,6 +81,8 @@ export async function POST(request: NextRequest) {
 
     if (!initialRateLimitResult.allowed) {
       logger.info('вќЊ [LOGIN] Email-level rate limit exceeded for key:', email)
+      stopLoginTimer()
+      trackLoginFailed('credentials')
 
       // Record failed login event due to rate limit
       await eventService.record({
@@ -156,6 +164,8 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       logger.info('вќЊ [LOGIN] User not found:', email)
+      stopLoginTimer()
+      trackLoginFailed('credentials')
 
       // Record failed login event - user not found
       await eventService.record({
@@ -192,6 +202,8 @@ export async function POST(request: NextRequest) {
     const isValidPassword = await bcrypt.compare(password, user.password)
     if (!isValidPassword) {
       logger.info('вќЊ [LOGIN] Invalid password for user:', email)
+      stopLoginTimer()
+      trackLoginFailed('credentials')
 
       // Record failed login event - invalid password
       await eventService.record({
@@ -258,10 +270,13 @@ export async function POST(request: NextRequest) {
     }
 
     logger.info('вњ… [LOGIN] Password valid, creating session for:', email)
+    stopLoginTimer()
+    trackLoginSuccess('credentials')
 
     const sessionToken = crypto.randomUUID()
     const session = await lucia.createSession(user.id, { sessionToken })
     logger.info('вњ… [LOGIN] Session created:', session.id)
+    trackSessionCreated('credentials')
 
     const sessionCookie = lucia.createSessionCookie(session.id)
     logger.info('рџЌЄ [LOGIN] Setting session cookie:', sessionCookie.name)
@@ -306,6 +321,8 @@ export async function POST(request: NextRequest) {
     return response
   } catch (error) {
     logger.error('Login error', { error: error instanceof Error ? error.message : error, route: 'login' })
+    stopLoginTimer()
+    trackLoginFailed('credentials')
     const { payload, init } = createErrorResponse({
       status: 500,
       code: 'AUTH_INTERNAL_ERROR',

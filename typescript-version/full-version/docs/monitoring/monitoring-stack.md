@@ -41,6 +41,8 @@ typescript-version/full-version/monitoring/
 | **Materio Redis Overview** | `materio-redis` | Redis monitoring: connections, operations, performance, memory |
 | **Materio Socket.IO Overview** | `materio-socket` | Socket.IO monitoring: connections, messages, rooms, performance |
 | **Materio Application Operations** | `materio-operations` | Application operations: API errors, bulk ops, events, import/export, roles, translations |
+| **Materio System Overview** | `materio-system` | HTTP API and Database: requests, latency, queries, connections |
+| **Materio Security Overview** | `materio-security` | Authentication and Storage: logins, sessions, uploads, downloads |
 
 ### Rate Limit Dashboard Panels
 
@@ -134,6 +136,26 @@ typescript-version/full-version/monitoring/
 | 🔐 Roles | Role Operations (5m), Cache Errors (5m), Role Operations by Type, Role Cache Switches |
 | 🌐 Translations | Translation Ops (5m), Translation Import (5m), Translation Operations, Translation Duration |
 
+### System Overview Dashboard Panels
+
+| Row | Panels |
+|-----|--------|
+| 📊 HTTP Overview | Total Requests (5m), Error Rate (5m), Active Requests, Avg Response Time, Server Errors, Client Errors |
+| 📈 HTTP Traffic | Requests Over Time, Requests by Status (Pie), Requests by Method (Pie) |
+| ⚡ HTTP Performance | Response Time Percentiles (p50/p95/p99), Response Size (p50/p95) |
+| 🗄️ Database Overview | Total Queries (5m), Query Errors (5m), Active Connections, Slow Queries (5m), Transactions (5m), Pool Size |
+| 📈 Database Performance | Query Duration Percentiles (p50/p95/p99), Queries by Model |
+
+### Security Overview Dashboard Panels
+
+| Row | Panels |
+|-----|--------|
+| 🔐 Auth Overview | Login Success (5m), Login Failed (5m), Active Sessions, Registrations (5m), Password Resets (5m), Token Refreshes (5m) |
+| 📈 Auth Activity | Logins Over Time, Login Success Rate (Donut), Logins by Provider (Pie) |
+| 🔄 Sessions | Session Duration Distribution (p50/p95), Sessions Created/Expired |
+| 📦 Storage Overview | Uploads (5m), Downloads (5m), Storage Errors (5m), Active Uploads, Bytes Uploaded (5m), Bytes Downloaded (5m) |
+| 📈 Storage Activity | Storage Operations Over Time, File Sizes (Upload/Download p50/p95) |
+
 **Metrics used:**
 - `socket_active_connections` — Active connections by namespace
 - `socket_active_users` — Unique active users
@@ -173,6 +195,49 @@ typescript-version/full-version/monitoring/
 - `translation_operation_duration_seconds` — Translation latency
 
 **Access:** http://localhost:9091/d/materio-operations
+
+---
+
+### System Overview Dashboard (`system-dashboard.json`)
+
+**Metrics used:**
+- `http_requests_total` — Total HTTP requests by method/route/status
+- `http_errors_total` — HTTP errors by type
+- `http_request_duration_seconds` — Request latency
+- `http_response_size_bytes` — Response sizes
+- `http_active_requests` — Currently processing requests
+- `prisma_query_total` — Database queries by model/operation
+- `prisma_query_duration_seconds` — Query latency
+- `prisma_connections_active` — Active DB connections
+- `prisma_slow_queries_total` — Slow queries count
+- `prisma_transaction_total` — Transactions count
+- `prisma_pool_size` — Connection pool size
+
+**Access:** http://localhost:9091/d/materio-system
+
+---
+
+### Security Overview Dashboard (`security-dashboard.json`)
+
+**Metrics used:**
+- `auth_login_total` — Login attempts by status/provider
+- `auth_logout_total` — Logout events
+- `auth_registration_total` — Registration attempts
+- `auth_password_reset_total` — Password reset attempts
+- `auth_token_refresh_total` — Token refresh attempts
+- `auth_session_created_total` — Sessions created
+- `auth_session_expired_total` — Sessions expired
+- `auth_session_duration_seconds` — Session duration
+- `auth_active_sessions` — Currently active sessions
+- `s3_operations_total` — S3 operations by type
+- `s3_errors_total` — S3 errors
+- `s3_bytes_uploaded_total` — Total bytes uploaded
+- `s3_bytes_downloaded_total` — Total bytes downloaded
+- `s3_upload_size_bytes` — Upload file sizes
+- `s3_download_size_bytes` — Download file sizes
+- `s3_active_uploads` — Currently uploading
+
+**Access:** http://localhost:9091/d/materio-security
 
 ## Running the stack
 

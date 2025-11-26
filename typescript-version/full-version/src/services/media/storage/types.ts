@@ -77,3 +77,4 @@ export interface S3AdapterConfig {
 
 export type StorageType = 'local' | 's3'
 
+

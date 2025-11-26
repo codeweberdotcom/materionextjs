@@ -285,7 +285,7 @@
 - ✅ **Этап 1:** Prisma schema + миграция выполнена
 - ✅ **Этап 2:** Шифрование AES-256-GCM реализовано (`src/lib/config/encryption.ts`)
 - ✅ **Этап 3:** ServiceConfigResolver реализован с приоритетами Admin → ENV → Default
-- ✅ **Этап 4:** Коннекторы созданы (Redis, PostgreSQL, S3, Prometheus, Loki, Grafana, Sentry)
+- ✅ **Этап 4:** Коннекторы созданы (Redis, PostgreSQL, S3, Prometheus, Loki, Grafana, Sentry, Elasticsearch, SMTP)
 - ✅ **Этап 5:** ServiceConfigurationService реализован (CRUD + тестирование)
 - ✅ **Этап 6:** API endpoints созданы (GET, POST, PUT, DELETE, test, toggle, status)
 - ✅ **Этап 7:** UI страница создана (`/admin/settings/services`)

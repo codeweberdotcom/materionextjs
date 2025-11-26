@@ -2,9 +2,10 @@
 
 /**
  * Медиатека - список и управление медиа файлами
+ * Поддержка Drag & Drop и множественной загрузки
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -34,8 +35,31 @@ import ImageList from '@mui/material/ImageList'
 import ImageListItem from '@mui/material/ImageListItem'
 import ImageListItemBar from '@mui/material/ImageListItemBar'
 import Skeleton from '@mui/material/Skeleton'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
+import ToggleButton from '@mui/material/ToggleButton'
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
+import Avatar from '@mui/material/Avatar'
+import LinearProgress from '@mui/material/LinearProgress'
 
+import { useDropzone } from 'react-dropzone'
 import { toast } from 'react-toastify'
+
+import MediaDetailSidebar from './MediaDetailSidebar'
+
+// Upload file with progress tracking
+interface UploadFile {
+  file: File
+  id: string
+  progress: number
+  status: 'pending' | 'uploading' | 'success' | 'error'
+  error?: string
+  preview?: string
+}
 
 // Types
 interface Media {
@@ -107,6 +131,7 @@ const getStorageStatusColor = (status: string): 'success' | 'warning' | 'error' 
 export default function MediaLibrary() {
   const [media, setMedia] = useState<Media[]>([])
   const [loading, setLoading] = useState(true)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [total, setTotal] = useState(0)
@@ -123,17 +148,19 @@ export default function MediaLibrary() {
   const [detailMedia, setDetailMedia] = useState<Media | null>(null)
   const [detailOpen, setDetailOpen] = useState(false)
   
+  // Delete confirmation dialog
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'single' | 'bulk'; id?: string; count?: number } | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  
   // Upload dialog
   const [uploadOpen, setUploadOpen] = useState(false)
   const [uploadEntityType, setUploadEntityType] = useState('other')
-  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([])
   const [uploading, setUploading] = useState(false)
   
-  // Scan dialog
-  const [scanOpen, setScanOpen] = useState(false)
-  const [scanStats, setScanStats] = useState<any>(null)
-  const [scanning, setScanning] = useState(false)
-  const [scanLoading, setScanLoading] = useState(false)
+  // Refs for debounce
+  const searchDebounceRef = useRef<NodeJS.Timeout | null>(null)
 
   const fetchMedia = useCallback(async () => {
     setLoading(true)
@@ -163,9 +190,32 @@ export default function MediaLibrary() {
     }
   }, [page, search, entityType, storageStatus])
 
+  // Initial load
   useEffect(() => {
     fetchMedia()
-  }, [fetchMedia])
+  }, [])
+
+  // Re-fetch when filters change
+  useEffect(() => {
+    fetchMedia()
+  }, [page, entityType, storageStatus])
+
+  // Debounced search
+  useEffect(() => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current)
+    }
+    
+    searchDebounceRef.current = setTimeout(() => {
+      fetchMedia()
+    }, 500)
+    
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current)
+      }
+    }
+  }, [search])
 
   const handleSelectAll = () => {
     if (selectedIds.length === media.length) {
@@ -183,106 +233,204 @@ export default function MediaLibrary() {
     )
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Удалить этот файл?')) return
-    
-    try {
-      const response = await fetch(`/api/admin/media/${id}`, { method: 'DELETE' })
-      if (!response.ok) throw new Error('Failed to delete')
-      
-      toast.success('Файл удалён')
-      fetchMedia()
-    } catch (error) {
-      toast.error('Ошибка удаления')
-    }
+  const openDeleteConfirm = (type: 'single' | 'bulk', id?: string) => {
+    if (type === 'bulk' && selectedIds.length === 0) return
+    setDeleteTarget({ 
+      type, 
+      id, 
+      count: type === 'bulk' ? selectedIds.length : 1 
+    })
+    setDeleteConfirmOpen(true)
   }
 
-  const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return
-    if (!confirm(`Удалить ${selectedIds.length} файлов?`)) return
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return
     
+    setDeleting(true)
     try {
-      for (const id of selectedIds) {
-        await fetch(`/api/admin/media/${id}`, { method: 'DELETE' })
+      if (deleteTarget.type === 'single' && deleteTarget.id) {
+        const response = await fetch(`/api/admin/media/${deleteTarget.id}`, { method: 'DELETE' })
+        if (!response.ok) throw new Error('Failed to delete')
+        toast.success('Файл удалён')
+      } else if (deleteTarget.type === 'bulk') {
+        for (const id of selectedIds) {
+          await fetch(`/api/admin/media/${id}`, { method: 'DELETE' })
+        }
+        toast.success(`Удалено ${selectedIds.length} файлов`)
+        setSelectedIds([])
       }
-      toast.success(`Удалено ${selectedIds.length} файлов`)
-      setSelectedIds([])
+      
+      // Close detail dialog if deleting the currently viewed media
+      if (detailMedia && deleteTarget.id === detailMedia.id) {
+        setDetailOpen(false)
+      }
+      
       fetchMedia()
     } catch (error) {
       toast.error('Ошибка удаления')
+    } finally {
+      setDeleting(false)
+      setDeleteConfirmOpen(false)
+      setDeleteTarget(null)
     }
   }
 
+  // Handle file drop from react-dropzone
+  const MAX_PREVIEWS = 20 // Превью только для первых N файлов (экономия памяти)
+  
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    setUploadFiles(prev => {
+      const currentCount = prev.length
+      const newFiles: UploadFile[] = acceptedFiles.map((file, index) => ({
+        file,
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        progress: 0,
+        status: 'pending' as const,
+        // Превью только для первых MAX_PREVIEWS файлов (экономия памяти)
+        preview: (currentCount + index < MAX_PREVIEWS && file.type.startsWith('image/')) 
+          ? URL.createObjectURL(file) 
+          : undefined,
+      }))
+      return [...prev, ...newFiles]
+    })
+  }, [])
+
+  // Remove file from upload list
+  const removeUploadFile = (id: string) => {
+    setUploadFiles(prev => {
+      const file = prev.find(f => f.id === id)
+      if (file?.preview) {
+        URL.revokeObjectURL(file.preview)
+      }
+      return prev.filter(f => f.id !== id)
+    })
+  }
+
+  // Clear all upload files
+  const clearUploadFiles = () => {
+    uploadFiles.forEach(f => {
+      if (f.preview) URL.revokeObjectURL(f.preview)
+    })
+    setUploadFiles([])
+  }
+
+  // Upload single file with progress (using XMLHttpRequest for progress)
+  const uploadSingleFile = async (uploadFile: UploadFile): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const xhr = new XMLHttpRequest()
+      const formData = new FormData()
+      formData.append('file', uploadFile.file)
+      formData.append('entityType', uploadEntityType)
+
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 100)
+          setUploadFiles(prev => 
+            prev.map(f => f.id === uploadFile.id ? { ...f, progress, status: 'uploading' } : f)
+          )
+        }
+      })
+
+      xhr.addEventListener('load', () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          setUploadFiles(prev => 
+            prev.map(f => f.id === uploadFile.id ? { ...f, progress: 100, status: 'success' } : f)
+          )
+          resolve(true)
+        } else {
+          let errorMsg = 'Ошибка загрузки'
+          try {
+            const response = JSON.parse(xhr.responseText)
+            errorMsg = response.error || errorMsg
+          } catch {}
+          setUploadFiles(prev => 
+            prev.map(f => f.id === uploadFile.id ? { ...f, status: 'error', error: errorMsg } : f)
+          )
+          resolve(false)
+        }
+      })
+
+      xhr.addEventListener('error', () => {
+        setUploadFiles(prev => 
+          prev.map(f => f.id === uploadFile.id ? { ...f, status: 'error', error: 'Сетевая ошибка' } : f)
+        )
+        resolve(false)
+      })
+
+      xhr.open('POST', '/api/admin/media')
+      xhr.send(formData)
+    })
+  }
+
+  // Handle upload all files with parallel uploads
   const handleUpload = async () => {
-    if (!uploadFile) return
+    const pendingFiles = uploadFiles.filter(f => f.status === 'pending')
+    if (pendingFiles.length === 0) return
     
     setUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append('file', uploadFile)
-      formData.append('entityType', uploadEntityType)
-      
-      const response = await fetch('/api/admin/media', {
-        method: 'POST',
-        body: formData,
+    
+    let successCount = 0
+    let errorCount = 0
+
+    // Upload files in parallel batches
+    const uploadBatch = async (batch: UploadFile[]) => {
+      const results = await Promise.all(batch.map(uploadSingleFile))
+      results.forEach(success => {
+        if (success) successCount++
+        else errorCount++
       })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Upload failed')
-      }
-      
-      toast.success('Файл загружен')
-      setUploadOpen(false)
-      setUploadFile(null)
+    }
+
+    // Split into chunks and upload in parallel
+    for (let i = 0; i < pendingFiles.length; i += PARALLEL_UPLOADS) {
+      const batch = pendingFiles.slice(i, i + PARALLEL_UPLOADS)
+      await uploadBatch(batch)
+    }
+
+    setUploading(false)
+
+    if (successCount > 0) {
+      toast.success(`Загружено файлов: ${successCount}`)
       fetchMedia()
-    } catch (error: any) {
-      toast.error(error.message || 'Ошибка загрузки')
-    } finally {
-      setUploading(false)
+    }
+    if (errorCount > 0) {
+      toast.error(`Ошибок: ${errorCount}`)
+    }
+
+    // Close dialog if all successful
+    if (errorCount === 0) {
+      setTimeout(() => {
+        clearUploadFiles()
+        setUploadOpen(false)
+      }, 1000)
     }
   }
 
-  const openScanDialog = async () => {
-    setScanOpen(true)
-    setScanLoading(true)
-    try {
-      const response = await fetch('/api/admin/media/scan')
-      if (response.ok) {
-        const data = await response.json()
-        setScanStats(data)
-      }
-    } catch (error) {
-      toast.error('Ошибка получения статистики')
-    } finally {
-      setScanLoading(false)
-    }
-  }
+  // Upload configuration
+  const MAX_FILES_PER_UPLOAD = 50 // Лимит файлов за раз
+  const PARALLEL_UPLOADS = 3 // Параллельных загрузок
 
-  const handleScan = async () => {
-    setScanning(true)
-    try {
-      const response = await fetch('/api/admin/media/scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ directory: '/uploads' }),
-      })
-      
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Scan failed')
+  // Dropzone configuration
+  const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
+    onDrop: (acceptedFiles) => {
+      // Лимит файлов
+      if (uploadFiles.length + acceptedFiles.length > MAX_FILES_PER_UPLOAD) {
+        const allowed = MAX_FILES_PER_UPLOAD - uploadFiles.length
+        if (allowed <= 0) {
+          toast.warning(`Максимум ${MAX_FILES_PER_UPLOAD} файлов за раз`)
+          return
+        }
+        toast.warning(`Добавлено только ${allowed} из ${acceptedFiles.length} файлов (лимит: ${MAX_FILES_PER_UPLOAD})`)
+        acceptedFiles = acceptedFiles.slice(0, allowed)
       }
-      
-      const result = await response.json()
-      toast.success(`Импортировано ${result.imported} файлов`)
-      setScanOpen(false)
-      fetchMedia()
-    } catch (error: any) {
-      toast.error(error.message || 'Ошибка сканирования')
-    } finally {
-      setScanning(false)
-    }
-  }
+      onDrop(acceptedFiles)
+    },
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.svg'],
+    },
+    maxSize: 15 * 1024 * 1024, // 15MB
+    multiple: true,
+  })
 
   const openDetail = (m: Media) => {
     setDetailMedia(m)
@@ -290,7 +438,19 @@ export default function MediaLibrary() {
   }
 
   const getMediaUrl = (m: Media) => {
-    if (m.localPath) return m.localPath
+    if (m.localPath) {
+      // Исправляем путь: добавляем /uploads/ если нужно и убираем дубли
+      let path = m.localPath
+        .replace(/^public\//, '')
+        .replace(/^\//, '')
+      
+      // Убираем все дублирующиеся uploads/ в начале
+      while (path.startsWith('uploads/')) {
+        path = path.substring(8)
+      }
+      
+      return `/uploads/${path}`
+    }
     return `/api/admin/media/${m.id}/file`
   }
 
@@ -302,14 +462,21 @@ export default function MediaLibrary() {
             title="Медиатека"
             subheader={`Всего файлов: ${total}`}
             action={
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <Button 
-                  variant="outlined" 
-                  startIcon={<i className="ri-folder-search-line" />}
-                  onClick={openScanDialog}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <ToggleButtonGroup
+                  value={viewMode}
+                  exclusive
+                  onChange={(_, value) => value && setViewMode(value)}
+                  size="small"
+                  sx={{ height: 38 }}
                 >
-                  Сканировать
-                </Button>
+                  <ToggleButton value="grid" sx={{ px: 2 }}>
+                    <i className="ri-grid-line" style={{ fontSize: 18 }} />
+                  </ToggleButton>
+                  <ToggleButton value="list" sx={{ px: 2 }}>
+                    <i className="ri-list-check" style={{ fontSize: 18 }} />
+                  </ToggleButton>
+                </ToggleButtonGroup>
                 <Button 
                   variant="contained" 
                   startIcon={<i className="ri-upload-2-line" />}
@@ -370,7 +537,8 @@ export default function MediaLibrary() {
               <Grid item xs={12} md={2}>
                 <Button 
                   variant="outlined" 
-                  fullWidth 
+                  fullWidth
+                  sx={{ height: 40 }}
                   onClick={() => {
                     setSearch('')
                     setEntityType('')
@@ -384,116 +552,269 @@ export default function MediaLibrary() {
             </Grid>
 
             {/* Bulk actions */}
-            {selectedIds.length > 0 && (
-              <Alert 
-                severity="info" 
-                sx={{ mb: 4 }}
-                action={
-                  <Button color="error" size="small" onClick={handleBulkDelete}>
-                    Удалить ({selectedIds.length})
-                  </Button>
-                }
-              >
-                Выбрано: {selectedIds.length} файлов
-              </Alert>
+            {/* Select all - only for grid view */}
+            {viewMode === 'grid' && (
+              <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Checkbox
+                  checked={selectedIds.length === media.length && media.length > 0}
+                  indeterminate={selectedIds.length > 0 && selectedIds.length < media.length}
+                  onChange={handleSelectAll}
+                />
+                <Typography variant="body2">Выбрать все</Typography>
+              </Box>
             )}
 
-            {/* Select all */}
-            <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Checkbox
-                checked={selectedIds.length === media.length && media.length > 0}
-                indeterminate={selectedIds.length > 0 && selectedIds.length < media.length}
-                onChange={handleSelectAll}
-              />
-              <Typography variant="body2">Выбрать все</Typography>
-            </Box>
-
-            {/* Media grid */}
+            {/* Media content */}
             {loading ? (
-              <ImageList cols={6} gap={16}>
-                {[...Array(12)].map((_, index) => (
-                  <ImageListItem key={index} sx={{ borderRadius: 1, overflow: 'hidden' }}>
-                    <Skeleton variant="rectangular" width="100%" height={150} animation="wave" />
-                    <Box sx={{ p: 1 }}>
-                      <Skeleton variant="text" width="80%" height={20} />
-                      <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
-                        <Skeleton variant="rounded" width={50} height={18} />
-                        <Skeleton variant="rounded" width={70} height={18} />
+              viewMode === 'grid' ? (
+                <Box sx={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(6, 1fr)', 
+                  gap: 2 
+                }}>
+                  {[...Array(12)].map((_, index) => (
+                    <Box key={index}>
+                      <Skeleton variant="rectangular" width="100%" height={164} animation="wave" sx={{ borderRadius: 1 }} />
+                      <Box sx={{ pt: 1 }}>
+                        <Skeleton variant="text" width="90%" height={20} />
+                        <Skeleton variant="text" width="60%" height={16} />
                       </Box>
                     </Box>
-                  </ImageListItem>
-                ))}
-              </ImageList>
+                  ))}
+                </Box>
+              ) : (
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell padding="checkbox"><Skeleton variant="rectangular" width={20} height={20} /></TableCell>
+                        <TableCell><Skeleton variant="text" width={60} /></TableCell>
+                        <TableCell><Skeleton variant="text" width={100} /></TableCell>
+                        <TableCell><Skeleton variant="text" width={80} /></TableCell>
+                        <TableCell><Skeleton variant="text" width={60} /></TableCell>
+                        <TableCell><Skeleton variant="text" width={80} /></TableCell>
+                        <TableCell><Skeleton variant="text" width={40} /></TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {[...Array(10)].map((_, index) => (
+                        <TableRow key={index}>
+                          <TableCell padding="checkbox"><Skeleton variant="rectangular" width={20} height={20} /></TableCell>
+                          <TableCell><Skeleton variant="rectangular" width={48} height={48} /></TableCell>
+                          <TableCell><Skeleton variant="text" width="80%" /></TableCell>
+                          <TableCell><Skeleton variant="text" width={60} /></TableCell>
+                          <TableCell><Skeleton variant="text" width={80} /></TableCell>
+                          <TableCell><Skeleton variant="rectangular" width={70} height={24} /></TableCell>
+                          <TableCell><Skeleton variant="circular" width={32} height={32} /></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )
             ) : media.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
                 <Typography color="text.secondary">Нет файлов</Typography>
               </Box>
-            ) : (
-              <ImageList cols={6} gap={16}>
+            ) : viewMode === 'grid' ? (
+              /* Grid View */
+              <Box sx={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(6, 1fr)', 
+                gap: 2 
+              }}>
                 {media.map(m => (
-                  <ImageListItem 
+                  <Box 
                     key={m.id}
                     sx={{ 
                       position: 'relative',
-                      border: selectedIds.includes(m.id) ? '2px solid' : '1px solid',
-                      borderColor: selectedIds.includes(m.id) ? 'primary.main' : 'divider',
-                      borderRadius: 1,
-                      overflow: 'hidden',
                       cursor: 'pointer',
-                      '&:hover': { opacity: 0.9 }
+                      minWidth: 0,
+                      '&:hover img': { 
+                        transform: 'scale(1.05)',
+                        transition: 'transform 0.2s ease-in-out'
+                      }
                     }}
                   >
                     <Checkbox
                       checked={selectedIds.includes(m.id)}
                       onChange={() => handleSelect(m.id)}
-                      sx={{ position: 'absolute', top: 4, left: 4, zIndex: 1 }}
+                      sx={{ 
+                        position: 'absolute', 
+                        top: 4, 
+                        left: 4, 
+                        zIndex: 1,
+                        '& svg': {
+                          filter: 'drop-shadow(0 0 1px rgba(0,0,0,0.8)) drop-shadow(0 0 2px rgba(255,255,255,0.8))',
+                        },
+                        '& svg path[stroke]': {
+                          stroke: 'rgba(255,255,255,0.95) !important',
+                        },
+                        '&.Mui-checked': {
+                          color: 'primary.main',
+                        },
+                        '&.Mui-checked svg path[stroke]': {
+                          stroke: 'currentColor !important',
+                        },
+                      }}
                       onClick={e => e.stopPropagation()}
                     />
-                    <img
-                      src={getMediaUrl(m)}
-                      alt={m.alt || m.filename}
-                      loading="lazy"
-                      style={{ 
-                        width: '100%', 
-                        height: 150, 
-                        objectFit: 'cover' 
+                    <Box
+                      sx={{
+                        position: 'relative',
+                        overflow: 'hidden',
+                        borderRadius: 1,
+                        border: selectedIds.includes(m.id) ? '3px solid' : '1px solid',
+                        borderColor: selectedIds.includes(m.id) ? 'primary.main' : 'divider',
                       }}
-                      onClick={() => openDetail(m)}
-                    />
-                    <ImageListItemBar
-                      title={m.filename}
-                      subtitle={
-                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                          <Chip 
-                            label={formatFileSize(m.size)} 
-                            size="small" 
-                            sx={{ height: 18, fontSize: '0.65rem' }}
-                          />
-                          <Chip 
-                            label={m.storageStatus} 
-                            size="small" 
-                            color={getStorageStatusColor(m.storageStatus)}
-                            sx={{ height: 18, fontSize: '0.65rem' }}
-                          />
-                        </Box>
-                      }
-                      actionIcon={
+                    >
+                      <img
+                        src={getMediaUrl(m)}
+                        alt={m.alt || m.filename}
+                        loading="lazy"
+                        style={{ 
+                          width: '100%', 
+                          height: 164, 
+                          objectFit: 'cover',
+                          display: 'block',
+                          transition: 'transform 0.2s ease-in-out'
+                        }}
+                        onClick={() => openDetail(m)}
+                      />
+                    </Box>
+                    <Box sx={{ pt: 1, minWidth: 0 }}>
+                      <Typography 
+                        variant="body2" 
+                        noWrap 
+                        sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis' }}
+                        title={m.filename}
+                      >
+                        {m.filename}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5, minWidth: 0 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatFileSize(m.size)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">•</Typography>
+                        <Chip 
+                          label={m.storageStatus === 'local_only' ? 'Локально' : m.storageStatus === 'synced' ? 'Синхр.' : m.storageStatus} 
+                          size="small" 
+                          color={getStorageStatusColor(m.storageStatus)}
+                          sx={{ height: 18, fontSize: '0.65rem' }}
+                        />
+                        <Box sx={{ flexGrow: 1 }} />
                         <Tooltip title="Удалить">
                           <IconButton
-                            sx={{ color: 'rgba(255, 255, 255, 0.7)' }}
+                            size="small"
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleDelete(m.id)
+                              openDeleteConfirm('single', m.id)
                             }}
+                            sx={{ p: 0.25 }}
                           >
-                            <i className="ri-delete-bin-line" />
+                            <i className="ri-delete-bin-line" style={{ fontSize: 16 }} />
                           </IconButton>
                         </Tooltip>
-                      }
-                    />
-                  </ImageListItem>
+                      </Box>
+                    </Box>
+                  </Box>
                 ))}
-              </ImageList>
+              </Box>
+            ) : (
+              /* List/Table View */
+              <TableContainer>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedIds.length === media.length && media.length > 0}
+                          indeterminate={selectedIds.length > 0 && selectedIds.length < media.length}
+                          onChange={handleSelectAll}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ width: 64 }}>Превью</TableCell>
+                      <TableCell>Имя файла</TableCell>
+                      <TableCell>Размер</TableCell>
+                      <TableCell>Тип</TableCell>
+                      <TableCell>Статус</TableCell>
+                      <TableCell>Дата</TableCell>
+                      <TableCell sx={{ width: 80 }}>Действия</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {media.map(m => (
+                      <TableRow 
+                        key={m.id}
+                        hover
+                        selected={selectedIds.includes(m.id)}
+                        sx={{ cursor: 'pointer' }}
+                        onClick={() => openDetail(m)}
+                      >
+                        <TableCell padding="checkbox" onClick={e => e.stopPropagation()}>
+                          <Checkbox
+                            checked={selectedIds.includes(m.id)}
+                            onChange={() => handleSelect(m.id)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Avatar
+                            variant="rounded"
+                            src={getMediaUrl(m)}
+                            sx={{ width: 48, height: 48 }}
+                          >
+                            <i className="ri-image-line" />
+                          </Avatar>
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2" noWrap sx={{ maxWidth: 250 }} title={m.filename}>
+                            {m.filename}
+                          </Typography>
+                          {m.alt && (
+                            <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 250 }}>
+                              {m.alt}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="body2">{formatFileSize(m.size)}</Typography>
+                          {m.width && m.height && (
+                            <Typography variant="caption" color="text.secondary">
+                              {m.width}×{m.height}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Chip label={m.entityType} size="small" variant="outlined" />
+                        </TableCell>
+                        <TableCell>
+                          <Chip 
+                            label={m.storageStatus === 'local_only' ? 'Локально' : m.storageStatus === 'synced' ? 'Синхр.' : m.storageStatus} 
+                            size="small" 
+                            color={getStorageStatusColor(m.storageStatus)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Typography variant="caption">
+                            {new Date(m.createdAt).toLocaleDateString('ru-RU')}
+                          </Typography>
+                        </TableCell>
+                        <TableCell onClick={e => e.stopPropagation()}>
+                          <Tooltip title="Удалить">
+                            <IconButton
+                              size="small"
+                              color="error"
+                              onClick={() => openDeleteConfirm('single', m.id)}
+                            >
+                              <i className="ri-delete-bin-line" />
+                            </IconButton>
+                          </Tooltip>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             )}
 
             {/* Pagination */}
@@ -511,97 +832,51 @@ export default function MediaLibrary() {
         </Card>
       </Grid>
 
-      {/* Detail Dialog */}
-      <Dialog open={detailOpen} onClose={() => setDetailOpen(false)} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {detailMedia?.filename}
-          <IconButton
-            onClick={() => setDetailOpen(false)}
-            sx={{ position: 'absolute', right: 8, top: 8 }}
-          >
-            <i className="ri-close-line" />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent dividers>
-          {detailMedia && (
-            <Grid container spacing={4}>
-              <Grid item xs={12} md={6}>
-                <img
-                  src={getMediaUrl(detailMedia)}
-                  alt={detailMedia.alt || detailMedia.filename}
-                  style={{ width: '100%', borderRadius: 8 }}
-                />
-              </Grid>
-              <Grid item xs={12} md={6}>
-                <Typography variant="subtitle2" gutterBottom>Информация</Typography>
-                <Box sx={{ '& > div': { mb: 1 } }}>
-                  <div><strong>ID:</strong> {detailMedia.id}</div>
-                  <div><strong>Slug:</strong> {detailMedia.slug}</div>
-                  <div><strong>Тип:</strong> {detailMedia.entityType}</div>
-                  <div><strong>MIME:</strong> {detailMedia.mimeType}</div>
-                  <div><strong>Размер:</strong> {formatFileSize(detailMedia.size)}</div>
-                  {detailMedia.width && detailMedia.height && (
-                    <div><strong>Размеры:</strong> {detailMedia.width}×{detailMedia.height}</div>
-                  )}
-                  <div>
-                    <strong>Хранение:</strong>{' '}
-                    <Chip 
-                      label={detailMedia.storageStatus} 
-                      size="small"
-                      color={getStorageStatusColor(detailMedia.storageStatus)}
-                    />
-                  </div>
-                  <div>
-                    <strong>Водяной знак:</strong>{' '}
-                    {detailMedia.hasWatermark ? '✅ Да' : '❌ Нет'}
-                  </div>
-                  <div><strong>Создан:</strong> {new Date(detailMedia.createdAt).toLocaleString()}</div>
-                </Box>
-                {detailMedia.localPath && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2">Локальный путь</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
-                      {detailMedia.localPath}
-                    </Typography>
-                  </Box>
-                )}
-                {detailMedia.s3Key && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2">S3 Key</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
-                      {detailMedia.s3Key}
-                    </Typography>
-                  </Box>
-                )}
-              </Grid>
-            </Grid>
-          )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDetailOpen(false)}>Закрыть</Button>
-          <Button 
-            color="error" 
-            onClick={() => {
-              if (detailMedia) handleDelete(detailMedia.id)
-              setDetailOpen(false)
-            }}
-          >
-            Удалить
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Detail Sidebar */}
+      <MediaDetailSidebar
+        open={detailOpen}
+        mediaId={detailMedia?.id || null}
+        onClose={() => setDetailOpen(false)}
+        onUpdate={fetchMedia}
+        onDelete={(id) => {
+          setDetailOpen(false)
+          openDeleteConfirm('single', id)
+        }}
+      />
 
       {/* Upload Dialog */}
-      <Dialog open={uploadOpen} onClose={() => setUploadOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Загрузить файл</DialogTitle>
+      <Dialog 
+        open={uploadOpen} 
+        onClose={() => !uploading && (clearUploadFiles(), setUploadOpen(false))} 
+        maxWidth="md" 
+        fullWidth
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <i className="ri-upload-cloud-2-line" style={{ fontSize: 24 }} />
+              Загрузить файлы
+            </Box>
+            {uploadFiles.length > 0 && (
+              <Chip 
+                label={`${uploadFiles.length} файл(ов)`} 
+                size="small" 
+                color="primary"
+                variant="outlined"
+              />
+            )}
+          </Box>
+        </DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
+            {/* Entity Type Select */}
             <FormControl fullWidth sx={{ mb: 3 }}>
               <InputLabel>Тип сущности</InputLabel>
               <Select
                 value={uploadEntityType}
                 label="Тип сущности"
                 onChange={e => setUploadEntityType(e.target.value)}
+                disabled={uploading}
               >
                 {ENTITY_TYPES.filter(t => t.value).map(t => (
                   <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>
@@ -609,85 +884,307 @@ export default function MediaLibrary() {
               </Select>
             </FormControl>
             
-            <Button
-              variant="outlined"
-              component="label"
-              fullWidth
-              sx={{ height: 100 }}
+            {/* Drag & Drop Zone */}
+            <Box
+              {...getRootProps()}
+              sx={{
+                border: '2px dashed',
+                borderColor: isDragAccept 
+                  ? 'success.main' 
+                  : isDragReject 
+                    ? 'error.main' 
+                    : isDragActive 
+                      ? 'primary.main' 
+                      : 'divider',
+                borderRadius: 2,
+                p: 4,
+                textAlign: 'center',
+                cursor: uploading ? 'not-allowed' : 'pointer',
+                bgcolor: isDragActive ? 'action.hover' : 'background.paper',
+                transition: 'all 0.2s ease-in-out',
+                '&:hover': {
+                  borderColor: uploading ? 'divider' : 'primary.main',
+                  bgcolor: uploading ? 'background.paper' : 'action.hover',
+                },
+                opacity: uploading ? 0.6 : 1,
+                mb: uploadFiles.length > 0 ? 3 : 0,
+              }}
             >
-              {uploadFile ? uploadFile.name : 'Выберите файл'}
-              <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={e => setUploadFile(e.target.files?.[0] || null)}
-              />
-            </Button>
+              <input {...getInputProps()} disabled={uploading} />
+              <Box sx={{ mb: 2 }}>
+                <i 
+                  className={isDragActive ? 'ri-download-line' : 'ri-image-add-line'} 
+                  style={{ 
+                    fontSize: 48, 
+                    color: isDragAccept 
+                      ? 'var(--mui-palette-success-main)' 
+                      : isDragReject 
+                        ? 'var(--mui-palette-error-main)'
+                        : 'var(--mui-palette-primary-main)',
+                  }} 
+                />
+              </Box>
+              <Typography variant="h6" gutterBottom>
+                {isDragActive 
+                  ? isDragAccept 
+                    ? 'Отпустите для загрузки' 
+                    : 'Неподдерживаемый формат'
+                  : 'Перетащите файлы сюда'
+                }
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                или нажмите для выбора
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+                Поддерживаются: JPG, PNG, GIF, WebP, SVG (до 15 MB)
+              </Typography>
+            </Box>
+
+            {/* File List */}
+            {uploadFiles.length > 0 && (
+              <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
+                {uploadFiles.map((uploadFile) => (
+                  <Box
+                    key={uploadFile.id}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      p: 1.5,
+                      mb: 1,
+                      borderRadius: 1,
+                      bgcolor: uploadFile.status === 'error' 
+                        ? 'error.lighter' 
+                        : uploadFile.status === 'success'
+                          ? 'success.lighter'
+                          : 'action.hover',
+                      border: '1px solid',
+                      borderColor: uploadFile.status === 'error'
+                        ? 'error.light'
+                        : uploadFile.status === 'success'
+                          ? 'success.light'
+                          : 'divider',
+                    }}
+                  >
+                    {/* Preview */}
+                    <Box
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                        bgcolor: 'background.paper',
+                        flexShrink: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {uploadFile.preview ? (
+                        <img 
+                          src={uploadFile.preview} 
+                          alt={uploadFile.file.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <i className="ri-file-image-line" style={{ fontSize: 24, color: 'var(--mui-palette-text-secondary)' }} />
+                      )}
+                    </Box>
+
+                    {/* File Info */}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="body2" noWrap title={uploadFile.file.name}>
+                        {uploadFile.file.name}
+                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          {formatFileSize(uploadFile.file.size)}
+                        </Typography>
+                        {uploadFile.status === 'uploading' && (
+                          <Typography variant="caption" color="primary">
+                            {uploadFile.progress}%
+                          </Typography>
+                        )}
+                        {uploadFile.status === 'success' && (
+                          <Typography variant="caption" color="success.main">
+                            Загружен
+                          </Typography>
+                        )}
+                        {uploadFile.status === 'error' && (
+                          <Typography variant="caption" color="error.main">
+                            {uploadFile.error}
+                          </Typography>
+                        )}
+                      </Box>
+                      {uploadFile.status === 'uploading' && (
+                        <LinearProgress 
+                          variant="determinate" 
+                          value={uploadFile.progress} 
+                          sx={{ mt: 0.5, height: 4, borderRadius: 2 }}
+                        />
+                      )}
+                    </Box>
+
+                    {/* Status / Actions */}
+                    <Box sx={{ flexShrink: 0 }}>
+                      {uploadFile.status === 'pending' && (
+                        <IconButton 
+                          size="small" 
+                          onClick={() => removeUploadFile(uploadFile.id)}
+                          disabled={uploading}
+                        >
+                          <i className="ri-close-line" style={{ fontSize: 18 }} />
+                        </IconButton>
+                      )}
+                      {uploadFile.status === 'uploading' && (
+                        <CircularProgress size={20} />
+                      )}
+                      {uploadFile.status === 'success' && (
+                        <i className="ri-check-line" style={{ fontSize: 20, color: 'var(--mui-palette-success-main)' }} />
+                      )}
+                      {uploadFile.status === 'error' && (
+                        <IconButton 
+                          size="small" 
+                          onClick={() => removeUploadFile(uploadFile.id)}
+                          color="error"
+                        >
+                          <i className="ri-close-line" style={{ fontSize: 18 }} />
+                        </IconButton>
+                      )}
+                    </Box>
+                  </Box>
+                ))}
+              </Box>
+            )}
           </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setUploadOpen(false)}>Отмена</Button>
+        <DialogActions sx={{ px: 3, pb: 3, gap: 2 }}>
+          {uploadFiles.length > 0 && !uploading && (
+            <Button 
+              onClick={clearUploadFiles} 
+              variant="text" 
+              color="inherit"
+              sx={{ mr: 'auto' }}
+            >
+              Очистить
+            </Button>
+          )}
+          <Button 
+            onClick={() => { clearUploadFiles(); setUploadOpen(false) }} 
+            variant="outlined"
+            disabled={uploading}
+          >
+            {uploading ? 'Подождите...' : 'Отмена'}
+          </Button>
           <Button 
             variant="contained" 
             onClick={handleUpload}
-            disabled={!uploadFile || uploading}
+            disabled={uploadFiles.filter(f => f.status === 'pending').length === 0 || uploading}
+            startIcon={uploading ? <CircularProgress size={18} color="inherit" /> : <i className="ri-upload-2-line" />}
           >
-            {uploading ? <CircularProgress size={20} /> : 'Загрузить'}
+            {uploading 
+              ? `Загрузка (${uploadFiles.filter(f => f.status === 'success').length}/${uploadFiles.filter(f => f.status !== 'error').length})...` 
+              : `Загрузить (${uploadFiles.filter(f => f.status === 'pending').length})`
+            }
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Scan Dialog */}
-      <Dialog open={scanOpen} onClose={() => setScanOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Сканировать существующие файлы</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2 }}>
-            <Alert severity="info" sx={{ mb: 3 }}>
-              Сканирование найдёт все изображения в папке <code>public/uploads</code> и добавит их в медиатеку.
-            </Alert>
-            
-            {scanLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : scanStats ? (
-              <Box>
-                <Typography variant="h6" gutterBottom>Статистика</Typography>
-                <Box sx={{ '& > div': { mb: 1 } }}>
-                  <div><strong>Найдено файлов:</strong> {scanStats.totalFiles}</div>
-                  <div><strong>Уже в медиатеке:</strong> {scanStats.alreadyImported}</div>
-                  <div><strong>Готовы к импорту:</strong> {scanStats.pendingImport}</div>
-                </Box>
-                
-                {scanStats.byType && Object.keys(scanStats.byType).length > 0 && (
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2" gutterBottom>По типам:</Typography>
-                    {Object.entries(scanStats.byType).map(([type, stats]: [string, any]) => (
-                      <Box key={type} sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                        <span>{type}</span>
-                        <span>
-                          <Chip label={`${stats.pending} новых`} size="small" color="primary" sx={{ mr: 0.5 }} />
-                          <Chip label={`${stats.imported} имп.`} size="small" variant="outlined" />
-                        </span>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
-              </Box>
-            ) : null}
+      {/* Delete Confirmation Dialog */}
+      <Dialog 
+        open={deleteConfirmOpen} 
+        onClose={() => !deleting && setDeleteConfirmOpen(false)}
+        maxWidth="xs" 
+        fullWidth
+      >
+        <DialogTitle sx={{ px: 6, pt: 5, pb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Box 
+              sx={{ 
+                width: 40, 
+                height: 40, 
+                borderRadius: '50%', 
+                bgcolor: 'error.lighter',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <i className="ri-delete-bin-line" style={{ fontSize: 20, color: 'var(--mui-palette-error-main)' }} />
+            </Box>
+            Подтверждение удаления
           </Box>
+        </DialogTitle>
+        <DialogContent sx={{ px: 6, py: 2 }}>
+          <Typography color="text.secondary">
+            {deleteTarget?.type === 'bulk' 
+              ? `Вы уверены, что хотите удалить ${deleteTarget.count} файлов? Это действие нельзя отменить.`
+              : 'Вы уверены, что хотите удалить этот файл? Это действие нельзя отменить.'
+            }
+          </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setScanOpen(false)}>Отмена</Button>
+        <DialogActions sx={{ px: 6, pb: 5, pt: 2, gap: 2 }}>
+          <Button 
+            onClick={() => setDeleteConfirmOpen(false)} 
+            disabled={deleting}
+            variant="outlined"
+            fullWidth
+          >
+            Отмена
+          </Button>
           <Button 
             variant="contained" 
-            onClick={handleScan}
-            disabled={scanning || !scanStats || scanStats.pendingImport === 0}
+            color="error"
+            onClick={handleConfirmDelete}
+            disabled={deleting}
+            fullWidth
+            startIcon={deleting ? <CircularProgress size={16} color="inherit" /> : <i className="ri-delete-bin-line" />}
           >
-            {scanning ? <CircularProgress size={20} /> : `Импортировать (${scanStats?.pendingImport || 0})`}
+            {deleting ? 'Удаление...' : 'Удалить'}
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Fixed Action Bar */}
+      {selectedIds.length > 0 && (
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1100,
+            bgcolor: 'background.paper',
+            borderRadius: 2,
+            boxShadow: 6,
+            px: 3,
+            py: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 3,
+          }}
+        >
+          <Typography variant="body2" fontWeight={500}>
+            Выбрано: {selectedIds.length}
+          </Typography>
+          <Button 
+            color="error" 
+            size="small" 
+            variant="contained"
+            startIcon={<i className="ri-delete-bin-line" />}
+            onClick={() => openDeleteConfirm('bulk')}
+          >
+            Удалить
+          </Button>
+          <Button 
+            size="small" 
+            variant="outlined"
+            onClick={() => setSelectedIds([])}
+          >
+            Отменить
+          </Button>
+        </Box>
+      )}
     </Grid>
   )
 }

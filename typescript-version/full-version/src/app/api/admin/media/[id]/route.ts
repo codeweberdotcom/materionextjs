@@ -112,6 +112,8 @@ export async function PUT(
     const updated = await mediaService.update(id, {
       alt: body.alt,
       title: body.title,
+      caption: body.caption,
+      description: body.description,
       position: body.position,
       entityId: body.entityId,
     })
@@ -192,4 +194,5 @@ export async function DELETE(
     )
   }
 }
+
 

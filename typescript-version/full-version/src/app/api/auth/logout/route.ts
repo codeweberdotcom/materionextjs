@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { lucia } from '@/libs/lucia'
 import { optionalRequireAuth } from '@/utils/auth/auth'
 import logger from '@/lib/logger'
+import { trackLogout, trackSessionExpired } from '@/lib/metrics/auth'
 
 
 export async function POST(request: NextRequest) {
@@ -14,6 +15,7 @@ export async function POST(request: NextRequest) {
       logger.info('рџљЄ [LOGOUT] Invalidating session...')
       await lucia.invalidateSession(session.id)
       logger.info('вњ… [LOGOUT] Session invalidated')
+      trackSessionExpired()
     } else {
       logger.info('рџљЄ [LOGOUT] No valid session found, skipping invalidation')
     }
@@ -29,6 +31,7 @@ export async function POST(request: NextRequest) {
       sessionCookie.attributes
     )
 
+    trackLogout()
     logger.info('вњ… [LOGOUT] Logout completed successfully')
     return response
   } catch (error) {

@@ -215,6 +215,9 @@ const HorizontalMenu = ({ dictionary, locale: propLocale }: HorizontalMenuProps)
           <MenuItem href={`/${locale}/admin/media/watermarks`} icon={<i className='ri-drop-line' />}>
             {dictionary['navigation'].mediaWatermarks || 'Водяные знаки'}
           </MenuItem>
+          <MenuItem href={`/${locale}/admin/media/licenses`} icon={<i className='ri-file-shield-2-line' />}>
+            {dictionary['navigation'].mediaLicenses || 'Лицензии'}
+          </MenuItem>
         </SubMenu>
 
 <SubMenu label={dictionary['navigation'].blocking} icon={<i className='ri-shield-check-line' />}>

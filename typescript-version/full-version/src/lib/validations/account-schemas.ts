@@ -116,3 +116,4 @@ export const switchAccountSchema = z.object({
 export const registrationAccountTypeSchema = accountTypeSchema
 
 
+
