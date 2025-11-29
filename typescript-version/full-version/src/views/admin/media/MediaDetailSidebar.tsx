@@ -41,6 +41,8 @@ interface MediaItem {
   caption?: string
   description?: string
   createdAt: string
+  deletedAt?: string | null
+  trashMetadata?: string | null
   variants?: string // JSON string with variant info
   uploadedUser?: {
     id: string
@@ -61,6 +63,7 @@ interface MediaDetailSidebarProps {
   onClose: () => void
   onUpdate?: () => void
   onDelete?: (id: string) => void
+  includeDeleted?: boolean
 }
 
 const formatFileSize = (bytes: number): string => {
@@ -82,7 +85,7 @@ const formatDate = (dateStr: string): string => {
   })
 }
 
-const getStorageStatusColor = (status: string): 'success' | 'warning' | 'info' | 'default' => {
+const getStorageStatusColor = (status: string): 'success' | 'warning' | 'info' | 'error' | 'default' => {
   switch (status) {
     case 'synced':
       return 'success'
@@ -90,6 +93,10 @@ const getStorageStatusColor = (status: string): 'success' | 'warning' | 'info' |
       return 'info'
     case 'local_only':
       return 'warning'
+    case 'sync_error':
+      return 'error'
+    case 'sync_pending':
+      return 'info'
     default:
       return 'default'
   }
@@ -98,11 +105,15 @@ const getStorageStatusColor = (status: string): 'success' | 'warning' | 'info' |
 const getStorageStatusLabel = (status: string): string => {
   switch (status) {
     case 'synced':
-      return 'Синхронизировано'
+      return 'S3 + Локально'
     case 's3_only':
       return 'Только S3'
     case 'local_only':
-      return 'Локально'
+      return 'Только локально'
+    case 'sync_error':
+      return 'Ошибка синхр.'
+    case 'sync_pending':
+      return 'Ожидает синхр.'
     default:
       return status
   }
@@ -114,6 +125,7 @@ export default function MediaDetailSidebar({
   onClose,
   onUpdate,
   onDelete,
+  includeDeleted = false,
 }: MediaDetailSidebarProps) {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -133,7 +145,7 @@ export default function MediaDetailSidebar({
     if (open && mediaId) {
       fetchMedia()
     }
-  }, [open, mediaId])
+  }, [open, mediaId, includeDeleted])
 
   const fetchMedia = async () => {
     if (!mediaId) return
@@ -141,7 +153,10 @@ export default function MediaDetailSidebar({
     setLoading(true)
 
     try {
-      const response = await fetch(`/api/admin/media/${mediaId}`)
+      const url = includeDeleted 
+        ? `/api/admin/media/${mediaId}?includeDeleted=true`
+        : `/api/admin/media/${mediaId}`
+      const response = await fetch(url)
 
       if (!response.ok) {
         throw new Error('Failed to fetch media')
@@ -212,12 +227,56 @@ export default function MediaDetailSidebar({
     }
   }
 
+  // Восстановить из корзины
+  const handleRestore = async () => {
+    if (!mediaId) return
+
+    try {
+      const response = await fetch(`/api/admin/media/${mediaId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'restore' }),
+      })
+
+      if (!response.ok) throw new Error('Failed to restore')
+
+      toast.success('Файл восстановлен')
+      onClose()
+      onUpdate?.()
+    } catch (error) {
+      toast.error('Ошибка восстановления')
+      console.error(error)
+    }
+  }
+
+  // Удалить навсегда
+  const handleHardDelete = async () => {
+    if (!mediaId) return
+
+    if (!confirm('Вы уверены? Файл будет удалён безвозвратно.')) return
+
+    try {
+      const response = await fetch(`/api/admin/media/${mediaId}?hard=true`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) throw new Error('Failed to delete')
+
+      toast.success('Файл удалён безвозвратно')
+      onClose()
+      onUpdate?.()
+    } catch (error) {
+      toast.error('Ошибка удаления')
+      console.error(error)
+    }
+  }
+
   const openLightbox = (url: string) => {
     setLightboxUrl(url)
     setLightboxOpen(true)
   }
 
-  const handleSyncToS3 = async () => {
+  const handleSyncToS3 = async (forceOverwrite: boolean = false) => {
     if (!mediaId) return
 
     setSyncing(true)
@@ -227,9 +286,10 @@ export default function MediaDetailSidebar({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          operation: 'upload_keep_local',
+          action: 'upload_to_s3_keep_local',
           scope: 'selected',
           mediaIds: [mediaId],
+          overwrite: forceOverwrite,
         }),
       })
 
@@ -237,7 +297,33 @@ export default function MediaDetailSidebar({
         throw new Error('Failed to sync')
       }
 
-      toast.success('Файл выгружен на S3')
+      const data = await response.json()
+      const jobId = data.job?.id
+
+      // Ждём завершения задачи (polling)
+      if (jobId) {
+        let attempts = 0
+        const maxAttempts = 30 // 30 секунд максимум
+        
+        while (attempts < maxAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 1000))
+          
+          const statusResponse = await fetch(`/api/admin/media/sync?limit=1`)
+          const statusData = await statusResponse.json()
+          const job = statusData.jobs?.find((j: any) => j.id === jobId)
+          
+          if (job && (job.status === 'completed' || job.status === 'failed')) {
+            if (job.status === 'failed') {
+              throw new Error(job.error || 'Sync failed')
+            }
+            break
+          }
+          
+          attempts++
+        }
+      }
+
+      toast.success(forceOverwrite ? 'Файл перезалит на S3' : 'Файл выгружен на S3')
       fetchMedia() // Обновляем данные
       onUpdate?.()
     } catch (error) {
@@ -258,6 +344,25 @@ export default function MediaDetailSidebar({
   const getImageUrl = () => {
     if (urls.thumbnail) return fixUploadsPath(urls.thumbnail)
     if (urls.original) return fixUploadsPath(urls.original)
+    
+    // Для файлов в корзине используем trashPath
+    if (media?.deletedAt && media?.trashMetadata) {
+      try {
+        const trashMeta = JSON.parse(media.trashMetadata)
+        if (trashMeta.trashPath) {
+          let path = trashMeta.trashPath
+            .replace(/^public\//, '')
+            .replace(/^\//, '')
+          while (path.startsWith('uploads/')) {
+            path = path.substring(8)
+          }
+          return `/uploads/${path}`
+        }
+      } catch {
+        // Игнорируем ошибки парсинга
+      }
+    }
+    
     if (media?.localPath) {
       let path = media.localPath
         .replace(/^public\//, '')
@@ -271,6 +376,22 @@ export default function MediaDetailSidebar({
     }
     return ''
   }
+  
+  // Получить путь к файлу для отображения
+  const getFilePath = (): string => {
+    if (media?.deletedAt && media?.trashMetadata) {
+      try {
+        const trashMeta = JSON.parse(media.trashMetadata)
+        return trashMeta.trashPath || 'Корзина'
+      } catch {
+        return 'Корзина'
+      }
+    }
+    return media?.localPath || media?.s3Key || '-'
+  }
+  
+  // Проверка, находится ли файл в корзине
+  const isInTrash = !!media?.deletedAt
   
   const imageUrl = getImageUrl()
 
@@ -438,6 +559,40 @@ export default function MediaDetailSidebar({
                       </div>
                     </div>
                   )}
+
+                  {/* File Path */}
+                  <div className='flex items-start justify-between'>
+                    <Typography variant='body2' color='text.secondary'>
+                      Путь
+                    </Typography>
+                    <Typography 
+                      variant='body2' 
+                      sx={{ 
+                        maxWidth: '60%', 
+                        wordBreak: 'break-all',
+                        textAlign: 'right',
+                        fontFamily: 'monospace',
+                        fontSize: '0.75rem'
+                      }}
+                    >
+                      {getFilePath()}
+                    </Typography>
+                  </div>
+
+                  {/* Trash indicator */}
+                  {isInTrash && (
+                    <div className='flex items-center justify-between'>
+                      <Typography variant='body2' color='text.secondary'>
+                        Статус
+                      </Typography>
+                      <Chip
+                        label="В корзине"
+                        size='small'
+                        color="warning"
+                        icon={<i className='ri-delete-bin-line' style={{ fontSize: 14 }} />}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 {/* Available Sizes Section */}
@@ -514,92 +669,135 @@ export default function MediaDetailSidebar({
                 )}
               </Grid>
 
-              {/* Column 2 - SEO Fields */}
-              <Grid item xs={12} md={6}>
-                <Typography variant='h6' className='mbe-4'>
-                  SEO и метаданные
-                </Typography>
+              {/* Column 2 - SEO Fields (скрыты для файлов в корзине) */}
+              {!isInTrash && (
+                <Grid item xs={12} md={6}>
+                  <Typography variant='h6' className='mbe-4'>
+                    SEO и метаданные
+                  </Typography>
 
-                <div className='flex flex-col gap-2'>
-                  <TextField
-                    fullWidth
-                    label='Alt текст'
-                    placeholder='Описание изображения для поисковиков'
-                    value={alt}
-                    onChange={(e) => setAlt(e.target.value)}
-                  />
+                  <div className='flex flex-col gap-2'>
+                    <TextField
+                      fullWidth
+                      label='Alt текст'
+                      placeholder='Описание изображения для поисковиков'
+                      value={alt}
+                      onChange={(e) => setAlt(e.target.value)}
+                    />
 
-                  <TextField
-                    fullWidth
-                    label='Заголовок (Title)'
-                    placeholder='Заголовок изображения'
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
+                    <TextField
+                      fullWidth
+                      label='Заголовок (Title)'
+                      placeholder='Заголовок изображения'
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                    />
 
-                  <TextField
-                    fullWidth
-                    label='Подпись (Caption)'
-                    placeholder='Подпись под изображением'
-                    value={caption}
-                    onChange={(e) => setCaption(e.target.value)}
-                    multiline
-                    rows={2}
-                  />
+                    <TextField
+                      fullWidth
+                      label='Подпись (Caption)'
+                      placeholder='Подпись под изображением'
+                      value={caption}
+                      onChange={(e) => setCaption(e.target.value)}
+                      multiline
+                      rows={2}
+                    />
 
-                  <TextField
-                    fullWidth
-                    label='Описание'
-                    placeholder='Подробное описание файла'
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    multiline
-                    rows={3}
-                  />
-                </div>
-              </Grid>
+                    <TextField
+                      fullWidth
+                      label='Описание'
+                      placeholder='Подробное описание файла'
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      multiline
+                      rows={3}
+                    />
+                  </div>
+                </Grid>
+              )}
             </Grid>
 
             {/* Actions */}
             <Divider />
-            <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
-              <Button
-                variant='contained'
-                onClick={handleSave}
-                disabled={saving}
-                startIcon={saving ? <CircularProgress size={18} color='inherit' /> : <i className='ri-save-line' />}
-              >
-                {saving ? 'Сохранение...' : 'Сохранить'}
-              </Button>
-              {media.storageStatus === 'local_only' && (
+            {isInTrash ? (
+              // Кнопки для файлов в корзине
+              <div className='grid grid-cols-2 gap-2'>
                 <Button
-                  variant='outlined'
-                  onClick={handleSyncToS3}
-                  disabled={syncing}
-                  startIcon={syncing ? <CircularProgress size={18} /> : <i className='ri-cloud-line' />}
+                  type='button'
+                  variant='contained'
+                  color='success'
+                  onClick={handleRestore}
+                  startIcon={<i className='ri-arrow-go-back-line' />}
                 >
-                  {syncing ? 'Выгрузка...' : 'На S3'}
+                  Восстановить
                 </Button>
-              )}
-              {imageUrl && (
                 <Button
+                  type='button'
                   variant='outlined'
-                  href={imageUrl}
-                  target='_blank'
-                  startIcon={<i className='ri-download-line' />}
+                  color='error'
+                  onClick={handleHardDelete}
+                  startIcon={<i className='ri-delete-bin-line' />}
                 >
-                  Скачать
+                  Удалить навсегда
                 </Button>
-              )}
-              <Button
-                variant='outlined'
-                color='error'
-                onClick={handleDelete}
-                startIcon={<i className='ri-delete-bin-line' />}
-              >
-                Удалить
-              </Button>
-            </div>
+              </div>
+            ) : (
+              // Кнопки для обычных файлов
+              <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
+                <Button
+                  type='button'
+                  variant='contained'
+                  onClick={handleSave}
+                  disabled={saving}
+                  startIcon={saving ? <CircularProgress size={18} color='inherit' /> : <i className='ri-save-line' />}
+                >
+                  {saving ? 'Сохранение...' : 'Сохранить'}
+                </Button>
+                {(media.storageStatus === 'local_only' || media.storageStatus === 'sync_error') && (
+                  <Button
+                    type='button'
+                    variant='outlined'
+                    onClick={() => handleSyncToS3(false)}
+                    disabled={syncing}
+                    color={media.storageStatus === 'sync_error' ? 'warning' : 'primary'}
+                    startIcon={syncing ? <CircularProgress size={18} /> : <i className='ri-cloud-line' />}
+                  >
+                    {syncing ? 'Выгрузка...' : media.storageStatus === 'sync_error' ? 'Повторить' : 'На S3'}
+                  </Button>
+                )}
+                {media.storageStatus === 'synced' && media.localPath && (
+                  <Button
+                    type='button'
+                    variant='outlined'
+                    onClick={() => handleSyncToS3(true)}
+                    disabled={syncing}
+                    startIcon={syncing ? <CircularProgress size={18} /> : <i className='ri-refresh-line' />}
+                  >
+                    {syncing ? 'Выгрузка...' : 'Перезалить'}
+                  </Button>
+                )}
+                {imageUrl && (
+                  <Button
+                    type='button'
+                    variant='outlined'
+                    href={imageUrl}
+                    target='_blank'
+                    startIcon={<i className='ri-download-line' />}
+                  >
+                    Скачать
+                  </Button>
+                )}
+                <Button
+                  type='button'
+                  variant='outlined'
+                  color='error'
+                  onClick={handleDelete}
+                  startIcon={<i className='ri-delete-bin-line' />}
+                >
+                  Удалить
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <Typography color='text.secondary' className='text-center pbs-8'>

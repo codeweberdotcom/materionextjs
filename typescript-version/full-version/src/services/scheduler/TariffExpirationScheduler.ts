@@ -148,15 +148,20 @@ export class TariffExpirationScheduler {
     }
 
     // Отправляем событие для Rules Engine
-    await eventService.emit({
+    await eventService.record({
       source: 'scheduler',
       type: 'tariff.check_expiration',
-      subjectType: 'account',
-      subjectId: account.id,
-      actorId: 'system',
-      actorType: 'system',
+      actor: {
+        type: 'system',
+        id: 'system'
+      },
+      subject: {
+        type: 'account',
+        id: account.id
+      },
       severity: 'info',
-      data: {
+      message: `Проверка истечения тарифа для аккаунта ${account.id}`,
+      payload: {
         accountId: account.id,
         userId: account.userId,
         tariffPlanCode: account.tariffPlan.code,
@@ -245,15 +250,20 @@ export class TariffExpirationScheduler {
         })
 
         // Отправляем событие об истечении
-        await eventService.emit({
+        await eventService.record({
           source: 'scheduler',
           type: 'tariff.expired',
-          subjectType: 'account',
-          subjectId: account.id,
-          actorId: 'system',
-          actorType: 'system',
+          actor: {
+            type: 'system',
+            id: 'system'
+          },
+          subject: {
+            type: 'account',
+            id: account.id
+          },
           severity: 'warning',
-          data: {
+          message: `Тариф истёк для аккаунта ${account.id}, downgrade на FREE`,
+          payload: {
             accountId: account.id,
             userId: account.userId,
             previousTariffCode: account.tariffPlan.code,

@@ -7,6 +7,8 @@
  * - WatermarkService: Водяные знаки
  * - StorageService: Абстракция хранилища (Local/S3)
  * - MediaSyncService: Синхронизация между хранилищами
+ * - MediaProcessingQueue: Очередь обработки (Bull)
+ * - MediaSyncQueue: Очередь синхронизации с S3
  * 
  * @module services/media
  */
@@ -24,6 +26,33 @@ export * from './storage'
 
 // Sync
 export { MediaSyncService, getMediaSyncService } from './sync'
+
+// Queue (Bull)
+export {
+  mediaProcessingQueue,
+  mediaSyncQueue,
+  mediaProcessingWorker,
+  mediaSyncWorker,
+  initializeMediaQueues,
+  closeMediaQueues,
+} from './queue'
+export type {
+  MediaProcessingJobData,
+  MediaSyncJobData,
+  QueueStats,
+} from './queue'
+
+// Settings
+export {
+  getImageSettings,
+  getGlobalSettings,
+  updateGlobalSettings,
+  clearSettingsCache,
+} from './settings'
+export type {
+  ImageSettingsData,
+  MediaGlobalSettingsData,
+} from './settings'
 
 // Presets
 export { 

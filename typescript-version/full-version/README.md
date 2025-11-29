@@ -32,19 +32,21 @@ Comprehensive documentation for AI agents and developers is available in the `do
    npx prisma db seed    # Seed with initial data
    ```
 
-4. **Start development servers:**
+4. **Start development server:**
     ```bash
-    # RECOMMENDED: Start both servers together (Next.js + Socket.IO)
-    pnpm run dev:with-socket
+    # RECOMMENDED: Start with all services (Docker required)
+    pnpm dev:full
 
-    # Alternative: Start separately
-    pnpm dev --port 3000    # Next.js app only
-    pnpm run socket         # Socket.IO server only
+    # Alternative commands:
+    pnpm dev           # Next.js only (no Docker, no WebSocket)
+    pnpm dev:socket    # Next.js + WebSocket (no Docker)
+    pnpm dev:full      # All services (PostgreSQL + Redis + MinIO + WebSocket)
     ```
 
 5. **Open your browser:**
    - Main app: http://localhost:3000
-   - Socket.IO server: http://localhost:3003
+   - Bull Board: http://localhost:3030
+   - Grafana: http://localhost:9091
 
 ### Default Admin Credentials
 - **Email:** superadmin@example.com
@@ -54,7 +56,7 @@ Comprehensive documentation for AI agents and developers is available in the `do
 
 - **Modern Stack:** Next.js 15, React 18, Material-UI v6, TypeScript
 - **Authentication:** Lucia Auth v3 with session management
-- **Database:** Prisma ORM with SQLite/PostgreSQL support
+- **Database:** Prisma ORM with PostgreSQL
 - **Real-time Chat:** Socket.IO integration
 - **Email System:** Template-based email system with SMTP
 - **Permissions:** Granular role-based access control

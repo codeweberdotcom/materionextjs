@@ -474,6 +474,7 @@
     "registerV2": "Register v2",
     "registrationModule": "Registrations",
     "registrationSettings": "Registration Settings",
+    "slugSettings": "Username Settings",
     "regru": "Reg.ru",
     "rememberMe": "Remember me",
     "reset": "Reset",
@@ -672,7 +673,8 @@
     "yesDeleteCountry": "Yes, Delete Country!",
     "yesDeleteCurrency": "Yes, Delete Currency!",
     "yesDeleteRole": "Yes, Delete Role!",
-    "yesSuspendUser": "Yes, Suspend User!"
+    "yesSuspendUser": "Yes, Suspend User!",
+    "webScraper": "Web Scraper"
   },
   "rateLimit": {
     "actionClear": "Clear block",

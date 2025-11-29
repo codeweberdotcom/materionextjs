@@ -130,7 +130,7 @@ export const checkPermission = (user: UserWithRoleLike, module: string, action: 
 
   // Логируем только если нет разрешения (для отладки)
   if (!hasPermission) {
-    logger.debug('❌ [PERMISSIONS] Permission denied', { module, action, role: user.role.name })
+    logger.debug('❌ [PERMISSIONS] Permission denied', { module, action, role: user.role?.name || user.role?.code })
   }
 
   return hasPermission

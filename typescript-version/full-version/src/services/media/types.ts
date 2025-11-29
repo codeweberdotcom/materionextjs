@@ -177,6 +177,10 @@ export interface SyncProgress {
   percentage: number
   currentFile?: string
   error?: string
+  // Parent job fields
+  isParent?: boolean
+  totalBatches?: number
+  completedBatches?: number
 }
 
 export interface SyncResult {
@@ -297,6 +301,7 @@ export interface MediaListOptions extends MediaFilter {
   limit?: number
   sortBy?: 'createdAt' | 'filename' | 'size' | 'entityType'
   sortOrder?: 'asc' | 'desc'
+  deleted?: boolean  // true = only deleted, false = only non-deleted, undefined = respect includeDeleted
 }
 
 export interface MediaListResult {

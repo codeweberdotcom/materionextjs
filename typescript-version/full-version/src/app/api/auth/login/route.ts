@@ -286,8 +286,8 @@ export async function POST(request: NextRequest) {
         id: user.id,
         email: user.email,
         name: user.name,
-        role: user.role.name,
-        permissions: user.role.permissions
+        role: user.role?.name || user.role?.code || 'user',
+        permissions: user.role?.permissions || '{}'
       },
       session
     })

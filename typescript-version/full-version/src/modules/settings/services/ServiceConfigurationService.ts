@@ -96,7 +96,7 @@ class ServiceConfigurationService {
   async create(data: CreateServiceConfigurationInput, createdBy?: string): Promise<ServiceConfigurationPublicDTO> {
     // Проверяем доступность шифрования для credentials
     if ((data.password || data.token || data.tlsCert) && !isEncryptionAvailable()) {
-      throw new Error('ENCRYPTION_KEY не настроен. Невозможно сохранить credentials.')
+      throw new Error('CREDENTIALS_ENCRYPTION_KEY не настроен. Невозможно сохранить credentials.')
     }
 
     // Шифруем credentials
@@ -154,7 +154,7 @@ class ServiceConfigurationService {
 
     // Проверяем доступность шифрования для новых credentials
     if ((data.password || data.token || data.tlsCert) && !isEncryptionAvailable()) {
-      throw new Error('ENCRYPTION_KEY не настроен. Невозможно сохранить credentials.')
+      throw new Error('CREDENTIALS_ENCRYPTION_KEY не настроен. Невозможно сохранить credentials.')
     }
 
     // Подготавливаем данные для обновления
@@ -328,7 +328,8 @@ class ServiceConfigurationService {
   }
 
   /**
-   * Преобразовать модель в публичный DTO (без credentials)
+   * Преобразовать модель в публичный DTO (без секретных credentials)
+   * username возвращается т.к. это не секретное поле (Access Key ID)
    */
   private toPublicDTO(config: any): ServiceConfigurationPublicDTO {
     return {
@@ -340,6 +341,7 @@ class ServiceConfigurationService {
       port: config.port,
       protocol: config.protocol,
       basePath: config.basePath,
+      username: config.username, // Access Key ID - не секретный
       tlsEnabled: config.tlsEnabled,
       enabled: config.enabled,
       status: config.status as ServiceStatus,
@@ -347,6 +349,7 @@ class ServiceConfigurationService {
       lastError: config.lastError,
       hasPassword: !!config.password,
       hasToken: !!config.token,
+      metadata: config.metadata, // Для S3 region, bucket и т.д.
       createdAt: config.createdAt,
       updatedAt: config.updatedAt
     }

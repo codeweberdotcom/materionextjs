@@ -17,7 +17,8 @@ export const ServiceType = {
   SENTRY: 'SENTRY',
   SMTP: 'SMTP',
   S3: 'S3',
-  ELASTICSEARCH: 'ELASTICSEARCH'
+  ELASTICSEARCH: 'ELASTICSEARCH',
+  FIRECRAWL: 'FIRECRAWL'
 } as const
 
 export type ServiceType = (typeof ServiceType)[keyof typeof ServiceType]
@@ -46,7 +47,7 @@ export type ConfigSource = (typeof ConfigSource)[keyof typeof ConfigSource]
 // ========================================
 
 /** Имена сервисов для резолвера */
-export type ServiceName = 'redis' | 'postgresql' | 'prometheus' | 'loki' | 'grafana' | 'sentry' | 'smtp' | 's3' | 'elasticsearch'
+export type ServiceName = 'redis' | 'postgresql' | 'prometheus' | 'loki' | 'grafana' | 'sentry' | 'smtp' | 's3' | 'elasticsearch' | 'firecrawl'
 
 // ========================================
 // Configuration Interfaces
@@ -153,7 +154,7 @@ export interface UpdateServiceConfigurationInput {
   metadata?: Record<string, unknown>
 }
 
-/** DTO для публичного ответа (без credentials) */
+/** DTO для публичного ответа (без секретных credentials) */
 export interface ServiceConfigurationPublicDTO {
   id: string
   name: string
@@ -163,13 +164,15 @@ export interface ServiceConfigurationPublicDTO {
   port: number | null
   protocol: string | null
   basePath: string | null
+  username: string | null // Access Key ID - не секретный, нужен для отображения
   tlsEnabled: boolean
   enabled: boolean
   status: ServiceStatus
   lastCheck: Date | null
   lastError: string | null
-  hasPassword: boolean // Указывает, что пароль задан
+  hasPassword: boolean // Указывает, что пароль задан (Secret Key)
   hasToken: boolean // Указывает, что токен задан
+  metadata: string | null // JSON с дополнительными настройками (region, bucket)
   createdAt: Date
   updatedAt: Date
 }
@@ -241,6 +244,13 @@ export const DEFAULT_CONFIGS: Record<ServiceName, Omit<ServiceConfig, 'source'>>
     port: 9200,
     protocol: 'http://',
     tls: false
+  },
+  firecrawl: {
+    url: 'https://api.firecrawl.dev',
+    host: 'api.firecrawl.dev',
+    port: 443,
+    protocol: 'https://',
+    tls: true
   }
 }
 
@@ -254,6 +264,7 @@ export const ENV_MAPPING: Record<ServiceName, string> = {
   sentry: 'SENTRY_DSN',
   smtp: 'SMTP_URL',
   s3: 'S3_ENDPOINT',
-  elasticsearch: 'ELASTICSEARCH_URL'
+  elasticsearch: 'ELASTICSEARCH_URL',
+  firecrawl: 'FIRECRAWL_API_KEY'
 }
 

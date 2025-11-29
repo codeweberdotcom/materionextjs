@@ -184,6 +184,11 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
         label: dictionary['navigation'].externalServices || 'External Services',
         icon: 'ri-server-line',
         href: '/admin/settings/services'
+      },
+      {
+        label: dictionary['navigation'].webScraper || 'Web Scraper',
+        icon: 'ri-fire-line',
+        href: '/admin/tools/web-scraper'
       }
     ]
   },  // Media Section

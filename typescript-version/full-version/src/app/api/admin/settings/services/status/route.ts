@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Проверяем права доступа
-    const userRole = user.role?.name?.toUpperCase()
+    const userRole = user.role?.code?.toUpperCase()
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

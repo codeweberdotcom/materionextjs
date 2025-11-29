@@ -145,6 +145,68 @@ npx prisma db seed
 
 ---
 
+## 📦 Модуль "S3 (MinIO)" (добавлено 2025-11-26)
+
+### Назначение
+
+Локальное S3-совместимое хранилище для разработки и тестирования модуля Media.
+
+### Структура файлов
+
+| Путь | Назначение |
+|------|------------|
+| `s3/docker-compose.yml` | Docker: MinIO контейнер |
+| `s3/README.md` | Документация по использованию |
+
+### npm скрипты
+
+| Скрипт | Описание |
+|--------|----------|
+| `pnpm s3:up` | Запуск MinIO |
+| `pnpm s3:down` | Остановка |
+| `pnpm s3:logs` | Логи контейнера |
+| `pnpm dev:with-socket:monitoring:with-redis:with-bull:with-s3` | Полный стек с S3 |
+
+### URL сервисов
+
+| URL | Сервис |
+|-----|--------|
+| http://localhost:9000 | S3 API endpoint |
+| http://localhost:9001 | MinIO Web Console |
+
+### Учётные данные
+
+| Параметр | Значение |
+|----------|----------|
+| Root User | `minioadmin` |
+| Root Password | `minioadmin123` |
+
+### ENV переменные
+
+```env
+S3_ENDPOINT=http://localhost:9000
+S3_ACCESS_KEY=minioadmin
+S3_SECRET_KEY=minioadmin123
+S3_BUCKET=materio-bucket
+S3_REGION=us-east-1
+```
+
+### Интеграция с проектом
+
+| Компонент | Путь | Описание |
+|-----------|------|----------|
+| **S3Connector** | `src/modules/settings/services/connectors/S3Connector.ts` | Тестирование подключения |
+| **S3Adapter** | `src/services/media/storage/S3Adapter.ts` | Адаптер для MediaService |
+| **ServiceConfiguration** | Seed в `prisma/seed.ts` | 3 конфигурации: MinIO, AWS, Yandex |
+
+### Связанные документы
+
+- [Анализ](analysis/architecture/analysis-s3-minio-docker-setup-2025-11-26.md)
+- [План реализации](plans/completed/plan-s3-minio-docker-setup-2025-11-26.md)
+- [Отчёт](reports/deployment/report-s3-minio-docker-setup-2025-11-26.md)
+
+---
+
 ## 🐂 Модуль "Bull Queue" (обновлено 2025-11-25)
 
 ### Структура файлов
@@ -441,14 +503,26 @@ model ServiceConfiguration {
 
 ### Приоритеты конфигурации
 
+**Для большинства сервисов (ServiceConfigResolver):**
 ```
 1️⃣ Admin (БД)  →  2️⃣ ENV (.env)  →  3️⃣ Default (Docker)
 ```
 
-**Пример:**
+**Для S3/MinIO (StorageService):**
+```
+1️⃣ ENV (.env)  →  2️⃣ Admin (БД)
+```
+
+> ⚠️ S3 использует обратный приоритет для удобства DevOps — настройки в `.env` важнее БД.
+
+**Пример Redis:**
 - Если в БД есть активная конфигурация Redis → используется она
 - Если нет в БД, но есть `REDIS_URL` в `.env` → используется ENV
 - Если нет ни того, ни другого → используется `redis://localhost:6379`
+
+**Пример S3:**
+- Если есть `S3_ENDPOINT` в `.env` → используется `.env`
+- Если `.env` пуст → используется БД (Admin Panel)
 
 ### Использование
 
@@ -508,14 +582,14 @@ S3 коннектор поддерживает кастомные S3-совме�
 
 ### Шифрование
 
-Credentials (пароли, токены, сертификаты) шифруются AES-256-GCM. Требуется `ENCRYPTION_KEY` в `.env`:
+Credentials (пароли, токены, сертификаты) шифруются AES-256-GCM. Требуется `CREDENTIALS_ENCRYPTION_KEY` в `.env`:
 
 ```bash
 # Сгенерировать ключ:
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 # Добавить в .env:
-ENCRYPTION_KEY=your-64-char-hex-key
+CREDENTIALS_ENCRYPTION_KEY=your-64-char-hex-key
 ```
 
 **Важно:** В seed данные могут храниться без шифрования (для удобства), но в production все credentials должны быть зашифрованы.
@@ -589,9 +663,14 @@ npx prisma db seed
 | `service_configuration.enabled` | POST /api/admin/settings/services/[id]/toggle | info |
 | `service_configuration.disabled` | POST /api/admin/settings/services/[id]/toggle | info |
 
+> ⚠️ **Важно:** Для записи событий использовать `eventService.record()`, а не `emit()`.
+> Метод `emit()` не существует в классе EventService.
+> См. [Анализ бага eventService.emit](analysis/architecture/analysis-s3-eventservice-bug-2025-11-27.md)
+
 ### Связанные документы
 
 - [Анализ модуля](analysis/architecture/analysis-service-configuration-module-2025-11-25.md)
+- [Анализ бага eventService.emit](analysis/architecture/analysis-s3-eventservice-bug-2025-11-27.md)
 - [План реализации](plans/active/plan-service-configuration-module-2025-11-25.md)
 - [API документация](api/service-configuration.md)
 - [Руководство для админов](admin/external-services.md)
@@ -1232,12 +1311,21 @@ model Watermark {
 | Секция | Содержимое |
 |--------|------------|
 | **Изображение** | Превью с Lightbox (клик по плюсу) |
-| **Информация о файле** | Имя (копируемое), размер, разрешение, тип, статус |
+| **Информация о файле** | Имя (копируемое), размер, разрешение, тип, статус, путь |
 | **URL файла** | Полный путь (копируемый с доменом) |
 | **SEO-поля** | Alt, Title, Caption, Description — редактируемые |
 | **Автор** | uploadedUser (имя, email) |
 | **Доступные размеры** | Оригинал + варианты с разрешением, копирование URL, открытие в Lightbox |
 | **Действия** | Сохранить, Удалить, На S3 (для local_only) |
+
+**Для файлов в корзине:**
+
+| Секция | Содержимое |
+|--------|------------|
+| **Статус** | Чип "В корзине" (warning) |
+| **Путь** | `.trash/{mediaId}/{filename}` |
+| **Действия** | Только "Восстановить" и "Удалить навсегда" |
+| **SEO-поля** | Скрыты |
 
 ### Типы сущностей (entityType)
 
@@ -1264,6 +1352,41 @@ model Watermark {
 | `s3_only` | Только S3 (локально временно при загрузке) |
 | `both` | Хранить в обоих хранилищах |
 
+### Корзина (Trash) — обновлено 2025-11-29
+
+```
+Обычные файлы:     public/uploads/{entityType}/{year}/{month}/{file}.webp
+Файлы в корзине:   storage/.trash/{mediaId}/{file}.webp  ← ВНЕ public/
+```
+
+**Важно:** Корзина находится **вне** папки `public/`, поэтому файлы **недоступны по прямому URL** после удаления.
+
+| Операция | Описание |
+|----------|----------|
+| **Soft Delete** | Перемещает файлы в `storage/.trash/`, удаляет с S3, устанавливает `deletedAt` |
+| **Restore** | Возвращает файлы в `public/uploads/`, перезаливает на S3, очищает `deletedAt` |
+| **Hard Delete** | Удаляет файлы из `storage/.trash/` и запись из БД |
+
+**API:**
+
+| Method | Endpoint | Описание |
+|--------|----------|----------|
+| `DELETE` | `/api/admin/media/[id]` | Soft delete (в корзину) |
+| `DELETE` | `/api/admin/media/[id]` + `{ hard: true }` | Hard delete |
+| `PATCH` | `/api/admin/media/[id]` + `{ action: 'restore' }` | Восстановить |
+| `GET` | `/api/admin/media/[id]/trash?variant=original` | Файл из корзины (только для админов) |
+
+**trashMetadata** (JSON):
+
+```json
+{
+  "originalPath": "other/2025/11/abc.webp",
+  "trashPath": "/abs/path/storage/.trash/cmxxx/abc.webp",
+  "originalVariants": { "thumb": "...", "medium": "..." },
+  "trashVariants": { "thumb": "...", "medium": "..." }
+}
+```
+
 ### API синхронизации
 
 **Actions для POST /api/admin/media/sync:**
@@ -1281,7 +1404,7 @@ model Watermark {
 
 | Сущность | Количество | Описание |
 |----------|------------|----------|
-| `MediaGlobalSettings` | 1 | Глобальные настройки |
+| `MediaGlobalSettings` | 1 | Глобальные настройки (S3 bucket: `materio-bucket`) |
 | `ImageSettings` | 9 | Пресеты для всех типов сущностей (включая `other`) |
 | `Watermark` | 1 | Дефолтный водяной знак (placeholder) |
 
@@ -1399,6 +1522,993 @@ model MediaLicenseItem {
 Документы лицензий хранятся в: `public/uploads/licenses/`
 
 Поддерживаемые форматы: PDF, JPG, PNG (до 10 MB)
+
+---
+
+## 📤 Массовая загрузка медиа (добавлено 2025-11-27)
+
+### useBulkUpload Hook
+
+Переиспользуемый хук для массовой загрузки файлов с прогрессом.
+
+**Интегрирован в MediaLibrary (27.11.2025):**
+- Полная поддержка Pause/Resume/Cancel/Retry
+- Динамический entityType через `optionsRef`
+- Отображение скорости загрузки и общего прогресса
+
+```typescript
+import { useBulkUpload } from '@/hooks'
+
+const {
+  files,      // QueuedFile[] - файлы в очереди
+  stats,      // UploadStats - статистика (total, pending, success, error, speed, progress)
+  isUploading,
+  isPaused,
+  addFiles,   // (files: File[]) => void
+  removeFile, // (id: string) => void
+  startUpload,
+  pauseUpload,
+  resumeUpload,
+  cancelUpload,
+  retryFailed,
+  clearSuccess,
+  clearQueue,
+} = useBulkUpload({
+  endpoint: '/api/admin/media',
+  parallelLimit: 5,     // 5 параллельных загрузок
+  maxFiles: 10000,      // Лимит файлов
+  entityType: 'listing_image',
+  onComplete: (stats) => {
+    toast.success(`Загружено: ${stats.success}`)
+    fetchMedia()
+  },
+})
+```
+
+### Опции хука
+
+| Опция | Тип | По умолчанию | Описание |
+|-------|-----|--------------|----------|
+| `endpoint` | `string` | `/api/admin/media` | URL для загрузки |
+| `useAsyncUpload` | `boolean` | `false` | Использовать Bull Queue |
+| `parallelLimit` | `number` | `3` | Параллельных загрузок |
+| `maxFiles` | `number` | `1000` | Макс. файлов в очереди |
+| `maxFileSize` | `number` | `15MB` | Макс. размер файла |
+| `entityType` | `string` | `other` | Тип сущности |
+| `maxPreviews` | `number` | `20` | Превью для первых N файлов |
+| `maxRetries` | `number` | `2` | Попыток retry |
+
+### BulkUploadProgress Component
+
+```tsx
+import { BulkUploadProgress } from '@/components/media'
+
+<BulkUploadProgress
+  stats={stats}
+  isUploading={isUploading}
+  isPaused={isPaused}
+  onStart={startUpload}
+  onPause={pauseUpload}
+  onResume={resumeUpload}
+  onCancel={cancelUpload}
+  onRetry={retryFailed}
+  onClearSuccess={clearSuccess}
+  onClearAll={clearQueue}
+  compact={false}
+/>
+```
+
+### Структура файлов
+
+| Путь | Назначение |
+|------|------------|
+| `src/hooks/useBulkUpload.ts` | Хук для массовой загрузки |
+| `src/hooks/index.ts` | Экспорты хуков |
+| `src/components/media/BulkUploadProgress.tsx` | UI прогресса |
+| `src/components/media/index.ts` | Экспорты компонентов |
+
+---
+
+## 🎨 Фоновые водяные знаки (добавлено 2025-11-27)
+
+### Архитектура
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    MediaProcessingWorker                             │
+│                                                                     │
+│  1. Обрабатывает изображение (resize, convert)                      │
+│  2. Сохраняет варианты                                              │
+│  3. Проверяет: shouldApplyWatermark(entityType)?                    │
+│     - entityType === 'other' (медиатека) → НЕТ                      │
+│     - settings.watermarkEnabled === true → ДА                        │
+└──────────────────────────┬──────────────────────────────────────────┘
+                           │ Если ДА
+                           ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      WatermarkQueue (Bull)                           │
+│                                                                     │
+│  - Concurrency: 3                                                   │
+│  - Attempts: 3 с exponential backoff                                │
+│  - Retention: 24h completed, 7d failed                               │
+└──────────────────────────┬──────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                      WatermarkWorker                                 │
+│                                                                     │
+│  1. Загружает настройки ImageSettings                               │
+│  2. Определяет варианты: watermarkOnVariants (medium,large)         │
+│  3. Для каждого варианта:                                           │
+│     - Загружает изображение                                         │
+│     - Применяет watermark с position/opacity/scale                   │
+│     - Сохраняет обратно                                             │
+│  4. Обновляет media.watermarkApplied                                │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### ImageSettings (prisma/schema.prisma)
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `watermarkEnabled` | `Boolean` | Включён ли водяной знак |
+| `watermarkMediaId` | `String?` | ID Media с PNG водяного знака |
+| `watermarkPosition` | `String?` | Позиция: `bottom-right`, `center`, etc. |
+| `watermarkOpacity` | `Float` | Прозрачность: 0.0 - 1.0 |
+| `watermarkScale` | `Float` | Размер относительно изображения |
+| `watermarkOnVariants` | `String` | Варианты: `medium,large` |
+
+### Логика применения
+
+| entityType | Водяной знак | Причина |
+|------------|:------------:|---------|
+| `other` | ❌ | Медиатека (admin) |
+| `watermark` | ❌ | Сами водяные знаки |
+| `user_avatar` | ⚙️ | По настройкам |
+| `listing_image` | ✅ | По настройкам (обычно включён) |
+| `company_photo` | ✅ | По настройкам |
+
+### Prometheus метрики
+
+| Метрика | Тип | Описание |
+|---------|-----|----------|
+| `watermark_jobs_added_total` | Counter | Задач добавлено |
+| `watermark_jobs_completed_total` | Counter | Завершено (success/failed) |
+| `watermark_duration_seconds` | Histogram | Время применения |
+
+### Структура файлов
+
+| Путь | Назначение |
+|------|------------|
+| `src/services/media/queue/WatermarkQueue.ts` | Bull Queue |
+| `src/services/media/queue/WatermarkWorker.ts` | Обработчик |
+| `src/services/media/WatermarkService.ts` | Применение watermark |
+| `src/lib/metrics/media.ts` | Prometheus метрики |
+
+---
+
+## 📊 Логи, Метрики, События (добавлено 2025-11-27)
+
+### Покрытие компонентов
+
+| Компонент | Logger | Metrics | Events |
+|-----------|:------:|:-------:|:------:|
+| `MediaService.ts` | ✅ | — | ✅ |
+| `WatermarkQueue.ts` | ✅ | ✅ | — |
+| `WatermarkWorker.ts` | ✅ | ✅ | ✅ |
+| `MediaSyncQueue.ts` | ✅ | ✅ | — |
+| `MediaSyncWorker.ts` | ✅ | ✅ | ✅ |
+| `MediaSyncService.ts` | ✅ | (Queue) | — |
+| `MediaProcessingQueue.ts` | ✅ | ✅ | — |
+| `MediaProcessingWorker.ts` | ✅ | ✅ | — |
+
+### Prometheus метрики (`src/lib/metrics/media.ts`)
+
+| Метрика | Тип | Labels |
+|---------|-----|--------|
+| `watermark_jobs_added_total` | Counter | `entity_type` |
+| `watermark_jobs_completed_total` | Counter | `status` |
+| `watermark_duration_seconds` | Histogram | `entity_type` |
+| `media_sync_jobs_added_total` | Counter | `operation`, `queue_type` |
+| `media_sync_jobs_processed_total` | Counter | `operation`, `status` |
+| `media_sync_duration_seconds` | Histogram | `operation` |
+| `media_processing_jobs_added_total` | Counter | `entity_type`, `queue_type` |
+| `media_processing_jobs_processed_total` | Counter | `entity_type`, `status` |
+| `media_file_size_bytes` | Histogram | `entity_type` |
+
+### EventService события
+
+| Событие | Source | Severity | Где |
+|---------|--------|----------|-----|
+| `media.soft_deleted` | media | info | MediaService |
+| `media.hard_deleted` | media | warning | MediaService, MediaSyncWorker |
+| `media.restored` | media | info | MediaService |
+| `media.watermark_applied` | media | info | WatermarkWorker |
+
+---
+
+## 🐛 Исправления (2025-11-27)
+
+### Prometheus метрики media не экспортировались
+
+**Проблема:** `src/lib/metrics/media.ts` использовал `prom-client` default `register` вместо `metricsRegistry`
+
+**Исправление:**
+- Изменён импорт на `metricsRegistry` из `./registry`
+- Добавлен `registers: [metricsRegistry]` при создании метрик
+- В `/api/metrics/route.ts` добавлен импорт `* as mediaMetrics`
+- Теперь 12 media метрик доступны через `/api/metrics`
+
+### useBulkUpload не использовался в MediaLibrary
+
+**Проблема:** При загрузке файлов в MediaLibrary использовалась локальная реализация без Pause/Resume/Cancel
+
+**Исправление:**
+- Интегрирован `useBulkUpload` hook
+- Добавлен `optionsRef` для динамического entityType
+- UI обновлён: кнопки Пауза/Продолжить/Отмена/Повторить
+
+### Исправлены ошибки S3 синхронизации
+
+| Ошибка | Причина | Исправление |
+|--------|---------|-------------|
+| `getEventService is not exported` | Неверный импорт | Заменено на `eventService` |
+| `storageService.syncToS3 is not a function` | `getStorageService()` возвращает Promise, вызывался без await | Добавлен `await getStorageService()` |
+| Очередь не обрабатывает задачи | `initializeMediaQueues()` не вызывался в sync API | Добавлен вызов в `/api/admin/media/sync` |
+
+### Затронутые файлы
+
+- `src/services/media/queue/MediaSyncWorker.ts` — await для getStorageService, eventService импорт
+- `src/services/media/queue/WatermarkWorker.ts` — eventService импорт  
+- `src/services/media/queue/WatermarkQueue.ts` — переписан на bull (вместо bullmq)
+- `src/services/media/MediaService.ts` — eventService импорт
+- `src/app/api/admin/media/sync/route.ts` — добавлен initializeMediaQueues()
+
+### Добавленные зависимости
+
+```bash
+pnpm add bullmq  # Для WatermarkQueue (позже переписан на bull)
+```
+
+---
+
+## 🧪 Тесты медиа модуля (добавлено 2025-11-27)
+
+### Созданные тестовые файлы
+
+| Путь | Тесты | Покрытие |
+|------|:-----:|----------|
+| `tests/unit/media/queue/WatermarkQueue.test.ts` | 7 | WatermarkQueue |
+| `tests/unit/media/queue/WatermarkWorker.test.ts` | 11 | WatermarkWorker |
+| `tests/unit/hooks/useBulkUpload.test.ts` | 5 | useBulkUpload hook |
+| `tests/unit/components/media/BulkUploadProgress.test.tsx` | 2 | BulkUploadProgress |
+| `tests/unit/media/sync/MediaSyncService.test.ts` | 8 | Batch processing |
+| `tests/unit/media/MediaService.delete.test.ts` | 9 | Soft/Hard delete |
+| **Всего** | **42** | |
+
+### Запуск тестов
+
+```bash
+# Все тесты медиа модуля
+pnpm vitest run tests/unit/media tests/unit/hooks tests/unit/components
+
+# Конкретный файл
+pnpm vitest run tests/unit/media/queue/WatermarkQueue.test.ts
+```
+
+### Покрытие тестами
+
+| Компонент | Unit | Integration |
+|-----------|:----:|:-----------:|
+| WatermarkQueue | ✅ | — |
+| WatermarkWorker | ✅ | — |
+| useBulkUpload | ✅ | — |
+| BulkUploadProgress | ✅ | — |
+| MediaSyncService (batch) | ✅ | — |
+| MediaService (delete) | ✅ | — |
+
+---
+
+## 🚀 S3 Sync Batch Processing (добавлено 2025-11-27)
+
+### Конфигурация
+
+| Параметр | Значение | Описание |
+|----------|:--------:|----------|
+| `batchSize` | 100 | Файлов в одном batch |
+| `minFilesForBatching` | 50 | Мин. файлов для batch режима |
+| `parallelLimit` | 10 | Параллельных операций в batch |
+
+### Архитектура Parent/Child Jobs
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      API Request                            │
+│                  (1000 файлов для sync)                     │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              MediaSyncService.createSyncJob()               │
+│                                                             │
+│  1. Определяет кол-во файлов > 50 → batch mode              │
+│  2. Создаёт Parent Job (isParent: true)                     │
+│  3. Разбивает на batches по 100 файлов                      │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+          ┌──────────────┼──────────────┐
+          │              │              │
+          ▼              ▼              ▼
+     ┌─────────┐   ┌─────────┐   ┌─────────┐
+     │ Child 1 │   │ Child 2 │   │ Child N │
+     │ Batch 0 │   │ Batch 1 │   │ Batch N │
+     │ 100 фай │   │ 100 фай │   │ ≤100 фай│
+     └────┬────┘   └────┬────┘   └────┬────┘
+          │              │              │
+          ▼              ▼              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    MediaSyncQueue                           │
+│                      (Bull Queue)                           │
+│  - concurrency: 5                                           │
+│  - attempts: 5 с exponential backoff                        │
+│  - Redis-backed                                             │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   MediaSyncWorker                           │
+│                                                             │
+│  - Обрабатывает каждый файл                                 │
+│  - Обновляет прогресс в БД                                  │
+│  - При завершении child → проверяет parent                  │
+│  - Финализирует parent когда все children done              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Prisma Schema (MediaSyncJob)
+
+```prisma
+model MediaSyncJob {
+  // ... existing fields ...
+  
+  // Parent/Child relationship
+  isParent    Boolean        @default(false)
+  parentJobId String?
+  parentJob   MediaSyncJob?  @relation("ParentChild", ...)
+  childJobs   MediaSyncJob[] @relation("ParentChild")
+  
+  // Batch info
+  batchIndex  Int?           // 0, 1, 2, ...
+  batchSize   Int?           // usually 100
+}
+```
+
+### UI Progress
+
+- **Таблица:** Показывает количество batch'ей для parent jobs
+- **Детали:** Визуальная сетка прогресса batch'ей (зелёный/красный/синий/серый)
+
+---
+
+## 📊 Grafana Dashboard: Media Module (добавлено 2025-11-28)
+
+### Файл
+`monitoring/grafana/dashboards/media-dashboard.json`
+
+### Структура дашборда
+
+| Row | Панели | Метрики |
+|-----|--------|---------|
+| **Overview** | Upload Rate, Processing Rate, Success %, Queue Size | stat panels |
+| **Async Upload** | Requests, Duration P50/P95/P99, File Size Distribution | timeseries, barchart |
+| **Processing Queue** | Jobs Added, Duration by Entity, Success/Failed Pie | timeseries, piechart |
+| **S3 Sync** | Jobs by Operation, Duration, Success/Failed | timeseries, piechart |
+| **Watermarks** | Jobs Added, Duration, Success Rate | timeseries, piechart |
+| **Health & Errors** | Queue Mode, Errors, Retries, Fallback Events | stat, timeseries |
+
+### Ключевые панели
+
+| Панель | Описание | Алерт |
+|--------|----------|-------|
+| Upload Rate | Загрузки в минуту | - |
+| Success Rate | % успешных обработок | < 98% |
+| Queue Size | Размер очереди ожидания | > 100 |
+| Queue Mode | Bull vs In-Memory | In-Memory = ⚠️ |
+| Fallback Events | Переключения на fallback | > 0 = ⚠️ |
+
+### Визуализация метрик
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  📊 Media Module Dashboard                                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  [📤 Upload: 42/min] [⚙️ Processing: 38/min] [✅ 99.2%] [📋 5] │
+│                                                                 │
+│  ┌── Async Upload ──────────────────────────────────────────┐  │
+│  │ [Rate Graph]    [P50: 120ms, P95: 450ms]   [Size Dist]   │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ┌── Processing ────────────────────────────────────────────┐  │
+│  │ [Jobs/min]      [Duration by type]     [🟢85% 🔴15%]     │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ┌── S3 Sync ───────────────────────────────────────────────┐  │
+│  │ [upload/download/delete] [Duration]    [Success Pie]     │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ┌── Health ────────────────────────────────────────────────┐  │
+│  │ [🟢 Bull]   [Errors: 0]   [Retries: 2]   [Fallback: 0]   │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Доступ
+- URL: `http://localhost:9091/d/media-module`
+- Требуется запущенный Grafana в Docker
+
+---
+
+## 🔄 Redis Fallback для очередей (добавлено 2025-11-28)
+
+### Архитектура Fallback
+
+Все очереди медиа модуля имеют in-memory fallback при недоступности Redis:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                       Queue Request                         │
+└────────────────────────┬────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────┐
+│              serviceConfigResolver.getConfig('redis')       │
+│                                                             │
+│    Redis URL есть и подключение успешно?                   │
+│                                                             │
+│    ДА → Bull Queue (Redis)                                 │
+│         • Персистентность задач                            │
+│         • Event handlers (waiting, completed, failed)       │
+│         • Мониторинг в Bull Board                          │
+│         • Метрики Prometheus (queue_type: 'bull')          │
+│                                                             │
+│    НЕТ → In-Memory Fallback                                │
+│         • Массив inMemoryQueue[]                           │
+│         • Обработка каждые 5 секунд (setInterval)          │
+│         • Retry с exponential backoff                       │
+│         • Метрики Prometheus (queue_type: 'in-memory')     │
+│         • Логирование: warn при переключении               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Поддерживаемые очереди
+
+| Очередь | Bull | In-Memory | Auto-switch | Retry |
+|---------|:----:|:---------:|:-----------:|:-----:|
+| `MediaProcessingQueue` | ✅ | ✅ | ✅ | 3 попытки |
+| `MediaSyncQueue` | ✅ | ✅ | ✅ | 5 попыток |
+| `WatermarkQueue` | ✅ | ✅ | ✅ | 3 попытки |
+| `NotificationQueue` | ✅ | ✅ | ✅ | 3 попытки |
+
+### Автоматическое переключение
+
+```typescript
+// При инициализации (Redis недоступен)
+if (!redisConfig.url) {
+  logger.warn('[Queue] Redis not configured, using in-memory fallback')
+  this.queueAvailable = false
+  return
+}
+
+// При ошибке Redis (runtime)
+this.queue.on('error', (error) => {
+  logger.error('[Queue] Redis error', { error })
+  markQueueSwitch('bull', 'in-memory')
+  this.queueAvailable = false
+})
+
+// При добавлении задачи
+async add(data) {
+  if (this.queueAvailable && this.queue) {
+    try {
+      return await this.queue.add(data)
+    } catch (error) {
+      // Переключаемся на fallback
+      markQueueSwitch('bull', 'in-memory')
+      this.queueAvailable = false
+    }
+  }
+  // In-memory fallback
+  this.inMemoryQueue.push(newJob)
+  return { id: jobId, type: 'in-memory' }
+}
+```
+
+### In-Memory обработчик
+
+```typescript
+// Проверка каждые 5 секунд
+private startInMemoryProcessor(): void {
+  this.inMemoryProcessor = setInterval(async () => {
+    if (this.queueAvailable) return // Bull работает
+    if (!this.processor) return      // Нет обработчика
+    
+    const pendingJobs = this.inMemoryQueue.filter(
+      job => job.status === 'pending' && job.scheduledAt <= now
+    )
+    
+    for (const job of pendingJobs) {
+      job.status = 'processing'
+      try {
+        const result = await this.processor(mockJob)
+        job.status = 'completed'
+      } catch (error) {
+        job.attempts++
+        if (job.attempts >= maxAttempts) {
+          job.status = 'failed'
+        } else {
+          job.status = 'pending' // Retry
+          job.scheduledAt = new Date(Date.now() + backoffDelay)
+        }
+      }
+    }
+  }, 5000)
+}
+```
+
+### Prometheus метрики
+
+| Метрика | Labels | Описание |
+|---------|--------|----------|
+| `media_processing_queue_size` | `status`, `queue_type` | Размер очереди |
+| `media_queue_switch_total` | `from`, `to` | Переключения между режимами |
+| `media_processing_jobs_added_total` | `entity_type`, `queue_type` | Добавленные задачи |
+
+### Логирование
+
+```
+# При недоступности Redis
+warn: [MediaProcessingQueue] Redis not configured, using in-memory fallback
+warn: [MediaSyncQueue] Failed to initialize Bull queue, using in-memory fallback
+
+# При переключении (runtime error)
+error: [MediaProcessingQueue:Bull] Queue error { error: "Connection refused" }
+warn: [MediaProcessingQueue] Switching to in-memory fallback
+
+# При работе in-memory
+info: [MediaProcessingQueue:InMemory] Job added { jobId, entityType }
+info: [MediaProcessingQueue:InMemory] Job completed { jobId }
+warn: [MediaProcessingQueue:InMemory] Job retry scheduled { jobId, attempt }
+error: [MediaProcessingQueue:InMemory] Job failed after max attempts { jobId }
+```
+
+### Ограничения In-Memory режима
+
+| Аспект | Bull (Redis) | In-Memory |
+|--------|:------------:|:---------:|
+| Персистентность | ✅ | ❌ (теряется при рестарте) |
+| Кластеризация | ✅ | ❌ |
+| Bull Board UI | ✅ | ❌ |
+| Задержки (delay) | ✅ | ✅ |
+| Retry | ✅ | ✅ |
+| Метрики | ✅ | ✅ |
+
+### Рекомендации
+
+- **Production:** Обязательно Redis (персистентность, масштабирование)
+- **Development:** In-memory достаточен для тестирования
+- **Staging:** Redis для тестирования полного функционала
+
+---
+
+## ⚡ Async Upload улучшения (добавлено 2025-11-28)
+
+### Проблемы и решения
+
+| Проблема | Решение |
+|----------|---------|
+| `Cannot define the same handler twice` | Promise-based lock в `initializeMediaQueues()` |
+| `isS3Configured is not a function` | Добавлен экспорт функции в `storage/index.ts` |
+| `preset.allowedMimeTypes.join is not a function` | Убран `.join()` в `settings.ts` (уже строка) |
+| S3 sync забивает очередь при отключённом S3 | Проверка `isS3Configured()` перед созданием sync job |
+| Медленная обработка | Увеличена concurrency с 3 до 5 workers |
+
+### Архитектура async upload
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 1. Клиент отправляет файл (5 параллельных потоков)          │
+│    ↓                                                        │
+│ 2. API сохраняет в temp (~50ms)                            │
+│    ↓                                                        │
+│ 3. Задача в Bull Queue                                      │
+│    ↓                                                        │
+│ 4. Ответ клиенту с tempPreview.url (мгновенно)             │
+│    ↓                                                        │
+│ 5. MediaProcessingWorker обрабатывает (5 параллельно)      │
+│    ↓                                                        │
+│ 6. WebSocket уведомление о завершении                       │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Response API `/api/admin/media/upload-async`
+
+```json
+{
+  "success": true,
+  "status": "processing",
+  "jobId": "123",
+  "tempPreview": {
+    "url": "/uploads/temp/1234_abc_photo.jpg",
+    "filename": "photo.jpg",
+    "size": 2048000,
+    "mimeType": "image/jpeg"
+  }
+}
+```
+
+### Затронутые файлы
+
+| Файл | Изменения |
+|------|-----------|
+| `src/app/api/admin/media/upload-async/route.ts` | tempPreview в response |
+| `src/services/media/queue/index.ts` | Promise-based lock |
+| `src/services/media/queue/MediaProcessingQueue.ts` | concurrency: 5, processorRegistered flag |
+| `src/services/media/queue/MediaSyncQueue.ts` | processorRegistered flag |
+| `src/services/media/queue/MediaProcessingWorker.ts` | isS3Configured check |
+| `src/services/media/storage/StorageService.ts` | isS3Configured function |
+| `src/services/media/storage/index.ts` | export isS3Configured |
+| `src/services/media/settings.ts` | fix allowedMimeTypes |
+
+### Метрики Prometheus
+
+| Метрика | Тип | Описание |
+|---------|-----|----------|
+| `media_async_upload_requests_total` | Counter | Всего async upload запросов |
+| `media_async_upload_duration_seconds` | Histogram | Длительность async upload |
+
+### Результаты тестирования (1361 файл)
+
+| Метрика | Значение |
+|---------|----------|
+| Загружено | 1361 |
+| Успешно обработано | 1358 (99.78%) |
+| В корзине | 0 |
+| Потеряно | 3 |
+
+---
+
+## 📷 Модуль "Медиатека UI" (обновлено 2025-11-27)
+
+### Адаптивная сетка
+
+| Breakpoint | Колонки |
+|------------|:-------:|
+| xs (mobile) | 2 |
+| sm | 3 |
+| md | 4 |
+| lg | 5 |
+| xl (desktop) | 6 |
+
+### Индикаторы хранилища
+
+В заголовке медиатеки отображаются Chip-индикаторы:
+
+| Индикатор | Цвет | Условие |
+|-----------|------|---------|
+| 💾 Local | warning (оранжевый) | Всегда (локальное хранилище) |
+| ☁️ S3 | success (зелёный) | Если S3 сервис enabled |
+
+```tsx
+<Chip label="Local" size="small" color="warning" icon={...} />
+<Chip label="S3" size="small" color="success" icon={...} />
+```
+
+### Корзина (Trash)
+
+| Элемент | Описание |
+|---------|----------|
+| Табы | "Все файлы" / "Корзина" |
+| Бейдж | Chip с количеством удалённых файлов |
+| Bulk actions | "В корзину", "Удалить навсегда", "Восстановить" |
+
+---
+
+## 🗑️ Модуль "Режимы удаления медиа" (добавлено 2025-11-27)
+
+### Режимы удаления
+
+| Режим | Local | S3 | Корзина | Восстановление |
+|-------|:-----:|:--:|:-------:|:--------------:|
+| **Soft delete** | 📁 Остаётся | ☁️ Остаётся | ✅ Да | ✅ Можно |
+| **Hard delete** | 🗑️ Удаляется | 🗑️ Удаляется | ❌ Нет | ❌ Нельзя |
+
+### Структура файлов
+
+| Путь | Назначение |
+|------|------------|
+| `src/views/admin/media/MediaLibrary.tsx` | UI табов "Все файлы" / "Корзина" |
+| `src/views/admin/media/MediaSettings.tsx` | UI настроек удаления |
+| `src/app/api/admin/media/[id]/route.ts` | DELETE `?hard=true` для hard delete |
+| `src/app/api/admin/media/[id]/restore/route.ts` | POST для восстановления |
+| `src/services/media/MediaService.ts` | `delete(id, hard)`, `restore(id)` |
+| `src/services/media/jobs/MediaCleanupJob.ts` | Авто-очистка корзины |
+
+### API Endpoints
+
+| Endpoint | Метод | Описание |
+|----------|-------|----------|
+| `/api/admin/media?deleted=false` | GET | Только активные файлы |
+| `/api/admin/media?deleted=true` | GET | Только удалённые (корзина) |
+| `/api/admin/media/[id]` | DELETE | Soft delete (в корзину) |
+| `/api/admin/media/[id]?hard=true` | DELETE | Hard delete (навсегда) |
+| `/api/admin/media/[id]/restore` | POST | Восстановить из корзины |
+
+### UI в медиатеке
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  📁 Медиатека                                    [Загрузить]    │
+├─────────────────────────────────────────────────────────────────┤
+│  [Все файлы (21)]  [🗑️ Корзина (78)]                            │
+├─────────────────────────────────────────────────────────────────┤
+│  Grid / List View                                               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**В табе "Все файлы":**
+- Dropdown при удалении: "В корзину" / "Удалить навсегда"
+- Bulk actions: "В корзину", "Удалить навсегда"
+
+**В табе "Корзина":**
+- Кнопки: "Восстановить", "Удалить навсегда"
+- Bulk actions: "Восстановить все", "Удалить навсегда"
+
+### Настройки в MediaSettings
+
+| Настройка | Описание | По умолчанию |
+|-----------|----------|--------------|
+| `deleteMode` | Режим по умолчанию | `soft` |
+| `softDeleteRetentionDays` | Дней до авто hard delete | `30` |
+| `autoCleanupEnabled` | Авто-очистка корзины | `true` |
+| `s3DeleteWithLocal` | Удалять S3 при hard delete | `true` |
+
+### MediaCleanupJob
+
+Ночной cron-job (рекомендуется `0 3 * * *`):
+1. Проверяет `autoCleanupEnabled`
+2. Находит файлы с `deletedAt < now - softDeleteRetentionDays`
+3. Ставит `hard_delete` задачи в `mediaSyncQueue`
+
+```typescript
+import { runMediaCleanup } from '@/services/media/jobs/MediaCleanupJob'
+
+// Dry run — показать что будет удалено
+const result = await runMediaCleanup(true)
+
+// Реальная очистка
+const result = await runMediaCleanup(false)
+```
+
+---
+
+## 🔄 Модуль "S3 Синхронизация медиа" (обновлено 2025-11-27)
+
+### Исправления S3 подключения
+
+| Проблема | Решение |
+|----------|---------|
+| `eventService.emit is not a function` | Заменено на `eventService.record()` в 8 файлах |
+| `ENCRYPTION_KEY` непонятное имя | Переименовано в `CREDENTIALS_ENCRYPTION_KEY` |
+| Неправильный пароль MinIO | `minioadmin` → `minioadmin123` в seed.ts |
+| Неправильный протокол | `http://` → `http` (убрана дублирующая `://`) |
+| Неправильный bucket | `test-bucket` → `materio-bucket` |
+| Ошибка расшифровки | `decrypt()` → `safeDecrypt()` в StorageService |
+
+### Управление S3 Buckets — обновлено 2025-11-29
+
+| Method | Endpoint | Описание | Права |
+|--------|----------|----------|-------|
+| `GET` | `/api/admin/media/s3/buckets` | Список buckets | isSuperadmin |
+| `POST` | `/api/admin/media/s3/buckets` | Создать bucket | isSuperadmin |
+| `POST` | `/api/admin/media/s3/buckets/validate` | Проверить bucket | isSuperadmin |
+
+**UI в MediaSettings:**
+- Select dropdown со списком buckets
+- Кнопка обновления списка
+- Кнопка создания нового bucket
+- Чип статуса: "✅ Bucket доступен" / "❌ Bucket недоступен"
+
+### Структура файлов синхронизации
+
+| Путь | Назначение |
+|------|------------|
+| `src/services/media/sync/MediaSyncService.ts` | Сервис синхронизации (upload, download, verify) |
+| `src/services/media/storage/StorageService.ts` | Абстракция хранилища (Local + S3 + Trash) |
+| `src/services/media/storage/S3Adapter.ts` | Адаптер для AWS S3 / MinIO + buckets API |
+| `src/services/media/storage/LocalAdapter.ts` | Адаптер для локального хранилища + move() |
+| `src/app/api/admin/media/sync/route.ts` | API синхронизации |
+| `src/app/api/admin/media/s3/buckets/route.ts` | API управления buckets |
+| `src/app/api/admin/media/[id]/trash/route.ts` | API файлов из корзины |
+| `src/views/admin/media/MediaSync.tsx` | UI управления синхронизацией |
+| `src/views/admin/media/MediaDetailSidebar.tsx` | Боковая панель с кнопками синхронизации |
+| `storage/.trash/` | Директория корзины (вне public/) |
+
+### Операции синхронизации
+
+| Действие | API action | Описание |
+|----------|------------|----------|
+| Выгрузить на S3 | `upload_to_s3_keep_local` | Копирует на S3, оставляет локально |
+| Выгрузить и удалить | `upload_to_s3_with_delete` | Перемещает на S3 |
+| Загрузить из S3 | `download_from_s3` | Скачивает локально |
+| Проверить статусы | `verify_status` | Сверяет БД с реальностью S3 |
+
+### Статусы хранения
+
+| storageStatus | Отображение | Описание |
+|---------------|-------------|----------|
+| `local_only` | Только локально | Файл только на диске |
+| `s3_only` | Только S3 | Файл только в облаке |
+| `synced` | S3 + Локально | Файл в обоих местах |
+
+### Улучшения синхронизации — 2025-11-29
+
+| Улучшение | Описание |
+|-----------|----------|
+| **Атомарные инкременты** | Использование `{ increment: 1 }` вместо `++` для предотвращения race conditions |
+| **Параллельное добавление в очередь** | `Promise.all` вместо последовательного `for...of` |
+| **S3 Bucket в задаче** | Каждая задача сохраняет bucket для отслеживания |
+| **Автор задачи** | `createdBy` + кликабельная ссылка на профиль |
+| **MUI Dialog** | Замена `window.confirm` на современные диалоги |
+| **Reset singleton** | `resetStorageService()` при изменении настроек |
+| `sync_error` | Ошибка синхр. | Проблема синхронизации |
+| `sync_pending` | Ожидает синхр. | В очереди |
+
+### Параметр overwrite
+
+При `overwrite: true` — перезаписывает файлы на S3, даже если они уже синхронизированы.
+Используется кнопкой "Перезалить" для восстановления удалённых с S3 файлов.
+
+### Верификация статусов (verify_status)
+
+Проверяет реальное наличие файлов:
+1. Проверяет `localPath` через `LocalAdapter.exists()`
+2. Проверяет `s3Key` через `S3Adapter.exists()`
+3. Обновляет `storageStatus` в БД согласно реальности
+4. Очищает `s3Key` если файла нет на S3
+
+### Шифрование credentials
+
+| Переменная | Назначение |
+|------------|------------|
+| `CREDENTIALS_ENCRYPTION_KEY` | 64-символьный hex ключ для AES-256-GCM |
+
+**Генерация ключа:**
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+**Функции шифрования (`src/lib/config/encryption.ts`):**
+- `encrypt(plaintext)` — шифрует, требует ключ
+- `decrypt(ciphertext)` — расшифровывает, требует ключ
+- `safeDecrypt(text)` — расшифровывает или возвращает plaintext
+- `isEncryptionAvailable()` — проверяет наличие ключа
+
+---
+
+## 📝 Конфигурация .env (обновлено 2025-11-28)
+
+Все настройки серверов централизованы в `.env` файле.
+
+### Серверы подключения
+
+| Сервис | Переменные | Порт |
+|--------|------------|------|
+| **PostgreSQL** | `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD` | 5432 |
+| **Redis** | `REDIS_URL`, `REDIS_HOST`, `REDIS_PORT` | 6379 |
+| **S3/MinIO** | `S3_ENDPOINT`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET` | 9000 |
+
+### Мониторинг
+
+| Сервис | Переменные | Credentials |
+|--------|------------|-------------|
+| **Grafana** | `GRAFANA_URL`, `GRAFANA_USER`, `GRAFANA_PASSWORD` | `admin/admin` |
+| **Prometheus** | `PROMETHEUS_URL` | — |
+| **Loki** | `LOKI_URL` | — |
+| **Bull Board** | `BULL_BOARD_URL` | — |
+
+### Приоритет S3 конфигурации
+
+```
+.env (S3_ENDPOINT, S3_ACCESS_KEY...) → приоритет
+         ↓ если пусто
+Admin Panel (БД) → fallback
+```
+
+### Защита для Production
+
+Раскомментировать в `.env`:
+```env
+REDIS_PASSWORD=your-secure-password
+PROMETHEUS_USER=admin
+PROMETHEUS_PASSWORD=your-secure-password
+GRAFANA_PASSWORD=strong-password  # Изменить с 'admin'
+```
+
+### Docker синхронизация
+
+Docker Compose читает credentials из `.env`:
+```yaml
+# docker-compose.dev.yml
+grafana:
+  environment:
+    - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+    - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+```
+
+---
+
+## 🐳 Docker Development Environment (обновлено 2025-11-28)
+
+### Unified docker-compose.dev.yml
+
+Один файл `docker-compose.dev.yml` объединяет все сервисы для разработки:
+
+| Сервис | Порт | Описание |
+|--------|------|----------|
+| Redis | 6379 | Кэш, сессии, очереди |
+| Bull Board | 3030 | UI мониторинга очередей |
+| Prometheus | 9090 | Сбор метрик |
+| Grafana | 9091 | Визуализация (admin/admin) |
+| Loki | 3100 | Агрегация логов |
+| Promtail | — | Сборщик логов |
+| MinIO (S3) | 9000, 9001 | Объектное хранилище |
+
+### NPM скрипты (упрощённые)
+
+| Команда | Описание |
+|---------|----------|
+| `pnpm dev` | Базовый Next.js (без Docker) |
+| `pnpm dev:socket` | Next.js + WebSocket сервер |
+| `pnpm dev:full` | **Всё!** PostgreSQL + Redis + MinIO + WebSocket |
+| `pnpm docker:up` | Запустить все Docker сервисы |
+| `pnpm docker:down` | Остановить все Docker сервисы |
+| `pnpm docker:logs` | Логи всех сервисов |
+
+### Быстрый старт
+
+```bash
+# Первоначальная настройка (один раз)
+pnpm pg:setup
+
+# Рекомендуемый способ разработки
+pnpm dev:full
+```
+
+---
+
+## 🐘 PostgreSQL
+
+PostgreSQL — основная база данных проекта.
+
+### NPM скрипты PostgreSQL
+
+| Команда | Описание |
+|---------|----------|
+| `pnpm pg:up` | Запустить PostgreSQL контейнер |
+| `pnpm pg:down` | Остановить PostgreSQL |
+| `pnpm pg:setup` | Полная настройка (schema + seed) |
+| `pnpm pg:psql` | Консоль psql |
+| `pnpm pg:studio` | Prisma Studio |
+
+### Документация
+
+| Документ | Ссылка |
+|----------|--------|
+| README | `postgresql/README.md` |
+| Миграция PostgreSQL | `docs/reports/migrations/report-postgresql-migration-2025-11-28.md` |
+| Обновление .env | `docs/reports/migrations/report-env-configuration-update-2025-11-28.md` |
 
 ---
 

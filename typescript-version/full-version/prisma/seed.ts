@@ -1173,12 +1173,12 @@ async function main() {
   // ============================================
   console.log('Creating test service configurations...')
 
-  // Helper function to safely encrypt (fallback if ENCRYPTION_KEY not set)
+  // Helper function to safely encrypt (fallback if CREDENTIALS_ENCRYPTION_KEY not set)
   const safeEncrypt = (value: string): string | null => {
     try {
       return encrypt(value)
     } catch (error) {
-      console.warn(`⚠️  Cannot encrypt value (ENCRYPTION_KEY not set). Storing as plain text for seed.`)
+      console.warn(`⚠️  Cannot encrypt value (CREDENTIALS_ENCRYPTION_KEY not set). Storing as plain text for seed.`)
       return value // В seed можно хранить без шифрования, но в production это недопустимо
     }
   }
@@ -1369,16 +1369,16 @@ async function main() {
       type: 'S3',
       host: 'localhost',
       port: 9000,
-      protocol: 'http://',
+      protocol: 'http',
       username: 'minioadmin',
-      password: safeEncrypt('minioadmin'),
+      password: safeEncrypt('minioadmin123'),
       token: null,
       tlsEnabled: false,
       enabled: false,
       status: 'UNKNOWN',
       metadata: JSON.stringify({
         region: 'us-east-1',
-        bucket: 'test-bucket',
+        bucket: 'materio-bucket',
         storageType: 'minio',
         forcePathStyle: true
       })
@@ -1484,6 +1484,23 @@ async function main() {
       token: null,
       tlsEnabled: true,
       enabled: false,
+      status: 'UNKNOWN',
+      metadata: null
+    },
+    // Firecrawl
+    {
+      name: 'firecrawl',
+      displayName: 'Firecrawl (Web Scraper)',
+      type: 'FIRECRAWL',
+      host: 'api.firecrawl.dev',
+      port: 443,
+      protocol: 'https://',
+      basePath: '/v1',
+      username: null,
+      password: null,
+      token: safeEncrypt('fc-4bca2c4dbee84d85b25f184057534558'),
+      tlsEnabled: true,
+      enabled: true,
       status: 'UNKNOWN',
       metadata: null
     }
@@ -2274,7 +2291,7 @@ async function main() {
     create: {
       id: 'global-media-settings',
       defaultStorageStrategy: 'local_first',
-      s3DefaultBucket: null,
+      s3DefaultBucket: 'materio-bucket',
       s3DefaultRegion: 'us-east-1',
       s3PublicUrlPrefix: null,
       localUploadPath: '/uploads',
@@ -2456,6 +2473,25 @@ async function main() {
       watermarkEnabled: false,
       storageStrategy: 's3_only',
       namingStrategy: 'uuid',
+    },
+    {
+      entityType: 'other',
+      displayName: 'Прочие файлы',
+      description: 'Файлы без категории (медиатека)',
+      maxFileSize: 10 * 1024 * 1024,
+      maxFilesPerEntity: 100,
+      allowedMimeTypes: 'image/jpeg,image/png,image/webp,image/gif',
+      variants: JSON.stringify([
+        { name: 'thumb', width: 150, height: 150, fit: 'cover', quality: 80 },
+        { name: 'medium', width: 600, height: 400, fit: 'inside', quality: 85 },
+        { name: 'large', width: 1200, height: 800, fit: 'inside', quality: 90 },
+      ]),
+      convertToWebP: true,
+      stripMetadata: true,
+      quality: 85,
+      watermarkEnabled: false,
+      storageStrategy: 'local_first',
+      namingStrategy: 'slug',
     },
   ]
 

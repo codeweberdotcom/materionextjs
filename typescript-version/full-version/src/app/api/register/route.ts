@@ -17,6 +17,7 @@ import { smsRuSettingsService } from '@/services/settings/SMSRuSettingsService'
 import { SMSRuProvider } from '@/services/sms'
 import { accountService } from '@/services/accounts'
 import type { AccountType } from '@/types/accounts/types'
+import { slugService } from '@/services/slug'
 
 export async function POST(request: NextRequest) {
   const correlationId = crypto.randomUUID()
@@ -306,10 +307,16 @@ export async function POST(request: NextRequest) {
     const requiresEmailVerification = email && settings.requireEmailVerification
     const isActive = !requiresEmailVerification
 
+    // Генерируем уникальный username
+    // Приоритет: name > email prefix > random
+    const usernameSource = name || (email ? email.split('@')[0] : `user_${Date.now().toString(36)}`)
+    const username = await slugService.generateUniqueSlug(usernameSource, 'user')
+
     // Create user
     const newUser = await prisma.user.create({
       data: {
         name,
+        username, // Автоматически сгенерированный username
         email: email || null,
         phone: normalizedPhone || null,
         password: hashedPassword,
@@ -533,11 +540,12 @@ export async function POST(request: NextRequest) {
       correlationId,
       payload: {
         userId: newUser.id,
+        username: newUser.username,
         email: email,
         phone: normalizedPhone,
         name: name,
         ipAddress: clientIp,
-        role: newUser.role.name,
+        role: newUser.role?.name || newUser.role?.code || 'user',
         registrationMode,
         requiresEmailVerification: !!email && settings.requireEmailVerification,
         requiresPhoneVerification: !!normalizedPhone && settings.requirePhoneVerification,

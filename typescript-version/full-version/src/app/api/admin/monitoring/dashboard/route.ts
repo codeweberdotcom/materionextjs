@@ -149,22 +149,30 @@ function getSystemMetrics() {
   }
 }
 
-// Получение метрик БД
+// Получение метрик БД (PostgreSQL)
 async function getDatabaseMetrics() {
   try {
     const start = Date.now()
     await prisma.$queryRaw`SELECT 1`
     const latency = Date.now() - start
 
-    // Получаем количество активных соединений (приблизительно)
-    // Для SQLite это не очень актуально, но можно попробовать
-    const dbFile = process.env.DATABASE_URL?.replace('file:', '') || ''
+    // Получаем количество активных соединений для PostgreSQL
+    let activeConnections = 0
+    try {
+      const result = await prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT count(*) as count FROM pg_stat_activity 
+        WHERE datname = current_database()
+      `
+      activeConnections = Number(result[0]?.count || 0)
+    } catch {
+      // Fallback если нет доступа к pg_stat_activity
+      activeConnections = 1
+    }
     
     return {
       status: 'up',
       latency,
-      activeConnections: 1, // SQLite обычно одно соединение
-      // Можно добавить больше метрик если нужно
+      activeConnections,
     }
   } catch (error) {
     return {

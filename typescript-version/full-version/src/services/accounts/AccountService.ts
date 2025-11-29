@@ -1,6 +1,7 @@
 import { prisma } from '@/libs/prisma'
 import { tariffPlanService } from './TariffPlanService'
 import { accountRulesService } from './AccountRulesService'
+import { slugService } from '@/services/slug'
 import type { AccountType, TariffPlanCode } from '@/types/accounts/types'
 import type { CreateAccountInput, UpdateAccountInput, UserAccountWithRelations } from '@/types/accounts/interfaces'
 
@@ -39,6 +40,9 @@ export class AccountService {
     // Генерируем название аккаунта на основе типа
     const accountName = this.generateAccountName(type)
 
+    // Генерируем уникальный slug для аккаунта
+    const slug = await slugService.generateUniqueSlug(accountName, 'account')
+
     // Создаем аккаунт
     const account = await prisma.userAccount.create({
       data: {
@@ -46,6 +50,7 @@ export class AccountService {
         ownerId: userId, // При создании владелец = пользователь
         type,
         name: accountName,
+        slug, // Автоматически сгенерированный slug
         tariffPlanId: tariffPlan.id,
         status: 'active'
       },
@@ -73,12 +78,16 @@ export class AccountService {
       throw new Error(`Tariff plan with code ${planCode} not found`)
     }
 
+    // Генерируем уникальный slug для аккаунта
+    const slug = await slugService.generateUniqueSlug(data.name, 'account')
+
     const account = await prisma.userAccount.create({
       data: {
         userId,
         ownerId: userId,
         type: data.type,
         name: data.name,
+        slug, // Автоматически сгенерированный slug
         description: data.description,
         tariffPlanId: tariffPlan.id,
         status: 'active'

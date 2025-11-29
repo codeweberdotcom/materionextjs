@@ -7,7 +7,7 @@ This guide will help you set up the Materio MUI Next.js Admin Template for devel
 ### Minimum Requirements
 - **Node.js**: 18.17.0 or higher (LTS version recommended)
 - **Package Manager**: pnpm (recommended), yarn, or npm
-- **Database**: SQLite (included) or PostgreSQL/MySQL
+- **Database**: PostgreSQL (via Docker)
 - **Memory**: 512MB RAM minimum, 1GB recommended
 - **Storage**: 500MB free space
 
@@ -32,12 +32,12 @@ This guide will help you set up the Materio MUI Next.js Admin Template for devel
 **Основная команда для запуска приложения:**
 
 ```bash
-pnpm dev:with-socket:monitoring:with-redis
+pnpm dev:full
 ```
 
 **⚠️ Обязательно:**
 - Docker должен быть запущен перед выполнением команды
-- Команда автоматически запускает Docker контейнеры (Redis и мониторинг)
+- Команда автоматически запускает все Docker контейнеры (Redis, мониторинг, S3)
 - Обеспечивает полную функциональность всех модулей
 
 ---
@@ -124,53 +124,51 @@ npm run seed
 
 **⚠️ ВАЖНО: Основная команда для запуска приложения**
 
-Для полной функциональности приложения (включая мониторинг, Redis и Socket.IO) **обязательно** используйте:
+Для полной функциональности приложения (включая мониторинг, Redis, S3 и Socket.IO) **обязательно** используйте:
 
 ```bash
 # Основная команда запуска (РЕКОМЕНДУЕТСЯ)
-pnpm dev:with-socket:monitoring:with-redis
+pnpm dev:full
 ```
 
 **Эта команда автоматически:**
-- ✅ Запускает Docker контейнеры (Redis и мониторинг)
+- ✅ Запускает все Docker контейнеры (Redis, Bull Board, Prometheus, Grafana, Loki, MinIO)
 - ✅ Запускает Next.js приложение с Socket.IO
-- ✅ Обеспечивает полную функциональность чата, уведомлений и событий
+- ✅ Обеспечивает полную функциональность чата, уведомлений, очередей и событий
 
 **⚠️ Обязательно:** Убедитесь, что Docker запущен перед выполнением команды!
 
 ---
 
-**Альтернативные команды (для разработки без Docker):**
+**Команды разработки:**
 
-```bash
-# Next.js application only (port 3000)
-pnpm run dev
+| Команда | Описание |
+|---------|----------|
+| `pnpm dev` | Только Next.js (без Docker, без WebSocket) |
+| `pnpm dev:socket` | Next.js + WebSocket сервер (без Docker) |
+| `pnpm dev:full` | **Всё!** Docker (PostgreSQL + Redis + MinIO) + WebSocket |
 
-# Next.js application with Socket.IO (port 3000)
-pnpm run dev:with-socket
+**Docker команды:**
 
-# С мониторингом (требует Docker)
-pnpm run dev:with-socket:monitoring
-```
+| Команда | Описание |
+|---------|----------|
+| `pnpm docker:up` | Запустить все Docker сервисы |
+| `pnpm docker:down` | Остановить все Docker сервисы |
+| `pnpm docker:logs` | Логи всех сервисов |
 
 **Для npm/yarn:**
 
 ```bash
 # npm
-npm run dev:with-socket:monitoring:with-redis
+npm run dev:full
 npm run dev
-npm run dev:with-socket
+npm run dev:socket
 
 # yarn
-yarn dev:with-socket:monitoring:with-redis
+yarn dev:full
 yarn dev
-yarn dev:with-socket
+yarn dev:socket
 ```
-
-**Note**: 
-- **Основная команда:** `pnpm dev:with-socket:monitoring:with-redis` - используйте для полной функциональности
-- `dev:with-socket` - для разработки с Socket.IO, но без Docker
-- `dev` - только Next.js, без Socket.IO и Docker
 
 Visit `http://localhost:3000` to see the application.
 
@@ -216,7 +214,7 @@ Environment variables are key-value pairs that configure your application outsid
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `ENCRYPTION_KEY` | AES-256-GCM encryption key for service credentials (32 bytes, 64 hex characters) | `a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890abcd` |
+| `CREDENTIALS_ENCRYPTION_KEY` | AES-256-GCM encryption key for service credentials (32 bytes, 64 hex characters) | `a1b2c3d4e5f6789012345678901234567890123456789012345678901234567890abcd` |
 
 **Note**: This key is used to encrypt passwords, tokens, and API keys stored in the Service Configuration module. **Required if using external service configurations through the admin panel.**
 
@@ -308,45 +306,29 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ### Database Configuration
 
-#### SQLite (Development)
+#### PostgreSQL (Default)
 
-Default configuration uses SQLite:
-
-```env
-DATABASE_URL="file:./prisma/dev.db"
-```
-
-#### PostgreSQL (Production)
-
-For production, use PostgreSQL:
+Project uses PostgreSQL via Docker:
 
 ```env
-DATABASE_URL="postgresql://username:password@localhost:5432/dbname?schema=public"
+DATABASE_URL="postgresql://materio:materio123@localhost:5432/materio?schema=public"
 ```
 
-Update `prisma/schema.prisma`:
+**Первоначальная настройка:**
 
-```prisma
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+```bash
+pnpm pg:setup
 ```
 
-#### MySQL (Alternative)
+**Команды PostgreSQL:**
 
-```env
-DATABASE_URL="mysql://username:password@localhost:3306/dbname"
-```
-
-Update schema.prisma:
-
-```prisma
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-```
+| Команда | Описание |
+|---------|----------|
+| `pnpm pg:up` | Запустить PostgreSQL контейнер |
+| `pnpm pg:down` | Остановить PostgreSQL |
+| `pnpm pg:setup` | Полная настройка (schema + seed) |
+| `pnpm pg:psql` | Консоль psql |
+| `pnpm pg:studio` | Prisma Studio |
 
 ### Authentication Setup
 
@@ -699,32 +681,29 @@ The application uses an integrated Socket.IO server for real-time chat functiona
 
 ```bash
 # Основная команда запуска (РЕКОМЕНДУЕТСЯ)
-pnpm dev:with-socket:monitoring:with-redis
+pnpm dev:full
 ```
 
 **⚠️ ВАЖНО:** 
 - Docker должен быть запущен перед выполнением команды
-- Команда автоматически запускает необходимые Docker контейнеры (Redis и мониторинг)
+- Команда автоматически запускает все Docker контейнеры
 - Обеспечивает полную функциональность всех модулей
 
 **Альтернативные команды:**
 
 ```bash
-# С Socket.IO и мониторингом (требует Docker)
-pnpm run dev:with-socket:monitoring
-
-# Только с Socket.IO (без Docker)
-pnpm run dev:with-socket
+# Next.js + WebSocket (без Docker)
+pnpm dev:socket
 
 # Только Next.js (без Socket.IO и Docker)
-pnpm run dev
+pnpm dev
 ```
 
 **Для npm/yarn:**
 
 ```bash
-npm run dev:with-socket:monitoring:with-redis
-yarn dev:with-socket:monitoring:with-redis
+npm run dev:full
+yarn dev:full
 ```
 
 ### Production Deployment

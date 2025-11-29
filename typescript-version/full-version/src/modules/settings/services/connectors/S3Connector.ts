@@ -14,7 +14,7 @@
 
 import { BaseConnector } from './BaseConnector'
 import type { ConnectionTestResult } from '@/lib/config/types'
-import { decrypt } from '@/lib/config/encryption'
+import { safeDecrypt } from '@/lib/config/encryption'
 import logger from '@/lib/logger'
 import { trackS3OperationSuccess, trackS3OperationError, startS3OperationTimer } from '@/lib/metrics/storage'
 
@@ -164,7 +164,7 @@ export class S3Connector extends BaseConnector {
 
       // Расшифровываем credentials
       const accessKeyId = this.config.username || ''
-      const secretAccessKey = this.config.password ? decrypt(this.config.password) : ''
+      const secretAccessKey = this.config.password ? safeDecrypt(this.config.password) : ''
 
       if (!accessKeyId || !secretAccessKey) {
         return {
@@ -320,7 +320,7 @@ export class S3Connector extends BaseConnector {
     const metadata = this.parseMetadata()
 
     const accessKeyId = this.config.username || ''
-    const secretAccessKey = this.config.password ? decrypt(this.config.password) : ''
+    const secretAccessKey = this.config.password ? safeDecrypt(this.config.password) : ''
     const endpoint = this.buildEndpoint(metadata)
     const region = metadata.region || 'us-east-1'
 

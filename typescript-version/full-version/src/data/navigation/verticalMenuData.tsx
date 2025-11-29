@@ -216,6 +216,11 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         href: '/apps/settings/registration'
       },
       {
+        label: dictionary['navigation'].slugSettings || 'Username Settings',
+        icon: 'ri-at-line',
+        href: '/admin/settings/slug'
+      },
+      {
         label: dictionary['navigation'].smsRuSettings,
         icon: 'ri-message-3-line',
         href: '/apps/settings/sms-ru'
@@ -234,6 +239,11 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
         label: dictionary['navigation'].externalServices || 'External Services',
         icon: 'ri-server-line',
         href: '/admin/settings/services'
+      },
+      {
+        label: dictionary['navigation'].webScraper || 'Web Scraper',
+        icon: 'ri-fire-line',
+        href: '/admin/tools/web-scraper'
       }
     ]
   },  // Media Section

@@ -7,7 +7,7 @@
 
 import { BaseConnector } from './BaseConnector'
 import type { ConnectionTestResult } from '@/lib/config/types'
-import { decrypt } from '@/lib/config/encryption'
+import { safeDecrypt } from '@/lib/config/encryption'
 import logger from '@/lib/logger'
 
 /**
@@ -27,7 +27,7 @@ export class PostgreSQLConnector extends BaseConnector {
       const { Client } = await import('pg')
 
       // Расшифровываем пароль если есть
-      const password = this.config.password ? decrypt(this.config.password) : undefined
+      const password = this.config.password ? safeDecrypt(this.config.password) : undefined
 
       // Парсим metadata для дополнительных параметров
       let metadata: Record<string, any> = {}

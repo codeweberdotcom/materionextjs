@@ -260,6 +260,40 @@ export class LocalAdapter implements StorageAdapter {
       throw error
     }
   }
+
+  /**
+   * Переместить файл
+   */
+  async move(sourcePath: string, destinationPath: string): Promise<string> {
+    const sourceAbsolute = this.getAbsolutePath(sourcePath)
+    const destAbsolute = this.getAbsolutePath(destinationPath)
+    
+    try {
+      if (!existsSync(sourceAbsolute)) {
+        throw new Error(`Source file not found: ${sourcePath}`)
+      }
+      
+      await this.ensureDirectory(destAbsolute)
+      await fs.rename(sourceAbsolute, destAbsolute)
+      
+      logger.debug('[LocalAdapter] File moved', {
+        source: sourcePath,
+        destination: destinationPath,
+      })
+      
+      // Очищаем пустые директории после перемещения
+      await this.cleanupEmptyDirs(path.dirname(sourceAbsolute))
+      
+      return destinationPath
+    } catch (error) {
+      logger.error('[LocalAdapter] Move failed', {
+        source: sourcePath,
+        destination: destinationPath,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw error
+    }
+  }
 }
 
 

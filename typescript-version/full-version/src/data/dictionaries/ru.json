@@ -553,6 +553,7 @@
     "registerV2": "Регистрация v2",
     "registrationModule": "Регистрации",
     "registrationSettings": "Настройки регистрации",
+    "slugSettings": "Настройки username",
     "regru": "Reg.ru",
     "rememberMe": "Запомнить меня",
     "reset": "Сбросить",
@@ -780,7 +781,8 @@
     "yesDeleteCountry": "Да, удалить страну!",
     "yesDeleteCurrency": "Да, удалить валюту!",
     "yesDeleteRole": "Да, удалить роль!",
-    "yesSuspendUser": "Да, приостановить пользователя!"
+    "yesSuspendUser": "Да, приостановить пользователя!",
+    "webScraper": "Парсер сайтов"
   },
   "rateLimit": {
     "actionClear": "Снять блокировку",

@@ -121,17 +121,18 @@ src/components/
 
 ```prisma
 model Media {
-  id              String   @id @default(cuid())
-  filename        String   // Оригинальное имя
-  slug            String   @unique // Безопасный идентификатор
+  id              String    @id @default(cuid())
+  filename        String    // Оригинальное имя
+  slug            String    @unique // Безопасный идентификатор
   localPath       String?
   s3Key           String?
-  storageStatus   String   @default("local_only")
+  s3Bucket        String?   // Bucket в котором хранится файл
+  storageStatus   String    @default("local_only")
   mimeType        String
   size            Int
-  width           Int?     // ≤1920
-  height          Int?     // ≤1280
-  variants        String   @default("{}")
+  width           Int?      // ≤1920
+  height          Int?      // ≤1280
+  variants        String    @default("{}")
   entityType      String
   entityId        String?
   alt             String?
@@ -139,8 +140,10 @@ model Media {
   caption         String?
   description     String?
   uploadedBy      String?
-  uploadedUser    User?    @relation(...)
+  uploadedUser    User?     @relation(...)
   licenses        MediaLicenseItem[]
+  deletedAt       DateTime? // Soft delete (корзина)
+  trashMetadata   String?   @db.Text // JSON с путями для восстановления
 }
 ```
 
@@ -222,6 +225,7 @@ model MediaLicense {
 | План улучшений | `docs/plans/completed/plan-media-library-improvements-2025-11-26.md` |
 | Отчёт лицензий | `docs/reports/report-media-licenses-module-2025-11-26.md` |
 | Анализ лицензий | `docs/analysis/architecture/analysis-media-licenses-module-2025-11-26.md` |
+| **Отчёт Trash + улучшения** | `docs/reports/report-media-trash-and-improvements-2025-11-29.md` |
 
 ---
 
@@ -273,7 +277,18 @@ model MediaLicense {
 - ✅ Водяные знаки
 - ✅ Документация
 
+### Обновления 2025-11-29
+
+- ✅ **Корзина (Trash)** — безопасное удаление с восстановлением
+- ✅ **Файлы недоступны извне** после удаления (storage/.trash/)
+- ✅ **Управление S3 Buckets** — выбор, создание, валидация
+- ✅ **Атомарные операции** — fix race conditions в синхронизации
+- ✅ **UI/UX улучшения** — консистентные стили, современные диалоги
+
+📄 Подробности: [report-media-trash-and-improvements-2025-11-29.md](./report-media-trash-and-improvements-2025-11-29.md)
+
 ---
 
-*Отчёт создан: 2025-11-26*
+*Отчёт создан: 2025-11-26*  
+*Обновлён: 2025-11-29*
 

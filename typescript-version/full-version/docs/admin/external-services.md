@@ -24,7 +24,7 @@ The External Services module allows you to:
 ### Requirements
 
 - **Role**: `SUPERADMIN` or `ADMIN`
-- **Encryption Key**: Must be configured in environment variables (`ENCRYPTION_KEY`)
+- **Encryption Key**: Must be configured in environment variables (`CREDENTIALS_ENCRYPTION_KEY`)
 
 ## 🔄 Configuration Priority
 
@@ -343,7 +343,7 @@ Use `/api/admin/settings/services/status` to get overall status of all enabled s
 All passwords, tokens, and API keys are automatically encrypted using AES-256-GCM before storage.
 
 **Requirements:**
-- `ENCRYPTION_KEY` must be set in environment variables
+- `CREDENTIALS_ENCRYPTION_KEY` must be set in environment variables
 - Key must be 32 bytes (64 hex characters)
 
 **Generate Key:**
@@ -420,9 +420,9 @@ SENTRY_DSN=https://abc123@o123456.ingest.sentry.io/1234567
 
 If you see encryption errors:
 
-1. **Verify ENCRYPTION_KEY**:
+1. **Verify CREDENTIALS_ENCRYPTION_KEY**:
    ```bash
-   echo $ENCRYPTION_KEY
+   echo $CREDENTIALS_ENCRYPTION_KEY
    ```
 
 2. **Generate New Key** (if missing):

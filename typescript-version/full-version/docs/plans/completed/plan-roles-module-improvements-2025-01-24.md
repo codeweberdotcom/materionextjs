@@ -25,6 +25,7 @@
 - [API документация ролей](../api/roles.md)
 - [Документация разрешений](../permissions/permissions.md)
 - [Инструкция для AI](../AI_WORKFLOW_GUIDE.md)
+- **[Отчёт о выполнении](../../reports/testing/report-roles-module-improvements-2025-11-25.md)** ✅
 
 ---
 

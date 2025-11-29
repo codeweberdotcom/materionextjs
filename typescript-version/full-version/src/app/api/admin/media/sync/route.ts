@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
-import { getMediaSyncService, SyncScope, SyncOperation } from '@/services/media'
+import { getMediaSyncService, SyncScope, SyncOperation, initializeMediaQueues } from '@/services/media'
 import logger from '@/lib/logger'
 
 type SyncAction = 
@@ -20,6 +20,8 @@ type SyncAction =
   | 'download_from_s3_delete_s3'
   | 'delete_local_only'
   | 'delete_s3_only'
+  | 'purge_s3'
+  | 'verify_status'
 
 /**
  * POST /api/admin/media/sync
@@ -38,11 +40,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { action, scope, entityType, mediaIds } = body as {
+    const { action, scope, entityType, mediaIds, overwrite } = body as {
       action: SyncAction
       scope: SyncScope
       entityType?: string
       mediaIds?: string[]
+      overwrite?: boolean
     }
 
     if (!action) {
@@ -73,6 +76,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Инициализируем очереди и workers
+    await initializeMediaQueues()
+
     const syncService = getMediaSyncService()
     let job
 
@@ -82,6 +88,7 @@ export async function POST(request: NextRequest) {
           scope,
           entityType,
           mediaIds,
+          overwrite,
           createdBy: user.id,
         })
         break
@@ -91,6 +98,7 @@ export async function POST(request: NextRequest) {
           scope,
           entityType,
           mediaIds,
+          overwrite,
           createdBy: user.id,
         })
         break
@@ -132,6 +140,46 @@ export async function POST(request: NextRequest) {
           createdBy: user.id,
         })
         break
+
+      case 'purge_s3':
+        // Очистка всего S3 bucket (независимо от БД)
+        const purgeResult = await syncService.purgeS3Bucket({ createdBy: user.id })
+
+        logger.warn('[API] S3 bucket purge completed', {
+          jobId: purgeResult.job?.id,
+          deletedFiles: purgeResult.deletedFiles,
+          deletedBytes: purgeResult.deletedBytes,
+          errors: purgeResult.errors,
+          userId: user.id,
+        })
+
+        return NextResponse.json({
+          success: true,
+          job: purgeResult.job,
+          purge: {
+            deletedFiles: purgeResult.deletedFiles,
+            deletedBytes: purgeResult.deletedBytes,
+            errors: purgeResult.errors,
+          },
+        })
+
+      case 'verify_status':
+        // Верификация не создаёт job, выполняется синхронно
+        const verifyResult = await syncService.verifyStorageStatus({
+          scope,
+          entityType,
+          mediaIds,
+        })
+
+        logger.info('[API] Storage status verification completed', {
+          total: verifyResult.total,
+          updated: verifyResult.updated,
+        })
+
+        return NextResponse.json({
+          success: true,
+          verification: verifyResult,
+        })
 
       default:
         return NextResponse.json(

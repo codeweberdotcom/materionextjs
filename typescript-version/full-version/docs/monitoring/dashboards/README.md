@@ -11,13 +11,14 @@
 
 | Dashboard | UID | Файл | Описание |
 |-----------|-----|------|----------|
+| **Media** | `media-module` | `media-dashboard.json` | Upload, Processing, S3 Sync |
 | Rate Limit | `materio-rl` | `rate-limit-dashboard.json` | Rate limiting метрики |
 | Notifications | `materio-notifications` | `notifications-dashboard.json` | Bull queue мониторинг |
 | Redis | `materio-redis` | `redis-dashboard.json` | Redis сервер |
 | Socket.IO | `materio-socket` | `socket-dashboard.json` | WebSocket соединения |
 | Operations | `materio-operations` | `operations-dashboard.json` | API errors, bulk ops, events |
-| **System** | `materio-system` | `system-dashboard.json` | HTTP API + Database |
-| **Security** | `materio-security` | `security-dashboard.json` | Auth + Storage |
+| System | `materio-system` | `system-dashboard.json` | HTTP API + Database |
+| Security | `materio-security` | `security-dashboard.json` | Auth + Storage |
 
 ---
 
@@ -47,13 +48,14 @@
 
 ## 📝 Документация каждого дашборда
 
-- [system-dashboard.json](./system-dashboard.md) - HTTP API + Database
-- [security-dashboard.json](./security-dashboard.md) - Authentication + Storage
-- [rate-limit-dashboard.json](./rate-limit-dashboard.md) - Rate Limiting
-- [notifications-dashboard.json](./notifications-dashboard.md) - Notifications/Bull
-- [redis-dashboard.json](./redis-dashboard.md) - Redis
-- [socket-dashboard.json](./socket-dashboard.md) - Socket.IO
-- [operations-dashboard.json](./operations-dashboard.md) - Application Operations
+- [media-dashboard.md](./media-dashboard.md) - **Media Upload, Processing, S3** ✅ NEW
+- [system-dashboard.md](./system-dashboard.md) - HTTP API + Database
+- [security-dashboard.md](./security-dashboard.md) - Authentication + Storage
+- [rate-limit-dashboard.md](./rate-limit-dashboard.md) - Rate Limiting
+- [notifications-dashboard.md](./notifications-dashboard.md) - Notifications/Bull
+- [redis-dashboard.md](./redis-dashboard.md) - Redis
+- [socket-dashboard.md](./socket-dashboard.md) - Socket.IO
+- [operations-dashboard.md](./operations-dashboard.md) - Application Operations
 
 ---
 
@@ -78,6 +80,7 @@ providers:
 
 | Dashboard | URL |
 |-----------|-----|
+| **Media** | http://localhost:9091/d/media-module |
 | System | http://localhost:9091/d/materio-system |
 | Security | http://localhost:9091/d/materio-security |
 | Rate Limit | http://localhost:9091/d/materio-rl |
@@ -85,4 +88,6 @@ providers:
 | Redis | http://localhost:9091/d/materio-redis |
 | Socket.IO | http://localhost:9091/d/materio-socket |
 | Operations | http://localhost:9091/d/materio-operations |
+
+**Credentials:** См. `.env` (`GRAFANA_USER`, `GRAFANA_PASSWORD`)
 

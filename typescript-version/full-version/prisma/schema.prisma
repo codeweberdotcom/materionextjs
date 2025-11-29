@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -41,6 +41,8 @@ model Session {
 
 model User {
   id                      String             @id @default(cuid())
+  username                String?            @unique // URL slug: ivan_petrov (nullable для существующих)
+  usernameChangedAt       DateTime? // Последнее изменение username
   name                    String?
   email                   String?            @unique
   phone                   String?            @unique
@@ -512,6 +514,40 @@ model RegistrationSettings {
 }
 
 // ========================================
+// Slug History - История изменений slug/username
+// ========================================
+
+model SlugHistory {
+  id         String   @id @default(cuid())
+  entityType String // 'user' | 'account'
+  entityId   String // ID пользователя или аккаунта
+  oldSlug    String // Старый slug
+  newSlug    String // Новый slug
+  changedAt  DateTime @default(now())
+  changedBy  String? // ID пользователя, который изменил (null = система)
+
+  @@index([entityType, oldSlug])
+  @@index([entityId])
+  @@index([changedAt])
+  @@map("slug_history")
+}
+
+// Настройки slug системы
+model SlugSettings {
+  id                   String   @id @default(cuid())
+  changeIntervalDays   Int      @default(30) // Минимальный интервал между сменами (дни)
+  minLength            Int      @default(3) // Минимальная длина slug
+  maxLength            Int      @default(50) // Максимальная длина slug
+  reservedSlugs        String   @default("[]") // JSON массив зарезервированных slug
+  allowAdminOverride   Boolean  @default(true) // Админ может менять без ограничений
+  updatedBy            String? // ID администратора
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("slug_settings")
+}
+
+// ========================================
 // Service Configuration - External Services
 // ========================================
 
@@ -718,6 +754,8 @@ model TariffPlan {
 
 model UserAccount {
   id           String     @id @default(cuid())
+  slug         String?    @unique // URL slug: ooo_romashka (nullable для существующих)
+  slugChangedAt DateTime? // Последнее изменение slug
   userId       String // Владелец аккаунта
   ownerId      String // Основной владелец (для переданных аккаунтов)
   type         String // 'LISTING', 'COMPANY', 'NETWORK'
@@ -855,6 +893,9 @@ model Media {
   lastSyncAt DateTime?
   syncError  String?
 
+  // Корзина
+  trashMetadata String? // JSON: { originalPath, trashPath, originalVariants, trashVariants }
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime? // Soft delete
@@ -925,11 +966,22 @@ model MediaSyncJob {
   scope      String  @default("selected") // 'all' | 'entity_type' | 'selected'
   entityType String? // Фильтр по типу сущности
   mediaIds   String? // JSON массив ID для 'selected'
+  s3Bucket   String? // S3 bucket с которым выполнялась задача
 
   // Опции
   deleteSource    Boolean @default(false) // Удалять исходные файлы после синхронизации
   overwrite       Boolean @default(false) // Перезаписывать существующие
   includeVariants Boolean @default(true) // Включать варианты размеров
+
+  // Parent/Child relationship для batch processing
+  isParent    Boolean        @default(false) // true = родительская задача
+  parentJobId String? // ID родительской задачи (для child jobs)
+  parentJob   MediaSyncJob?  @relation("ParentChild", fields: [parentJobId], references: [id])
+  childJobs   MediaSyncJob[] @relation("ParentChild")
+
+  // Batch info (для child jobs)
+  batchIndex Int? // 0, 1, 2, ... номер batch
+  batchSize  Int? // Размер batch (обычно 100)
 
   // Прогресс
   status         String @default("pending") // 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
@@ -956,6 +1008,7 @@ model MediaSyncJob {
   @@index([status])
   @@index([operation])
   @@index([createdAt])
+  @@index([parentJobId])
   @@map("media_sync_jobs")
 }
 
@@ -1025,6 +1078,17 @@ model MediaGlobalSettings {
 
   // Очередь
   processingConcurrency Int @default(3) // Параллельная обработка
+
+  // Режим удаления
+  deleteMode              String  @default("soft") // soft | hard
+  softDeleteRetentionDays Int     @default(30) // Дней до авто hard delete
+  autoCleanupEnabled      Boolean @default(true) // Авто-очистка soft deleted
+
+  // S3 расширенные настройки
+  s3Enabled         Boolean @default(false)
+  s3AutoSync        Boolean @default(true) // Авто-синхр. после upload
+  s3DeleteWithLocal Boolean @default(true) // Удалять S3 при hard delete
+  s3Endpoint        String? // Для MinIO/Yandex Object Storage
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

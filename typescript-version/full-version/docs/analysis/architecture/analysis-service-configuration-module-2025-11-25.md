@@ -255,7 +255,7 @@ enum ServiceStatus {
    - Оценка времени: 1 день
 
 2. **Рекомендация 2: Реализовать шифрование credentials**
-   - Описание: AES-256-GCM с ключом из ENCRYPTION_KEY env
+   - Описание: AES-256-GCM с ключом из CREDENTIALS_ENCRYPTION_KEY env
    - Оценка сложности: Низкая
    - Оценка времени: 0.5 дня
 

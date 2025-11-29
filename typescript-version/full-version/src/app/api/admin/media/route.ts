@@ -30,6 +30,15 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
 
+    // Handle deleted filter: 'true' = only deleted, 'false' = only non-deleted, undefined = all
+    const deletedParam = searchParams.get('deleted')
+    let deletedFilter: boolean | undefined = undefined
+    if (deletedParam === 'true') {
+      deletedFilter = true  // Only deleted items (trash)
+    } else if (deletedParam === 'false') {
+      deletedFilter = false  // Only non-deleted items (files)
+    }
+    
     const options = {
       page: parseInt(searchParams.get('page') || '1'),
       limit: parseInt(searchParams.get('limit') || '20'),
@@ -43,6 +52,7 @@ export async function GET(request: NextRequest) {
       hasWatermark: searchParams.get('hasWatermark') === 'true' ? true :
                     searchParams.get('hasWatermark') === 'false' ? false : undefined,
       search: searchParams.get('search') || undefined,
+      deleted: deletedFilter,
       includeDeleted: searchParams.get('includeDeleted') === 'true',
     }
 

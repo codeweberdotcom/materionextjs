@@ -256,11 +256,113 @@ model User {
 - **Protected Roles**: System roles (`isSystem: true`) cannot be deleted
 - **Hierarchy Enforcement**: Roles can only modify roles with higher `level` value
 
+### Защита иерархии ролей
+
+Функция `canModifyRole()` предотвращает изменение родительских ролей дочерними:
+
+```typescript
+import { canModifyRole, getRoleLevel } from '@/utils/formatting/string'
+
+// Проверка возможности изменения роли
+function canModifyRole(actorRole: string, targetRole: string): boolean {
+  const actorLevel = getRoleLevel(actorRole)   // Уровень текущего пользователя
+  const targetLevel = getRoleLevel(targetRole) // Уровень целевой роли
+  return targetLevel > actorLevel  // Можно изменять только роли с бо́льшим level
+}
+
+// Пример использования в API
+if (!canModifyRole(currentUser.role.code, targetRole.code)) {
+  return NextResponse.json(
+    { message: 'Cannot modify role with higher hierarchy level' },
+    { status: 403 }
+  )
+}
+```
+
+**Правила:**
+- ADMIN (level 10) может изменять MANAGER (20), EDITOR (30), и т.д.
+- ADMIN (level 10) **НЕ может** изменять SUPERADMIN (0)
+- Custom роли (level 100) могут изменять только другие custom роли (level 100+)
+
 ### Data Validation
 - **Unique Names**: Role names must be unique
 - **Required Fields**: Name is mandatory for roles
-- **JSON Permissions**: Permissions stored as validated JSON
+- **JSON Permissions**: Permissions stored as validated JSON (Zod schema)
 - **User Assignment Checks**: Prevent deletion of roles with users
+
+---
+
+## 💾 Кэширование
+
+### Redis с fallback на in-memory
+
+```
+┌─────────────────────────────────────┐
+│      ResilientRoleCacheStore        │
+├─────────────────────────────────────┤
+│  Primary: RedisRoleCacheStore       │
+│  Fallback: InMemoryRoleCacheStore   │
+│  Auto-switch: ✅                    │
+└─────────────────────────────────────┘
+```
+
+**Поведение:**
+1. Если `REDIS_URL` установлен — использует Redis
+2. При потере связи с Redis — автоматически переключается на in-memory
+3. При восстановлении связи — возвращается на Redis
+4. Кэш очищается при create/update/delete роли
+
+```typescript
+// Очистка кэша
+await fetch('/api/admin/roles?clearCache=true')
+```
+
+---
+
+## 📊 События аудита
+
+Все операции с ролями фиксируются через EventService:
+
+| Событие | Severity | Описание |
+|---------|----------|----------|
+| `role.created` | info | Создание роли |
+| `role.updated` | info | Обновление роли |
+| `role.deleted` | warning | Удаление роли |
+| `role.permissions.changed` | info | Изменение разрешений |
+
+**Структура события:**
+```typescript
+{
+  source: 'roleManagement',
+  module: 'roleManagement',
+  type: 'role.updated',
+  severity: 'info',
+  actor: { type: 'user', id: 'user-id' },
+  subject: { type: 'role', id: 'role-id' },
+  payload: {
+    roleId: 'role-id',
+    roleName: 'Admin',
+    changes: [
+      { field: 'permissions', oldValue: {...}, newValue: {...} }
+    ]
+  }
+}
+```
+
+---
+
+## 📈 Метрики (Prometheus)
+
+| Метрика | Тип | Описание |
+|---------|-----|----------|
+| `roles_operations_total` | Counter | Количество операций (create/update/delete/read) |
+| `roles_operation_duration_seconds` | Histogram | Время выполнения операций |
+| `roles_cache_hits_total` | Counter | Попадания в кэш |
+| `roles_cache_misses_total` | Counter | Промахи кэша |
+| `roles_cache_backend_active` | Gauge | Активный бэкенд (redis/in-memory) |
+| `roles_cache_backend_switch_total` | Counter | Переключения между бэкендами |
+| `roles_validation_errors_total` | Counter | Ошибки валидации |
+| `roles_hierarchy_violations_total` | Counter | Нарушения иерархии |
 
 ## 🚀 Usage Examples
 
@@ -371,6 +473,14 @@ if (response.status === 400) {
 - **Permission Validation**: Always check permissions before operations
 - **User Assignment**: Check for assigned users before deletion
 - **Protected Roles**: Respect system role protections
+
+---
+
+## 🔗 Связанные документы
+
+- [Отчёт: Улучшения модуля ролей (2025-11-25)](../reports/testing/report-roles-module-improvements-2025-11-25.md)
+- [Отчёт: Рефакторинг isAdmin (2025-11-25)](../reports/testing/report-roles-refactoring-isadmin-removal-2025-11-25.md)
+- [Permissions Documentation](../permissions/permissions.md)
 
 ---
 

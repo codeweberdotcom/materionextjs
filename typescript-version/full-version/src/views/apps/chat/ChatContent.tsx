@@ -26,6 +26,7 @@ import SendMsgForm from './SendMsgForm'
 import UserProfileRight from './UserProfileRight'
 import CustomAvatar from '@core/components/mui/Avatar'
 import { useTranslation } from '@/contexts/TranslationContext'
+import { useTranslate } from '@/hooks/useTranslate'
 
 // Custom Hooks
 import { useUnreadByContact } from '@/hooks/useUnreadByContact'
@@ -61,13 +62,15 @@ const UserAvatar = ({
   setUserProfileLeftOpen,
   setBackdropOpen,
   navigation,
-  userStatuses
+  userStatuses,
+  t
 }: {
   activeUser: ContactType
   setUserProfileLeftOpen: (open: boolean) => void
   setBackdropOpen: (open: boolean) => void
   navigation: Record<string, string>
   userStatuses: { [userId: string]: { isOnline: boolean; lastSeen?: string } }
+  t: (key: string, variables?: Record<string, string | number>) => string
 }) => {
   // Get real-time user status
   const userStatus = userStatuses[activeUser?.id || '']
@@ -95,11 +98,11 @@ const UserAvatar = ({
     if (diffMins < 1) {
       statusText = navigation.justNow
     } else if (diffMins < 60) {
-      statusText = navigation.minutesAgo.replace('{{count}}', diffMins.toString())
+      statusText = t('navigation.minutesAgo', { count: diffMins })
     } else if (diffHours < 24) {
-      statusText = navigation.hoursAgo.replace('{{count}}', diffHours.toString())
+      statusText = t('navigation.hoursAgo', { count: diffHours })
     } else if (diffDays < 7) {
-      statusText = navigation.daysAgo.replace('{{count}}', diffDays.toString())
+      statusText = t('navigation.daysAgo', { count: diffDays })
     } else {
       statusText = lastSeenDate.toLocaleDateString('ru-RU')
     }
@@ -164,6 +167,7 @@ const ChatContent = (props: Props) => {
   const router = useRouter()
   const { lang } = useParams()
   const { navigation } = useTranslation()
+  const { t } = useTranslate()
   const { userStatuses: unreadStatuses } = useUnreadByContact()
   const { statuses: presenceStatuses } = usePresence()
 
@@ -228,6 +232,7 @@ const ChatContent = (props: Props) => {
                 setUserProfileLeftOpen={setUserProfileRightOpen}
                 navigation={navigation}
                 userStatuses={mergedStatuses}
+                t={t}
               />
             </div>
           ) : (
@@ -237,6 +242,7 @@ const ChatContent = (props: Props) => {
               setUserProfileLeftOpen={setUserProfileRightOpen}
               navigation={navigation}
               userStatuses={mergedStatuses}
+              t={t}
             />
           )}
             {isBelowMdScreen ? null : (

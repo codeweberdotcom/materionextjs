@@ -12,7 +12,7 @@
 
 import { BaseConnector } from './BaseConnector'
 import type { ConnectionTestResult } from '@/lib/config/types'
-import { decrypt } from '@/lib/config/encryption'
+import { safeDecrypt } from '@/lib/config/encryption'
 import logger from '@/lib/logger'
 
 /**
@@ -81,7 +81,7 @@ export class ElasticsearchConnector extends BaseConnector {
       // Аутентификация
       if (metadata.apiKeyId && metadata.apiKey) {
         // API Key аутентификация
-        const apiKey = decrypt(metadata.apiKey)
+        const apiKey = safeDecrypt(metadata.apiKey)
         clientConfig.auth = {
           apiKey: {
             id: metadata.apiKeyId,
@@ -90,14 +90,14 @@ export class ElasticsearchConnector extends BaseConnector {
         }
       } else if (this.config.username && this.config.password) {
         // Basic аутентификация
-        const password = decrypt(this.config.password)
+        const password = safeDecrypt(this.config.password)
         clientConfig.auth = {
           username: this.config.username,
           password
         }
       } else if (this.config.token) {
         // Bearer token
-        const token = decrypt(this.config.token)
+        const token = safeDecrypt(this.config.token)
         clientConfig.auth = {
           bearer: token
         }
@@ -114,7 +114,7 @@ export class ElasticsearchConnector extends BaseConnector {
         }
 
         if (this.config.tlsCert) {
-          const cert = decrypt(this.config.tlsCert)
+          const cert = safeDecrypt(this.config.tlsCert)
           clientConfig.tls.ca = cert
         }
       }
@@ -238,22 +238,22 @@ export class ElasticsearchConnector extends BaseConnector {
 
     // Аутентификация
     if (metadata.apiKeyId && metadata.apiKey) {
-      const apiKey = decrypt(metadata.apiKey)
+      const apiKey = safeDecrypt(metadata.apiKey)
       clientConfig.auth = {
         apiKey: { id: metadata.apiKeyId, api_key: apiKey }
       }
     } else if (this.config.username && this.config.password) {
-      const password = decrypt(this.config.password)
+      const password = safeDecrypt(this.config.password)
       clientConfig.auth = { username: this.config.username, password }
     } else if (this.config.token) {
-      const token = decrypt(this.config.token)
+      const token = safeDecrypt(this.config.token)
       clientConfig.auth = { bearer: token }
     }
 
     if (this.config.tlsEnabled) {
       clientConfig.tls = { rejectUnauthorized: true }
       if (this.config.tlsCert) {
-        clientConfig.tls.ca = decrypt(this.config.tlsCert)
+        clientConfig.tls.ca = safeDecrypt(this.config.tlsCert)
       }
     }
 

@@ -3,6 +3,7 @@ import Grid from '@mui/material/Grid2'
 
 // Component Imports
 import AccountDetails from './AccountDetails'
+import UsernameCard from './UsernameCard'
 import AccountDelete from './AccountDelete'
 
 const Account = () => {
@@ -10,6 +11,9 @@ const Account = () => {
     <Grid container spacing={6}>
       <Grid size={{ xs: 12 }}>
         <AccountDetails />
+      </Grid>
+      <Grid size={{ xs: 12 }}>
+        <UsernameCard />
       </Grid>
       <Grid size={{ xs: 12 }}>
         <AccountDelete />

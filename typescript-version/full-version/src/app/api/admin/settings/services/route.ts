@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Проверяем права доступа (только admin/superadmin)
-    const userRole = user.role?.name?.toUpperCase()
+    const userRole = user.role?.code?.toUpperCase()
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Проверяем права доступа (только admin/superadmin)
-    const userRole = user.role?.name?.toUpperCase()
+    const userRole = user.role?.code?.toUpperCase()
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -113,15 +113,19 @@ export async function POST(request: NextRequest) {
     )
 
     // Логируем событие
-    await eventService.emit({
+    await eventService.record({
       source: 'api',
       module: 'settings',
       type: 'service_configuration.created',
       severity: 'info',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'service_configuration',
-      subjectId: service.id,
+      actor: {
+        type: 'user',
+        id: user.id
+      },
+      subject: {
+        type: 'service_configuration',
+        id: service.id
+      },
       message: `Создана конфигурация сервиса: ${service.displayName}`,
       payload: {
         name: service.name,

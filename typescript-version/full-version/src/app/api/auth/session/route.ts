@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
         image: user.image,
         role: user.role ? {
           id: user.role.id,
-          name: user.role.name,
+          name: user.role.name || user.role.code,
+          code: user.role.code,
           permissions: user.role.permissions
         } : null
       },

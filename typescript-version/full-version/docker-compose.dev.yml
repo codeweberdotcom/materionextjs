@@ -1,0 +1,158 @@
+# Unified Docker Compose для локальной разработки
+# 
+# Все credentials читаются из .env файла
+#
+# Команды:
+#   pnpm dev:full    - запустить всё
+#   docker compose -f docker-compose.dev.yml down - остановить
+#   docker compose -f docker-compose.dev.yml logs -f - логи
+
+services:
+  # ============================================
+  # REDIS - основа для сессий, кэша, очередей
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: materio-redis
+    restart: unless-stopped
+    command: >
+      redis-server 
+      --appendonly yes 
+      --maxmemory 256mb 
+      --maxmemory-policy allkeys-lru
+      ${REDIS_PASSWORD:+--requirepass ${REDIS_PASSWORD}}
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - materio-net
+
+  # ============================================
+  # BULL BOARD - UI для мониторинга очередей
+  # ============================================
+  bull-board:
+    image: deadly0/bull-board
+    container_name: materio-bull-board
+    restart: unless-stopped
+    ports:
+      - '3030:3000'
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_USE_TLS: 'false'
+      BULL_PREFIX: 'bull'
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - materio-net
+
+  # ============================================
+  # PROMETHEUS - сбор метрик
+  # ============================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: materio-prometheus
+    restart: unless-stopped
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - materio-net
+
+  # ============================================
+  # LOKI - агрегация логов
+  # ============================================
+  loki:
+    image: grafana/loki:latest
+    container_name: materio-loki
+    restart: unless-stopped
+    ports:
+      - '3100:3100'
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - materio-net
+
+  # ============================================
+  # PROMTAIL - сборщик логов для Loki
+  # ============================================
+  promtail:
+    image: grafana/promtail:latest
+    container_name: materio-promtail
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml:ro
+      - ./logs:/var/log/materio:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - materio-net
+
+  # ============================================
+  # GRAFANA - визуализация метрик и логов
+  # ============================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: materio-grafana
+    restart: unless-stopped
+    ports:
+      - '9091:3000'
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - materio-net
+
+  # ============================================
+  # MINIO (S3) - объектное хранилище
+  # ============================================
+  minio:
+    image: minio/minio:latest
+    container_name: materio-s3
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-minioadmin123}
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - materio-net
+
+volumes:
+  redis-data:
+    name: materio-redis-data
+  minio-data:
+    name: materio-minio-data
+
+networks:
+  materio-net:
+    name: materio-network
+    driver: bridge

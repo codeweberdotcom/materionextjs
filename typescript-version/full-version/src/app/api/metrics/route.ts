@@ -1,15 +1,31 @@
 import { metricsRegistry } from '@/lib/metrics/registry'
 // Явно импортируем метрики для их регистрации в registry
 import { httpRequestDuration, websocketConnections, databaseQueryDuration } from '@/lib/metrics'
+import * as mediaMetrics from '@/lib/metrics/media'
 import { getSocketMetrics, getTotalConnections } from '@/lib/sockets'
+import { initializeMediaQueues } from '@/services/media'
 
 // Убеждаемся, что метрики инициализированы (side-effect)
 const _metrics = { httpRequestDuration, websocketConnections, databaseQueryDuration }
+const _mediaMetrics = mediaMetrics
+
+// Флаг инициализации очередей для метрик
+let queuesInitialized = false
 
 export async function GET() {
   const startTime = Date.now()
   
   try {
+    // Инициализируем очереди для обновления метрик
+    if (!queuesInitialized) {
+      try {
+        await initializeMediaQueues()
+        queuesInitialized = true
+      } catch (queueError) {
+        // Игнорируем ошибки инициализации очередей
+      }
+    }
+
     // Синхронизируем WebSocket метрики из Socket.IO сервера
     try {
       const socketMetrics = getSocketMetrics()

@@ -204,8 +204,20 @@ export class StorageService {
 
   /**
    * Получить публичный URL файла
+   * Для файлов в корзине использует trashPath
    */
   getUrl(media: Media, variantName?: string): string {
+    // Проверяем, находится ли файл в корзине
+    const trashMeta = media.trashMetadata ? JSON.parse(media.trashMetadata) : null
+    const isInTrash = media.deletedAt && trashMeta
+    
+    // Для файлов в корзине возвращаем специальный API URL
+    // Корзина недоступна публично, только через API
+    if (isInTrash) {
+      const variant = variantName || 'original'
+      return `/api/admin/media/${media.id}/trash?variant=${variant}`
+    }
+    
     // Если указан вариант, ищем его URL
     if (variantName && media.variants) {
       const variants = JSON.parse(media.variants)
@@ -232,6 +244,23 @@ export class StorageService {
     }
     
     throw new Error(`No URL available for media: ${media.id}`)
+  }
+
+  /**
+   * Проверить существование файла в локальном хранилище
+   */
+  async existsLocal(path: string): Promise<boolean> {
+    return this.localAdapter.exists(path)
+  }
+
+  /**
+   * Проверить существование файла на S3
+   */
+  async existsS3(path: string): Promise<boolean> {
+    if (!this.s3Adapter) {
+      return false
+    }
+    return this.s3Adapter.exists(path)
   }
 
   /**
@@ -443,6 +472,257 @@ export class StorageService {
       },
     })
   }
+
+  /**
+   * Получить абсолютный путь к папке корзины (вне public/)
+   * Корзина хранится в /storage/.trash/ чтобы быть недоступной извне
+   */
+  private getTrashBasePath(): string {
+    return path.join(process.cwd(), 'storage', '.trash')
+  }
+
+  /**
+   * Переместить файл в корзину (storage/.trash)
+   * Перемещает локальные файлы в storage/.trash/{mediaId}/ и удаляет с S3
+   * Корзина находится вне public/ и недоступна по прямому URL
+   */
+  async moveToTrash(media: Media): Promise<{ 
+    trashPath: string | null
+    trashVariants: Record<string, string>
+  }> {
+    const trashDir = path.join(this.getTrashBasePath(), media.id)
+    let trashPath: string | null = null
+    const trashVariants: Record<string, string> = {}
+    
+    // Создаём директорию для корзины
+    const fs = await import('fs/promises')
+    await fs.mkdir(trashDir, { recursive: true })
+    
+    // Перемещаем оригинал в корзину
+    if (media.localPath) {
+      const filename = media.localPath.split('/').pop() || 'file'
+      const trashFilePath = path.join(trashDir, filename)
+      const sourceAbsPath = path.join(this.config.local.basePath, media.localPath)
+      
+      try {
+        await fs.rename(sourceAbsPath, trashFilePath)
+        trashPath = trashFilePath // Сохраняем абсолютный путь
+        logger.info('[StorageService] File moved to trash', {
+          mediaId: media.id,
+          from: media.localPath,
+          to: trashPath,
+        })
+      } catch (error) {
+        logger.warn('[StorageService] Failed to move file to trash', {
+          mediaId: media.id,
+          error: error instanceof Error ? error.message : String(error),
+        })
+        trashPath = null
+      }
+    }
+    
+    // Перемещаем варианты в корзину
+    const variants = JSON.parse(media.variants || '{}')
+    for (const [name, variant] of Object.entries(variants) as [string, any][]) {
+      if (variant.localPath) {
+        const variantFilename = variant.localPath.split('/').pop() || `${name}.webp`
+        const variantTrashFilePath = path.join(trashDir, variantFilename)
+        const variantSourceAbsPath = path.join(this.config.local.basePath, variant.localPath)
+        
+        try {
+          await fs.rename(variantSourceAbsPath, variantTrashFilePath)
+          trashVariants[name] = variantTrashFilePath // Абсолютный путь
+        } catch (error) {
+          logger.warn('[StorageService] Failed to move variant to trash', {
+            mediaId: media.id,
+            variant: name,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+    }
+    
+    // Удаляем с S3
+    if (this.s3Adapter) {
+      if (media.s3Key) {
+        try {
+          await this.s3Adapter.delete(media.s3Key)
+          logger.info('[StorageService] S3 file deleted (trash)', {
+            mediaId: media.id,
+            s3Key: media.s3Key,
+          })
+        } catch (error) {
+          logger.warn('[StorageService] Failed to delete S3 file', {
+            mediaId: media.id,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+      
+      // Удаляем варианты с S3
+      for (const [name, variant] of Object.entries(variants) as [string, any][]) {
+        if (variant.s3Key) {
+          try {
+            await this.s3Adapter.delete(variant.s3Key)
+          } catch (error) {
+            logger.warn('[StorageService] Failed to delete S3 variant', {
+              mediaId: media.id,
+              variant: name,
+              error: error instanceof Error ? error.message : String(error),
+            })
+          }
+        }
+      }
+    }
+    
+    return { trashPath, trashVariants }
+  }
+
+  /**
+   * Восстановить файл из корзины (storage/.trash)
+   * Перемещает файлы из storage/.trash обратно в public/uploads и перезаливает на S3
+   */
+  async restoreFromTrash(media: Media): Promise<Media> {
+    const trashMeta = media.trashMetadata ? JSON.parse(media.trashMetadata) : null
+    
+    if (!trashMeta) {
+      logger.warn('[StorageService] No trash metadata for restore', { mediaId: media.id })
+      return media
+    }
+    
+    const { originalPath, trashPath, originalVariants, trashVariants } = trashMeta
+    let restoredLocalPath: string | null = null
+    const variants = JSON.parse(media.variants || '{}')
+    const fs = await import('fs/promises')
+    
+    // Восстанавливаем оригинал (trashPath теперь абсолютный)
+    if (trashPath && originalPath) {
+      try {
+        const destAbsPath = path.join(this.config.local.basePath, originalPath)
+        // Создаём директорию назначения
+        await fs.mkdir(path.dirname(destAbsPath), { recursive: true })
+        await fs.rename(trashPath, destAbsPath)
+        restoredLocalPath = originalPath
+        logger.info('[StorageService] File restored from trash', {
+          mediaId: media.id,
+          from: trashPath,
+          to: originalPath,
+        })
+      } catch (error) {
+        logger.error('[StorageService] Failed to restore file from trash', {
+          mediaId: media.id,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+    
+    // Восстанавливаем варианты (trashVariants содержит абсолютные пути)
+    if (trashVariants && originalVariants) {
+      for (const [name, trashVariantPath] of Object.entries(trashVariants) as [string, string][]) {
+        const originalVariantPath = originalVariants[name]
+        if (originalVariantPath) {
+          try {
+            const destAbsPath = path.join(this.config.local.basePath, originalVariantPath)
+            await fs.mkdir(path.dirname(destAbsPath), { recursive: true })
+            await fs.rename(trashVariantPath, destAbsPath)
+            if (variants[name]) {
+              variants[name].localPath = originalVariantPath
+            }
+          } catch (error) {
+            logger.warn('[StorageService] Failed to restore variant from trash', {
+              mediaId: media.id,
+              variant: name,
+              error: error instanceof Error ? error.message : String(error),
+            })
+          }
+        }
+      }
+    }
+    
+    // Удаляем пустую директорию корзины для этого файла
+    try {
+      const trashDir = path.join(this.getTrashBasePath(), media.id)
+      await fs.rmdir(trashDir)
+    } catch {
+      // Игнорируем ошибки удаления директории
+    }
+    
+    // Обновляем запись в БД
+    const updateData: any = {
+      localPath: restoredLocalPath,
+      storageStatus: 'local_only',
+      trashMetadata: null, // Очищаем метаданные корзины
+      variants: JSON.stringify(variants),
+    }
+    
+    const updatedMedia = await prisma.media.update({
+      where: { id: media.id },
+      data: updateData,
+    })
+    
+    // Перезаливаем на S3 если доступен
+    if (this.s3Adapter && restoredLocalPath) {
+      try {
+        return await this.syncToS3(updatedMedia, false)
+      } catch (error) {
+        logger.warn('[StorageService] Failed to re-sync to S3 after restore', {
+          mediaId: media.id,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+    
+    return updatedMedia
+  }
+
+  /**
+   * Полностью удалить файлы из корзины
+   */
+  /**
+   * Полностью удалить файлы из корзины (storage/.trash)
+   */
+  async deleteFromTrash(media: Media): Promise<void> {
+    const trashMeta = media.trashMetadata ? JSON.parse(media.trashMetadata) : null
+    const fs = await import('fs/promises')
+    
+    // Удаляем оригинал (trashPath теперь абсолютный путь)
+    if (trashMeta?.trashPath) {
+      try {
+        await fs.unlink(trashMeta.trashPath)
+      } catch (error) {
+        logger.warn('[StorageService] Failed to delete file from trash', {
+          mediaId: media.id,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
+    }
+    
+    // Удаляем варианты (абсолютные пути)
+    if (trashMeta?.trashVariants) {
+      for (const trashVariantPath of Object.values(trashMeta.trashVariants) as string[]) {
+        try {
+          await fs.unlink(trashVariantPath)
+        } catch (error) {
+          logger.warn('[StorageService] Failed to delete variant from trash', {
+            mediaId: media.id,
+            error: error instanceof Error ? error.message : String(error),
+          })
+        }
+      }
+    }
+    
+    // Удаляем директорию storage/.trash/{mediaId}
+    try {
+      const trashDir = path.join(this.getTrashBasePath(), media.id)
+      const files = await fs.readdir(trashDir)
+      if (files.length === 0) {
+        // Директория пуста, удаляем её
+        await fs.rmdir(trashDir)
+      }
+    } catch {
+      // Игнорируем ошибки
+    }
+  }
 }
 
 // ========================================
@@ -450,6 +730,74 @@ export class StorageService {
 // ========================================
 
 let storageServiceInstance: StorageService | null = null
+
+/**
+ * Получить S3 конфигурацию
+ * Приоритет bucket: БД (s3DefaultBucket) > .env (S3_BUCKET)
+ * Приоритет credentials: .env > БД
+ */
+async function getS3Config(): Promise<S3AdapterConfig | undefined> {
+  // Credentials из .env
+  const envEndpoint = process.env.S3_ENDPOINT
+  const envAccessKey = process.env.S3_ACCESS_KEY
+  const envSecretKey = process.env.S3_SECRET_KEY
+  const envBucket = process.env.S3_BUCKET
+  
+  // Получаем bucket из БД (приоритет над .env)
+  const globalSettings = await prisma.mediaGlobalSettings.findFirst()
+  const dbBucket = globalSettings?.s3DefaultBucket
+  
+  // Bucket: БД имеет приоритет над .env
+  const bucket = dbBucket || envBucket
+  
+  if (envEndpoint && envAccessKey && envSecretKey && bucket) {
+    logger.info('[StorageService] Using S3 config', { 
+      bucket,
+      bucketSource: dbBucket ? 'database' : 'env'
+    })
+    return {
+      endpoint: envEndpoint,
+      accessKeyId: envAccessKey,
+      secretAccessKey: envSecretKey,
+      bucket,
+      region: process.env.S3_REGION || 'us-east-1',
+      forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== 'false',
+    }
+  }
+  
+  // Fallback: credentials из БД (ServiceConfiguration)
+  if (!dbBucket) {
+    return undefined
+  }
+  
+  const s3Config = await prisma.serviceConfiguration.findFirst({
+    where: { 
+      type: 'S3',
+      enabled: true,
+    },
+  })
+  
+  if (!s3Config?.username || !s3Config?.password) {
+    return undefined
+  }
+  
+  logger.info('[StorageService] Using S3 config from database')
+  const { safeDecrypt } = await import('@/lib/config/encryption')
+  const metadata = JSON.parse(s3Config.metadata || '{}')
+  const protocol = (s3Config.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
+  
+  return {
+    bucket: dbBucket,
+    region: metadata.region || globalSettings?.s3DefaultRegion || 'us-east-1',
+    endpoint: s3Config.port 
+      ? `${protocol}://${s3Config.host}:${s3Config.port}`
+      : `${protocol}://${s3Config.host}`,
+    accessKeyId: s3Config.username,
+    secretAccessKey: safeDecrypt(s3Config.password),
+    forcePathStyle: metadata.forcePathStyle ?? true,
+    publicUrlPrefix: globalSettings?.s3PublicUrlPrefix || undefined,
+  }
+}
 
 /**
  * Получить или создать singleton StorageService
@@ -471,35 +819,8 @@ export async function getStorageService(): Promise<StorageService> {
     defaultStrategy: (globalSettings?.defaultStorageStrategy as StorageStrategy) || 'local_first',
   }
   
-  // Добавляем S3 конфигурацию если доступна
-  if (globalSettings?.s3DefaultBucket) {
-    // Пробуем получить credentials из ServiceConfiguration
-    const s3Config = await prisma.serviceConfiguration.findFirst({
-      where: { 
-        type: 'S3',
-        enabled: true,
-      },
-    })
-    
-    if (s3Config && s3Config.username && s3Config.password) {
-      // Импортируем decrypt функцию
-      const { decrypt } = await import('@/lib/config/encryption')
-      
-      const metadata = JSON.parse(s3Config.metadata || '{}')
-      
-      config.s3 = {
-        bucket: metadata.bucket || globalSettings.s3DefaultBucket,
-        region: metadata.region || globalSettings.s3DefaultRegion || 'us-east-1',
-        endpoint: s3Config.port 
-          ? `${s3Config.protocol || 'https'}://${s3Config.host}:${s3Config.port}`
-          : `${s3Config.protocol || 'https'}://${s3Config.host}`,
-        accessKeyId: s3Config.username,
-        secretAccessKey: decrypt(s3Config.password),
-        forcePathStyle: metadata.forcePathStyle ?? true,
-        publicUrlPrefix: globalSettings.s3PublicUrlPrefix || undefined,
-      }
-    }
-  }
+  // Добавляем S3 конфигурацию (.env приоритетнее БД)
+  config.s3 = await getS3Config()
   
   storageServiceInstance = new StorageService(config)
   return storageServiceInstance
@@ -510,6 +831,18 @@ export async function getStorageService(): Promise<StorageService> {
  */
 export function resetStorageService(): void {
   storageServiceInstance = null
+}
+
+/**
+ * Проверить, настроен ли S3
+ */
+export async function isS3Configured(): Promise<boolean> {
+  try {
+    const service = await getStorageService()
+    return service.isS3Available()
+  } catch {
+    return false
+  }
 }
 
 

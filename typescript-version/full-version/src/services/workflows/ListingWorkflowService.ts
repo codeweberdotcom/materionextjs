@@ -377,15 +377,19 @@ class ListingWorkflowService {
     reason?: string
   ) {
     // 1. Отправить событие в EventService
-    await eventService.emit({
+    await eventService.record({
       source: 'listing-workflow',
       module: 'listings',
       type: `listing.${event.toLowerCase()}`,
       severity: this.getEventSeverity(event),
-      actorType: 'user',
-      actorId,
-      subjectType: 'listing',
-      subjectId: listing.id,
+      actor: {
+        type: 'user',
+        id: actorId
+      },
+      subject: {
+        type: 'listing',
+        id: listing.id
+      },
       message: `Объявление "${listing.title}": ${listingStateLabels[fromState]} → ${listingStateLabels[toState]}`,
       payload: {
         listingId: listing.id,

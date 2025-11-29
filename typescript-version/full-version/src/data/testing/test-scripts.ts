@@ -143,6 +143,14 @@ export const playwrightTestScripts: PlaywrightTestScript[] = [
     file: 'e2e/verification/verification-flow.spec.ts',
     type: 'E2E',
     timeout: 120000
+  },
+  {
+    id: 'username-change',
+    title: 'Username/Slug System',
+    description: 'Tests username system: public profile display, 404 for non-existent users, username change in settings, availability checking, format validation, 301 redirects for old usernames.',
+    file: 'e2e/username/username-change.spec.ts',
+    type: 'E2E',
+    timeout: 90000
   }
 ]
 

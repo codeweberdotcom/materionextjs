@@ -65,7 +65,7 @@
 - [x] 2.1 Создать `src/lib/config/encryption.ts`
 - [x] 2.2 Реализовать функцию `encrypt(text: string): string`
 - [x] 2.3 Реализовать функцию `decrypt(encryptedText: string): string`
-- [ ] 2.4 Добавить `ENCRYPTION_KEY` в `.env.example`
+- [ ] 2.4 Добавить `CREDENTIALS_ENCRYPTION_KEY` в `.env.example`
 - [ ] 2.5 Написать unit тесты для шифрования
 
 **Критерии завершения:**
@@ -261,7 +261,7 @@
 - [ ] 10.2 Создать `docs/admin/external-services.md` (user guide)
 - [x] 10.3 Обновить `docs/STATUS_INDEX.md`
 - [x] 10.4 Обновить `docs/ROOT_FILES_DESCRIPTION.md`
-- [ ] 10.5 Добавить `ENCRYPTION_KEY` в `.env.example` с документацией
+- [ ] 10.5 Добавить `CREDENTIALS_ENCRYPTION_KEY` в `.env.example` с документацией
 - [ ] 10.6 Создать отчёт о реализации
 
 **Критерии завершения:**
@@ -305,7 +305,7 @@
    - Влияние: Среднее
    - Митигация: Миграция обратно-совместима, таблица создаётся пустой
 
-2. **Риск 2: Потеря ENCRYPTION_KEY**
+2. **Риск 2: Потеря CREDENTIALS_ENCRYPTION_KEY**
    - Описание: При потере ключа credentials станут нечитаемыми
    - Вероятность: Низкая
    - Влияние: Критическое

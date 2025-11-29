@@ -7,7 +7,7 @@
 
 import { BaseConnector } from './BaseConnector'
 import type { ConnectionTestResult } from '@/lib/config/types'
-import { decrypt } from '@/lib/config/encryption'
+import { safeDecrypt } from '@/lib/config/encryption'
 import logger from '@/lib/logger'
 
 /**
@@ -31,11 +31,11 @@ export class SentryConnector extends BaseConnector {
       let dsn = ''
 
       if (this.config.token) {
-        dsn = decrypt(this.config.token)
+        dsn = safeDecrypt(this.config.token)
       } else {
         // Строим DSN из компонентов
         const protocol = this.config.tlsEnabled ? 'https' : 'http'
-        const password = this.config.password ? decrypt(this.config.password) : ''
+        const password = this.config.password ? safeDecrypt(this.config.password) : ''
         const auth = this.config.username
           ? `${this.config.username}${password ? `:${password}` : ''}`
           : ''

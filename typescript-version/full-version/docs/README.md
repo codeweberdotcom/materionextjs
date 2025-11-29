@@ -82,6 +82,10 @@
 - [Улучшения функционала](improvements/enhancements/) - Предложения по улучшению
 
 ### ⚙️ Конфигурация
+- [**Environment Variables (.env)**](configuration/environment.md) ⭐
+- [**PostgreSQL**](configuration/postgresql.md) ⭐ — миграция, переключение SQLite↔PostgreSQL
+- [**Redis**](configuration/redis.md) ⭐ — очереди, кэш, rate limiting
+- [**S3 Storage**](configuration/s3-storage.md) ⭐ — buckets, синхронизация, корзина
 - [Аутентификация](configuration/authentication.md)
 - [Клиент Socket.IO](configuration/socket-client.md)
 - [Требования к Socket](configuration/socket-requirements.md)

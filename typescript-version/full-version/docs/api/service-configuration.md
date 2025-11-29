@@ -135,7 +135,7 @@ Create new service configuration.
 
 **AI Agent Usage:**
 - Passwords and tokens are automatically encrypted using AES-256-GCM
-- Requires `ENCRYPTION_KEY` in environment variables
+- Requires `CREDENTIALS_ENCRYPTION_KEY` in environment variables
 - After creation, `ServiceConfigResolver` cache is automatically cleared
 
 ### GET `/api/admin/settings/services/[id]`
@@ -311,7 +311,7 @@ Get connection status of all enabled services.
 All sensitive credentials (passwords, tokens, API keys) are encrypted using AES-256-GCM before storage in the database.
 
 **Requirements:**
-- `ENCRYPTION_KEY` must be set in environment variables
+- `CREDENTIALS_ENCRYPTION_KEY` must be set in environment variables
 - Key must be 32 bytes (64 hex characters)
 
 **Generate Encryption Key:**

@@ -13,6 +13,9 @@ import {
   HeadObjectCommand,
   ListObjectsV2Command,
   CopyObjectCommand,
+  ListBucketsCommand,
+  CreateBucketCommand,
+  HeadBucketCommand,
 } from '@aws-sdk/client-s3'
 import { Readable } from 'stream'
 
@@ -295,6 +298,172 @@ export class S3Adapter implements StorageAdapter {
    */
   getBucket(): string {
     return this.bucket
+  }
+
+  /**
+   * Получить список всех bucket'ов
+   */
+  async listBuckets(): Promise<{ name: string; creationDate?: Date }[]> {
+    try {
+      const response = await this.client.send(new ListBucketsCommand({}))
+      
+      return (response.Buckets || []).map(bucket => ({
+        name: bucket.Name || '',
+        creationDate: bucket.CreationDate,
+      }))
+    } catch (error) {
+      logger.error('[S3Adapter] ListBuckets failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw error
+    }
+  }
+
+  /**
+   * Создать новый bucket
+   */
+  async createBucket(bucketName: string): Promise<boolean> {
+    try {
+      await this.client.send(new CreateBucketCommand({
+        Bucket: bucketName,
+      }))
+      
+      logger.info('[S3Adapter] Bucket created', { bucket: bucketName })
+      return true
+    } catch (error: any) {
+      // Bucket уже существует - это не ошибка
+      if (error.name === 'BucketAlreadyOwnedByYou' || error.name === 'BucketAlreadyExists') {
+        logger.debug('[S3Adapter] Bucket already exists', { bucket: bucketName })
+        return true
+      }
+      
+      logger.error('[S3Adapter] CreateBucket failed', {
+        bucket: bucketName,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw error
+    }
+  }
+
+  /**
+   * Проверить существование bucket'а и доступ к нему
+   */
+  async validateBucket(bucketName: string): Promise<{ exists: boolean; accessible: boolean; error?: string }> {
+    try {
+      await this.client.send(new HeadBucketCommand({
+        Bucket: bucketName,
+      }))
+      
+      return { exists: true, accessible: true }
+    } catch (error: any) {
+      if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+        return { exists: false, accessible: false, error: 'Bucket не найден' }
+      }
+      
+      if (error.$metadata?.httpStatusCode === 403) {
+        return { exists: true, accessible: false, error: 'Нет доступа к bucket' }
+      }
+      
+      return { 
+        exists: false, 
+        accessible: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      }
+    }
+  }
+
+  /**
+   * Статический метод для создания временного клиента (без указания bucket'а)
+   */
+  static createTemporaryClient(config: Omit<S3AdapterConfig, 'bucket'>): S3Client {
+    return new S3Client({
+      region: config.region,
+      endpoint: config.endpoint,
+      credentials: {
+        accessKeyId: config.accessKeyId,
+        secretAccessKey: config.secretAccessKey,
+      },
+      forcePathStyle: config.forcePathStyle ?? false,
+    })
+  }
+
+  /**
+   * Статический метод для получения списка bucket'ов без создания полного адаптера
+   */
+  static async listBucketsStatic(config: Omit<S3AdapterConfig, 'bucket'>): Promise<{ name: string; creationDate?: Date }[]> {
+    const client = S3Adapter.createTemporaryClient(config)
+    
+    try {
+      const response = await client.send(new ListBucketsCommand({}))
+      
+      return (response.Buckets || []).map(bucket => ({
+        name: bucket.Name || '',
+        creationDate: bucket.CreationDate,
+      }))
+    } catch (error) {
+      logger.error('[S3Adapter] Static ListBuckets failed', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw error
+    }
+  }
+
+  /**
+   * Статический метод для создания bucket'а
+   */
+  static async createBucketStatic(config: Omit<S3AdapterConfig, 'bucket'>, bucketName: string): Promise<boolean> {
+    const client = S3Adapter.createTemporaryClient(config)
+    
+    try {
+      await client.send(new CreateBucketCommand({
+        Bucket: bucketName,
+      }))
+      
+      logger.info('[S3Adapter] Bucket created (static)', { bucket: bucketName })
+      return true
+    } catch (error: any) {
+      if (error.name === 'BucketAlreadyOwnedByYou' || error.name === 'BucketAlreadyExists') {
+        return true
+      }
+      
+      logger.error('[S3Adapter] Static CreateBucket failed', {
+        bucket: bucketName,
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw error
+    }
+  }
+
+  /**
+   * Статический метод для проверки bucket'а
+   */
+  static async validateBucketStatic(
+    config: Omit<S3AdapterConfig, 'bucket'>, 
+    bucketName: string
+  ): Promise<{ exists: boolean; accessible: boolean; error?: string }> {
+    const client = S3Adapter.createTemporaryClient(config)
+    
+    try {
+      await client.send(new HeadBucketCommand({
+        Bucket: bucketName,
+      }))
+      
+      return { exists: true, accessible: true }
+    } catch (error: any) {
+      if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
+        return { exists: false, accessible: false, error: 'Bucket не найден' }
+      }
+      
+      if (error.$metadata?.httpStatusCode === 403) {
+        return { exists: true, accessible: false, error: 'Нет доступа к bucket' }
+      }
+      
+      return { 
+        exists: false, 
+        accessible: false, 
+        error: error instanceof Error ? error.message : String(error) 
+      }
+    }
   }
 }
 

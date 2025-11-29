@@ -73,6 +73,7 @@ interface ServiceConfig {
   host: string
   port: number | null
   protocol: string | null
+  username: string | null
   tlsEnabled: boolean
   enabled: boolean
   status: 'CONNECTED' | 'DISCONNECTED' | 'ERROR' | 'UNKNOWN'
@@ -80,6 +81,7 @@ interface ServiceConfig {
   lastError: string | null
   hasPassword: boolean
   hasToken: boolean
+  metadata: string | null
   createdAt: string
   updatedAt: string
 }
@@ -114,7 +116,8 @@ const SERVICE_TYPES = [
   { value: 'SENTRY', label: 'Sentry', icon: '🐛' },
   { value: 'S3', label: 'S3 / MinIO', icon: '📦' },
   { value: 'SMTP', label: 'SMTP', icon: '📧' },
-  { value: 'ELASTICSEARCH', label: 'Elasticsearch', icon: '🔍' }
+  { value: 'ELASTICSEARCH', label: 'Elasticsearch', icon: '🔍' },
+  { value: 'FIRECRAWL', label: 'Firecrawl', icon: '🔥' }
 ]
 
 const DEFAULT_PORTS: Record<string, number> = {
@@ -125,7 +128,8 @@ const DEFAULT_PORTS: Record<string, number> = {
   GRAFANA: 3000,
   S3: 9000,
   SMTP: 587,
-  ELASTICSEARCH: 9200
+  ELASTICSEARCH: 9200,
+  FIRECRAWL: 443
 }
 
 const DEFAULT_PROTOCOLS: Record<string, string> = {
@@ -137,7 +141,8 @@ const DEFAULT_PROTOCOLS: Record<string, string> = {
   SENTRY: 'https://',
   S3: 'http://',
   SMTP: 'smtp://',
-  ELASTICSEARCH: 'http://'
+  ELASTICSEARCH: 'http://',
+  FIRECRAWL: 'https://'
 }
 
 const S3_STORAGE_TYPES = [
@@ -207,6 +212,12 @@ export default function ExternalServicesPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showToken, setShowToken] = useState(false)
 
+  // Track if credentials are already set (for edit mode)
+  const [existingCredentials, setExistingCredentials] = useState({
+    hasPassword: false,
+    hasToken: false
+  })
+
   // Fetch services
   const fetchServices = useCallback(async () => {
     try {
@@ -254,6 +265,14 @@ export default function ExternalServicesPage() {
       newData.pgDatabase = 'postgres'
     }
 
+    // Reset Firecrawl specific fields
+    if (type === 'FIRECRAWL') {
+      newData.host = 'api.firecrawl.dev'
+      newData.port = '443'
+      newData.protocol = 'https://'
+      newData.tlsEnabled = true
+    }
+
     setFormData(prev => ({ ...prev, ...newData }))
   }
 
@@ -274,26 +293,61 @@ export default function ExternalServicesPage() {
   // Open create dialog
   const handleOpenCreate = () => {
     setFormData(initialFormData)
+    setExistingCredentials({ hasPassword: false, hasToken: false })
     setDialogMode('create')
     setFormError(null)
     setDialogOpen(true)
   }
 
   // Open edit dialog
-  const handleOpenEdit = (service: ServiceConfig) => {
-    setFormData({
-      name: service.name,
-      displayName: service.displayName,
-      type: service.type,
-      host: service.host,
-      port: service.port?.toString() || '',
-      protocol: service.protocol || '',
-      username: '',
-      password: '',
-      token: '',
-      tlsEnabled: service.tlsEnabled,
-      enabled: service.enabled
-    })
+  const handleOpenEdit = async (service: ServiceConfig) => {
+    try {
+      const response = await fetch(`/api/admin/settings/services/${service.id}`)
+      const data = await response.json()
+      const fullService = data.data || service
+      const metadata = fullService.metadata ? JSON.parse(fullService.metadata) : {}
+
+      setFormData({
+        name: service.name,
+        displayName: service.displayName,
+        type: service.type,
+        host: service.host,
+        port: service.port?.toString() || '',
+        protocol: service.protocol || '',
+        username: fullService.username || '',
+        password: '',
+        token: '',
+        tlsEnabled: service.tlsEnabled,
+        enabled: service.enabled,
+        s3Region: metadata.region || 'us-east-1',
+        s3Bucket: metadata.bucket || '',
+        s3StorageType: metadata.storageType || 'minio',
+        s3ForcePathStyle: metadata.forcePathStyle ?? true,
+        pgDatabase: metadata.database || 'postgres'
+      })
+
+      // Track existing credentials for placeholder display
+      setExistingCredentials({
+        hasPassword: fullService.hasPassword || false,
+        hasToken: fullService.hasToken || false
+      })
+    } catch {
+      setFormData({
+        ...initialFormData,
+        name: service.name,
+        displayName: service.displayName,
+        type: service.type,
+        host: service.host,
+        port: service.port?.toString() || '',
+        protocol: service.protocol || '',
+        tlsEnabled: service.tlsEnabled,
+        enabled: service.enabled,
+      })
+      setExistingCredentials({
+        hasPassword: service.hasPassword || false,
+        hasToken: service.hasToken || false
+      })
+    }
     setEditingId(service.id)
     setDialogMode('edit')
     setFormError(null)
@@ -770,42 +824,80 @@ export default function ExternalServicesPage() {
               </>
             )}
 
+            {/* Firecrawl Specific Fields */}
+            {formData.type === 'FIRECRAWL' && (
+              <>
+                <Divider />
+                <Typography variant='subtitle2' color='textSecondary'>
+                  Настройки Firecrawl
+                </Typography>
+
+                <Alert severity='info' sx={{ mb: 1 }}>
+                  Получите API ключ на{' '}
+                  <a href='https://www.firecrawl.dev/' target='_blank' rel='noopener noreferrer'>
+                    firecrawl.dev
+                  </a>
+                </Alert>
+              </>
+            )}
+
             <Divider />
             <Typography variant='subtitle2' color='textSecondary'>
-              Аутентификация {formData.type === 'S3' ? '' : '(опционально)'}
+              Аутентификация {formData.type === 'S3' || formData.type === 'FIRECRAWL' ? '' : '(опционально)'}
             </Typography>
 
-            <TextField
-              label={formData.type === 'S3' ? 'Access Key ID' : 'Имя пользователя'}
-              value={formData.username}
-              onChange={e => setFormData(prev => ({ ...prev, username: e.target.value }))}
-              required={formData.type === 'S3'}
-            />
+            {formData.type !== 'FIRECRAWL' && (
+              <TextField
+                label={formData.type === 'S3' ? 'Access Key ID' : 'Имя пользователя'}
+                value={formData.username}
+                onChange={e => setFormData(prev => ({ ...prev, username: e.target.value }))}
+                required={formData.type === 'S3'}
+              />
+            )}
+
+            {formData.type !== 'FIRECRAWL' && (
+              <TextField
+                label={formData.type === 'S3' ? 'Secret Access Key' : 'Пароль'}
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                placeholder={dialogMode === 'edit' && existingCredentials.hasPassword ? '••••••••••••' : ''}
+                helperText={
+                  dialogMode === 'edit' 
+                    ? existingCredentials.hasPassword 
+                      ? '✓ Установлен. Введите новый для замены или оставьте пустым' 
+                      : 'Не установлен'
+                    : ''
+                }
+                required={formData.type === 'S3' && dialogMode === 'create'}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <IconButton onClick={() => setShowPassword(!showPassword)} edge='end'>
+                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  )
+                }}
+              />
+            )}
 
             <TextField
-              label={formData.type === 'S3' ? 'Secret Access Key' : 'Пароль'}
-              type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={e => setFormData(prev => ({ ...prev, password: e.target.value }))}
-              helperText={dialogMode === 'edit' ? 'Оставьте пустым, чтобы не менять' : ''}
-              required={formData.type === 'S3' && dialogMode === 'create'}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <IconButton onClick={() => setShowPassword(!showPassword)} edge='end'>
-                      {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                    </IconButton>
-                  </InputAdornment>
-                )
-              }}
-            />
-
-            <TextField
-              label='API Токен'
+              label={formData.type === 'FIRECRAWL' ? 'API Key' : 'API Токен'}
               type={showToken ? 'text' : 'password'}
               value={formData.token}
               onChange={e => setFormData(prev => ({ ...prev, token: e.target.value }))}
-              helperText={dialogMode === 'edit' ? 'Оставьте пустым, чтобы не менять' : ''}
+              placeholder={dialogMode === 'edit' && existingCredentials.hasToken ? '••••••••••••' : ''}
+              helperText={
+                formData.type === 'FIRECRAWL'
+                  ? 'API ключ из личного кабинета Firecrawl (fc-...)'
+                  : dialogMode === 'edit' 
+                    ? existingCredentials.hasToken 
+                      ? '✓ Установлен. Введите новый для замены или оставьте пустым' 
+                      : 'Не установлен'
+                    : ''
+              }
+              required={formData.type === 'FIRECRAWL'}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position='end'>

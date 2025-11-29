@@ -30,7 +30,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Проверяем права доступа
-    const userRole = user.role?.name?.toUpperCase()
+    const userRole = user.role?.code?.toUpperCase()
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -51,15 +51,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const result = await serviceConfigurationService.testConnection(id)
 
     // Логируем событие
-    await eventService.emit({
+    await eventService.record({
       source: 'api',
       module: 'settings',
       type: result.success ? 'service_configuration.test_success' : 'service_configuration.test_failed',
       severity: result.success ? 'info' : 'warning',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'service_configuration',
-      subjectId: id,
+      actor: {
+        type: 'user',
+        id: user.id
+      },
+      subject: {
+        type: 'service_configuration',
+        id: id
+      },
       message: result.success
         ? `Тест подключения успешен: ${service.displayName}`
         : `Тест подключения не удался: ${service.displayName}`,

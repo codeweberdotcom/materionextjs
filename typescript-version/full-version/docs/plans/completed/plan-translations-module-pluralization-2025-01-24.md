@@ -2,7 +2,8 @@
 
 **Статус:** ✅ Завершён  
 **Дата завершения:** 2025-01-24  
-**Модуль:** Переводы (Translations)
+**Модуль:** Переводы (Translations)  
+**Отчёт:** [report-translations-pluralization-2025-01-24.md](../../reports/testing/report-translations-pluralization-2025-01-24.md)
 
 ---
 

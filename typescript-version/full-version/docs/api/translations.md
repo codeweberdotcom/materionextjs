@@ -495,6 +495,68 @@ console.log('Context:', context)
 - **Performance**: Cache dictionaries and avoid unnecessary re-renders
 - **Internationalization**: Consider cultural context for translations
 
+## 🔢 Pluralization (Множественные формы)
+
+Система поддерживает pluralization для языков с комплексными правилами склонения (русский, арабский, польский).
+
+### Хук useTranslate
+
+```typescript
+import { useTranslate } from '@/hooks/useTranslate'
+
+const { t } = useTranslate()
+
+// Простой перевод
+t('navigation.dashboard') // → "Панель управления"
+
+// С переменными
+t('messages.welcome', { name: 'Иван' }) // → "Привет, Иван!"
+
+// С plural forms (для русского)
+t('navigation.totalUsersCount', { count: 1 })  // → "Всего 1 пользователь"
+t('navigation.totalUsersCount', { count: 3 })  // → "Всего 3 пользователя"
+t('navigation.totalUsersCount', { count: 5 })  // → "Всего 5 пользователей"
+```
+
+### Структура plural forms
+
+**В JSON файлах:**
+```json
+{
+  "totalUsersCount": {
+    "one": "Всего {{count}} пользователь",
+    "few": "Всего {{count}} пользователя",
+    "many": "Всего {{count}} пользователей"
+  }
+}
+```
+
+**В БД (поле value):**
+```json
+"{\"one\":\"{{count}} пользователь\",\"few\":\"{{count}} пользователя\",\"many\":\"{{count}} пользователей\"}"
+```
+
+### Правила для русского языка
+
+| Число | Форма | Пример |
+|-------|-------|--------|
+| 1, 21, 31 | one | 1 пользователь |
+| 2, 3, 4, 22, 23 | few | 2 пользователя |
+| 0, 5-20, 25-30 | many | 5 пользователей |
+
+### Файлы
+
+- `src/utils/translations/pluralization.ts` — утилиты pluralization
+- `src/hooks/useTranslate.ts` — хук с поддержкой plural forms
+- `src/utils/translations/export-helper.ts` — импорт/экспорт plural forms
+
+---
+
+## 🔗 Связанные документы
+
+- [Отчёт: Pluralization](../reports/testing/report-translations-pluralization-2025-01-24.md)
+- [References API](./references.md)
+
 ---
 
 *This documentation is designed for AI agents to understand and maintain the translation system functionality.*

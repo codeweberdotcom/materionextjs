@@ -4,13 +4,13 @@ This document provides detailed information about the database schema, relations
 
 ## 🗄️ Database Overview
 
-The application uses **Prisma ORM** with **SQLite** as the database engine. SQLite is chosen for development ease but can be easily switched to PostgreSQL or MySQL for production.
+The application uses **Prisma ORM** with **PostgreSQL** as the database engine.
 
 ### Database Configuration
 
 ```prisma
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -18,6 +18,38 @@ generator client {
   provider        = "prisma-client-js"
   binaryTargets   = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-1.1.x", "rhel-openssl-3.0.x"]
 }
+```
+
+### Environment Variables
+
+```env
+DATABASE_URL="postgresql://materio:materio123@localhost:5432/materio?schema=public"
+DATABASE_USER=materio
+DATABASE_PASSWORD=materio123
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
+DATABASE_NAME=materio
+```
+
+### Docker Setup
+
+PostgreSQL запускается через Docker:
+
+```bash
+# Первоначальная настройка
+pnpm pg:setup
+
+# Запуск
+pnpm pg:up
+
+# Остановка
+pnpm pg:down
+
+# Консоль psql
+pnpm pg:psql
+
+# Prisma Studio
+pnpm pg:studio
 ```
 
 ## 📊 Entity-Relationship Diagram
@@ -557,3 +589,9 @@ npx prisma generate
 - **Session Management**: Automatic session cleanup and validation
 
 This database schema provides a solid foundation for a scalable admin application with proper relationships, constraints, and performance optimizations.
+
+## 🔗 Связанная документация
+
+- [PostgreSQL Configuration](../configuration/postgresql.md) — миграция, переключение SQLite↔PostgreSQL
+- [Environment Variables](../configuration/environment.md)
+- [Redis Configuration](../configuration/redis.md)

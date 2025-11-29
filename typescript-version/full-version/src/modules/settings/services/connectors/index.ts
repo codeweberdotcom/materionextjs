@@ -14,6 +14,7 @@ export { SentryConnector } from './SentryConnector'
 export { S3Connector } from './S3Connector'
 export { ElasticsearchConnector } from './ElasticsearchConnector'
 export { SMTPConnector } from './SMTPConnector'
+export { FirecrawlConnector } from './FirecrawlConnector'
 
 import type { ServiceConfigurationModel, ServiceType } from '@/lib/config/types'
 import { BaseConnector } from './BaseConnector'
@@ -26,6 +27,7 @@ import { SentryConnector } from './SentryConnector'
 import { S3Connector } from './S3Connector'
 import { ElasticsearchConnector } from './ElasticsearchConnector'
 import { SMTPConnector } from './SMTPConnector'
+import { FirecrawlConnector } from './FirecrawlConnector'
 
 /**
  * Фабрика для создания коннектора по типу сервиса
@@ -69,6 +71,9 @@ export function createConnector(config: ServiceConfigurationModel): BaseConnecto
 
     case 'SMTP':
       return new SMTPConnector(config)
+
+    case 'FIRECRAWL':
+      return new FirecrawlConnector(config)
 
     default:
       throw new Error(`Неизвестный тип сервиса: ${type}`)

@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Проверяем права доступа
-    const userRole = user.role?.name?.toUpperCase()
+    const userRole = user.role?.code?.toUpperCase()
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -86,7 +86,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Проверяем права доступа
-    const userRole = user.role?.name?.toUpperCase()
+    const userRole = user.role?.code?.toUpperCase()
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -115,15 +115,19 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     )
 
     // Логируем событие
-    await eventService.emit({
+    await eventService.record({
       source: 'api',
       module: 'settings',
       type: 'service_configuration.updated',
       severity: 'info',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'service_configuration',
-      subjectId: service.id,
+      actor: {
+        type: 'user',
+        id: user.id
+      },
+      subject: {
+        type: 'service_configuration',
+        id: service.id
+      },
       message: `Обновлена конфигурация сервиса: ${service.displayName}`,
       payload: {
         name: service.name,
@@ -178,7 +182,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     // Проверяем права доступа
-    const userRole = user.role?.name?.toUpperCase()
+    const userRole = user.role?.code?.toUpperCase()
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -199,15 +203,19 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await serviceConfigurationService.delete(id, user.id)
 
     // Логируем событие
-    await eventService.emit({
+    await eventService.record({
       source: 'api',
       module: 'settings',
       type: 'service_configuration.deleted',
       severity: 'warning',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'service_configuration',
-      subjectId: id,
+      actor: {
+        type: 'user',
+        id: user.id
+      },
+      subject: {
+        type: 'service_configuration',
+        id: id
+      },
       message: `Удалена конфигурация сервиса: ${service.displayName}`,
       payload: {
         name: service.name,

@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
 import { isAdminOrHigher } from '@/utils/permissions/permissions'
 import { getMediaService } from '@/services/media'
+import { getStorageService } from '@/services/media/storage'
 import logger from '@/lib/logger'
 
 /**
@@ -33,8 +34,11 @@ export async function GET(
     }
 
     const { id } = await params
+    const { searchParams } = new URL(request.url)
+    const includeDeleted = searchParams.get('includeDeleted') === 'true'
+    
     const mediaService = getMediaService()
-    const media = await mediaService.getById(id)
+    const media = await mediaService.getById(id, includeDeleted)
 
     if (!media) {
       return NextResponse.json(
@@ -43,21 +47,23 @@ export async function GET(
       )
     }
 
-    // Получаем URL для всех вариантов
+    // Получаем URL для всех вариантов - используем storageService напрямую (без доп. запросов к БД)
+    const storageService = await getStorageService()
     const variants = JSON.parse(media.variants || '{}')
     const urls: Record<string, string> = {}
 
-    for (const [name] of Object.entries(variants)) {
+    // getUrl - синхронный метод, быстро получаем все URL
+    for (const name of Object.keys(variants)) {
       try {
-        urls[name] = await mediaService.getUrl(id, name)
+        urls[name] = storageService.getUrl(media, name)
       } catch {
-        // Игнорируем ошибки получения URL
+        // Игнорируем
       }
     }
 
     // URL оригинала
     try {
-      urls.original = await mediaService.getUrl(id)
+      urls.original = storageService.getUrl(media)
     } catch {
       // Игнорируем
     }
@@ -140,6 +146,61 @@ export async function PUT(
 }
 
 /**
+ * PATCH /api/admin/media/[id]
+ * Восстановить медиа из корзины
+ */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { user } = await requireAuth(request)
+
+    if (!isAdminOrHigher(user)) {
+      return NextResponse.json(
+        { error: 'Forbidden' },
+        { status: 403 }
+      )
+    }
+
+    const { id } = await params
+    const body = await request.json()
+    
+    // Проверяем действие
+    if (body.action !== 'restore') {
+      return NextResponse.json(
+        { error: 'Invalid action. Use action: "restore"' },
+        { status: 400 }
+      )
+    }
+
+    const mediaService = getMediaService()
+    
+    // Восстанавливаем из корзины
+    const media = await mediaService.restore(id)
+
+    logger.info('[API] Media restored', {
+      mediaId: id,
+      restoredBy: user.id,
+    })
+
+    return NextResponse.json({
+      success: true,
+      media,
+    })
+  } catch (error) {
+    logger.error('[API] PATCH /api/admin/media/[id] failed', {
+      error: error instanceof Error ? error.message : String(error),
+    })
+
+    return NextResponse.json(
+      { error: 'Failed to restore media' },
+      { status: 500 }
+    )
+  }
+}
+
+/**
  * DELETE /api/admin/media/[id]
  * Удалить медиа
  */
@@ -162,7 +223,8 @@ export async function DELETE(
     const hard = searchParams.get('hard') === 'true'
 
     const mediaService = getMediaService()
-    const media = await mediaService.getById(id)
+    // includeDeleted=true чтобы находить файлы в корзине для hard delete
+    const media = await mediaService.getById(id, true)
 
     if (!media) {
       return NextResponse.json(

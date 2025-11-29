@@ -191,15 +191,19 @@ class RulesService {
     }
 
     // Отправить событие
-    await eventService.emit({
+    await eventService.record({
       source: 'rules',
       module: 'business-rules',
       type: 'rule.created',
       severity: 'info',
-      actorType: 'user',
-      actorId: input.createdBy,
-      subjectType: 'rule',
-      subjectId: rule.id,
+      actor: {
+        type: 'user',
+        id: input.createdBy
+      },
+      subject: {
+        type: 'rule',
+        id: rule.id
+      },
       message: `Создано правило: ${rule.name}`,
       payload: {
         ruleId: rule.id,
@@ -254,13 +258,15 @@ class RulesService {
     }
 
     // Отправить событие
-    await eventService.emit({
+    await eventService.record({
       source: 'rules',
       module: 'business-rules',
       type: 'rule.updated',
       severity: 'info',
-      subjectType: 'rule',
-      subjectId: rule.id,
+      subject: {
+        type: 'rule',
+        id: rule.id
+      },
       message: `Обновлено правило: ${rule.name}`,
       payload: {
         ruleId: rule.id,
@@ -290,13 +296,15 @@ class RulesService {
     this.engine.removeRule(rule.name)
 
     // Отправить событие
-    await eventService.emit({
+    await eventService.record({
       source: 'rules',
       module: 'business-rules',
       type: 'rule.deleted',
       severity: 'warning',
-      subjectType: 'rule',
-      subjectId: id,
+      subject: {
+        type: 'rule',
+        id: id
+      },
       message: `Удалено правило: ${rule.name}`,
       payload: {
         ruleId: id,

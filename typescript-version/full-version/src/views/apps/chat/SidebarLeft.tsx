@@ -31,6 +31,7 @@ import CustomAvatar from '@core/components/mui/Avatar'
 import UserProfileLeft from './UserProfileLeft'
 import AvatarWithBadge from './AvatarWithBadge'
 import { useTranslation } from '@/contexts/TranslationContext'
+import { useTranslate } from '@/hooks/useTranslate'
 
 // Util Imports
 import { getInitials } from '@/utils/formatting/getInitials'
@@ -66,12 +67,13 @@ type RenderChatType = {
   isBelowMdScreen: boolean
   navigation: any
   initializeRoom: (userId: string) => void
+  t: (key: string, variables?: Record<string, string | number>) => string
 }
 
 // Render contacts list (all users except current)
 const renderContacts = (props: RenderChatType & { session: any; unreadByContact: { [contactId: string]: number }; userStatuses: { [userId: string]: { isOnline: boolean; lastSeen?: string } }; navigation: any; user: any }) => {
   // Props
-  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen, session, unreadByContact, userStatuses, navigation, user, initializeRoom } = props
+  const { chatStore, getActiveUserData, setSidebarOpen, backdropOpen, setBackdropOpen, isBelowMdScreen, session, unreadByContact, userStatuses, navigation, user, initializeRoom, t } = props
 
   return chatStore.contacts.map(contact => {
     const isContactActive = chatStore.activeUser?.id === contact.id
@@ -112,11 +114,11 @@ const renderContacts = (props: RenderChatType & { session: any; unreadByContact:
       if (diffMins < 1) {
         lastSeenText = navigation.recently
       } else if (diffMins < 60) {
-        lastSeenText = navigation.minutesAgo.replace('{{count}}', diffMins.toString())
+        lastSeenText = t('navigation.minutesAgo', { count: diffMins })
       } else if (diffHours < 24) {
-        lastSeenText = navigation.hoursAgo.replace('{{count}}', diffHours.toString())
+        lastSeenText = t('navigation.hoursAgo', { count: diffHours })
       } else if (diffDays < 7) {
-        lastSeenText = navigation.daysAgo.replace('{{count}}', diffDays.toString())
+        lastSeenText = t('navigation.daysAgo', { count: diffDays })
       } else {
         lastSeenText = lastSeenDate.toLocaleDateString('ru-RU')
       }
@@ -224,6 +226,7 @@ const SidebarLeft = (props: Props) => {
   const { unreadByContact, userStatuses: unreadStatuses } = useUnreadByContact()
   const { statuses: presenceStatuses } = usePresence()
   const { navigation } = useTranslation()
+  const { t } = useTranslate()
   const userStatuses = presenceStatuses && Object.keys(presenceStatuses).length > 0 ? presenceStatuses : unreadStatuses
 
   // Make session available in renderContacts function
@@ -375,7 +378,8 @@ const SidebarLeft = (props: Props) => {
                 userStatuses,
                 navigation: currentNavigation,
                 user,
-                initializeRoom
+                initializeRoom,
+                t
               })
             )}
           </ul>

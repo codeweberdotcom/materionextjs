@@ -30,7 +30,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Проверяем права доступа
-    const userRole = user.role?.name?.toUpperCase()
+    const userRole = user.role?.code?.toUpperCase()
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -41,15 +41,19 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const service = await serviceConfigurationService.toggleEnabled(id, user.id)
 
     // Логируем событие
-    await eventService.emit({
+    await eventService.record({
       source: 'api',
       module: 'settings',
       type: service.enabled ? 'service_configuration.enabled' : 'service_configuration.disabled',
       severity: 'info',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'service_configuration',
-      subjectId: id,
+      actor: {
+        type: 'user',
+        id: user.id
+      },
+      subject: {
+        type: 'service_configuration',
+        id: id
+      },
       message: service.enabled
         ? `Сервис включен: ${service.displayName}`
         : `Сервис отключен: ${service.displayName}`,

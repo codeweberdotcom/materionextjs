@@ -72,10 +72,11 @@ export class UserAdapter implements IEntityAdapter {
         
         // Transform to UsersType format
         // Note: Prisma schema has 'name' field, not 'fullName'
+        // username is now a real field in the database
         return users.map(user => ({
           id: user.id,
           fullName: user.name || '',
-          username: user.email?.split('@')[0] || '', // Use email prefix as username
+          username: user.username || user.email?.split('@')[0] || '', // Use real username or fallback to email prefix
           email: user.email || '',
           role: user.role?.name || 'user',
           status: user.status || 'active',

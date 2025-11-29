@@ -15,7 +15,7 @@
 
 import { BaseConnector } from './BaseConnector'
 import type { ConnectionTestResult } from '@/lib/config/types'
-import { decrypt } from '@/lib/config/encryption'
+import { safeDecrypt } from '@/lib/config/encryption'
 import logger from '@/lib/logger'
 
 /**
@@ -81,7 +81,7 @@ export class SMTPConnector extends BaseConnector {
         : port === 465
 
       // Расшифровываем пароль если есть
-      const password = this.config.password ? decrypt(this.config.password) : undefined
+      const password = this.config.password ? safeDecrypt(this.config.password) : undefined
 
       // Конфигурация транспорта
       const transportConfig: any = {
@@ -101,7 +101,7 @@ export class SMTPConnector extends BaseConnector {
         }
       } else if (this.config.token) {
         // OAuth2 или API Key
-        const token = decrypt(this.config.token)
+        const token = safeDecrypt(this.config.token)
         transportConfig.auth = {
           type: 'OAuth2',
           user: this.config.username || '',
@@ -116,7 +116,7 @@ export class SMTPConnector extends BaseConnector {
         }
 
         if (this.config.tlsCert) {
-          const cert = decrypt(this.config.tlsCert)
+          const cert = safeDecrypt(this.config.tlsCert)
           transportConfig.tls.ca = cert
         }
       }
@@ -221,7 +221,7 @@ export class SMTPConnector extends BaseConnector {
     const metadata = this.parseMetadata()
     const port = this.config.port || 587
     const secure = metadata.secure !== undefined ? metadata.secure : port === 465
-    const password = this.config.password ? decrypt(this.config.password) : undefined
+    const password = this.config.password ? safeDecrypt(this.config.password) : undefined
 
     const transportConfig: any = {
       host: this.config.host,
@@ -235,7 +235,7 @@ export class SMTPConnector extends BaseConnector {
         pass: password
       }
     } else if (this.config.token) {
-      const token = decrypt(this.config.token)
+      const token = safeDecrypt(this.config.token)
       transportConfig.auth = {
         type: 'OAuth2',
         user: this.config.username || '',
@@ -246,7 +246,7 @@ export class SMTPConnector extends BaseConnector {
     if (this.config.tlsEnabled || secure) {
       transportConfig.tls = { rejectUnauthorized: true }
       if (this.config.tlsCert) {
-        transportConfig.tls.ca = decrypt(this.config.tlsCert)
+        transportConfig.tls.ca = safeDecrypt(this.config.tlsCert)
       }
     }
 

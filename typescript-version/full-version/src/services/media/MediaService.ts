@@ -28,6 +28,7 @@ import { getImageProcessingService, ImageProcessingService } from './ImageProces
 import { getWatermarkService, WatermarkService } from './WatermarkService'
 import { getPresetForEntityType, isMimeTypeAllowed, isFileSizeAllowed } from './presets'
 import { prisma } from '@/libs/prisma'
+import { eventService } from '@/services/events'
 import logger from '@/lib/logger'
 
 export class MediaService {
@@ -269,10 +270,12 @@ export class MediaService {
 
   /**
    * Получить медиа по ID
+   * @param id - ID медиа
+   * @param includeDeleted - Включать удалённые (для restore операции)
    */
-  async getById(id: string): Promise<Media | null> {
+  async getById(id: string, includeDeleted: boolean = false): Promise<Media | null> {
     return prisma.media.findUnique({
-      where: { id, deletedAt: null },
+      where: includeDeleted ? { id } : { id, deletedAt: null },
       include: {
         uploadedUser: {
           select: {
@@ -304,10 +307,11 @@ export class MediaService {
       sortBy = 'createdAt',
       sortOrder = 'desc',
       includeDeleted = false,
+      deleted,
       ...filters
     } = options
 
-    const where = this.buildWhereClause(filters, includeDeleted)
+    const where = this.buildWhereClause(filters, includeDeleted, deleted)
 
     const [items, total] = await Promise.all([
       prisma.media.findMany({
@@ -371,36 +375,128 @@ export class MediaService {
 
   /**
    * Удалить медиа (soft delete)
+   * При soft delete: файлы перемещаются в .trash/, удаляются с S3
+   * При hard delete: файлы удаляются полностью (из .trash если есть)
    */
   async delete(id: string, hard: boolean = false): Promise<void> {
     await this.init()
 
-    const media = await prisma.media.findUnique({ where: { id } })
+    // Для hard delete ищем включая удалённые (в корзине)
+    const media = hard 
+      ? await prisma.media.findFirst({ where: { id } })
+      : await prisma.media.findUnique({ where: { id } })
     if (!media) return
 
     if (hard) {
-      // Физическое удаление файлов
-      await this.storageService.delete(media)
+      // Физическое удаление
+      if (media.deletedAt && media.trashMetadata) {
+        // Файлы уже в корзине - удаляем из .trash
+        await this.storageService.deleteFromTrash(media)
+      } else {
+        // Файлы ещё не в корзине - удаляем напрямую
+        await this.storageService.delete(media)
+      }
       await prisma.media.delete({ where: { id } })
     } else {
-      // Soft delete
+      // Soft delete - перемещаем в .trash и удаляем с S3
+      const variants = JSON.parse(media.variants || '{}')
+      const originalVariants: Record<string, string> = {}
+      for (const [name, v] of Object.entries(variants) as [string, any][]) {
+        if (v.localPath) {
+          originalVariants[name] = v.localPath
+        }
+      }
+
+      const { trashPath, trashVariants } = await this.storageService.moveToTrash(media)
+      
+      // Сохраняем метаданные для восстановления
+      const trashMetadata = JSON.stringify({
+        originalPath: media.localPath,
+        trashPath,
+        originalVariants,
+        trashVariants,
+      })
+
+      // Обновляем варианты - очищаем пути
+      for (const [name] of Object.entries(variants) as [string, any][]) {
+        if (variants[name]) {
+          variants[name].localPath = null
+          variants[name].s3Key = null
+        }
+      }
+
       await prisma.media.update({
         where: { id },
-        data: { deletedAt: new Date() },
+        data: { 
+          deletedAt: new Date(),
+          localPath: null,
+          s3Key: null,
+          s3Bucket: null,
+          storageStatus: 'local_only', // Файлы только в .trash (локально)
+          trashMetadata,
+          variants: JSON.stringify(variants),
+        },
       })
     }
 
     logger.info('[MediaService] Media deleted', { mediaId: id, hard })
+
+    // Записываем событие
+    await eventService.record({
+      source: 'media',
+      type: hard ? 'media.hard_deleted' : 'media.soft_deleted',
+      severity: hard ? 'warning' : 'info',
+      entityType: 'media',
+      entityId: id,
+      message: hard 
+        ? `Медиа файл "${media.filename}" безвозвратно удалён`
+        : `Медиа файл "${media.filename}" перемещён в корзину`,
+      details: {
+        filename: media.filename,
+        entityType: media.entityType,
+        storageStatus: media.storageStatus,
+      },
+    })
   }
 
   /**
-   * Восстановить удалённое медиа
+   * Восстановить удалённое медиа из корзины
+   * Перемещает файлы из .trash обратно и перезаливает на S3
    */
   async restore(id: string): Promise<Media> {
-    return prisma.media.update({
+    await this.init()
+
+    // Сначала получаем текущие данные
+    const currentMedia = await prisma.media.findFirst({ where: { id } })
+    if (!currentMedia) {
+      throw new Error(`Media not found: ${id}`)
+    }
+
+    // Восстанавливаем файлы из корзины
+    const restoredMedia = await this.storageService.restoreFromTrash(currentMedia)
+
+    // Очищаем deletedAt
+    const media = await prisma.media.update({
       where: { id },
       data: { deletedAt: null },
     })
+
+    // Записываем событие
+    await eventService.record({
+      source: 'media',
+      type: 'media.restored',
+      severity: 'info',
+      entityType: 'media',
+      entityId: id,
+      message: `Медиа файл "${media.filename}" восстановлен из корзины`,
+      details: {
+        filename: media.filename,
+        entityType: media.entityType,
+        restoredPath: restoredMedia.localPath,
+      },
+    })
+
+    return restoredMedia
   }
 
   /**
@@ -560,11 +656,25 @@ export class MediaService {
 
   /**
    * Построить WHERE clause для фильтрации
+   * @param filters - Фильтры
+   * @param includeDeleted - Включать все (игнорировать deleted filter)
+   * @param deleted - undefined = только активные, true = только удалённые, false = только активные
    */
-  private buildWhereClause(filters: MediaFilter, includeDeleted: boolean) {
+  private buildWhereClause(
+    filters: MediaFilter, 
+    includeDeleted: boolean,
+    deleted?: boolean
+  ) {
     const where: any = {}
 
-    if (!includeDeleted) {
+    // Handle deleted filter
+    if (includeDeleted) {
+      // Include all items (no filter on deletedAt)
+    } else if (deleted === true) {
+      // Only deleted items (trash)
+      where.deletedAt = { not: null }
+    } else {
+      // Only non-deleted items (default, files)
       where.deletedAt = null
     }
 

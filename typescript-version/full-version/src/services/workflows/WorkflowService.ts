@@ -273,15 +273,19 @@ class WorkflowService {
       })
 
       // Отправить событие
-      await eventService.emit({
+      await eventService.record({
         source: 'workflow',
         module: type,
         type: `workflow.${type}.${event.toLowerCase()}`,
         severity: 'info',
-        actorType: actorType as ActorType,
-        actorId,
-        subjectType: type,
-        subjectId: entityId,
+        actor: {
+          type: actorType as string,
+          id: actorId
+        },
+        subject: {
+          type: type,
+          id: entityId
+        },
         message: `Workflow ${type}: ${fromState} → ${toState} (${event})`,
         payload: {
           fromState,

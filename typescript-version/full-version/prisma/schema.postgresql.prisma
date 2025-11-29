@@ -1,0 +1,1163 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-arm64-openssl-1.1.x", "rhel-openssl-3.0.x"]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expiresAt    DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionToken])
+}
+
+model User {
+  id                      String             @id @default(cuid())
+  username                String?            @unique // URL slug: ivan_petrov (nullable для существующих)
+  usernameChangedAt       DateTime? // Последнее изменение username
+  name                    String?
+  email                   String?            @unique
+  phone                   String?            @unique
+  password                String
+  emailVerified           DateTime?
+  phoneVerified           DateTime?
+  documentsVerified       DateTime? // Дата подтверждения документов
+  documentsVerifiedBy     String? // ID администратора, подтвердившего документы
+  documentsRejectedAt     DateTime? // Дата отклонения документов
+  documentsRejectedReason String? // Причина отклонения документов
+  image                   String?
+  roleId                  String
+  language                String             @default("Russian")
+  currency                String             @default("RUB")
+  country                 String             @default("russia")
+  status                  String             @default("active") // XState workflow: active, suspended, blocked, deleted
+  isActive                Boolean            @default(true) // Legacy field, kept for compatibility
+  lastSeen                DateTime?
+  telegramChatId          String? // Telegram chat ID для отправки уведомлений через бота
+  role                    Role               @relation(fields: [roleId], references: [id])
+  accounts                Account[]
+  sessions                Session[]
+  sentMessages            Message[]          @relation("MessageSender")
+  user1Rooms              ChatRoom[]         @relation("User1Rooms")
+  user2Rooms              ChatRoom[]         @relation("User2Rooms")
+  notifications           Notification[]
+  blocks                  UserBlock[]
+  verificationCodes       VerificationCode[]
+  ownedAccounts           UserAccount[]      @relation("OwnedAccounts")
+  ownedAccountsByOwner    UserAccount[]      @relation("OwnedAccountsByOwner")
+  managedAccounts         AccountManager[]   @relation("ManagedAccounts")
+  accountTransfers        AccountTransfer[]  @relation("AccountTransfers")
+  uploadedMedia           Media[]            @relation("UserUploadedMedia")
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  // Constraint: хотя бы email или phone должен быть заполнен (проверяется на уровне приложения)
+
+  @@index([email])
+  @@index([phone])
+  @@index([telegramChatId])
+  @@index([documentsVerified])
+  @@index([status])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  code        String   @unique // Immutable code: 'SUPERADMIN', 'ADMIN', 'USER'
+  name        String   @unique // Display name (can be renamed)
+  description String?
+  permissions String?  @default("{}") // JSON: {"module": ["action1", "action2"]}
+  level       Int      @default(100) // Hierarchy level (0 = highest priority)
+  isSystem    Boolean  @default(false) // System role (cannot be deleted)
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model VerificationCode {
+  id          String   @id @default(cuid())
+  identifier  String // email или phone
+  code        String // код верификации (6-значный для SMS, токен для email)
+  type        String // 'email' | 'phone'
+  expires     DateTime
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(3)
+  verified    Boolean  @default(false)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([identifier, type])
+  @@index([code])
+  @@index([userId])
+  @@index([type, verified])
+  @@index([expires])
+}
+
+model Language {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Country {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String   @unique
+  isActive  Boolean  @default(true)
+  states    State[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Currency {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String   @unique
+  symbol    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model State {
+  id        String   @id @default(cuid())
+  name      String
+  code      String
+  countryId String?
+  country   Country? @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cities City[]
+
+  @@unique([name, id])
+}
+
+model City {
+  id        String   @id @default(cuid())
+  name      String
+  code      String
+  stateId   String?
+  state     State?   @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  districts District[]
+
+  @@unique([name, id])
+}
+
+model District {
+  id        String   @id @default(cuid())
+  name      String
+  code      String
+  cityId    String?
+  city      City?    @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, id])
+}
+
+model Translation {
+  id        String   @id @default(cuid())
+  key       String // e.g., "navigation.dashboards"
+  language  String // e.g., "en", "fr", "ar"
+  value     String // The translated text
+  namespace String   @default("common") // e.g., "navigation", "common", "forms"
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, language, namespace])
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  subject   String
+  content   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatRoom {
+  id        String    @id @default(cuid())
+  user1Id   String
+  user2Id   String
+  user1     User      @relation("User1Rooms", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2     User      @relation("User2Rooms", fields: [user2Id], references: [id], onDelete: Cascade)
+  messages  Message[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([user1Id, user2Id])
+}
+
+model Message {
+  id        String    @id @default(cuid())
+  content   String
+  senderId  String
+  sender    User      @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  roomId    String
+  room      ChatRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([createdAt])
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  message     String
+  type        String    @default("system") // system, chat, email, etc.
+  status      String    @default("unread") // unread, read, archived, deleted
+  readAt      DateTime?
+  metadata    String?   @default("{}")
+  avatarImage String?
+  avatarIcon  String?
+  avatarText  String?
+  avatarColor String?
+  avatarSkin  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([userId, status, createdAt])
+}
+
+model RateLimit {
+  id           String    @id @default(cuid())
+  key          String // IP или userId
+  module       String // 'chat', 'ads', 'upload', 'auth'
+  count        Int       @default(0)
+  windowStart  DateTime  @default(now())
+  windowEnd    DateTime
+  blockedUntil DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([key, module, windowStart])
+}
+
+model RateLimitConfig {
+  id                 String   @id @default(cuid())
+  module             String   @unique // 'chat', 'ads', 'upload', 'auth'
+  maxRequests        Int // Максимум запросов
+  windowMs           Int // Окно в миллисекундах
+  blockMs            Int // Блокировка в миллисекундах
+  warnThreshold      Int?     @default(0)
+  isActive           Boolean  @default(true)
+  mode               String   @default("enforce")
+  storeEmailInEvents Boolean  @default(true)
+  storeIpInEvents    Boolean  @default(true)
+  isFallback         Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model RateLimitState {
+  id           String    @id @default(cuid())
+  key          String // IP или userId
+  module       String // 'chat', 'ads', 'upload', 'auth'
+  count        Int       @default(0) // Текущее количество запросов в окне
+  windowStart  DateTime  @default(now()) // Начало текущего окна
+  windowEnd    DateTime // Конец текущего окна
+  blockedUntil DateTime? // Время окончания блокировки (если заблокирован)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([key, module])
+  @@index([module, updatedAt])
+  @@index([blockedUntil])
+  @@index([module, blockedUntil])
+}
+
+model UserBlock {
+  id          String    @id @default(cuid())
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress   String? // IP адрес для блокировки неавторизованных пользователей
+  ipHash      String?
+  ipPrefix    String?
+  hashVersion Int       @default(1)
+  email       String?
+  emailHash   String?
+  mailDomain  String?
+  reason      String // 'spam', 'abuse', 'rate_limit_violation', etc.
+  module      String // 'chat', 'auth', 'registration', 'ads', etc.
+  blockedBy   String // ID администратора, который заблокировал
+  blockedAt   DateTime  @default(now())
+  unblockedAt DateTime? // Время разблокировки (null = permanent)
+  isActive    Boolean   @default(true)
+  notes       String? // Дополнительные заметки администратора
+  cidr        String?
+  asn         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Индексы для быстрого поиска
+  @@index([userId])
+  @@index([ipAddress])
+  @@index([ipHash])
+  @@index([ipPrefix])
+  @@index([emailHash])
+  @@index([mailDomain])
+  @@index([module])
+  @@index([isActive])
+  @@index([module, isActive])
+  @@index([unblockedAt])
+  @@index([asn])
+}
+
+model CronJobStatus {
+  id            String    @id @default(cuid())
+  name          String    @unique
+  lastRunAt     DateTime?
+  lastSuccessAt DateTime?
+  lastResult    String?
+  lastCount     Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model RateLimitEvent {
+  id           String    @id @default(cuid())
+  module       String
+  key          String
+  userId       String?
+  ipAddress    String?
+  ipHash       String?
+  ipPrefix     String?
+  hashVersion  Int       @default(1)
+  email        String?
+  emailHash    String?
+  debugEmail   String? // For superadmin debugging only
+  eventType    String // 'warning' | 'block'
+  mode         String    @default("enforce") // 'monitor' | 'enforce'
+  count        Int
+  maxRequests  Int
+  windowStart  DateTime
+  windowEnd    DateTime
+  blockedUntil DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([module, eventType, createdAt])
+  @@index([module, key, eventType, mode, windowStart])
+  @@index([key, module])
+  @@index([userId, module])
+  @@index([module])
+  @@index([eventType])
+  @@index([mode])
+  @@index([key])
+  @@index([ipHash])
+  @@index([ipPrefix])
+  @@index([emailHash])
+}
+
+model Event {
+  id            String   @id @default(cuid())
+  source        String
+  module        String
+  type          String
+  severity      String
+  actorType     String?
+  actorId       String?
+  subjectType   String?
+  subjectId     String?
+  key           String?
+  message       String
+  payload       String   @default("{}")
+  correlationId String?
+  metadata      String?  @default("{}")
+  createdAt     DateTime @default(now())
+
+  @@index([source, createdAt])
+  @@index([module, type, createdAt])
+  @@index([key])
+  @@index([actorType, actorId])
+  @@index([subjectType, subjectId])
+}
+
+model TestConfig {
+  id        String   @id @default(cuid())
+  testId    String   @unique // Corresponds to PlaywrightTestScript.id
+  timeout   Int      @default(30000) // Timeout in milliseconds
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([testId])
+  @@index([isActive])
+}
+
+model NotificationScenario {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  enabled     Boolean  @default(true)
+  trigger     String   @default("{}") // Event trigger config: JSON string { source, type, module?, conditions? }
+  actions     String   @default("[]") // Array of actions: JSON string [{ channel, templateId?, content?, delay?, conditions? }]
+  conditions  String? // Optional global conditions: JSON string { userRole?, userStatus?, custom? }
+  priority    Int      @default(0) // Higher priority scenarios execute first
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+
+  executions NotificationExecution[]
+
+  @@index([enabled])
+  @@index([priority])
+  @@index([createdAt])
+}
+
+model NotificationExecution {
+  id          String               @id @default(cuid())
+  scenarioId  String
+  scenario    NotificationScenario @relation(fields: [scenarioId], references: [id], onDelete: Cascade)
+  eventId     String? // Reference to Event.id
+  status      String // 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+  result      String? // Execution result: JSON string { success, messageId, channel, etc. }
+  error       String? // Error message if failed
+  attempts    Int                  @default(0)
+  maxAttempts Int                  @default(3)
+  scheduledAt DateTime? // When to execute (for delayed actions)
+  createdAt   DateTime             @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+
+  @@index([scenarioId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([scheduledAt])
+  @@index([eventId])
+}
+
+model DataSanitizationLog {
+  id           String   @id @default(cuid())
+  operationId  String   @unique // Уникальный ID операции
+  target       String // JSON с целью очистки
+  options      String // JSON с опциями
+  result       String // JSON с результатами
+  requestedBy  String? // Кто запросил операцию
+  ipAddress    String? // IP адрес инициатора
+  userAgent    String? // User agent
+  duration     Int // Время выполнения в ms
+  success      Boolean  @default(true)
+  errorMessage String? // Сообщение об ошибке если была
+  createdAt    DateTime @default(now())
+
+  @@index([operationId])
+  @@index([requestedBy])
+  @@index([createdAt])
+  @@index([success])
+}
+
+model RegistrationSettings {
+  id                       String   @id @default(cuid())
+  registrationMode         String   @default("email_or_phone") // 'email_or_phone' | 'email_and_phone'
+  requirePhoneVerification Boolean  @default(true) // Всегда true для полного доступа
+  requireEmailVerification Boolean  @default(true) // Всегда true при регистрации по email
+  smsProvider              String   @default("smsru") // SMS провайдер
+  updatedBy                String? // ID администратора, который обновил настройки
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@unique([id]) // Только одна запись настроек
+}
+
+// ========================================
+// Slug History - История изменений slug/username
+// ========================================
+
+model SlugHistory {
+  id         String   @id @default(cuid())
+  entityType String // 'user' | 'account'
+  entityId   String // ID пользователя или аккаунта
+  oldSlug    String // Старый slug
+  newSlug    String // Новый slug
+  changedAt  DateTime @default(now())
+  changedBy  String? // ID пользователя, который изменил (null = система)
+
+  @@index([entityType, oldSlug])
+  @@index([entityId])
+  @@index([changedAt])
+  @@map("slug_history")
+}
+
+// Настройки slug системы
+model SlugSettings {
+  id                   String   @id @default(cuid())
+  changeIntervalDays   Int      @default(30) // Минимальный интервал между сменами (дни)
+  minLength            Int      @default(3) // Минимальная длина slug
+  maxLength            Int      @default(50) // Максимальная длина slug
+  reservedSlugs        String   @default("[]") // JSON массив зарезервированных slug
+  allowAdminOverride   Boolean  @default(true) // Админ может менять без ограничений
+  updatedBy            String? // ID администратора
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("slug_settings")
+}
+
+// ========================================
+// Service Configuration - External Services
+// ========================================
+
+model ServiceConfiguration {
+  id          String  @id @default(cuid())
+  name        String  @unique // Уникальный код: 'redis', 'prometheus', 'loki', 'grafana', 'sentry'
+  displayName String // Отображаемое имя: "Redis Server", "Prometheus"
+  type        String // ServiceType: REDIS, POSTGRESQL, PROMETHEUS, LOKI, GRAFANA, SENTRY, SMTP, S3, ELASTICSEARCH
+  host        String // Хост сервера
+  port        Int? // Порт (опционально)
+  protocol    String? // Протокол: redis://, https://, http://
+  basePath    String? // Базовый путь API: /api/v1
+
+  // Аутентификация (зашифровано AES-256-GCM)
+  username   String? // Имя пользователя
+  password   String? // Пароль (зашифровано)
+  token      String? // API токен (зашифровано)
+  tlsEnabled Boolean @default(false) // Использовать TLS
+  tlsCert    String? // Сертификат TLS (зашифровано)
+
+  // Статус подключения
+  enabled   Boolean   @default(true) // Активен ли сервис
+  status    String    @default("UNKNOWN") // ServiceStatus: CONNECTED, DISCONNECTED, ERROR, UNKNOWN
+  lastCheck DateTime? // Последняя проверка подключения
+  lastError String? // Последняя ошибка
+
+  // Дополнительные настройки
+  metadata  String?  @default("{}") // JSON с дополнительными настройками
+  createdBy String? // ID администратора, создавшего конфигурацию
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([type])
+  @@index([enabled])
+  @@index([status])
+  @@map("service_configurations")
+}
+
+// ========================================
+// Workflow & Rules Engine
+// ========================================
+
+model WorkflowInstance {
+  id        String   @id @default(cuid())
+  type      String // 'listing', 'user', 'company', 'verification'
+  entityId  String // ID сущности
+  state     String // Текущее состояние
+  context   String?  @default("{}") // Контекст машины (JSON)
+  version   Int      @default(1) // Для optimistic locking
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transitions WorkflowTransition[]
+
+  @@unique([type, entityId])
+  @@index([type, state])
+  @@index([updatedAt])
+  @@map("workflow_instances")
+}
+
+model WorkflowTransition {
+  id         String   @id @default(cuid())
+  instanceId String
+  fromState  String
+  toState    String
+  event      String // Событие, вызвавшее переход
+  actorId    String? // Кто инициировал
+  actorType  String? // 'user', 'system', 'cron'
+  metadata   String?  @default("{}") // JSON с дополнительными данными
+  createdAt  DateTime @default(now())
+
+  instance WorkflowInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId])
+  @@index([createdAt])
+  @@index([event])
+  @@index([actorId])
+  @@map("workflow_transitions")
+}
+
+model BusinessRule {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  category    String // 'tariff', 'limit', 'blocking', 'notification', 'discount'
+  conditions  String // JSON: { all: [...], any: [...] }
+  event       String // JSON: { type: '...', params: {...} }
+  priority    Int      @default(0)
+  enabled     Boolean  @default(true)
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  executions RuleExecution[]
+
+  @@index([category, enabled])
+  @@index([priority])
+  @@index([enabled])
+  @@map("business_rules")
+}
+
+model RuleExecution {
+  id        String   @id @default(cuid())
+  ruleId    String
+  facts     String // JSON: входные данные
+  result    String // JSON: результат (events)
+  success   Boolean  @default(true)
+  duration  Int // ms
+  error     String?
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  rule BusinessRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId])
+  @@index([createdAt])
+  @@index([success])
+  @@map("rule_executions")
+}
+
+// ========================================
+// Listings (Доска объявлений)
+// ========================================
+
+model Listing {
+  id              String    @id @default(cuid())
+  title           String
+  description     String
+  price           Float?
+  currency        String    @default("RUB")
+  categoryId      String?
+  status          String    @default("draft") // Управляется через XState: draft, pending, active, rejected, sold, archived, deleted
+  ownerId         String // ID владельца (User.id)
+  moderatorId     String? // ID модератора
+  moderatedAt     DateTime?
+  rejectionReason String?
+  images          String?   @default("[]") // JSON массив URL
+  location        String?
+  contacts        String?   @default("{}") // JSON: { phone, email, telegram }
+  metadata        String?   @default("{}") // JSON: дополнительные поля
+  viewsCount      Int       @default(0)
+  publishedAt     DateTime?
+  soldAt          DateTime?
+  archivedAt      DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  category ListingCategory? @relation(fields: [categoryId], references: [id])
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([categoryId])
+  @@index([status, createdAt])
+  @@index([ownerId, status])
+  @@map("listings")
+}
+
+model ListingCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  parentId    String? // Для иерархии
+  icon        String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  parent   ListingCategory?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children ListingCategory[] @relation("CategoryHierarchy")
+  listings Listing[]
+
+  @@index([parentId])
+  @@index([isActive, sortOrder])
+  @@map("listing_categories")
+}
+
+// ========================================
+// User Accounts System
+// ========================================
+
+model TariffPlan {
+  id          String   @id @default(cuid())
+  code        String   @unique // 'FREE', 'BASIC', 'PRO', 'ENTERPRISE'
+  name        String   @unique // Отображаемое имя
+  description String?
+  price       Float    @default(0) // Месячная стоимость
+  currency    String   @default("RUB")
+  features    String   @default("{}") // JSON с возможностями
+  maxAccounts Int? // Максимум аккаунтов (для NETWORK)
+  isActive    Boolean  @default(true)
+  isSystem    Boolean  @default(false) // Системный тариф (нельзя удалить)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  accounts UserAccount[]
+
+  @@index([code])
+  @@index([isActive])
+  @@map("tariff_plans")
+}
+
+model UserAccount {
+  id           String     @id @default(cuid())
+  slug         String?    @unique // URL slug: ooo_romashka (nullable для существующих)
+  slugChangedAt DateTime? // Последнее изменение slug
+  userId       String // Владелец аккаунта
+  ownerId      String // Основной владелец (для переданных аккаунтов)
+  type         String // 'LISTING', 'COMPANY', 'NETWORK'
+  name         String // Название аккаунта
+  description  String?
+  tariffPlanId String
+  tariffPlan   TariffPlan @relation(fields: [tariffPlanId], references: [id])
+  user         User       @relation("OwnedAccounts", fields: [userId], references: [id], onDelete: Cascade)
+  owner        User       @relation("OwnedAccountsByOwner", fields: [ownerId], references: [id])
+  status       String     @default("active") // 'active', 'suspended', 'archived'
+
+  // Тарифная подписка
+  tariffStartedAt      DateTime  @default(now()) // Дата начала текущего тарифа
+  tariffPaidUntil      DateTime? // Оплачено до (null = бессрочно для FREE после downgrade)
+  tariffReminderSentAt DateTime? // Когда последнее напоминание отправлено
+  tariffAutoRenew      Boolean   @default(true) // Автопродление
+
+  metadata  String?  @default("{}") // JSON: дополнительные данные
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  managers  AccountManager[]
+  transfers AccountTransfer[] @relation("TransferFrom")
+
+  @@index([userId])
+  @@index([ownerId])
+  @@index([type])
+  @@index([status])
+  @@index([tariffPlanId])
+  @@index([tariffPaidUntil]) // Для cron-запросов по истекающим тарифам
+  @@map("user_accounts")
+}
+
+model AccountManager {
+  id         String      @id @default(cuid())
+  accountId  String
+  userId     String // Назначенный пользователь
+  account    UserAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  user       User        @relation("ManagedAccounts", fields: [userId], references: [id], onDelete: Cascade)
+  canManage  Boolean     @default(true) // Может ли управлять
+  canEdit    Boolean     @default(true) // Может ли редактировать
+  canDelete  Boolean     @default(false) // Может ли удалять
+  assignedAt DateTime    @default(now())
+  assignedBy String // Кто назначил
+  revokedAt  DateTime?
+  revokedBy  String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@unique([accountId, userId])
+  @@index([userId])
+  @@index([accountId])
+  @@index([canManage])
+  @@map("account_managers")
+}
+
+model AccountTransfer {
+  id            String      @id @default(cuid())
+  fromAccountId String
+  toUserId      String // Кому передается
+  fromAccount   UserAccount @relation("TransferFrom", fields: [fromAccountId], references: [id], onDelete: Cascade)
+  toUser        User        @relation("AccountTransfers", fields: [toUserId], references: [id], onDelete: Cascade)
+  status        String      @default("pending") // 'pending', 'accepted', 'rejected', 'cancelled'
+  requestedBy   String // Кто запросил передачу
+  acceptedAt    DateTime?
+  rejectedAt    DateTime?
+  cancelledAt   DateTime?
+  reason        String? // Причина отклонения/отмены
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([fromAccountId])
+  @@index([toUserId])
+  @@index([status])
+  @@map("account_transfers")
+}
+
+// ========================================
+// Media Module - Управление изображениями
+// ========================================
+
+model Media {
+  id String @id @default(cuid())
+
+  // Идентификация файла
+  filename String // Оригинальное имя: "photo.jpg"
+  slug     String @unique // Уникальный slug: "abc123xyz"
+
+  // Хранение
+  localPath String? // Локальный путь: "/uploads/2025/11/abc123xyz.webp"
+  s3Key     String? // S3 ключ: "media/2025/11/abc123xyz.webp"
+  s3Bucket  String? // Bucket: "my-bucket"
+
+  // Статусы хранения
+  storageStatus String @default("local_only")
+  // 'local_only' | 'synced' | 's3_only' | 'sync_pending' | 'sync_error'
+
+  // Метаданные файла
+  mimeType         String // image/webp, image/jpeg
+  originalMimeType String? // Оригинальный тип до конвертации
+  size             Int // Размер в байтах
+  width            Int?
+  height           Int?
+
+  // Варианты (JSON)
+  variants String @default("{}")
+  // { "thumb": { "localPath": "...", "s3Key": "...", "width": 150 }, ... }
+
+  // Связь с сущностью
+  entityType String // 'user_avatar', 'listing_image', etc.
+  entityId   String? // ID связанной сущности
+  position   Int     @default(0) // Порядок для галерей
+
+  // Водяной знак
+  hasWatermark     Boolean   @default(false)
+  watermarkApplied DateTime?
+
+  // Обработка
+  isProcessed     Boolean   @default(false)
+  processingError String?
+  processedAt     DateTime?
+
+  // EXIF данные (очищены, но сохранены для справки)
+  originalExif String? @default("{}") // JSON
+
+  // Аудит
+  uploadedBy   String?
+  uploadedUser User?   @relation("UserUploadedMedia", fields: [uploadedBy], references: [id])
+  alt          String? // SEO alt текст
+  title        String?
+  caption      String? // Подпись изображения
+  description  String? // Описание для SEO
+
+  // Синхронизация
+  lastSyncAt DateTime?
+  syncError  String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Soft delete
+
+  // Связь с лицензиями
+  licenses MediaLicenseItem[]
+
+  @@index([entityType, entityId])
+  @@index([storageStatus])
+  @@index([isProcessed])
+  @@index([slug])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("media")
+}
+
+model ImageSettings {
+  id          String  @id @default(cuid())
+  entityType  String  @unique // 'user_avatar', 'company_logo', etc.
+  displayName String // "Аватар пользователя"
+  description String?
+
+  // Ограничения загрузки
+  maxFileSize       Int    @default(5242880) // 5MB в байтах
+  maxFilesPerEntity Int    @default(1) // Сколько файлов на сущность
+  allowedMimeTypes  String @default("image/jpeg,image/png,image/webp,image/gif")
+
+  // Размеры вариантов (JSON массив)
+  variants String @default("[]")
+  // [{"name": "thumb", "width": 150, "height": 150, "fit": "cover", "quality": 85}]
+
+  // Обработка
+  convertToWebP Boolean @default(true)
+  stripMetadata Boolean @default(true)
+  quality       Int     @default(85) // 1-100
+
+  // Водяной знак
+  watermarkEnabled    Boolean @default(false)
+  watermarkMediaId    String? // ID Media с водяным знаком
+  watermarkPosition   String? @default("bottom-right") // 'center', 'bottom-right', etc.
+  watermarkOpacity    Float   @default(0.3) // 0.0 - 1.0
+  watermarkScale      Float   @default(0.15) // Размер относительно изображения
+  watermarkOnVariants String  @default("large") // На какие варианты накладывать
+
+  // Хранение
+  storageStrategy String  @default("local_first")
+  // 'local_only' | 'local_first' | 's3_only' | 'both'
+  s3Bucket        String? // Переопределение bucket для типа
+  s3Prefix        String? // Префикс пути в S3: "avatars/"
+
+  // Именование файлов
+  namingStrategy String @default("slug") // 'slug' | 'uuid' | 'original' | 'entity_id'
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("image_settings")
+}
+
+model MediaSyncJob {
+  id String @id @default(cuid())
+
+  // Тип операции
+  operation String // 'upload_to_s3' | 'download_from_s3' | 'delete_local' | 'delete_s3'
+
+  // Область применения
+  scope      String  @default("selected") // 'all' | 'entity_type' | 'selected'
+  entityType String? // Фильтр по типу сущности
+  mediaIds   String? // JSON массив ID для 'selected'
+
+  // Опции
+  deleteSource    Boolean @default(false) // Удалять исходные файлы после синхронизации
+  overwrite       Boolean @default(false) // Перезаписывать существующие
+  includeVariants Boolean @default(true) // Включать варианты размеров
+
+  // Parent/Child relationship для batch processing
+  isParent    Boolean        @default(false) // true = родительская задача
+  parentJobId String? // ID родительской задачи (для child jobs)
+  parentJob   MediaSyncJob?  @relation("ParentChild", fields: [parentJobId], references: [id])
+  childJobs   MediaSyncJob[] @relation("ParentChild")
+
+  // Batch info (для child jobs)
+  batchIndex Int? // 0, 1, 2, ... номер batch
+  batchSize  Int? // Размер batch (обычно 100)
+
+  // Прогресс
+  status         String @default("pending") // 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled'
+  totalFiles     Int    @default(0)
+  processedFiles Int    @default(0)
+  failedFiles    Int    @default(0)
+
+  // Результаты
+  results String? @default("[]") // JSON с детальными результатами
+  error   String?
+
+  // Размеры (в байтах, используем Int для SQLite)
+  totalBytes     Int @default(0)
+  processedBytes Int @default(0)
+
+  // Исполнение
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdBy   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([operation])
+  @@index([createdAt])
+  @@index([parentJobId])
+  @@map("media_sync_jobs")
+}
+
+model Watermark {
+  id          String  @id @default(cuid())
+  name        String  @unique // 'default', 'premium', 'company_x'
+  displayName String
+  description String?
+
+  // Файл водяного знака
+  mediaId String? // Связь с Media (PNG с прозрачностью)
+
+  // Настройки по умолчанию
+  defaultPosition String @default("bottom-right")
+  defaultOpacity  Float  @default(0.3)
+  defaultScale    Float  @default(0.15)
+
+  // Применимость
+  entityTypes String @default("[]") // JSON: ["listing_image", "company_photo"]
+
+  isDefault Boolean @default(false) // Водяной знак по умолчанию
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("watermarks")
+}
+
+// Глобальные настройки медиа
+model MediaGlobalSettings {
+  id String @id @default(cuid())
+
+  // Стратегия хранения по умолчанию
+  defaultStorageStrategy String @default("local_first")
+
+  // S3 настройки
+  s3DefaultBucket   String?
+  s3DefaultRegion   String?
+  s3PublicUrlPrefix String? // CDN URL: "https://cdn.example.com"
+
+  // Локальное хранилище
+  localUploadPath      String @default("/uploads")
+  localPublicUrlPrefix String @default("/uploads")
+
+  // Организация файлов
+  organizeByDate       Boolean @default(true) // /uploads/2025/11/file.webp
+  organizeByEntityType Boolean @default(true) // /uploads/avatars/file.webp
+
+  // Лимиты
+  globalMaxFileSize      Int  @default(20971520) // 20MB
+  globalDailyUploadLimit Int? // Лимит загрузки в день (байты)
+
+  // Очистка
+  autoDeleteOrphans   Boolean @default(false) // Удалять несвязанные файлы
+  orphanRetentionDays Int     @default(30)
+
+  // Автосинхронизация
+  autoSyncEnabled         Boolean @default(false)
+  autoSyncDelayMinutes    Int     @default(30)
+  autoCleanupLocalEnabled Boolean @default(false)
+  keepLocalDays           Int     @default(7)
+
+  // Обработка
+  defaultQuality       Int     @default(85)
+  defaultConvertToWebP Boolean @default(true)
+
+  // Очередь
+  processingConcurrency Int @default(3) // Параллельная обработка
+
+  // Режим удаления
+  deleteMode              String  @default("soft") // soft | hard
+  softDeleteRetentionDays Int     @default(30) // Дней до авто hard delete
+  autoCleanupEnabled      Boolean @default(true) // Авто-очистка soft deleted
+
+  // S3 расширенные настройки
+  s3Enabled         Boolean @default(false)
+  s3AutoSync        Boolean @default(true) // Авто-синхр. после upload
+  s3DeleteWithLocal Boolean @default(true) // Удалять S3 при hard delete
+  s3Endpoint        String? // Для MinIO/Yandex Object Storage
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("media_global_settings")
+}
+
+// Лицензии медиа
+model MediaLicense {
+  id String @id @default(cuid())
+
+  // Тип лицензии
+  licenseType     String // 'royalty_free', 'rights_managed', 'creative_commons', 'editorial', 'exclusive', 'custom'
+  licenseTypeName String? // Название если custom
+
+  // Стороны лицензии
+  licensorName  String // Автор/Владелец прав (лицензиар)
+  licensorEmail String?
+  licensorUrl   String?
+
+  licenseeName  String // Получатель лицензии (лицензиат)
+  licenseeEmail String?
+
+  // Привязка к товару/сущности
+  entityType String? // 'product', 'listing', 'company'
+  entityId   String?
+  entityName String? // Название товара для отображения
+  entityUrl  String? // URL-адрес товара
+
+  // Документ лицензии
+  documentPath String? // Путь к PDF/документу
+  documentName String? // Оригинальное имя файла
+  documentSize Int? // Размер в байтах
+  documentMime String? // application/pdf, image/jpeg...
+
+  // Срок действия
+  validFrom  DateTime? // Дата начала действия
+  validUntil DateTime? // Дата окончания (null = бессрочная)
+  territory  String? // Территория действия
+
+  // Примечания
+  notes String?
+
+  // Аудит
+  uploadedBy String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Связь с медиафайлами
+  mediaItems MediaLicenseItem[]
+
+  @@index([licenseType])
+  @@index([licensorName])
+  @@index([entityType, entityId])
+  @@index([validUntil])
+  @@index([createdAt])
+  @@map("media_licenses")
+}
+
+// Связь лицензии с медиафайлами (many-to-many)
+model MediaLicenseItem {
+  id        String @id @default(cuid())
+  licenseId String
+  mediaId   String
+
+  license MediaLicense @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  media   Media        @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([licenseId, mediaId])
+  @@index([licenseId])
+  @@index([mediaId])
+  @@map("media_license_items")
+}

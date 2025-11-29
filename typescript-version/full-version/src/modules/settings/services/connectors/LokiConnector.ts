@@ -7,7 +7,7 @@
 
 import { BaseConnector } from './BaseConnector'
 import type { ConnectionTestResult } from '@/lib/config/types'
-import { decrypt } from '@/lib/config/encryption'
+import { safeDecrypt } from '@/lib/config/encryption'
 import logger from '@/lib/logger'
 
 /**
@@ -29,10 +29,10 @@ export class LokiConnector extends BaseConnector {
       }
 
       if (this.config.token) {
-        const token = decrypt(this.config.token)
+        const token = safeDecrypt(this.config.token)
         headers['Authorization'] = `Bearer ${token}`
       } else if (this.config.username && this.config.password) {
-        const password = decrypt(this.config.password)
+        const password = safeDecrypt(this.config.password)
         const auth = Buffer.from(`${this.config.username}:${password}`).toString('base64')
         headers['Authorization'] = `Basic ${auth}`
       }

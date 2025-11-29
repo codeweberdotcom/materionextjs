@@ -13,6 +13,7 @@ import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import { IMAGE_PRESETS, DEFAULT_GLOBAL_SETTINGS } from '@/services/media'
+import { resetStorageService } from '@/services/media/storage'
 import logger from '@/lib/logger'
 
 /**
@@ -101,6 +102,9 @@ export async function PUT(request: NextRequest) {
         } as any,
       })
     }
+
+    // Сбрасываем singleton StorageService чтобы применить новые настройки
+    resetStorageService()
 
     logger.info('[API] Global settings updated', {
       updatedBy: user.id,

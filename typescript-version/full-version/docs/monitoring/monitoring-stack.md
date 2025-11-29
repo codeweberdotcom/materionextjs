@@ -241,18 +241,41 @@ typescript-version/full-version/monitoring/
 
 ## Running the stack
 
-1. Start the Next.js app (`pnpm run dev`) or use the combined helper below.
-2. From `typescript-version/full-version` (корень Next.js-пакета) выполните:
+1. Start everything with one command:
 
-```powershell
-cd monitoring
-docker compose up -d
+```bash
+pnpm dev:full
 ```
 
-   _Shortcut_: `pnpm run dev:with-socket:monitoring` — first brings up `docker compose` then starts the Socket.IO dev server.
+This brings up all Docker containers (PostgreSQL, Redis, monitoring, S3) and starts the Socket.IO dev server.
+
+2. Access monitoring services:
+
+| Service | URL | Credentials |
+|---------|-----|-------------|
+| **Grafana** | http://localhost:9091 | `admin` / `admin` |
+| **Prometheus** | http://localhost:9090 | — |
+| **Loki** | http://localhost:3100 | — |
+| **Bull Board** | http://localhost:3030 | — |
+
+### Environment Variables
+
+Credentials настраиваются в `.env`:
+
+```env
+GRAFANA_URL=http://localhost:9091
+GRAFANA_USER=admin
+GRAFANA_PASSWORD=admin
+
+PROMETHEUS_URL=http://localhost:9090
+LOKI_URL=http://localhost:3100
+BULL_BOARD_URL=http://localhost:3030
+```
+
+### Verify Setup
+
 3. Open Prometheus at http://localhost:9090 and verify the `materio-nextjs` target is UP.
-4. Open Loki at http://localhost:3100 to inspect logs directly (optional).
-5. Open Grafana at http://localhost:9091 (default login `admin/admin`) to view dashboards and explore logs via Loki datasource.
+4. Open Grafana at http://localhost:9091 to view dashboards.
 
 ## Logs (Winston + Loki + Sentry integration)
 

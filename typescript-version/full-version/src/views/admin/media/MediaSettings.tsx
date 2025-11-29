@@ -29,6 +29,17 @@ import TableCell from '@mui/material/TableCell'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Skeleton from '@mui/material/Skeleton'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import InputLabel from '@mui/material/InputLabel'
+import FormControl from '@mui/material/FormControl'
+import FormHelperText from '@mui/material/FormHelperText'
+import IconButton from '@mui/material/IconButton'
+import Tooltip from '@mui/material/Tooltip'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
 
 import { toast } from 'react-toastify'
 
@@ -53,6 +64,11 @@ interface GlobalSettings {
   defaultQuality: number
   defaultConvertToWebP: boolean
   processingConcurrency: number
+  // Deletion settings
+  deleteMode: string
+  softDeleteRetentionDays: number
+  autoCleanupEnabled: boolean
+  s3DeleteWithLocal: boolean
 }
 
 interface EntitySettings {
@@ -75,6 +91,23 @@ interface EntitySettings {
   namingStrategy: string
 }
 
+interface S3Bucket {
+  name: string
+  creationDate?: string
+}
+
+interface S3BucketsResponse {
+  configured: boolean
+  buckets: S3Bucket[]
+  error?: string
+}
+
+interface BucketValidation {
+  exists: boolean
+  accessible: boolean
+  error?: string
+}
+
 const formatBytes = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
@@ -86,9 +119,21 @@ export default function MediaSettings() {
   const [saving, setSaving] = useState(false)
   const [globalSettings, setGlobalSettings] = useState<GlobalSettings | null>(null)
   const [entitySettings, setEntitySettings] = useState<EntitySettings[]>([])
+  
+  // S3 Bucket states
+  const [s3Buckets, setS3Buckets] = useState<S3Bucket[]>([])
+  const [s3Configured, setS3Configured] = useState(false)
+  const [s3Error, setS3Error] = useState<string | null>(null)
+  const [loadingBuckets, setLoadingBuckets] = useState(false)
+  const [bucketValidation, setBucketValidation] = useState<BucketValidation | null>(null)
+  const [validatingBucket, setValidatingBucket] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [newBucketName, setNewBucketName] = useState('')
+  const [creatingBucket, setCreatingBucket] = useState(false)
 
   useEffect(() => {
     fetchSettings()
+    fetchBuckets()
   }, [])
 
   const fetchSettings = async () => {
@@ -105,6 +150,105 @@ export default function MediaSettings() {
       setLoading(false)
     }
   }
+
+  const fetchBuckets = async () => {
+    setLoadingBuckets(true)
+    setS3Error(null)
+    
+    try {
+      const response = await fetch('/api/admin/media/s3/buckets')
+      if (!response.ok) throw new Error('Failed to fetch buckets')
+      
+      const data: S3BucketsResponse = await response.json()
+      setS3Configured(data.configured)
+      setS3Buckets(data.buckets)
+      
+      if (data.error) {
+        setS3Error(data.error)
+      }
+    } catch (error) {
+      setS3Error('Ошибка загрузки списка bucket\'ов')
+    } finally {
+      setLoadingBuckets(false)
+    }
+  }
+
+  const validateBucket = async (bucketName: string) => {
+    if (!bucketName) {
+      setBucketValidation(null)
+      return
+    }
+    
+    setValidatingBucket(true)
+    
+    try {
+      const response = await fetch('/api/admin/media/s3/buckets/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bucketName }),
+      })
+      
+      const data: BucketValidation = await response.json()
+      setBucketValidation(data)
+    } catch (error) {
+      setBucketValidation({ exists: false, accessible: false, error: 'Ошибка проверки' })
+    } finally {
+      setValidatingBucket(false)
+    }
+  }
+
+  const createBucket = async () => {
+    if (!newBucketName.trim()) {
+      toast.error('Введите имя bucket\'а')
+      return
+    }
+    
+    setCreatingBucket(true)
+    
+    try {
+      const response = await fetch('/api/admin/media/s3/buckets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bucketName: newBucketName.trim() }),
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        toast.error(data.error || 'Ошибка создания bucket\'а')
+        return
+      }
+      
+      toast.success(data.message || 'Bucket создан')
+      setCreateDialogOpen(false)
+      setNewBucketName('')
+      
+      // Обновить список и выбрать новый bucket
+      await fetchBuckets()
+      updateGlobal('s3DefaultBucket', newBucketName.trim())
+    } catch (error) {
+      toast.error('Ошибка создания bucket\'а')
+    } finally {
+      setCreatingBucket(false)
+    }
+  }
+
+  const handleBucketChange = (bucketName: string) => {
+    updateGlobal('s3DefaultBucket', bucketName)
+    
+    if (bucketName) {
+      validateBucket(bucketName)
+    } else {
+      setBucketValidation(null)
+    }
+  }
+
+  // Валидация текущего bucket при загрузке
+  useEffect(() => {
+    if (globalSettings?.s3DefaultBucket && s3Configured) {
+      validateBucket(globalSettings.s3DefaultBucket)
+    }
+  }, [globalSettings?.s3DefaultBucket, s3Configured])
 
   const saveGlobalSettings = async () => {
     if (!globalSettings) return
@@ -213,8 +357,8 @@ export default function MediaSettings() {
                     fullWidth
                     label="Локальный путь"
                     value={globalSettings.localUploadPath}
-                    onChange={e => updateGlobal('localUploadPath', e.target.value)}
-                    helperText="Путь относительно public/"
+                    disabled
+                    helperText="Фиксированный путь: /uploads"
                   />
                 </Grid>
                 
@@ -223,18 +367,90 @@ export default function MediaSettings() {
                     fullWidth
                     label="Публичный URL префикс"
                     value={globalSettings.localPublicUrlPrefix}
-                    onChange={e => updateGlobal('localPublicUrlPrefix', e.target.value)}
+                    disabled
+                    helperText="Фиксированный префикс: /uploads"
                   />
                 </Grid>
                 
                 <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    label="S3 Bucket"
-                    value={globalSettings.s3DefaultBucket || ''}
-                    onChange={e => updateGlobal('s3DefaultBucket', e.target.value)}
-                    helperText="Оставьте пустым для отключения S3"
-                  />
+                  <Box>
+                    <FormControl fullWidth size="small">
+                      <InputLabel id="s3-bucket-label">S3 Bucket</InputLabel>
+                      <Select
+                        labelId="s3-bucket-label"
+                        value={globalSettings.s3DefaultBucket || ''}
+                        onChange={e => handleBucketChange(e.target.value)}
+                        label="S3 Bucket"
+                        disabled={loadingBuckets}
+                        endAdornment={
+                          <Box sx={{ display: 'flex', mr: 2 }}>
+                            {loadingBuckets && <CircularProgress size={16} />}
+                            {!loadingBuckets && (
+                              <>
+                                <Tooltip title="Обновить список">
+                                  <IconButton size="small" onClick={fetchBuckets}>
+                                    <i className="ri-refresh-line" style={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={s3Configured ? "Создать новый bucket" : "S3 не настроен"}>
+                                  <span>
+                                    <IconButton 
+                                      size="small" 
+                                      onClick={() => setCreateDialogOpen(true)}
+                                      disabled={!s3Configured}
+                                    >
+                                      <i className="ri-add-line" style={{ fontSize: 16 }} />
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                              </>
+                            )}
+                          </Box>
+                        }
+                      >
+                        <MenuItem value="">
+                          <em>Не выбран (S3 отключен)</em>
+                        </MenuItem>
+                        {/* Текущий bucket, если не в списке */}
+                        {globalSettings.s3DefaultBucket && 
+                         !s3Buckets.some(b => b.name === globalSettings.s3DefaultBucket) && (
+                          <MenuItem value={globalSettings.s3DefaultBucket}>
+                            {globalSettings.s3DefaultBucket} (сохранённый)
+                          </MenuItem>
+                        )}
+                        {s3Buckets.map(bucket => (
+                          <MenuItem key={bucket.name} value={bucket.name}>
+                            {bucket.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      <FormHelperText>
+                        {!s3Configured && s3Error ? (
+                          <Box component="span" sx={{ color: 'error.main' }}>
+                            {s3Error}
+                          </Box>
+                        ) : validatingBucket ? (
+                          'Проверка...'
+                        ) : bucketValidation ? (
+                          bucketValidation.accessible ? (
+                            <Box component="span" sx={{ color: 'success.main' }}>
+                              ✅ Bucket доступен
+                            </Box>
+                          ) : (
+                            <Box component="span" sx={{ color: 'error.main' }}>
+                              ❌ {bucketValidation.error || 'Bucket недоступен'}
+                            </Box>
+                          )
+                        ) : !s3Configured ? (
+                          <Box component="span" sx={{ color: 'warning.main' }}>
+                            ⚠️ Настройте S3 в .env файле
+                          </Box>
+                        ) : (
+                          'Выберите bucket или создайте новый'
+                        )}
+                      </FormHelperText>
+                    </FormControl>
+                  </Box>
                 </Grid>
 
                 <Grid item xs={12} md={4}>
@@ -369,11 +585,71 @@ export default function MediaSettings() {
                   />
                 </Grid>
 
-                {/* Cleanup */}
+                {/* Trash / Deletion */}
                 <Grid item xs={12}>
                   <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
                     <i className="ri-delete-bin-line" style={{ marginRight: 8 }} />
-                    Очистка
+                    Корзина и удаление
+                  </Typography>
+                  <Divider sx={{ mb: 2 }} />
+                </Grid>
+                
+                <Grid item xs={12} md={3}>
+                  <TextField
+                    select
+                    fullWidth
+                    label="Режим удаления по умолчанию"
+                    value={globalSettings.deleteMode}
+                    onChange={e => updateGlobal('deleteMode', e.target.value)}
+                    SelectProps={{ native: true }}
+                    helperText="soft = в корзину, hard = навсегда"
+                  >
+                    <option value="soft">В корзину (soft)</option>
+                    <option value="hard">Навсегда (hard)</option>
+                  </TextField>
+                </Grid>
+                
+                <Grid item xs={12} md={3}>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label="Хранить в корзине (дней)"
+                    value={globalSettings.softDeleteRetentionDays}
+                    onChange={e => updateGlobal('softDeleteRetentionDays', parseInt(e.target.value))}
+                    inputProps={{ min: 1, max: 365 }}
+                    helperText="После этого срока — hard delete"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} md={3}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={globalSettings.autoCleanupEnabled}
+                        onChange={e => updateGlobal('autoCleanupEnabled', e.target.checked)}
+                      />
+                    }
+                    label="Авто-очистка корзины"
+                  />
+                </Grid>
+                
+                <Grid item xs={12} md={3}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={globalSettings.s3DeleteWithLocal}
+                        onChange={e => updateGlobal('s3DeleteWithLocal', e.target.checked)}
+                      />
+                    }
+                    label="Удалять из S3 при hard delete"
+                  />
+                </Grid>
+
+                {/* Cleanup */}
+                <Grid item xs={12}>
+                  <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+                    <i className="ri-file-shred-line" style={{ marginRight: 8 }} />
+                    Очистка несвязанных файлов
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
@@ -386,7 +662,7 @@ export default function MediaSettings() {
                         onChange={e => updateGlobal('autoDeleteOrphans', e.target.checked)}
                       />
                     }
-                    label="Удалять несвязанные файлы"
+                    label="Удалять orphan файлы"
                   />
                 </Grid>
                 
@@ -398,6 +674,7 @@ export default function MediaSettings() {
                     value={globalSettings.orphanRetentionDays}
                     onChange={e => updateGlobal('orphanRetentionDays', parseInt(e.target.value))}
                     disabled={!globalSettings.autoDeleteOrphans}
+                    helperText="Файлы без привязки к сущности"
                   />
                 </Grid>
               </Grid>
@@ -500,6 +777,54 @@ export default function MediaSettings() {
           </CardContent>
         </Card>
       </Grid>
+
+      {/* Create Bucket Dialog */}
+      <Dialog open={createDialogOpen} onClose={() => setCreateDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <i className="ri-add-circle-line" />
+            Создать новый S3 Bucket
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <TextField
+              fullWidth
+              label="Имя bucket'а"
+              value={newBucketName}
+              onChange={e => setNewBucketName(e.target.value.toLowerCase())}
+              placeholder="my-media-bucket"
+              helperText="Только строчные буквы, цифры, точки и дефисы. Длина 3-63 символа."
+              disabled={creatingBucket}
+            />
+            
+            <Alert severity="info" sx={{ mt: 2 }}>
+              <Typography variant="body2">
+                <strong>Правила именования:</strong>
+              </Typography>
+              <ul style={{ margin: '8px 0', paddingLeft: 20 }}>
+                <li>Только строчные буквы (a-z), цифры (0-9), точки (.) и дефисы (-)</li>
+                <li>Должен начинаться и заканчиваться буквой или цифрой</li>
+                <li>Длина от 3 до 63 символов</li>
+                <li>Нельзя использовать формат IP-адреса (например, 192.168.1.1)</li>
+              </ul>
+            </Alert>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCreateDialogOpen(false)} disabled={creatingBucket}>
+            Отмена
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={createBucket}
+            disabled={creatingBucket || !newBucketName.trim()}
+            startIcon={creatingBucket ? <CircularProgress size={16} /> : <i className="ri-add-line" />}
+          >
+            {creatingBucket ? 'Создание...' : 'Создать'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Grid>
   )
 }

@@ -18,11 +18,11 @@ const KEY_LENGTH = 32 // 256 bits
  * @throws Error если ENCRYPTION_KEY не задан или невалидный
  */
 function getEncryptionKey(): Buffer {
-  const key = process.env.ENCRYPTION_KEY
+  const key = process.env.CREDENTIALS_ENCRYPTION_KEY
 
   if (!key) {
     throw new Error(
-      'ENCRYPTION_KEY не задан. Добавьте 64-символьный hex ключ в .env файл. ' +
+      'CREDENTIALS_ENCRYPTION_KEY не задан. Добавьте 64-символьный hex ключ в .env файл. ' +
         'Сгенерировать: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
     )
   }
@@ -30,7 +30,7 @@ function getEncryptionKey(): Buffer {
   // Проверяем что ключ в hex формате и имеет правильную длину
   if (!/^[0-9a-fA-F]{64}$/.test(key)) {
     throw new Error(
-      'ENCRYPTION_KEY должен быть 64-символьной hex строкой (256 бит). ' +
+      'CREDENTIALS_ENCRYPTION_KEY должен быть 64-символьной hex строкой (256 бит). ' +
         'Сгенерировать: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"'
     )
   }
@@ -152,6 +152,41 @@ export function isEncryptionAvailable(): boolean {
  */
 export function generateEncryptionKey(): string {
   return crypto.randomBytes(KEY_LENGTH).toString('hex')
+}
+
+/**
+ * Безопасная расшифровка - возвращает plaintext если расшифровка не удалась
+ * Используется для обратной совместимости с незашифрованными данными
+ * 
+ * @param encryptedText - Зашифрованный или plain текст
+ * @returns Расшифрованный текст или исходный plaintext
+ */
+export function safeDecrypt(encryptedText: string): string {
+  if (!encryptedText) {
+    return ''
+  }
+
+  // Проверяем формат зашифрованных данных (iv:authTag:ciphertext)
+  const parts = encryptedText.split(':')
+  if (parts.length !== 3) {
+    // Не зашифровано - возвращаем как есть
+    return encryptedText
+  }
+
+  // Проверяем что это hex строки правильной длины
+  const [ivHex, authTagHex] = parts
+  if (ivHex.length !== IV_LENGTH * 2 || authTagHex.length !== AUTH_TAG_LENGTH * 2) {
+    // Не похоже на зашифрованные данные
+    return encryptedText
+  }
+
+  try {
+    return decrypt(encryptedText)
+  } catch {
+    // Расшифровка не удалась - возвращаем как есть
+    logger.warn('[Encryption] Failed to decrypt, returning plaintext')
+    return encryptedText
+  }
 }
 
 /**
