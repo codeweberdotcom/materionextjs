@@ -24,6 +24,9 @@ reports/e2e/**
 # storage (trash folder, not public)
 /storage/
 
+# uploads (user uploaded files)
+/public/uploads/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

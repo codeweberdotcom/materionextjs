@@ -731,7 +731,7 @@ export default function MediaSync() {
                     </Typography>
                   </Grid>
                   <Grid item xs={selectedJob.isParent ? 3 : 4}>
-                    <Typography variant="caption" color="text.secondary">Ошибок</Typography>
+                    <Typography variant="caption" color="text.secondary">{t?.errors ?? 'Errors'}</Typography>
                     <Typography variant="h6" color="error.main">
                       {selectedJob.isParent && selectedJob.childJobs
                         ? selectedJob.childJobs.reduce((sum, c) => sum + c.failedFiles, 0)
@@ -982,7 +982,7 @@ export default function MediaSync() {
                 <Grid item xs={4}>
                   <Box sx={{ textAlign: 'center', p: 2, bgcolor: purgeResult.errors > 0 ? 'error.main' : 'grey.500', color: 'white', borderRadius: 1 }}>
                     <Typography variant="h4">{purgeResult.errors}</Typography>
-                    <Typography variant="caption">Ошибок</Typography>
+                    <Typography variant="caption">{t?.errors ?? 'Errors'}</Typography>
                   </Box>
                 </Grid>
               </Grid>
@@ -1073,7 +1073,7 @@ export default function MediaSync() {
                 <Grid item xs={3}>
                   <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'error.main', color: 'white', borderRadius: 1 }}>
                     <Typography variant="h4">{verifyResult.errors}</Typography>
-                    <Typography variant="caption">Ошибок</Typography>
+                    <Typography variant="caption">{t?.errors ?? 'Errors'}</Typography>
                   </Box>
                 </Grid>
               </Grid>

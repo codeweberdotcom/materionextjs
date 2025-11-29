@@ -1,14 +1,20 @@
 'use client'
 
 /**
- * Боковая панель деталей медиа (WordPress-style)
- * Отображает информацию о файле и позволяет редактировать SEO-поля
+ * Media details sidebar (WordPress-style)
+ * Displays file info and allows editing SEO fields
  */
 
 import { useState, useEffect } from 'react'
 
+import { useTranslationSafe } from '@/contexts/TranslationContext'
+
 import Drawer from '@mui/material/Drawer'
 import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import DialogContent from '@mui/material/DialogContent'
+import DialogActions from '@mui/material/DialogActions'
+import Alert from '@mui/material/Alert'
 import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import TextField from '@mui/material/TextField'
@@ -102,22 +108,7 @@ const getStorageStatusColor = (status: string): 'success' | 'warning' | 'info' |
   }
 }
 
-const getStorageStatusLabel = (status: string): string => {
-  switch (status) {
-    case 'synced':
-      return 'S3 + Локально'
-    case 's3_only':
-      return 'Только S3'
-    case 'local_only':
-      return 'Только локально'
-    case 'sync_error':
-      return 'Ошибка синхр.'
-    case 'sync_pending':
-      return 'Ожидает синхр.'
-    default:
-      return status
-  }
-}
+// Storage status labels will be translated inside component
 
 export default function MediaDetailSidebar({
   open,
@@ -127,6 +118,28 @@ export default function MediaDetailSidebar({
   onDelete,
   includeDeleted = false,
 }: MediaDetailSidebarProps) {
+  // Translations
+  const dictionary = useTranslationSafe()
+  const t = dictionary?.mediaLibrary
+
+  // Get storage status label with translations
+  const getStorageStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'synced':
+        return t?.localAndS3 ?? 'Local + S3'
+      case 's3_only':
+        return t?.s3Only ?? 'S3 only'
+      case 'local_only':
+        return t?.localOnly ?? 'Local only'
+      case 'sync_error':
+        return t?.syncError ?? 'Sync error'
+      case 'sync_pending':
+        return t?.pending ?? 'Pending'
+      default:
+        return status
+    }
+  }
+
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [syncing, setSyncing] = useState(false)
@@ -134,6 +147,7 @@ export default function MediaDetailSidebar({
   const [urls, setUrls] = useState<Record<string, string>>({})
   const [lightboxOpen, setLightboxOpen] = useState(false)
   const [lightboxUrl, setLightboxUrl] = useState<string>('')
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   // Editable fields
   const [alt, setAlt] = useState('')
@@ -173,7 +187,7 @@ export default function MediaDetailSidebar({
       setCaption(data.media.caption || '')
       setDescription(data.media.description || '')
     } catch (error) {
-      toast.error('Не удалось загрузить данные')
+      toast.error(t?.loadError ?? 'Failed to load data')
       console.error(error)
     } finally {
       setLoading(false)
@@ -196,10 +210,10 @@ export default function MediaDetailSidebar({
         throw new Error('Failed to update')
       }
 
-      toast.success('Изменения сохранены')
+      toast.success(t?.changesSaved ?? 'Changes saved')
       onUpdate?.()
     } catch (error) {
-      toast.error('Ошибка сохранения')
+      toast.error(t?.saveError ?? 'Save error')
       console.error(error)
     } finally {
       setSaving(false)
@@ -211,13 +225,13 @@ export default function MediaDetailSidebar({
       ? `${window.location.origin}${url}` 
       : url
     navigator.clipboard.writeText(fullUrl)
-    toast.success('URL скопирован')
+    toast.success(t?.urlCopied ?? 'URL copied')
   }
 
   const handleCopyFilename = () => {
     if (media?.filename) {
       navigator.clipboard.writeText(media.filename)
-      toast.success('Имя файла скопировано')
+      toast.success(t?.filenameCopied ?? 'Filename copied')
     }
   }
 
@@ -240,20 +254,24 @@ export default function MediaDetailSidebar({
 
       if (!response.ok) throw new Error('Failed to restore')
 
-      toast.success('Файл восстановлен')
+      toast.success(t?.fileRestored ?? 'File restored')
       onClose()
       onUpdate?.()
     } catch (error) {
-      toast.error('Ошибка восстановления')
+      toast.error(t?.restoreError ?? 'Restore error')
       console.error(error)
     }
   }
 
   // Удалить навсегда
-  const handleHardDelete = async () => {
+  const handleHardDelete = () => {
+    setConfirmDeleteOpen(true)
+  }
+
+  const confirmHardDelete = async () => {
     if (!mediaId) return
 
-    if (!confirm('Вы уверены? Файл будет удалён безвозвратно.')) return
+    setConfirmDeleteOpen(false)
 
     try {
       const response = await fetch(`/api/admin/media/${mediaId}?hard=true`, {
@@ -262,11 +280,11 @@ export default function MediaDetailSidebar({
 
       if (!response.ok) throw new Error('Failed to delete')
 
-      toast.success('Файл удалён безвозвратно')
+      toast.success(t?.fileDeletedPermanently ?? 'File deleted permanently')
       onClose()
       onUpdate?.()
     } catch (error) {
-      toast.error('Ошибка удаления')
+      toast.error(t?.deleteError ?? 'Delete error')
       console.error(error)
     }
   }
@@ -327,7 +345,7 @@ export default function MediaDetailSidebar({
       fetchMedia() // Обновляем данные
       onUpdate?.()
     } catch (error) {
-      toast.error('Ошибка выгрузки на S3')
+      toast.error(t?.s3UploadError ?? 'S3 upload error')
       console.error(error)
     } finally {
       setSyncing(false)
@@ -404,7 +422,7 @@ export default function MediaDetailSidebar({
     >
       {/* Header */}
       <div className='flex items-center justify-between pli-6 plb-4 border-be'>
-        <Typography variant='h5'>Детали файла</Typography>
+        <Typography variant='h5'>{t?.fileDetails ?? 'File Details'}</Typography>
         <IconButton size='small' onClick={onClose}>
           <i className='ri-close-line text-2xl' />
         </IconButton>
@@ -468,20 +486,20 @@ export default function MediaDetailSidebar({
               {/* Column 1 - File Info */}
               <Grid item xs={12} md={6}>
                 <Typography variant='h6' className='mbe-4'>
-                  Информация о файле
+                  {t?.fileInfo ?? 'File information'}
                 </Typography>
                 
                 <div className='flex flex-col gap-4'>
                   {/* Filename */}
                   <div className='flex items-center justify-between'>
                     <Typography variant='body2' color='text.secondary'>
-                      Имя файла
+                      {t?.filename ?? 'Filename'}
                     </Typography>
                     <div className='flex items-center gap-1 max-is-[60%]'>
                       <Typography variant='body2' noWrap title={media.filename}>
                         {media.filename}
                       </Typography>
-                      <Tooltip title='Копировать' arrow>
+                      <Tooltip title={t?.copy ?? 'Copy'} arrow>
                         <IconButton size='small' onClick={handleCopyFilename}>
                           <i className='ri-file-copy-line text-lg' />
                         </IconButton>
@@ -492,7 +510,7 @@ export default function MediaDetailSidebar({
                   {/* Size */}
                   <div className='flex items-center justify-between'>
                     <Typography variant='body2' color='text.secondary'>
-                      Размер файла
+                      {t?.size ?? 'Size'}
                     </Typography>
                     <Typography variant='body2'>
                       {formatFileSize(media.size)}
@@ -503,7 +521,7 @@ export default function MediaDetailSidebar({
                   {media.width && media.height && (
                     <div className='flex items-center justify-between'>
                       <Typography variant='body2' color='text.secondary'>
-                        Разрешение
+                        {t?.dimensions ?? 'Dimensions'}
                       </Typography>
                       <Typography variant='body2'>
                         {media.width} × {media.height} px
@@ -514,7 +532,7 @@ export default function MediaDetailSidebar({
                   {/* Type */}
                   <div className='flex items-center justify-between'>
                     <Typography variant='body2' color='text.secondary'>
-                      Тип файла
+                      {t?.mimeType ?? 'MIME type'}
                     </Typography>
                     <Typography variant='body2'>
                       {media.mimeType}
@@ -524,7 +542,7 @@ export default function MediaDetailSidebar({
                   {/* Date */}
                   <div className='flex items-center justify-between'>
                     <Typography variant='body2' color='text.secondary'>
-                      Дата загрузки
+                      {t?.uploadDate ?? 'Upload date'}
                     </Typography>
                     <Typography variant='body2'>
                       {formatDate(media.createdAt)}
@@ -534,7 +552,7 @@ export default function MediaDetailSidebar({
                   {/* Storage */}
                   <div className='flex items-center justify-between'>
                     <Typography variant='body2' color='text.secondary'>
-                      Хранилище
+                      {t?.storage ?? 'Storage'}
                     </Typography>
                     <Chip
                       label={getStorageStatusLabel(media.storageStatus)}
@@ -547,7 +565,7 @@ export default function MediaDetailSidebar({
                   {media.uploadedUser && (
                     <div className='flex items-center justify-between'>
                       <Typography variant='body2' color='text.secondary'>
-                        Загрузил
+                        {t?.uploadedBy ?? 'Uploaded by'}
                       </Typography>
                       <div className='flex items-center gap-2'>
                         <Avatar src={media.uploadedUser.image} sx={{ width: 28, height: 28 }}>
@@ -563,7 +581,7 @@ export default function MediaDetailSidebar({
                   {/* File Path */}
                   <div className='flex items-start justify-between'>
                     <Typography variant='body2' color='text.secondary'>
-                      Путь
+                      {t?.path ?? 'Path'}
                     </Typography>
                     <Typography 
                       variant='body2' 
@@ -583,10 +601,10 @@ export default function MediaDetailSidebar({
                   {isInTrash && (
                     <div className='flex items-center justify-between'>
                       <Typography variant='body2' color='text.secondary'>
-                        Статус
+                        {t?.status ?? 'Status'}
                       </Typography>
                       <Chip
-                        label="В корзине"
+                        label={t?.inTrash ?? 'In trash'}
                         size='small'
                         color="warning"
                         icon={<i className='ri-delete-bin-line' style={{ fontSize: 14 }} />}
@@ -599,14 +617,14 @@ export default function MediaDetailSidebar({
                 {Object.keys(urls).length > 0 && (
                   <div className='mbs-6'>
                     <Typography variant='h6' className='mbe-4'>
-                      Доступные размеры
+                      {t?.variants ?? 'Variants'}
                     </Typography>
                     <div className='flex flex-col gap-2'>
                       {/* Original */}
                       {urls.original && (
                         <div className='flex items-center justify-between p-2 rounded border border-divider'>
                           <div className='flex items-center gap-2'>
-                            <Chip label="Оригинал" size="small" color="primary" />
+                            <Chip label={t?.original ?? 'Original'} size="small" color="primary" />
                             {media.width && media.height && (
                               <Typography variant='caption' color='text.secondary'>
                                 {media.width}×{media.height}
@@ -619,7 +637,7 @@ export default function MediaDetailSidebar({
                                 <i className='ri-eye-line' />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title='Копировать URL' arrow>
+                            <Tooltip title={t?.copyUrl ?? 'Copy URL'} arrow>
                               <IconButton size='small' onClick={() => handleCopyUrl(urls.original)}>
                                 <i className='ri-file-copy-line' />
                               </IconButton>
@@ -655,7 +673,7 @@ export default function MediaDetailSidebar({
                                     <i className='ri-eye-line' />
                                   </IconButton>
                                 </Tooltip>
-                                <Tooltip title='Копировать URL' arrow>
+                                <Tooltip title={t?.copyUrl ?? 'Copy URL'} arrow>
                                   <IconButton size='small' onClick={() => handleCopyUrl(url)}>
                                     <i className='ri-file-copy-line' />
                                   </IconButton>
@@ -673,30 +691,30 @@ export default function MediaDetailSidebar({
               {!isInTrash && (
                 <Grid item xs={12} md={6}>
                   <Typography variant='h6' className='mbe-4'>
-                    SEO и метаданные
+                    {t?.seoSettings ?? 'SEO Settings'}
                   </Typography>
 
                   <div className='flex flex-col gap-2'>
                     <TextField
                       fullWidth
-                      label='Alt текст'
-                      placeholder='Описание изображения для поисковиков'
+                      label={t?.altText ?? 'Alt text'}
+                      placeholder={dictionary?.navigation?.altTextPlaceholder ?? 'Image description for search engines'}
                       value={alt}
                       onChange={(e) => setAlt(e.target.value)}
                     />
 
                     <TextField
                       fullWidth
-                      label='Заголовок (Title)'
-                      placeholder='Заголовок изображения'
+                      label={t?.titleText ?? 'Title'}
+                      placeholder={dictionary?.navigation?.titlePlaceholder ?? 'Image title'}
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                     />
 
                     <TextField
                       fullWidth
-                      label='Подпись (Caption)'
-                      placeholder='Подпись под изображением'
+                      label={t?.caption ?? 'Caption'}
+                      placeholder={dictionary?.navigation?.captionPlaceholder ?? 'Image caption'}
                       value={caption}
                       onChange={(e) => setCaption(e.target.value)}
                       multiline
@@ -705,8 +723,8 @@ export default function MediaDetailSidebar({
 
                     <TextField
                       fullWidth
-                      label='Описание'
-                      placeholder='Подробное описание файла'
+                      label={t?.description ?? 'Description'}
+                      placeholder={dictionary?.navigation?.descriptionPlaceholder ?? 'Detailed file description'}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       multiline
@@ -720,7 +738,7 @@ export default function MediaDetailSidebar({
             {/* Actions */}
             <Divider />
             {isInTrash ? (
-              // Кнопки для файлов в корзине
+              // Buttons for trashed files
               <div className='grid grid-cols-2 gap-2'>
                 <Button
                   type='button'
@@ -729,7 +747,7 @@ export default function MediaDetailSidebar({
                   onClick={handleRestore}
                   startIcon={<i className='ri-arrow-go-back-line' />}
                 >
-                  Восстановить
+                  {t?.restore ?? 'Restore'}
                 </Button>
                 <Button
                   type='button'
@@ -738,7 +756,7 @@ export default function MediaDetailSidebar({
                   onClick={handleHardDelete}
                   startIcon={<i className='ri-delete-bin-line' />}
                 >
-                  Удалить навсегда
+                  {t?.deletePermanently ?? 'Delete permanently'}
                 </Button>
               </div>
             ) : (
@@ -751,7 +769,7 @@ export default function MediaDetailSidebar({
                   disabled={saving}
                   startIcon={saving ? <CircularProgress size={18} color='inherit' /> : <i className='ri-save-line' />}
                 >
-                  {saving ? 'Сохранение...' : 'Сохранить'}
+                  {saving ? (t?.saving ?? 'Saving...') : (t?.save ?? 'Save')}
                 </Button>
                 {(media.storageStatus === 'local_only' || media.storageStatus === 'sync_error') && (
                   <Button
@@ -762,7 +780,7 @@ export default function MediaDetailSidebar({
                     color={media.storageStatus === 'sync_error' ? 'warning' : 'primary'}
                     startIcon={syncing ? <CircularProgress size={18} /> : <i className='ri-cloud-line' />}
                   >
-                    {syncing ? 'Выгрузка...' : media.storageStatus === 'sync_error' ? 'Повторить' : 'На S3'}
+                    {syncing ? (t?.uploading ?? 'Uploading...') : media.storageStatus === 'sync_error' ? (t?.retry ?? 'Retry') : (t?.toS3 ?? 'To S3')}
                   </Button>
                 )}
                 {media.storageStatus === 'synced' && media.localPath && (
@@ -773,7 +791,7 @@ export default function MediaDetailSidebar({
                     disabled={syncing}
                     startIcon={syncing ? <CircularProgress size={18} /> : <i className='ri-refresh-line' />}
                   >
-                    {syncing ? 'Выгрузка...' : 'Перезалить'}
+                    {syncing ? (t?.uploading ?? 'Uploading...') : (t?.reupload ?? 'Re-upload')}
                   </Button>
                 )}
                 {imageUrl && (
@@ -784,7 +802,7 @@ export default function MediaDetailSidebar({
                     target='_blank'
                     startIcon={<i className='ri-download-line' />}
                   >
-                    Скачать
+                    {t?.download ?? 'Download'}
                   </Button>
                 )}
                 <Button
@@ -794,14 +812,14 @@ export default function MediaDetailSidebar({
                   onClick={handleDelete}
                   startIcon={<i className='ri-delete-bin-line' />}
                 >
-                  Удалить
+                  {t?.delete ?? 'Delete'}
                 </Button>
               </div>
             )}
           </div>
         ) : (
           <Typography color='text.secondary' className='text-center pbs-8'>
-            Выберите файл для просмотра
+            {t?.selectFile ?? 'Select a file to view'}
           </Typography>
         )}
       </div>
@@ -853,6 +871,42 @@ export default function MediaDetailSidebar({
             />
           )}
         </div>
+      </Dialog>
+
+      {/* Confirm Delete Dialog */}
+      <Dialog
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'error.main' }}>
+          <i className="ri-error-warning-line" />
+          {t?.confirmDelete ?? 'Confirm deletion'}
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="error" sx={{ mt: 1 }}>
+            <Typography variant="body2">
+              {t?.deleteFileWarning ?? 'Are you sure? The file will be deleted permanently.'}
+            </Typography>
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3, gap: '0.5rem', '& .MuiButtonBase-root:not(:first-of-type)': { marginInlineStart: 0 } }} disableSpacing>
+          <Button
+            variant="outlined"
+            onClick={() => setConfirmDeleteOpen(false)}
+          >
+            {t?.cancel ?? 'Cancel'}
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={confirmHardDelete}
+            startIcon={<i className="ri-delete-bin-line" />}
+          >
+            {t?.deletePermanently ?? 'Delete permanently'}
+          </Button>
+        </DialogActions>
       </Dialog>
     </Drawer>
   )

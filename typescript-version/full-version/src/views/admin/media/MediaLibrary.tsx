@@ -1,11 +1,13 @@
 'use client'
 
 /**
- * Медиатека - список и управление медиа файлами
- * Поддержка Drag & Drop и множественной загрузки
+ * Media Library - file list and management
+ * Supports Drag & Drop and multi-file upload
  */
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+
+import { useTranslationSafe } from '@/contexts/TranslationContext'
 
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -86,26 +88,11 @@ interface MediaListResult {
   totalPages: number
 }
 
-const ENTITY_TYPES = [
-  { value: '', label: 'Все типы' },
-  { value: 'user_avatar', label: 'Аватары' },
-  { value: 'company_logo', label: 'Логотипы' },
-  { value: 'company_banner', label: 'Баннеры' },
-  { value: 'company_photo', label: 'Фото компаний' },
-  { value: 'listing_image', label: 'Фото объявлений' },
-  { value: 'site_logo', label: 'Логотип сайта' },
-  { value: 'watermark', label: 'Водяные знаки' },
-  { value: 'document', label: 'Документы' },
-]
+// Entity types - labels will be translated in component
+const ENTITY_TYPE_VALUES = ['', 'user_avatar', 'company_logo', 'company_banner', 'company_photo', 'listing_image', 'site_logo', 'watermark', 'document', 'other']
 
-const STORAGE_STATUSES = [
-  { value: '', label: 'Все статусы' },
-  { value: 'local_only', label: 'Только локально' },
-  { value: 'synced', label: 'S3 + Локально' },
-  { value: 's3_only', label: 'Только S3' },
-  { value: 'sync_pending', label: 'Ожидает синхр.' },
-  { value: 'sync_error', label: 'Ошибка синхр.' },
-]
+// Storage statuses - labels will be translated in component
+const STORAGE_STATUS_VALUES = ['', 'local_only', 'synced', 's3_only', 'sync_pending', 'sync_error']
 
 const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`
@@ -125,6 +112,46 @@ const getStorageStatusColor = (status: string): 'success' | 'warning' | 'error' 
 }
 
 export default function MediaLibrary() {
+  // Translations
+  const dictionary = useTranslationSafe()
+  const t = dictionary?.mediaLibrary
+
+  // Get translated storage status labels
+  const getStorageStatusLabel = useCallback((status: string): string => {
+    switch (status) {
+      case 'local_only': return t?.local ?? 'Local'
+      case 'synced': return t?.localAndS3 ?? 'Local + S3'
+      case 's3_only': return t?.s3 ?? 'S3'
+      case 'sync_pending': return t?.pending ?? 'Pending'
+      case 'sync_error': return 'Error'
+      default: return status
+    }
+  }, [t])
+
+  // Get storage statuses with translated labels
+  const STORAGE_STATUSES = useMemo(() => [
+    { value: '', label: t?.allStatuses ?? 'All statuses' },
+    { value: 'local_only', label: t?.localOnly ?? 'Local only' },
+    { value: 'synced', label: t?.localAndS3 ?? 'Local + S3' },
+    { value: 's3_only', label: t?.s3Only ?? 'S3 only' },
+    { value: 'sync_pending', label: t?.pending ?? 'Pending' },
+    { value: 'sync_error', label: 'Error' },
+  ], [t])
+
+  // Get entity types with translated labels
+  const ENTITY_TYPES = useMemo(() => [
+    { value: '', label: t?.entityTypes?.all ?? 'All types' },
+    { value: 'user_avatar', label: t?.entityTypes?.user_avatar ?? 'Avatars' },
+    { value: 'company_logo', label: t?.entityTypes?.company_logo ?? 'Logos' },
+    { value: 'company_banner', label: t?.entityTypes?.company_banner ?? 'Banners' },
+    { value: 'company_photo', label: t?.entityTypes?.company_photo ?? 'Company photos' },
+    { value: 'listing_image', label: t?.entityTypes?.listing_image ?? 'Listing photos' },
+    { value: 'site_logo', label: t?.entityTypes?.site_logo ?? 'Site logo' },
+    { value: 'watermark', label: t?.entityTypes?.watermark ?? 'Watermarks' },
+    { value: 'document', label: t?.entityTypes?.document ?? 'Documents' },
+    { value: 'other', label: t?.entityTypes?.other ?? 'Other' },
+  ], [t])
+
   const [media, setMedia] = useState<Media[]>([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -428,8 +455,8 @@ export default function MediaLibrary() {
         if (errorCount === 0) {
           toast.success(
             isHardDelete
-              ? `Удалено навсегда: ${successCount} файлов`
-              : `Перемещено в корзину: ${successCount} файлов`
+              ? `${t?.deletedPermanently ?? 'Deleted permanently'}: ${successCount}`
+              : `${t?.movedToTrash ?? 'Moved to trash'}: ${successCount}`
           )
         } else {
           toast.warning(
@@ -467,7 +494,7 @@ export default function MediaLibrary() {
         body: JSON.stringify({ action: 'restore' })
       })
       if (!response.ok) throw new Error('Failed to restore')
-      toast.success('Файл восстановлен')
+      toast.success(t?.fileRestored ?? 'File restored')
       fetchMedia()
       fetchTrashCount()
     } catch (error) {
@@ -564,7 +591,7 @@ export default function MediaLibrary() {
           <CardHeader
             title={
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                Медиатека
+                {t?.title ?? 'Media Library'}
                 <Box sx={{ display: 'flex', gap: 0.5 }}>
                   {localEnabled && (
                     <Chip
@@ -587,7 +614,7 @@ export default function MediaLibrary() {
                 </Box>
               </Box>
             }
-            subheader={activeTab === 'trash' ? `В корзине: ${total}` : `Всего файлов: ${total}`}
+            subheader={activeTab === 'trash' ? `${t?.inTrash ?? 'In trash'}: ${total}` : `${t?.totalFiles ?? 'Total files'}: ${total}`}
             action={
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <ToggleButtonGroup
@@ -610,7 +637,7 @@ export default function MediaLibrary() {
                     startIcon={<i className="ri-upload-2-line" />}
                     onClick={() => setUploadOpen(true)}
                   >
-                    Загрузить
+                    {t?.upload ?? 'Upload'}
                   </Button>
                 )}
               </Box>
@@ -626,7 +653,7 @@ export default function MediaLibrary() {
             >
               <Tab
                 value="files"
-                label="Все файлы"
+                label={t?.allFiles ?? 'All files'}
                 icon={<i className="ri-folder-image-line" style={{ fontSize: 18 }} />}
                 iconPosition="start"
               />
@@ -634,7 +661,7 @@ export default function MediaLibrary() {
                 value="trash"
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    Корзина
+                    {t?.trash ?? 'Trash'}
                     {trashCount > 0 && (
                       <Chip
                         label={trashCount > 999 ? '999+' : trashCount}
@@ -662,7 +689,7 @@ export default function MediaLibrary() {
                 <TextField
                   fullWidth
                   size="small"
-                  placeholder="Поиск по имени файла..."
+                  placeholder={t?.searchPlaceholder ?? 'Search by filename...'}
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   InputProps={{
@@ -677,10 +704,10 @@ export default function MediaLibrary() {
               </Box>
               <Box sx={{ flex: '0 1 180px', minWidth: 150 }}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Тип</InputLabel>
+                  <InputLabel>{t?.type ?? 'Type'}</InputLabel>
                   <Select
                     value={entityType}
-                    label="Тип"
+                    label={t?.type ?? 'Type'}
                     onChange={e => setEntityType(e.target.value)}
                   >
                     {ENTITY_TYPES.map(t => (
@@ -691,10 +718,10 @@ export default function MediaLibrary() {
               </Box>
               <Box sx={{ flex: '0 1 180px', minWidth: 150 }}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Статус</InputLabel>
+                  <InputLabel>{t?.status ?? 'Status'}</InputLabel>
                   <Select
                     value={storageStatus}
-                    label="Статус"
+                    label={t?.status ?? 'Status'}
                     onChange={e => setStorageStatus(e.target.value)}
                   >
                     {STORAGE_STATUSES.map(s => (
@@ -714,7 +741,7 @@ export default function MediaLibrary() {
                     setPage(1)
                   }}
                 >
-                  Сбросить
+                  {t?.reset ?? 'Reset'}
                 </Button>
               </Box>
             </Box>
@@ -745,7 +772,7 @@ export default function MediaLibrary() {
                     sx={{ cursor: 'pointer', userSelect: 'none' }}
                     onClick={handleSelectAll}
                   >
-                    На странице ({media.length})
+                    {t?.onPage ?? 'On page'} ({media.length})
                   </Typography>
                 </Box>
 
@@ -767,7 +794,7 @@ export default function MediaLibrary() {
                       }}
                       onClick={selectingAll ? undefined : handleSelectAllPages}
                     >
-                      {selectingAll ? 'Загрузка...' : `Все страницы (${total})`}
+                      {selectingAll ? (t?.processing ?? 'Processing...') : `${t?.allPages ?? 'All pages'} (${total})`}
                     </Typography>
                   </Box>
                 )}
@@ -775,7 +802,7 @@ export default function MediaLibrary() {
                 {selectedIds.length > 0 && (
                   <Chip
                     size="small"
-                    label={`Выбрано: ${selectedIds.length}`}
+                    label={`${t?.selected ?? 'Selected'}: ${selectedIds.length}`}
                     color="primary"
                   />
                 )}
@@ -787,7 +814,7 @@ export default function MediaLibrary() {
                   onClick={() => setSelectedIds([])}
                   startIcon={<i className="ri-close-line" />}
                 >
-                  Сбросить
+                  {t?.reset ?? 'Reset'}
                 </Button>
               )}
             </Box>
@@ -937,14 +964,14 @@ export default function MediaLibrary() {
                         </Typography>
                         <Typography variant="caption" color="text.secondary">•</Typography>
                         <Chip
-                          label={m.storageStatus === 'local_only' ? 'Локально' : m.storageStatus === 'synced' ? 'S3+Local' : m.storageStatus === 's3_only' ? 'S3' : m.storageStatus === 'sync_error' ? 'Ошибка' : m.storageStatus}
+                          label={getStorageStatusLabel(m.storageStatus)}
                           size="small"
                           color={getStorageStatusColor(m.storageStatus)}
                           sx={{ height: 18, fontSize: '0.65rem' }}
                         />
                         <Box sx={{ flexGrow: 1 }} />
                         {activeTab === 'files' ? (
-                          <Tooltip title="Удалить">
+                          <Tooltip title={t?.delete ?? 'Delete'}>
                             <IconButton
                               size="small"
                               onClick={(e) => openDeleteMenu(e, m.id)}
@@ -955,7 +982,7 @@ export default function MediaLibrary() {
                           </Tooltip>
                         ) : (
                           <Box sx={{ display: 'flex', gap: 0.5 }}>
-                            <Tooltip title="Восстановить">
+                            <Tooltip title={t?.restore ?? 'Restore'}>
                               <IconButton
                                 size="small"
                                 color="success"
@@ -968,7 +995,7 @@ export default function MediaLibrary() {
                                 <i className="ri-arrow-go-back-line" style={{ fontSize: 16 }} />
                               </IconButton>
                             </Tooltip>
-                            <Tooltip title="Удалить навсегда">
+                            <Tooltip title={t?.deletePermanently ?? 'Delete permanently'}>
                               <IconButton
                                 size="small"
                                 color="error"
@@ -1001,13 +1028,13 @@ export default function MediaLibrary() {
                           onChange={handleSelectAll}
                         />
                       </TableCell>
-                      <TableCell sx={{ width: 64 }}>Превью</TableCell>
-                      <TableCell>Имя файла</TableCell>
-                      <TableCell>Размер</TableCell>
+                      <TableCell sx={{ width: 64 }}>{t?.preview ?? 'Preview'}</TableCell>
+                      <TableCell>{t?.table?.filename ?? t?.filename ?? 'Filename'}</TableCell>
+                      <TableCell>{t?.table?.size ?? t?.size ?? 'Size'}</TableCell>
                       <TableCell>Тип</TableCell>
                       <TableCell>Статус</TableCell>
-                      <TableCell>Дата</TableCell>
-                      <TableCell sx={{ width: 80 }}>Действия</TableCell>
+                      <TableCell>{t?.table?.date ?? t?.date ?? 'Date'}</TableCell>
+                      <TableCell sx={{ width: 80 }}>{t?.table?.actions ?? t?.actions ?? 'Actions'}</TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -1057,7 +1084,7 @@ export default function MediaLibrary() {
                         </TableCell>
                         <TableCell>
                           <Chip
-                            label={m.storageStatus === 'local_only' ? 'Локально' : m.storageStatus === 'synced' ? 'S3+Local' : m.storageStatus === 's3_only' ? 'S3' : m.storageStatus === 'sync_error' ? 'Ошибка' : m.storageStatus}
+                            label={getStorageStatusLabel(m.storageStatus)}
                             size="small"
                             color={getStorageStatusColor(m.storageStatus)}
                           />
@@ -1069,7 +1096,7 @@ export default function MediaLibrary() {
                         </TableCell>
                         <TableCell onClick={e => e.stopPropagation()}>
                           {activeTab === 'files' ? (
-                            <Tooltip title="Удалить">
+                            <Tooltip title={t?.delete ?? 'Delete'}>
                               <IconButton
                                 size="small"
                                 color="error"
@@ -1080,7 +1107,7 @@ export default function MediaLibrary() {
                             </Tooltip>
                           ) : (
                             <Box sx={{ display: 'flex', gap: 0.5 }}>
-                              <Tooltip title="Восстановить">
+                              <Tooltip title={t?.restore ?? 'Restore'}>
                                 <IconButton
                                   size="small"
                                   color="success"
@@ -1089,7 +1116,7 @@ export default function MediaLibrary() {
                                   <i className="ri-arrow-go-back-line" />
                                 </IconButton>
                               </Tooltip>
-                              <Tooltip title="Удалить навсегда">
+                              <Tooltip title={t?.deletePermanently ?? 'Delete permanently'}>
                                 <IconButton
                                   size="small"
                                   color="error"
@@ -1147,7 +1174,7 @@ export default function MediaLibrary() {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
               <i className="ri-upload-cloud-2-line" style={{ fontSize: 24 }} />
-              Загрузить файлы
+              {t?.uploadFiles ?? 'Upload files'}
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {uploadFiles.length > 0 && (
@@ -1191,10 +1218,10 @@ export default function MediaLibrary() {
           <Box sx={{ mt: 2 }}>
             {/* Entity Type Select */}
             <FormControl fullWidth sx={{ mb: 3 }}>
-              <InputLabel>Тип сущности</InputLabel>
+              <InputLabel>{t?.entityType ?? 'Entity type'}</InputLabel>
               <Select
                 value={uploadEntityType}
-                label="Тип сущности"
+                label={t?.entityType ?? 'Entity type'}
                 onChange={e => setUploadEntityType(e.target.value)}
                 disabled={uploading}
               >
@@ -1247,16 +1274,16 @@ export default function MediaLibrary() {
               <Typography variant="h6" gutterBottom>
                 {isDragActive
                   ? isDragAccept
-                    ? 'Отпустите для загрузки'
-                    : 'Неподдерживаемый формат'
-                  : 'Перетащите файлы сюда'
+                    ? (t?.dropToUpload ?? 'Drop to upload')
+                    : (t?.unsupportedFormat ?? 'Unsupported format')
+                  : (t?.dragFilesHere ?? 'Drag files here')
                 }
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                или нажмите для выбора
+                {t?.orClickToSelect ?? 'or click to select'}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                Поддерживаются: JPG, PNG, GIF, WebP, SVG (до 15 MB)
+                {t?.supportedFormats ?? 'Supported: JPG, PNG, GIF, WebP, SVG (up to 15 MB)'}
               </Typography>
             </Box>
 
@@ -1275,14 +1302,14 @@ export default function MediaLibrary() {
                       onClick={bulkUpload.retryFailed}
                       startIcon={<i className="ri-refresh-line" />}
                     >
-                      Повторить
+                      {t?.retry ?? 'Retry'}
                     </Button>
                   ) : undefined
                 }
               >
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                    Загрузка завершена:
+                    {t?.uploadComplete ?? 'Upload complete'}:
                   </Typography>
                   {bulkUpload.stats.success > 0 && (
                     <Chip
@@ -1392,17 +1419,17 @@ export default function MediaLibrary() {
                         )}
                         {uploadFile.status === 'success' && (
                           <Typography variant="caption" color="success.main">
-                            Загружен
+                            {t?.uploaded ?? 'Uploaded'}
                           </Typography>
                         )}
                         {uploadFile.status === 'error' && (
                           <Typography variant="caption" color="error.main">
-                            {uploadFile.error || 'Ошибка'}
+                            {uploadFile.error || (t?.error ?? 'Error')}
                           </Typography>
                         )}
                         {uploadFile.status === 'cancelled' && (
                           <Typography variant="caption" color="warning.main">
-                            Отменён
+                            {t?.cancelled ?? 'Cancelled'}
                           </Typography>
                         )}
                       </Box>
@@ -1473,7 +1500,7 @@ export default function MediaLibrary() {
                 color="inherit"
                 sx={{ height: 41 }}
               >
-                Очистить
+                {t?.clear ?? 'Clear'}
               </Button>
             )}
             {bulkUpload.stats.error > 0 && !uploading && (
@@ -1484,7 +1511,7 @@ export default function MediaLibrary() {
                 sx={{ height: 41 }}
                 startIcon={<i className="ri-refresh-line" />}
               >
-                Повторить ({bulkUpload.stats.error})
+                {t?.retry ?? 'Retry'} ({bulkUpload.stats.error})
               </Button>
             )}
             {bulkUpload.stats.success > 0 && !uploading && (
@@ -1494,7 +1521,7 @@ export default function MediaLibrary() {
                 color="success"
                 sx={{ height: 41 }}
               >
-                Убрать готовые
+                {t?.clearCompleted ?? 'Clear completed'}
               </Button>
             )}
           </Box>
@@ -1507,7 +1534,7 @@ export default function MediaLibrary() {
                 sx={{ height: 41 }}
                 startIcon={<i className="ri-pause-line" />}
               >
-                Пауза
+                {t?.pause ?? 'Pause'}
               </Button>
             )}
             {uploading && bulkUpload.isPaused && (
@@ -1518,7 +1545,7 @@ export default function MediaLibrary() {
                 sx={{ height: 41 }}
                 startIcon={<i className="ri-play-line" />}
               >
-                Продолжить
+                {t?.resume ?? 'Resume'}
               </Button>
             )}
             {uploading && (
@@ -1529,7 +1556,7 @@ export default function MediaLibrary() {
                 sx={{ height: 41 }}
                 startIcon={<i className="ri-close-circle-line" />}
               >
-                Отмена
+                {t?.cancel ?? 'Cancel'}
               </Button>
             )}
             {!uploading && (
@@ -1538,7 +1565,7 @@ export default function MediaLibrary() {
                 variant="outlined"
                 sx={{ height: 41 }}
               >
-                Закрыть
+                {t?.close ?? 'Close'}
               </Button>
             )}
             <Button
@@ -1550,7 +1577,7 @@ export default function MediaLibrary() {
             >
               {uploading
                 ? `${bulkUpload.stats.progress}%`
-                : `Загрузить (${bulkUpload.stats.pending})`
+                : `${t?.upload ?? 'Upload'} (${bulkUpload.stats.pending})`
               }
             </Button>
           </Box>
@@ -1567,11 +1594,11 @@ export default function MediaLibrary() {
       >
         <MenuItem onClick={() => deleteMenuTarget && openDeleteConfirm('single', 'soft', deleteMenuTarget)}>
           <i className="ri-inbox-archive-line" style={{ marginRight: 8 }} />
-          В корзину
+          {t?.moveToTrash ?? 'Move to trash'}
         </MenuItem>
         <MenuItem onClick={() => deleteMenuTarget && openDeleteConfirm('single', 'hard', deleteMenuTarget)} sx={{ color: 'error.main' }}>
           <i className="ri-delete-bin-line" style={{ marginRight: 8 }} />
-          Удалить навсегда
+          {t?.deletePermanently ?? 'Delete permanently'}
         </MenuItem>
       </Menu>
 
@@ -1605,14 +1632,14 @@ export default function MediaLibrary() {
                 }}
               />
             </Box>
-            {deleteTarget?.mode === 'hard' ? 'Удалить навсегда?' : 'Переместить в корзину?'}
+            {deleteTarget?.mode === 'hard' ? (t?.hardDeleteConfirmTitle ?? 'Delete permanently?') : (t?.deleteConfirmTitle ?? 'Move to trash?')}
           </Box>
         </DialogTitle>
         <DialogContent sx={{ px: 6, py: 2 }}>
           {deleting && deleteProgress.total > 0 ? (
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Удаление: {deleteProgress.current} / {deleteProgress.total}
+                {t?.processing ?? 'Processing...'}: {deleteProgress.current} / {deleteProgress.total}
               </Typography>
               <LinearProgress
                 variant="determinate"
@@ -1622,15 +1649,10 @@ export default function MediaLibrary() {
             </Box>
           ) : (
             <Typography color="text.secondary">
-              {deleteTarget?.mode === 'hard' ? (
-                deleteTarget?.type === 'bulk'
-                  ? `Вы уверены, что хотите безвозвратно удалить ${deleteTarget.count} файлов? Файлы будут удалены с сервера и из S3. Это действие НЕЛЬЗЯ отменить!`
-                  : 'Вы уверены, что хотите безвозвратно удалить этот файл? Файл будет удалён с сервера и из S3. Это действие НЕЛЬЗЯ отменить!'
-              ) : (
-                deleteTarget?.type === 'bulk'
-                  ? `${deleteTarget.count} файлов будут перемещены в корзину. Вы сможете восстановить их в течение установленного срока.`
-                  : 'Файл будет перемещён в корзину. Вы сможете восстановить его в течение установленного срока.'
-              )}
+              {deleteTarget?.mode === 'hard'
+                ? (t?.hardDeleteConfirmMessage ?? 'This action cannot be undone. File will be deleted from all storages')
+                : (t?.deleteConfirmMessage ?? 'File will be moved to trash and can be restored later')
+              }
             </Typography>
           )}
         </DialogContent>
@@ -1647,7 +1669,7 @@ export default function MediaLibrary() {
             variant="outlined"
             fullWidth
           >
-            Отмена
+            {t?.cancel ?? 'Cancel'}
           </Button>
           <Button
             variant="contained"
@@ -1662,10 +1684,10 @@ export default function MediaLibrary() {
             }
           >
             {deleting
-              ? 'Удаление...'
+              ? (t?.processing ?? 'Processing...')
               : deleteTarget?.mode === 'hard'
-                ? 'Удалить навсегда'
-                : 'В корзину'
+                ? (t?.deletePermanently ?? 'Delete permanently')
+                : (t?.moveToTrash ?? 'Move to trash')
             }
           </Button>
         </DialogActions>
@@ -1691,7 +1713,7 @@ export default function MediaLibrary() {
           }}
         >
           <Typography variant="body2" fontWeight={500}>
-            Выбрано: {selectedIds.length}
+            {t?.selected ?? 'Selected'}: {selectedIds.length}
           </Typography>
 
           {activeTab === 'files' ? (
@@ -1703,7 +1725,7 @@ export default function MediaLibrary() {
                 startIcon={<i className="ri-inbox-archive-line" />}
                 onClick={() => openDeleteConfirm('bulk', 'soft')}
               >
-                В корзину
+                {t?.toTrash ?? 'To trash'}
               </Button>
               <Button
                 color="error"
@@ -1712,7 +1734,7 @@ export default function MediaLibrary() {
                 startIcon={<i className="ri-delete-bin-line" />}
                 onClick={() => openDeleteConfirm('bulk', 'hard')}
               >
-                Удалить навсегда
+                {t?.deletePermanently ?? 'Delete permanently'}
               </Button>
             </>
           ) : (
@@ -1733,7 +1755,7 @@ export default function MediaLibrary() {
                 startIcon={<i className="ri-delete-bin-line" />}
                 onClick={() => openDeleteConfirm('bulk', 'hard')}
               >
-                Удалить навсегда
+                {t?.deletePermanently ?? 'Delete permanently'}
               </Button>
             </>
           )}
@@ -1743,7 +1765,7 @@ export default function MediaLibrary() {
             variant="text"
             onClick={() => setSelectedIds([])}
           >
-            Отменить
+            {t?.cancel ?? 'Cancel'}
           </Button>
         </Box>
       )}
