@@ -103,7 +103,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
     useAsyncUpload = false,
     parallelLimit = 5,
     maxFiles = 10000,
-    maxFileSize = 15 * 1024 * 1024,
+    maxFileSize = 10 * 1024 * 1024, // 10MB default, override from settings
     entityType = 'other',
     entityId,
     maxPreviews = 20,
@@ -216,18 +216,24 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
     
     if (allowedCount <= 0) return
     
-    const filesToAdd = newFiles.slice(0, allowedCount).filter(f => f.size <= maxFileSize)
+    const filesToAdd = newFiles.slice(0, allowedCount)
     
-    const queuedFiles: QueuedFile[] = filesToAdd.map((file, index) => ({
-      id: generateId(),
-      file,
-      status: 'pending' as const,
-      progress: 0,
-      retryCount: 0,
-      preview: (currentCount + index < maxPreviews && file.type.startsWith('image/'))
-        ? URL.createObjectURL(file)
-        : undefined,
-    }))
+    const queuedFiles: QueuedFile[] = filesToAdd.map((file, index) => {
+      const exceedsMaxSize = file.size > maxFileSize
+      const maxSizeMB = Math.round(maxFileSize / (1024 * 1024))
+      
+      return {
+        id: generateId(),
+        file,
+        status: exceedsMaxSize ? 'error' as const : 'pending' as const,
+        progress: 0,
+        retryCount: 0,
+        error: exceedsMaxSize ? `File size exceeds ${maxSizeMB} MB limit` : undefined,
+        preview: (currentCount + index < maxPreviews && file.type.startsWith('image/'))
+          ? URL.createObjectURL(file)
+          : undefined,
+      }
+    })
 
     queueRef.current = [...queueRef.current, ...queuedFiles]
     syncQueueToUIImmediate()

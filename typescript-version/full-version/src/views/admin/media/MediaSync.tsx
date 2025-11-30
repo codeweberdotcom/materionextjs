@@ -1,10 +1,12 @@
 'use client'
 
 /**
- * Синхронизация медиа - управление задачами синхронизации
+ * Media Synchronization - sync task management
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+
+import { useTranslationSafe } from '@/contexts/TranslationContext'
 
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -83,32 +85,29 @@ interface SyncJob {
   }>
 }
 
-const OPERATIONS = [
-  { value: 'upload_to_s3_with_delete', label: '☁️ Выгрузить на S3 и удалить локальные', color: 'warning' },
-  { value: 'upload_to_s3_keep_local', label: '☁️ Выгрузить на S3 (сохранить локальные)', color: 'info' },
-  { value: 'download_from_s3', label: '💾 Загрузить из S3 в локальное', color: 'success' },
-  { value: 'download_from_s3_delete_s3', label: '💾 Загрузить из S3 и удалить из S3', color: 'warning' },
-  { value: 'delete_local_only', label: '🗑️ Удалить только локальные', color: 'error' },
-  { value: 'delete_s3_only', label: '🗑️ Удалить только из S3', color: 'error' },
-  { value: 'purge_s3', label: '⚠️ ОЧИСТИТЬ S3 (удалить ВСЕ файлы из bucket)', color: 'error' },
-  { value: 'verify_status', label: '🔍 Проверить статусы (сверка с S3)', color: 'info' },
-]
+const OPERATION_VALUES = [
+  'upload_to_s3_with_delete',
+  'upload_to_s3_keep_local',
+  'download_from_s3',
+  'download_from_s3_delete_s3',
+  'delete_local_only',
+  'delete_s3_only',
+  'purge_s3',
+  'verify_status',
+] as const
 
-const SCOPES = [
-  { value: 'all', label: 'Все файлы' },
-  { value: 'entity_type', label: 'По типу сущности' },
-]
+const SCOPE_VALUES = ['all', 'entity_type'] as const
 
-const ENTITY_TYPES = [
-  { value: 'user_avatar', label: 'Аватары' },
-  { value: 'company_logo', label: 'Логотипы' },
-  { value: 'company_banner', label: 'Баннеры' },
-  { value: 'company_photo', label: 'Фото компаний' },
-  { value: 'listing_image', label: 'Фото объявлений' },
-  { value: 'site_logo', label: 'Логотип сайта' },
-  { value: 'watermark', label: 'Водяные знаки' },
-  { value: 'document', label: 'Документы' },
-]
+const ENTITY_TYPE_VALUES = [
+  'user_avatar',
+  'company_logo',
+  'company_banner',
+  'company_photo',
+  'listing_image',
+  'site_logo',
+  'watermark',
+  'document',
+] as const
 
 const getStatusColor = (status: string): 'default' | 'warning' | 'success' | 'error' | 'info' => {
   switch (status) {
@@ -139,6 +138,9 @@ const formatDuration = (startedAt?: string, completedAt?: string): string => {
 }
 
 export default function MediaSync() {
+  const dictionary = useTranslationSafe()
+  const t = dictionary?.mediaSync
+  
   const [jobs, setJobs] = useState<SyncJob[]>([])
   const [loading, setLoading] = useState(true)
   const [total, setTotal] = useState(0)
@@ -184,6 +186,30 @@ export default function MediaSync() {
   } | null>(null)
 
   const [accessDenied, setAccessDenied] = useState(false)
+
+  // Get translated operation label
+  const getOperationLabel = useCallback((operation: string): string => {
+    const operations = t?.operations as Record<string, string> | undefined
+    return operations?.[operation] || operation
+  }, [t])
+
+  // Get translated scope label
+  const getScopeLabel = useCallback((scope: string): string => {
+    const scopes = t?.scopes as Record<string, string> | undefined
+    return scopes?.[scope] || scope
+  }, [t])
+
+  // Get translated entity type label
+  const getEntityTypeLabel = useCallback((entityType: string): string => {
+    const entityTypes = t?.entityTypes as Record<string, string> | undefined
+    return entityTypes?.[entityType] || entityType
+  }, [t])
+
+  // Get translated status label
+  const getStatusLabel = useCallback((status: string): string => {
+    const statuses = t?.statuses as Record<string, string> | undefined
+    return statuses?.[status] || status
+  }, [t])
   
   const fetchJobs = useCallback(async () => {
     try {
@@ -202,14 +228,14 @@ export default function MediaSync() {
       setTotal(data.total)
       setAccessDenied(false)
     } catch (error) {
-      // Показываем toast только один раз при первой загрузке
+      // Show toast only once on first load
       if (loading) {
-        toast.error('Ошибка загрузки задач')
+        toast.error(t?.loadError || 'Error loading tasks')
       }
     } finally {
       setLoading(false)
     }
-  }, [loading])
+  }, [loading, t])
 
   useEffect(() => {
     fetchJobs()
@@ -221,16 +247,16 @@ export default function MediaSync() {
 
   const createJob = async () => {
     if (!newAction) {
-      toast.error('Выберите действие')
+      toast.error(t?.selectAction || 'Select an action')
       return
     }
     
     if (newScope === 'entity_type' && !newEntityType) {
-      toast.error('Выберите тип сущности')
+      toast.error(t?.selectEntityTypeRequired || 'Select entity type')
       return
     }
 
-    // Дополнительное подтверждение для опасных операций
+    // Additional confirmation for dangerous operations
     if (newAction === 'purge_s3') {
       setPendingDangerAction(newAction)
       setConfirmDangerOpen(true)
@@ -261,56 +287,56 @@ export default function MediaSync() {
       
       const data = await response.json()
       
-      // Сохраняем action до сброса состояния
+      // Save action before resetting state
       const actionWas = action
       
-      // Закрываем диалог сразу после успешного создания задачи
+      // Close dialog immediately after successful task creation
       setDialogOpen(false)
       
-      // Сбрасываем форму
+      // Reset form
       setNewAction('')
       setNewScope('all')
       setNewEntityType('')
       
-      // Для верификации показываем результаты в отдельном диалоге
+      // For verification show results in separate dialog
       if (actionWas === 'verify_status' && data.verification) {
         setVerifyResult(data.verification)
         setVerifyDialogOpen(true)
-        toast.success(`Проверено: ${data.verification.total}, обновлено: ${data.verification.updated}`)
+        const msg = (t?.verifiedCount || 'Verified: {total}, updated: {updated}')
+          .replace('{total}', data.verification.total)
+          .replace('{updated}', data.verification.updated)
+        toast.success(msg)
       } else if (actionWas === 'purge_s3' && data.purge) {
         setPurgeResult(data.purge)
         setPurgeDialogOpen(true)
-        toast.success(`Удалено ${data.purge.deletedFiles} файлов из S3`)
+        const msg = (t?.deletedFromS3 || 'Deleted {count} files from S3')
+          .replace('{count}', data.purge.deletedFiles)
+        toast.success(msg)
       } else {
-        toast.success('Задача создана и запущена')
+        toast.success(t?.taskCreated || 'Task created and started')
       }
       
-      // Обновляем список задач
+      // Refresh task list
       fetchJobs()
     } catch (error: any) {
-      toast.error(error.message || 'Ошибка создания задачи')
+      toast.error(error.message || t?.createError || 'Error creating task')
     } finally {
       setCreating(false)
     }
   }
 
   const cancelJob = async (jobId: string) => {
-    if (!confirm('Отменить эту задачу?')) return
+    if (!confirm(t?.cancelTask || 'Cancel this task?')) return
     
     try {
       const response = await fetch(`/api/admin/media/sync/${jobId}`, { method: 'DELETE' })
       if (!response.ok) throw new Error('Failed to cancel job')
       
-      toast.success('Задача отменена')
+      toast.success(t?.taskCancelled || 'Task cancelled')
       fetchJobs()
     } catch (error) {
-      toast.error('Ошибка отмены задачи')
+      toast.error(t?.cancelError || 'Error cancelling task')
     }
-  }
-
-  const getOperationLabel = (operation: string): string => {
-    const op = OPERATIONS.find(o => o.value === operation)
-    return op?.label || operation
   }
 
   if (loading) {
@@ -343,7 +369,7 @@ export default function MediaSync() {
               <Table>
                 <TableHead>
                   <TableRow>
-                    {['Операция', 'Область', 'Статус', 'Прогресс', 'Длительность', 'Создана', 'Автор', ''].map((_, i) => (
+                    {[...Array(8)].map((_, i) => (
                       <TableCell key={i}>
                         <Skeleton variant="text" width={80} />
                       </TableCell>
@@ -377,7 +403,7 @@ export default function MediaSync() {
       <Grid container spacing={6}>
         <Grid item xs={12}>
           <Alert severity="warning">
-            Доступ запрещён. Для работы с синхронизацией медиа требуются права SUPERADMIN.
+            {t?.accessDenied || 'Access denied. SUPERADMIN rights are required to work with media synchronization.'}
           </Alert>
         </Grid>
       </Grid>
@@ -392,7 +418,7 @@ export default function MediaSync() {
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Typography color="text.secondary" gutterBottom>Всего задач</Typography>
+                <Typography color="text.secondary" gutterBottom>{t?.totalTasks || 'Total tasks'}</Typography>
                 <Typography variant="h4">{total}</Typography>
               </CardContent>
             </Card>
@@ -400,7 +426,7 @@ export default function MediaSync() {
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Typography color="text.secondary" gutterBottom>В обработке</Typography>
+                <Typography color="text.secondary" gutterBottom>{t?.processing || 'Processing'}</Typography>
                 <Typography variant="h4" color="warning.main">
                   {jobs.filter(j => j.status === 'processing').length}
                 </Typography>
@@ -410,7 +436,7 @@ export default function MediaSync() {
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Typography color="text.secondary" gutterBottom>Завершено</Typography>
+                <Typography color="text.secondary" gutterBottom>{t?.completed || 'Completed'}</Typography>
                 <Typography variant="h4" color="success.main">
                   {jobs.filter(j => j.status === 'completed').length}
                 </Typography>
@@ -420,7 +446,7 @@ export default function MediaSync() {
           <Grid item xs={12} sm={6} md={3}>
             <Card>
               <CardContent>
-                <Typography color="text.secondary" gutterBottom>Ошибки</Typography>
+                <Typography color="text.secondary" gutterBottom>{t?.errors || 'Errors'}</Typography>
                 <Typography variant="h4" color="error.main">
                   {jobs.filter(j => j.status === 'failed').length}
                 </Typography>
@@ -434,34 +460,34 @@ export default function MediaSync() {
       <Grid item xs={12}>
         <Card>
           <CardHeader 
-            title="Задачи синхронизации"
+            title={t?.pageTitle || 'Synchronization Tasks'}
             action={
               <Button 
                 variant="contained" 
                 startIcon={<i className="ri-add-line" />}
                 onClick={() => setDialogOpen(true)}
               >
-                Создать задачу
+                {t?.createTask || 'Create Task'}
               </Button>
             }
           />
           <CardContent>
             {jobs.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
-                <Typography color="text.secondary">Нет задач</Typography>
+                <Typography color="text.secondary">{t?.noTasks || 'No tasks'}</Typography>
               </Box>
             ) : (
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>Операция</TableCell>
-                    <TableCell>Область</TableCell>
-                    <TableCell>Статус</TableCell>
-                    <TableCell>Прогресс</TableCell>
-                    <TableCell>Длительность</TableCell>
-                    <TableCell>Создана</TableCell>
-                    <TableCell>Автор</TableCell>
-                    <TableCell align="right">Действия</TableCell>
+                    <TableCell>{t?.operation || 'Operation'}</TableCell>
+                    <TableCell>{t?.scope || 'Scope'}</TableCell>
+                    <TableCell>{t?.status || 'Status'}</TableCell>
+                    <TableCell>{t?.progress || 'Progress'}</TableCell>
+                    <TableCell>{t?.duration || 'Duration'}</TableCell>
+                    <TableCell>{t?.created || 'Created'}</TableCell>
+                    <TableCell>{t?.author || 'Author'}</TableCell>
+                    <TableCell align="right">{t?.actions || 'Actions'}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -475,7 +501,7 @@ export default function MediaSync() {
                             </Typography>
                             {job.isParent && (
                               <Chip 
-                                label={`${job.childJobs?.length || 0} batch`} 
+                                label={`${job.childJobs?.length || 0} ${t?.batch || 'batch'}`} 
                                 size="small" 
                                 color="info"
                                 variant="outlined"
@@ -484,28 +510,28 @@ export default function MediaSync() {
                           </Box>
                           {job.s3Bucket && (
                             <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
-                              bucket: {job.s3Bucket}
+                              {t?.bucket || 'bucket'}: {job.s3Bucket}
                             </Typography>
                           )}
                         </Box>
                       </TableCell>
                       <TableCell>
                         <Chip 
-                          label={job.scope === 'entity_type' ? job.entityType : job.scope} 
+                          label={job.scope === 'entity_type' ? getEntityTypeLabel(job.entityType || '') : getScopeLabel(job.scope)} 
                           size="small" 
                           variant="outlined"
                         />
                       </TableCell>
                       <TableCell>
                         <Chip 
-                          label={job.status} 
+                          label={getStatusLabel(job.status)} 
                           size="small" 
                           color={getStatusColor(job.status)}
                         />
                       </TableCell>
                       <TableCell sx={{ minWidth: 200 }}>
                         {(() => {
-                          // Для parent job агрегируем из children
+                          // For parent job aggregate from children
                           const processedFiles = job.isParent && job.childJobs
                             ? job.childJobs.reduce((sum, c) => sum + c.processedFiles, 0)
                             : job.processedFiles
@@ -521,7 +547,7 @@ export default function MediaSync() {
                                 sx={{ mb: 0.5 }}
                               />
                               <Typography variant="caption" color="text.secondary">
-                                {processedFiles}/{job.totalFiles} файлов
+                                {processedFiles}/{job.totalFiles} {t?.files || 'files'}
                               </Typography>
                             </Box>
                           ) : (
@@ -531,7 +557,7 @@ export default function MediaSync() {
                               </Typography>
                               {failedFiles > 0 && (
                                 <Chip 
-                                  label={`${failedFiles} ошибок`} 
+                                  label={`${failedFiles} ${t?.errorsCount || 'errors'}`} 
                                   size="small" 
                                   color="error" 
                                 />
@@ -566,14 +592,14 @@ export default function MediaSync() {
                       </TableCell>
                       <TableCell align="right">
                         {job.status === 'processing' && (
-                          <Tooltip title="Отменить">
+                          <Tooltip title={t?.cancel || 'Cancel'}>
                             <IconButton color="error" onClick={() => cancelJob(job.id)}>
                               <i className="ri-stop-circle-line" />
                             </IconButton>
                           </Tooltip>
                         )}
                         {(job.error || job.status === 'failed' || job.failedFiles > 0) && (
-                          <Tooltip title="Подробности">
+                          <Tooltip title={t?.taskDetails || 'Task Details'}>
                             <IconButton 
                               color="error" 
                               onClick={() => {
@@ -597,51 +623,51 @@ export default function MediaSync() {
 
       {/* Create job dialog */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>Создать задачу синхронизации</DialogTitle>
+        <DialogTitle>{t?.createTaskTitle || 'Create Sync Task'}</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 2 }}>
             <Alert severity="warning" sx={{ mb: 3 }}>
-              ⚠️ Операции синхронизации могут быть необратимы.
+              ⚠️ {t?.syncWarning || 'Sync operations may be irreversible.'}
             </Alert>
             
             <FormControl fullWidth sx={{ mb: 3 }}>
-              <InputLabel>Операция</InputLabel>
+              <InputLabel>{t?.selectOperation || 'Operation'}</InputLabel>
               <Select
                 value={newAction}
-                label="Операция"
+                label={t?.selectOperation || 'Operation'}
                 onChange={e => setNewAction(e.target.value)}
               >
-                {OPERATIONS.map(op => (
-                  <MenuItem key={op.value} value={op.value}>
-                    {op.label}
+                {OPERATION_VALUES.map(op => (
+                  <MenuItem key={op} value={op}>
+                    {getOperationLabel(op)}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
             
             <FormControl fullWidth sx={{ mb: 3 }}>
-              <InputLabel>Область</InputLabel>
+              <InputLabel>{t?.selectScope || 'Scope'}</InputLabel>
               <Select
                 value={newScope}
-                label="Область"
+                label={t?.selectScope || 'Scope'}
                 onChange={e => setNewScope(e.target.value)}
               >
-                {SCOPES.map(s => (
-                  <MenuItem key={s.value} value={s.value}>{s.label}</MenuItem>
+                {SCOPE_VALUES.map(s => (
+                  <MenuItem key={s} value={s}>{getScopeLabel(s)}</MenuItem>
                 ))}
               </Select>
             </FormControl>
             
             {newScope === 'entity_type' && (
               <FormControl fullWidth>
-                <InputLabel>Тип сущности</InputLabel>
+                <InputLabel>{t?.selectEntityType || 'Entity type'}</InputLabel>
                 <Select
                   value={newEntityType}
-                  label="Тип сущности"
+                  label={t?.selectEntityType || 'Entity type'}
                   onChange={e => setNewEntityType(e.target.value)}
                 >
-                  {ENTITY_TYPES.map(t => (
-                    <MenuItem key={t.value} value={t.value}>{t.label}</MenuItem>
+                  {ENTITY_TYPE_VALUES.map(et => (
+                    <MenuItem key={et} value={et}>{getEntityTypeLabel(et)}</MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -655,7 +681,7 @@ export default function MediaSync() {
           '& .MuiButtonBase-root:not(:first-of-type)': { marginInlineStart: 0 }
         }}>
           <Button onClick={() => setDialogOpen(false)} variant="outlined" disabled={creating}>
-            Отмена
+            {t?.cancel || 'Cancel'}
           </Button>
           <Button 
             variant="contained" 
@@ -663,7 +689,7 @@ export default function MediaSync() {
             disabled={creating}
             startIcon={creating ? <CircularProgress size={16} color="inherit" /> : null}
           >
-            Создать
+            {creating ? (t?.creating || 'Creating...') : (t?.create || 'Create')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -680,7 +706,7 @@ export default function MediaSync() {
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <i className="ri-error-warning-line" style={{ color: 'var(--mui-palette-error-main)' }} />
-          Детали задачи
+          {t?.taskDetails || 'Task Details'}
         </DialogTitle>
         <DialogContent>
           {selectedJob && (
@@ -688,29 +714,29 @@ export default function MediaSync() {
               {/* Job Info */}
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={6} sm={3}>
-                  <Typography variant="caption" color="text.secondary">ID задачи</Typography>
+                  <Typography variant="caption" color="text.secondary">{t?.taskId || 'Task ID'}</Typography>
                   <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
                     {selectedJob.id}
                   </Typography>
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                  <Typography variant="caption" color="text.secondary">Статус</Typography>
+                  <Typography variant="caption" color="text.secondary">{t?.status || 'Status'}</Typography>
                   <Box>
                     <Chip 
-                      label={selectedJob.status} 
+                      label={getStatusLabel(selectedJob.status)} 
                       size="small" 
                       color={getStatusColor(selectedJob.status)}
                     />
                   </Box>
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                  <Typography variant="caption" color="text.secondary">Операция</Typography>
+                  <Typography variant="caption" color="text.secondary">{t?.operation || 'Operation'}</Typography>
                   <Typography variant="body2">{getOperationLabel(selectedJob.operation)}</Typography>
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                  <Typography variant="caption" color="text.secondary">Область</Typography>
+                  <Typography variant="caption" color="text.secondary">{t?.scope || 'Scope'}</Typography>
                   <Typography variant="body2">
-                    {selectedJob.scope === 'entity_type' ? selectedJob.entityType : selectedJob.scope}
+                    {selectedJob.scope === 'entity_type' ? getEntityTypeLabel(selectedJob.entityType || '') : getScopeLabel(selectedJob.scope)}
                   </Typography>
                 </Grid>
               </Grid>
@@ -719,11 +745,11 @@ export default function MediaSync() {
               <Box sx={{ mb: 3, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
                 <Grid container spacing={2}>
                   <Grid item xs={selectedJob.isParent ? 3 : 4}>
-                    <Typography variant="caption" color="text.secondary">Всего файлов</Typography>
+                    <Typography variant="caption" color="text.secondary">{t?.totalFiles || 'Total files'}</Typography>
                     <Typography variant="h6">{selectedJob.totalFiles}</Typography>
                   </Grid>
                   <Grid item xs={selectedJob.isParent ? 3 : 4}>
-                    <Typography variant="caption" color="text.secondary">Обработано</Typography>
+                    <Typography variant="caption" color="text.secondary">{t?.processed || 'Processed'}</Typography>
                     <Typography variant="h6" color="success.main">
                       {selectedJob.isParent && selectedJob.childJobs
                         ? selectedJob.childJobs.reduce((sum, c) => sum + c.processedFiles, 0)
@@ -731,7 +757,7 @@ export default function MediaSync() {
                     </Typography>
                   </Grid>
                   <Grid item xs={selectedJob.isParent ? 3 : 4}>
-                    <Typography variant="caption" color="text.secondary">{t?.errors ?? 'Errors'}</Typography>
+                    <Typography variant="caption" color="text.secondary">{t?.errors || 'Errors'}</Typography>
                     <Typography variant="h6" color="error.main">
                       {selectedJob.isParent && selectedJob.childJobs
                         ? selectedJob.childJobs.reduce((sum, c) => sum + c.failedFiles, 0)
@@ -740,7 +766,7 @@ export default function MediaSync() {
                   </Grid>
                   {selectedJob.isParent && selectedJob.childJobs && (
                     <Grid item xs={3}>
-                      <Typography variant="caption" color="text.secondary">Batch'и</Typography>
+                      <Typography variant="caption" color="text.secondary">{t?.batches || 'Batches'}</Typography>
                       <Typography variant="h6" color="primary.main">
                         {selectedJob.childJobs.filter(c => c.status === 'completed' || c.status === 'failed').length}
                         /{selectedJob.childJobs.length}
@@ -753,7 +779,7 @@ export default function MediaSync() {
                 {selectedJob.isParent && selectedJob.childJobs && selectedJob.childJobs.length > 0 && (
                   <Box sx={{ mt: 2 }}>
                     <Typography variant="caption" color="text.secondary" sx={{ mb: 1, display: 'block' }}>
-                      Прогресс по batch'ам
+                      {t?.batchProgress || 'Batch progress'}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
                       {selectedJob.childJobs
@@ -781,7 +807,7 @@ export default function MediaSync() {
                                 ? 'white' 
                                 : 'text.secondary',
                             }}
-                            title={`Batch ${idx + 1}: ${child.status}`}
+                            title={`Batch ${idx + 1}: ${getStatusLabel(child.status)}`}
                           >
                             {idx + 1}
                           </Box>
@@ -794,21 +820,21 @@ export default function MediaSync() {
               {/* Timestamps */}
               <Grid container spacing={2} sx={{ mb: 3 }}>
                 <Grid item xs={4}>
-                  <Typography variant="caption" color="text.secondary">Создана</Typography>
+                  <Typography variant="caption" color="text.secondary">{t?.created || 'Created'}</Typography>
                   <Typography variant="body2">
-                    {new Date(selectedJob.createdAt).toLocaleString('ru-RU')}
+                    {new Date(selectedJob.createdAt).toLocaleString()}
                   </Typography>
                 </Grid>
                 <Grid item xs={4}>
-                  <Typography variant="caption" color="text.secondary">Начата</Typography>
+                  <Typography variant="caption" color="text.secondary">{t?.startedAt || 'Started'}</Typography>
                   <Typography variant="body2">
-                    {selectedJob.startedAt ? new Date(selectedJob.startedAt).toLocaleString('ru-RU') : '-'}
+                    {selectedJob.startedAt ? new Date(selectedJob.startedAt).toLocaleString() : '-'}
                   </Typography>
                 </Grid>
                 <Grid item xs={4}>
-                  <Typography variant="caption" color="text.secondary">Завершена</Typography>
+                  <Typography variant="caption" color="text.secondary">{t?.completedAt || 'Completed'}</Typography>
                   <Typography variant="body2">
-                    {selectedJob.completedAt ? new Date(selectedJob.completedAt).toLocaleString('ru-RU') : '-'}
+                    {selectedJob.completedAt ? new Date(selectedJob.completedAt).toLocaleString() : '-'}
                   </Typography>
                 </Grid>
               </Grid>
@@ -816,7 +842,7 @@ export default function MediaSync() {
               {/* Error Message */}
               {selectedJob.error && (
                 <Alert severity="error" sx={{ mt: 2 }}>
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>Сообщение об ошибке:</Typography>
+                  <Typography variant="subtitle2" sx={{ mb: 1 }}>{t?.errorMessage || 'Error message'}:</Typography>
                   <Typography 
                     variant="body2" 
                     sx={{ 
@@ -840,7 +866,7 @@ export default function MediaSync() {
                     return (
                       <Box sx={{ mt: 2 }}>
                         <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                          Детали по файлам ({failedResults.length} ошибок):
+                          {(t?.fileDetails || 'File details ({count} errors):').replace('{count}', String(failedResults.length))}
                         </Typography>
                         <Box 
                           sx={{ 
@@ -881,8 +907,7 @@ export default function MediaSync() {
               {!selectedJob.error && selectedJob.failedFiles > 0 && !selectedJob.results && (
                 <Alert severity="warning" sx={{ mt: 2 }}>
                   <Typography variant="body2">
-                    {selectedJob.failedFiles} файл(ов) не удалось обработать. 
-                    Проверьте логи сервера для детальной информации.
+                    {selectedJob.failedFiles} {t?.fileErrors || 'files failed to process. Check server logs for details.'}
                   </Typography>
                 </Alert>
               )}
@@ -897,7 +922,7 @@ export default function MediaSync() {
             }} 
             variant="outlined"
           >
-            Закрыть
+            {t?.close || 'Close'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -914,15 +939,15 @@ export default function MediaSync() {
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'error.main' }}>
           <i className="ri-error-warning-line" />
-          Подтверждение опасной операции
+          {t?.dangerOperationTitle || 'Dangerous operation confirmation'}
         </DialogTitle>
         <DialogContent>
           <Alert severity="error" sx={{ mt: 1 }}>
             <Typography variant="body2" sx={{ fontWeight: 'bold', mb: 1 }}>
-              ⚠️ ВНИМАНИЕ!
+              {t?.dangerOperationWarning || '⚠️ WARNING!'}
             </Typography>
             <Typography variant="body2">
-              Это действие удалит <strong>ВСЕ файлы</strong> из S3 bucket безвозвратно!
+              {t?.dangerOperationMessage || 'This action will delete ALL files from S3 bucket permanently!'}
             </Typography>
           </Alert>
         </DialogContent>
@@ -934,7 +959,7 @@ export default function MediaSync() {
               setPendingDangerAction('')
             }}
           >
-            Отмена
+            {t?.cancel || 'Cancel'}
           </Button>
           <Button
             variant="contained"
@@ -943,7 +968,7 @@ export default function MediaSync() {
             disabled={creating}
             startIcon={creating ? <CircularProgress size={16} color="inherit" /> : <i className="ri-delete-bin-line" />}
           >
-            Удалить всё
+            {t?.deleteAll || 'Delete all'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -960,7 +985,7 @@ export default function MediaSync() {
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <i className="ri-delete-bin-line" style={{ color: 'var(--mui-palette-error-main)' }} />
-          Результаты очистки S3
+          {t?.purgeResults || 'S3 Purge Results'}
         </DialogTitle>
         <DialogContent>
           {purgeResult && (
@@ -970,39 +995,39 @@ export default function MediaSync() {
                 <Grid item xs={4}>
                   <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'success.main', color: 'white', borderRadius: 1 }}>
                     <Typography variant="h4">{purgeResult.deletedFiles}</Typography>
-                    <Typography variant="caption">Удалено файлов</Typography>
+                    <Typography variant="caption">{t?.deletedFiles || 'Deleted files'}</Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={4}>
                   <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'info.main', color: 'white', borderRadius: 1 }}>
                     <Typography variant="h4">{formatBytes(purgeResult.deletedBytes)}</Typography>
-                    <Typography variant="caption">Освобождено</Typography>
+                    <Typography variant="caption">{t?.freedSpace || 'Freed space'}</Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={4}>
                   <Box sx={{ textAlign: 'center', p: 2, bgcolor: purgeResult.errors > 0 ? 'error.main' : 'grey.500', color: 'white', borderRadius: 1 }}>
                     <Typography variant="h4">{purgeResult.errors}</Typography>
-                    <Typography variant="caption">{t?.errors ?? 'Errors'}</Typography>
+                    <Typography variant="caption">{t?.errors || 'Errors'}</Typography>
                   </Box>
                 </Grid>
               </Grid>
 
               {purgeResult.deletedFiles === 0 && purgeResult.errors === 0 && (
                 <Alert severity="info">
-                  S3 bucket уже пуст. Файлов для удаления не найдено.
+                  {t?.s3Empty || 'S3 bucket is already empty. No files to delete.'}
                 </Alert>
               )}
 
               {purgeResult.deletedFiles > 0 && purgeResult.errors === 0 && (
                 <Alert severity="success">
-                  S3 bucket успешно очищен!
+                  {t?.s3PurgeSuccess || 'S3 bucket successfully purged!'}
                 </Alert>
               )}
 
               {purgeResult.errors > 0 && purgeResult.details.length > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    Детали ({purgeResult.details.length}):
+                    {(t?.details || 'Details ({count}):').replace('{count}', String(purgeResult.details.length))}
                   </Typography>
                   <Box sx={{ maxHeight: 200, overflow: 'auto', bgcolor: 'grey.900', p: 1.5, borderRadius: 1 }}>
                     {purgeResult.details.map((detail, i) => (
@@ -1028,7 +1053,7 @@ export default function MediaSync() {
             }} 
             variant="outlined"
           >
-            Закрыть
+            {t?.close || 'Close'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -1045,7 +1070,7 @@ export default function MediaSync() {
       >
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <i className="ri-search-eye-line" style={{ color: 'var(--mui-palette-info-main)' }} />
-          Результаты проверки статусов
+          {t?.verifyResults || 'Status Verification Results'}
         </DialogTitle>
         <DialogContent>
           {verifyResult && (
@@ -1055,25 +1080,25 @@ export default function MediaSync() {
                 <Grid item xs={3}>
                   <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
                     <Typography variant="h4">{verifyResult.total}</Typography>
-                    <Typography variant="caption" color="text.secondary">Всего файлов</Typography>
+                    <Typography variant="caption" color="text.secondary">{t?.totalFiles || 'Total files'}</Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={3}>
                   <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'success.main', color: 'white', borderRadius: 1 }}>
                     <Typography variant="h4">{verifyResult.verified}</Typography>
-                    <Typography variant="caption">Проверено</Typography>
+                    <Typography variant="caption">{t?.verified || 'Verified'}</Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={3}>
                   <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'warning.main', color: 'white', borderRadius: 1 }}>
                     <Typography variant="h4">{verifyResult.updated}</Typography>
-                    <Typography variant="caption">Обновлено</Typography>
+                    <Typography variant="caption">{t?.updated || 'Updated'}</Typography>
                   </Box>
                 </Grid>
                 <Grid item xs={3}>
                   <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'error.main', color: 'white', borderRadius: 1 }}>
                     <Typography variant="h4">{verifyResult.errors}</Typography>
-                    <Typography variant="caption">{t?.errors ?? 'Errors'}</Typography>
+                    <Typography variant="caption">{t?.errors || 'Errors'}</Typography>
                   </Box>
                 </Grid>
               </Grid>
@@ -1082,17 +1107,17 @@ export default function MediaSync() {
               {verifyResult.details.length > 0 && (
                 <Box>
                   <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    Изменённые статусы ({verifyResult.details.length}):
+                    {(t?.changedStatuses || 'Changed statuses ({count}):').replace('{count}', String(verifyResult.details.length))}
                   </Typography>
                   <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell>Media ID</TableCell>
-                          <TableCell>Было</TableCell>
-                          <TableCell>Стало</TableCell>
-                          <TableCell>Local</TableCell>
-                          <TableCell>S3</TableCell>
+                          <TableCell>{t?.mediaId || 'Media ID'}</TableCell>
+                          <TableCell>{t?.was || 'Was'}</TableCell>
+                          <TableCell>{t?.became || 'Became'}</TableCell>
+                          <TableCell>{t?.local || 'Local'}</TableCell>
+                          <TableCell>{t?.s3 || 'S3'}</TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -1129,7 +1154,7 @@ export default function MediaSync() {
 
               {verifyResult.details.length === 0 && verifyResult.updated === 0 && (
                 <Alert severity="success">
-                  Все статусы корректны! Изменений не требуется.
+                  {t?.allStatusesCorrect || 'All statuses are correct! No changes needed.'}
                 </Alert>
               )}
             </Box>
@@ -1143,11 +1168,10 @@ export default function MediaSync() {
             }} 
             variant="outlined"
           >
-            Закрыть
+            {t?.close || 'Close'}
           </Button>
         </DialogActions>
       </Dialog>
     </Grid>
   )
 }
-

@@ -161,7 +161,7 @@ export const IMAGE_PRESETS: Record<string, ImageSettingsInput> = {
     entityType: 'document',
     displayName: 'Документ',
     description: 'Сканы документов, паспортов и т.д.',
-    maxFileSize: 15 * 1024 * 1024, // 15MB
+    maxFileSize: 10 * 1024 * 1024, // 10MB
     maxFilesPerEntity: 10,
     allowedMimeTypes: 'image/jpeg,image/png,image/webp,application/pdf',
     variants: [
@@ -208,7 +208,7 @@ export const DEFAULT_GLOBAL_SETTINGS: MediaGlobalSettingsInput = {
   localPublicUrlPrefix: '/uploads',
   organizeByDate: true,
   organizeByEntityType: true,
-  globalMaxFileSize: 20 * 1024 * 1024, // 20MB
+  globalMaxFileSize: 10 * 1024 * 1024, // 10MB
   globalDailyUploadLimit: undefined,
   autoDeleteOrphans: false,
   orphanRetentionDays: 30,

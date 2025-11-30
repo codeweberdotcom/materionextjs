@@ -132,6 +132,41 @@ const response = await fetch('/api/admin/media/upload-async', {
 }
 ```
 
+### Bulk Upload (UI)
+
+**Хук:** `useBulkUpload`
+
+```typescript
+const bulkUpload = useBulkUpload({
+  entityType: 'other',
+  maxFileSize,        // Из настроек
+  parallelLimit: 5,   // Одновременных загрузок
+  maxFiles: 10000,
+  useAsyncUpload: true,
+  onComplete: (stats) => { ... }
+})
+```
+
+**Обработка превышения размера:**
+
+Файлы с превышенным размером не игнорируются, а показываются в списке с ошибкой:
+
+```typescript
+// В addFiles():
+const exceedsMaxSize = file.size > maxFileSize
+return {
+  status: exceedsMaxSize ? 'error' : 'pending',
+  error: exceedsMaxSize ? `File size exceeds ${maxSizeMB} MB limit` : undefined
+}
+```
+
+**Статусы файлов:**
+- `pending` — ожидает загрузки
+- `uploading` — загружается (с прогрессом)
+- `success` — успешно загружен
+- `error` — ошибка (включая превышение размера)
+- `cancelled` — отменён
+
 ---
 
 ## 🖼️ Entity Types
@@ -144,6 +179,75 @@ const response = await fetch('/api/admin/media/upload-async', {
 | `company_photo` | 400, 800, 1200 | 1920×1280 |
 | `product_image` | 200, 400, 800 | 1200×1200 |
 | `default` | 200, 400, 800 | 1920×1280 |
+
+---
+
+## ⚙️ Settings (Настройки)
+
+### Глобальные настройки
+
+```typescript
+// GET /api/admin/media/settings
+{
+  "global": {
+    "globalMaxFileSize": 104857600,    // 100 MB (в байтах)
+    "localUploadPath": "/uploads",
+    "localPublicUrlPrefix": "/uploads",
+    "organizeByDate": true,
+    "organizeByEntityType": true,
+    "autoSyncEnabled": false,
+    "autoSyncDelayMinutes": 30,
+    "defaultConvertToWebP": true,
+    "defaultQuality": 85,
+    "processingConcurrency": 3
+  },
+  "entitySettings": [...]
+}
+```
+
+### Лимиты размера файла
+
+| Уровень | Источник | Приоритет |
+|---------|----------|-----------|
+| Entity Settings | `entitySettings[type].maxFileSize` | 1 (высший) |
+| Global Settings | `global.globalMaxFileSize` | 2 |
+| Default | 10 MB | 3 (низший) |
+
+**Поток проверки:**
+
+```
+Клиент (MediaLibrary)
+    ↓ fetchMediaSettings()
+    ↓ maxFileSize = globalMaxFileSize
+    ↓
+useBulkUpload
+    ↓ file.size > maxFileSize?
+    ↓ Да → status: 'error', error: "File size exceeds X MB limit"
+    ↓ Нет → status: 'pending' → upload
+    ↓
+Сервер (MediaService)
+    ↓ isFileSizeAllowed(entityType, size)
+    ↓ Финальная проверка перед сохранением
+```
+
+### Обновление настроек
+
+```typescript
+// PUT /api/admin/media/settings
+{
+  "globalMaxFileSize": 52428800,  // 50 MB
+  "organizeByDate": true,
+  "defaultConvertToWebP": true
+}
+```
+
+### UI для настроек
+
+**URL:** `/admin/media/settings`
+
+- **Максимальный размер файла** — применяется на клиенте и сервере
+- **S3 Bucket** — выпадающий список с возможностью создания нового
+- **Организация по дате/типу** — структура папок
 
 ---
 

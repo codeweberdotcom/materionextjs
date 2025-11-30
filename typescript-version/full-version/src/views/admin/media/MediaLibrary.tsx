@@ -166,6 +166,9 @@ export default function MediaLibrary() {
   // Storage status
   const [s3Enabled, setS3Enabled] = useState(false)
   const [localEnabled, setLocalEnabled] = useState(true) // Local storage always enabled by default
+  
+  // Max file size from settings (default 10MB, loaded from API)
+  const [maxFileSize, setMaxFileSize] = useState(10 * 1024 * 1024)
 
   // Filters
   const [search, setSearch] = useState('')
@@ -203,18 +206,24 @@ export default function MediaLibrary() {
     entityType: uploadEntityType,
     parallelLimit: 5,
     maxFiles: 10000,
+    maxFileSize, // Из настроек
     maxPreviews: 20,
     useAsyncUpload: true, // Async upload - мгновенный ответ, обработка в очереди
     onFileSuccess: () => {
-      // Обновим счётчик успешных
+      // Обновляем список после каждого успешного файла с debounce
+      setTimeout(() => {
+        fetchMedia()
+      }, 1000)
     },
     onFileError: (file, error) => {
       console.warn('[MediaLibrary] Upload error:', file.file.name, error)
     },
     onComplete: (stats) => {
-      // Обновляем список медиа после загрузки
+      // Финальное обновление списка после завершения всех загрузок
       if (stats.success > 0) {
-        fetchMedia()
+        setTimeout(() => {
+          fetchMedia()
+        }, 1500)
       }
       // Не закрываем диалог автоматически - пользователь должен видеть результаты
     },
@@ -290,11 +299,27 @@ export default function MediaLibrary() {
     }
   }, [])
 
+  // Fetch media settings (max file size)
+  const fetchMediaSettings = useCallback(async () => {
+    try {
+      const response = await fetch('/api/admin/media/settings')
+      if (response.ok) {
+        const data = await response.json()
+        if (data.global?.globalMaxFileSize) {
+          setMaxFileSize(data.global.globalMaxFileSize)
+        }
+      }
+    } catch {
+      // Use default
+    }
+  }, [])
+
   // Initial load
   useEffect(() => {
     fetchMedia()
     fetchTrashCount()
     fetchS3Status()
+    fetchMediaSettings()
   }, [])
 
   // Re-fetch when filters change
@@ -513,12 +538,12 @@ export default function MediaLibrary() {
           body: JSON.stringify({ action: 'restore' })
         })
       }
-      toast.success(`Восстановлено: ${selectedIds.length} файлов`)
+      toast.success(t?.filesRestored?.replace('{count}', String(selectedIds.length)) ?? `Restored: ${selectedIds.length} files`)
       setSelectedIds([])
       fetchMedia()
       fetchTrashCount()
     } catch (error) {
-      toast.error('Ошибка восстановления')
+      toast.error(t?.restoreError ?? 'Restore error')
     }
   }
 
@@ -536,6 +561,8 @@ export default function MediaLibrary() {
   const MAX_FILES_PER_UPLOAD = 10000
 
   // Dropzone configuration
+  // Не используем maxSize в dropzone - проверка размера происходит в useBulkUpload
+  // Это позволяет показывать файлы с превышенным размером в списке с ошибкой
   const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
     onDrop: (acceptedFiles) => {
       // Лимит файлов
@@ -553,7 +580,7 @@ export default function MediaLibrary() {
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.svg'],
     },
-    maxSize: 15 * 1024 * 1024, // 15MB
+    // maxSize убран - проверка в useBulkUpload показывает ошибку в UI
     multiple: true,
   })
 
@@ -875,7 +902,7 @@ export default function MediaLibrary() {
               )
             ) : media.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
-                <Typography color="text.secondary">Нет файлов</Typography>
+                <Typography color="text.secondary">{t?.noFiles ?? 'No files'}</Typography>
               </Box>
             ) : viewMode === 'grid' ? (
               /* Grid View */
@@ -1155,7 +1182,13 @@ export default function MediaLibrary() {
         open={detailOpen}
         mediaId={detailMedia?.id || null}
         onClose={() => setDetailOpen(false)}
-        onUpdate={fetchMedia}
+        onUpdate={() => {
+          // Небольшая задержка чтобы БД успела обновиться
+          setTimeout(() => {
+            fetchMedia()
+            fetchTrashCount()
+          }, 300)
+        }}
         onDelete={(id) => {
           setDetailOpen(false)
           openDeleteConfirm('single', 'soft', id)
@@ -1283,7 +1316,7 @@ export default function MediaLibrary() {
                 {t?.orClickToSelect ?? 'or click to select'}
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                {t?.supportedFormats ?? 'Supported: JPG, PNG, GIF, WebP, SVG (up to 15 MB)'}
+                {(t?.supportedFormats ?? 'Supported: JPG, PNG, GIF, WebP, SVG (up to {maxSize} MB)').replace('{maxSize}', String(Math.round(maxFileSize / (1024 * 1024))))}
               </Typography>
             </Box>
 
@@ -1686,7 +1719,7 @@ export default function MediaLibrary() {
             {deleting
               ? (t?.processing ?? 'Processing...')
               : deleteTarget?.mode === 'hard'
-                ? (t?.deletePermanently ?? 'Delete permanently')
+                ? (t?.delete ?? 'Delete')
                 : (t?.moveToTrash ?? 'Move to trash')
             }
           </Button>
@@ -1746,7 +1779,7 @@ export default function MediaLibrary() {
                 startIcon={<i className="ri-arrow-go-back-line" />}
                 onClick={handleBulkRestore}
               >
-                Восстановить
+                {t?.restore ?? 'Restore'}
               </Button>
               <Button
                 color="error"

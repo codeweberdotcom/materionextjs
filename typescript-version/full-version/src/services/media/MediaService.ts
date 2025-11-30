@@ -1,7 +1,7 @@
 /**
  * Основной сервис управления медиа файлами
  * CRUD операции, загрузка, обработка
- * 
+ *
  * @module services/media/MediaService
  */
 
@@ -92,6 +92,7 @@ export class MediaService {
 
       // Получаем настройки
       const settings = await this.getSettingsForEntityType(options.entityType)
+      const globalSettings = await prisma.mediaGlobalSettings.findFirst()
       const preset = getPresetForEntityType(options.entityType)
 
       // Генерируем slug и путь
@@ -105,25 +106,36 @@ export class MediaService {
       // Всегда добавляем оригинал с единым максимумом 1920×1280
       const ORIGINAL_MAX_WIDTH = 1920
       const ORIGINAL_MAX_HEIGHT = 1280
-      
+
       const entityVariants = (settings?.variants ? JSON.parse(settings.variants) : preset.variants) as ImageVariantConfig[]
-      
+
       // Фильтруем existing 'original' если есть и добавляем наш стандартный
+      // Приоритет качества: global settings > entity settings > preset > default
+      // Глобальная настройка имеет высший приоритет (пользователь явно установил)
+      const effectiveQuality = globalSettings?.defaultQuality ?? settings?.quality ?? preset.quality ?? 85
+
+      logger.info('[MediaService] Quality settings', {
+        globalSettings: globalSettings?.defaultQuality,
+        entitySettings: settings?.quality,
+        presetQuality: preset.quality,
+        effectiveQuality,
+      })
+
       const variants: ImageVariantConfig[] = [
         {
           name: 'original',
           width: ORIGINAL_MAX_WIDTH,
           height: ORIGINAL_MAX_HEIGHT,
           fit: 'inside', // Сохраняем пропорции, не обрезаем
-          quality: settings?.quality ?? preset.quality ?? 90,
+          quality: effectiveQuality,
         },
         ...entityVariants.filter(v => v.name !== 'original'),
       ]
-      
+
       const processingResult = await this.imageProcessingService.processImage(buffer, variants, {
-        convertToWebP: settings?.convertToWebP ?? preset.convertToWebP,
+        convertToWebP: settings?.convertToWebP ?? globalSettings?.defaultConvertToWebP ?? preset.convertToWebP,
         stripMetadata: settings?.stripMetadata ?? preset.stripMetadata,
-        quality: settings?.quality ?? preset.quality,
+        quality: effectiveQuality,
       })
 
       if (!processingResult.success) {
@@ -382,7 +394,7 @@ export class MediaService {
     await this.init()
 
     // Для hard delete ищем включая удалённые (в корзине)
-    const media = hard 
+    const media = hard
       ? await prisma.media.findFirst({ where: { id } })
       : await prisma.media.findUnique({ where: { id } })
     if (!media) return
@@ -408,7 +420,7 @@ export class MediaService {
       }
 
       const { trashPath, trashVariants } = await this.storageService.moveToTrash(media)
-      
+
       // Сохраняем метаданные для восстановления
       const trashMetadata = JSON.stringify({
         originalPath: media.localPath,
@@ -427,7 +439,7 @@ export class MediaService {
 
       await prisma.media.update({
         where: { id },
-        data: { 
+        data: {
           deletedAt: new Date(),
           localPath: null,
           s3Key: null,
@@ -448,7 +460,7 @@ export class MediaService {
       severity: hard ? 'warning' : 'info',
       entityType: 'media',
       entityId: id,
-      message: hard 
+      message: hard
         ? `Медиа файл "${media.filename}" безвозвратно удалён`
         : `Медиа файл "${media.filename}" перемещён в корзину`,
       details: {
@@ -661,7 +673,7 @@ export class MediaService {
    * @param deleted - undefined = только активные, true = только удалённые, false = только активные
    */
   private buildWhereClause(
-    filters: MediaFilter, 
+    filters: MediaFilter,
     includeDeleted: boolean,
     deleted?: boolean
   ) {

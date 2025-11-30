@@ -1,10 +1,12 @@
 'use client'
 
 /**
- * Настройки медиа - глобальные настройки и настройки по сущностям
+ * Media Settings - global settings and entity-specific settings
  */
 
 import { useState, useEffect } from 'react'
+
+import { useTranslationSafe } from '@/contexts/TranslationContext'
 
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -115,6 +117,7 @@ const formatBytes = (bytes: number): string => {
 }
 
 export default function MediaSettings() {
+  const t = useTranslationSafe()?.mediaSettings
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [globalSettings, setGlobalSettings] = useState<GlobalSettings | null>(null)
@@ -145,7 +148,7 @@ export default function MediaSettings() {
       setGlobalSettings(data.global)
       setEntitySettings(data.entitySettings)
     } catch (error) {
-      toast.error('Ошибка загрузки настроек')
+      toast.error(t?.loadError ?? 'Error loading settings')
     } finally {
       setLoading(false)
     }
@@ -167,7 +170,7 @@ export default function MediaSettings() {
         setS3Error(data.error)
       }
     } catch (error) {
-      setS3Error('Ошибка загрузки списка bucket\'ов')
+      setS3Error(t?.bucketsLoadError ?? 'Error loading bucket list')
     } finally {
       setLoadingBuckets(false)
     }
@@ -191,7 +194,7 @@ export default function MediaSettings() {
       const data: BucketValidation = await response.json()
       setBucketValidation(data)
     } catch (error) {
-      setBucketValidation({ exists: false, accessible: false, error: 'Ошибка проверки' })
+      setBucketValidation({ exists: false, accessible: false, error: t?.checkError ?? 'Check error' })
     } finally {
       setValidatingBucket(false)
     }
@@ -199,7 +202,7 @@ export default function MediaSettings() {
 
   const createBucket = async () => {
     if (!newBucketName.trim()) {
-      toast.error('Введите имя bucket\'а')
+      toast.error(t?.enterBucketName ?? 'Enter bucket name')
       return
     }
     
@@ -215,19 +218,19 @@ export default function MediaSettings() {
       const data = await response.json()
       
       if (!response.ok) {
-        toast.error(data.error || 'Ошибка создания bucket\'а')
+        toast.error(data.error || (t?.bucketCreateError ?? 'Error creating bucket'))
         return
       }
       
-      toast.success(data.message || 'Bucket создан')
+      toast.success(data.message || (t?.bucketCreated ?? 'Bucket created'))
       setCreateDialogOpen(false)
       setNewBucketName('')
       
-      // Обновить список и выбрать новый bucket
+      // Refresh list and select new bucket
       await fetchBuckets()
       updateGlobal('s3DefaultBucket', newBucketName.trim())
     } catch (error) {
-      toast.error('Ошибка создания bucket\'а')
+      toast.error(t?.bucketCreateError ?? 'Error creating bucket')
     } finally {
       setCreatingBucket(false)
     }
@@ -263,9 +266,9 @@ export default function MediaSettings() {
       
       if (!response.ok) throw new Error('Failed to save settings')
       
-      toast.success('Настройки сохранены')
+      toast.success(t?.saveSuccess ?? 'Settings saved')
     } catch (error) {
-      toast.error('Ошибка сохранения настроек')
+      toast.error(t?.saveError ?? 'Error saving settings')
     } finally {
       setSaving(false)
     }
@@ -329,14 +332,15 @@ export default function MediaSettings() {
       <Grid item xs={12}>
         <Card>
           <CardHeader 
-            title="Глобальные настройки"
+            title={t?.globalSettings ?? 'Global Settings'}
             action={
               <Button 
                 variant="contained" 
                 onClick={saveGlobalSettings}
                 disabled={saving}
+                startIcon={saving ? <CircularProgress size={16} color="inherit" /> : null}
               >
-                {saving ? <CircularProgress size={20} /> : 'Сохранить'}
+                {saving ? (t?.saving ?? 'Saving...') : (t?.save ?? 'Save')}
               </Button>
             }
           />
@@ -347,7 +351,7 @@ export default function MediaSettings() {
                 <Grid item xs={12}>
                   <Typography variant="subtitle1" gutterBottom>
                     <i className="ri-hard-drive-2-line" style={{ marginRight: 8 }} />
-                    Хранилище
+                    {t?.storage ?? 'Storage'}
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
@@ -355,44 +359,44 @@ export default function MediaSettings() {
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Локальный путь"
+                    label={t?.localPath ?? 'Local path'}
                     value={globalSettings.localUploadPath}
                     disabled
-                    helperText="Фиксированный путь: /uploads"
+                    helperText={t?.localPathHelp ?? 'Fixed path: /uploads'}
                   />
                 </Grid>
                 
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
-                    label="Публичный URL префикс"
+                    label={t?.publicUrlPrefix ?? 'Public URL prefix'}
                     value={globalSettings.localPublicUrlPrefix}
                     disabled
-                    helperText="Фиксированный префикс: /uploads"
+                    helperText={t?.publicUrlPrefixHelp ?? 'Fixed prefix: /uploads'}
                   />
                 </Grid>
                 
                 <Grid item xs={12} md={4}>
                   <Box>
-                    <FormControl fullWidth size="small">
-                      <InputLabel id="s3-bucket-label">S3 Bucket</InputLabel>
+                    <FormControl fullWidth>
+                      <InputLabel id="s3-bucket-label">{t?.s3Bucket ?? 'S3 Bucket'}</InputLabel>
                       <Select
                         labelId="s3-bucket-label"
                         value={globalSettings.s3DefaultBucket || ''}
                         onChange={e => handleBucketChange(e.target.value)}
-                        label="S3 Bucket"
+                        label={t?.s3Bucket ?? 'S3 Bucket'}
                         disabled={loadingBuckets}
                         endAdornment={
-                          <Box sx={{ display: 'flex', mr: 2 }}>
+                          <Box sx={{ display: 'flex', mr: 5 }}>
                             {loadingBuckets && <CircularProgress size={16} />}
                             {!loadingBuckets && (
                               <>
-                                <Tooltip title="Обновить список">
+                                <Tooltip title={t?.refreshList ?? 'Refresh list'}>
                                   <IconButton size="small" onClick={fetchBuckets}>
                                     <i className="ri-refresh-line" style={{ fontSize: 16 }} />
                                   </IconButton>
                                 </Tooltip>
-                                <Tooltip title={s3Configured ? "Создать новый bucket" : "S3 не настроен"}>
+                                <Tooltip title={s3Configured ? (t?.createNewBucket ?? 'Create new bucket') : (t?.s3NotConfigured ?? 'S3 not configured')}>
                                   <span>
                                     <IconButton 
                                       size="small" 
@@ -409,13 +413,13 @@ export default function MediaSettings() {
                         }
                       >
                         <MenuItem value="">
-                          <em>Не выбран (S3 отключен)</em>
+                          <em>{t?.notSelected ?? 'Not selected (S3 disabled)'}</em>
                         </MenuItem>
-                        {/* Текущий bucket, если не в списке */}
+                        {/* Current bucket if not in list */}
                         {globalSettings.s3DefaultBucket && 
                          !s3Buckets.some(b => b.name === globalSettings.s3DefaultBucket) && (
                           <MenuItem value={globalSettings.s3DefaultBucket}>
-                            {globalSettings.s3DefaultBucket} (сохранённый)
+                            {globalSettings.s3DefaultBucket} ({t?.saved ?? 'saved'})
                           </MenuItem>
                         )}
                         {s3Buckets.map(bucket => (
@@ -430,23 +434,23 @@ export default function MediaSettings() {
                             {s3Error}
                           </Box>
                         ) : validatingBucket ? (
-                          'Проверка...'
+                          t?.checking ?? 'Checking...'
                         ) : bucketValidation ? (
                           bucketValidation.accessible ? (
                             <Box component="span" sx={{ color: 'success.main' }}>
-                              ✅ Bucket доступен
+                              ✅ {t?.bucketAccessible ?? 'Bucket accessible'}
                             </Box>
                           ) : (
                             <Box component="span" sx={{ color: 'error.main' }}>
-                              ❌ {bucketValidation.error || 'Bucket недоступен'}
+                              ❌ {bucketValidation.error || (t?.bucketNotAccessible ?? 'Bucket not accessible')}
                             </Box>
                           )
                         ) : !s3Configured ? (
                           <Box component="span" sx={{ color: 'warning.main' }}>
-                            ⚠️ Настройте S3 в .env файле
+                            ⚠️ {t?.configureS3InEnv ?? 'Configure S3 in .env file'}
                           </Box>
                         ) : (
-                          'Выберите bucket или создайте новый'
+                          t?.selectOrCreateBucket ?? 'Select bucket or create new'
                         )}
                       </FormHelperText>
                     </FormControl>
@@ -461,7 +465,7 @@ export default function MediaSettings() {
                         onChange={e => updateGlobal('organizeByDate', e.target.checked)}
                       />
                     }
-                    label="Организовать по дате (2025/11/)"
+                    label={t?.organizeByDate ?? 'Organize by date (2025/11/)'}
                   />
                 </Grid>
                 
@@ -473,7 +477,7 @@ export default function MediaSettings() {
                         onChange={e => updateGlobal('organizeByEntityType', e.target.checked)}
                       />
                     }
-                    label="Организовать по типу сущности"
+                    label={t?.organizeByEntityType ?? 'Organize by entity type'}
                   />
                 </Grid>
 
@@ -481,7 +485,7 @@ export default function MediaSettings() {
                 <Grid item xs={12}>
                   <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
                     <i className="ri-image-edit-line" style={{ marginRight: 8 }} />
-                    Обработка
+                    {t?.processing ?? 'Processing'}
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
@@ -490,7 +494,7 @@ export default function MediaSettings() {
                   <TextField
                     fullWidth
                     type="number"
-                    label="Макс. размер файла (MB)"
+                    label={t?.maxFileSize ?? 'Max file size (MB)'}
                     value={globalSettings.globalMaxFileSize / (1024 * 1024)}
                     onChange={e => updateGlobal('globalMaxFileSize', parseInt(e.target.value) * 1024 * 1024)}
                   />
@@ -500,7 +504,7 @@ export default function MediaSettings() {
                   <TextField
                     fullWidth
                     type="number"
-                    label="Качество по умолчанию"
+                    label={t?.defaultQuality ?? 'Default quality'}
                     value={globalSettings.defaultQuality}
                     onChange={e => updateGlobal('defaultQuality', parseInt(e.target.value))}
                     inputProps={{ min: 1, max: 100 }}
@@ -511,7 +515,7 @@ export default function MediaSettings() {
                   <TextField
                     fullWidth
                     type="number"
-                    label="Параллельная обработка"
+                    label={t?.parallelProcessing ?? 'Parallel processing'}
                     value={globalSettings.processingConcurrency}
                     onChange={e => updateGlobal('processingConcurrency', parseInt(e.target.value))}
                     inputProps={{ min: 1, max: 10 }}
@@ -526,7 +530,7 @@ export default function MediaSettings() {
                         onChange={e => updateGlobal('defaultConvertToWebP', e.target.checked)}
                       />
                     }
-                    label="Конвертировать в WebP"
+                    label={t?.convertToWebP ?? 'Convert to WebP'}
                   />
                 </Grid>
 
@@ -534,7 +538,7 @@ export default function MediaSettings() {
                 <Grid item xs={12}>
                   <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
                     <i className="ri-refresh-line" style={{ marginRight: 8 }} />
-                    Автосинхронизация
+                    {t?.autoSync ?? 'Auto-sync'}
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
@@ -547,7 +551,7 @@ export default function MediaSettings() {
                         onChange={e => updateGlobal('autoSyncEnabled', e.target.checked)}
                       />
                     }
-                    label="Автосинхронизация на S3"
+                    label={t?.autoSyncToS3 ?? 'Auto-sync to S3'}
                   />
                 </Grid>
                 
@@ -555,7 +559,7 @@ export default function MediaSettings() {
                   <TextField
                     fullWidth
                     type="number"
-                    label="Задержка синхр. (мин)"
+                    label={t?.syncDelay ?? 'Sync delay (min)'}
                     value={globalSettings.autoSyncDelayMinutes}
                     onChange={e => updateGlobal('autoSyncDelayMinutes', parseInt(e.target.value))}
                     disabled={!globalSettings.autoSyncEnabled}
@@ -570,7 +574,7 @@ export default function MediaSettings() {
                         onChange={e => updateGlobal('autoCleanupLocalEnabled', e.target.checked)}
                       />
                     }
-                    label="Авто-очистка локальных"
+                    label={t?.autoCleanupLocal ?? 'Auto-cleanup local'}
                   />
                 </Grid>
                 
@@ -578,7 +582,7 @@ export default function MediaSettings() {
                   <TextField
                     fullWidth
                     type="number"
-                    label="Хранить локально (дней)"
+                    label={t?.keepLocalDays ?? 'Keep local (days)'}
                     value={globalSettings.keepLocalDays}
                     onChange={e => updateGlobal('keepLocalDays', parseInt(e.target.value))}
                     disabled={!globalSettings.autoCleanupLocalEnabled}
@@ -589,7 +593,7 @@ export default function MediaSettings() {
                 <Grid item xs={12}>
                   <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
                     <i className="ri-delete-bin-line" style={{ marginRight: 8 }} />
-                    Корзина и удаление
+                    {t?.trashAndDeletion ?? 'Trash and deletion'}
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
@@ -598,14 +602,14 @@ export default function MediaSettings() {
                   <TextField
                     select
                     fullWidth
-                    label="Режим удаления по умолчанию"
+                    label={t?.defaultDeleteMode ?? 'Default delete mode'}
                     value={globalSettings.deleteMode}
                     onChange={e => updateGlobal('deleteMode', e.target.value)}
                     SelectProps={{ native: true }}
-                    helperText="soft = в корзину, hard = навсегда"
+                    helperText={t?.deleteModeHelp ?? 'soft = to trash, hard = permanently'}
                   >
-                    <option value="soft">В корзину (soft)</option>
-                    <option value="hard">Навсегда (hard)</option>
+                    <option value="soft">{t?.toTrash ?? 'To trash (soft)'}</option>
+                    <option value="hard">{t?.permanently ?? 'Permanently (hard)'}</option>
                   </TextField>
                 </Grid>
                 
@@ -613,11 +617,11 @@ export default function MediaSettings() {
                   <TextField
                     fullWidth
                     type="number"
-                    label="Хранить в корзине (дней)"
+                    label={t?.keepInTrash ?? 'Keep in trash (days)'}
                     value={globalSettings.softDeleteRetentionDays}
                     onChange={e => updateGlobal('softDeleteRetentionDays', parseInt(e.target.value))}
                     inputProps={{ min: 1, max: 365 }}
-                    helperText="После этого срока — hard delete"
+                    helperText={t?.afterThisHardDelete ?? 'After this period — hard delete'}
                   />
                 </Grid>
                 
@@ -629,7 +633,7 @@ export default function MediaSettings() {
                         onChange={e => updateGlobal('autoCleanupEnabled', e.target.checked)}
                       />
                     }
-                    label="Авто-очистка корзины"
+                    label={t?.autoCleanupTrash ?? 'Auto-cleanup trash'}
                   />
                 </Grid>
                 
@@ -641,7 +645,7 @@ export default function MediaSettings() {
                         onChange={e => updateGlobal('s3DeleteWithLocal', e.target.checked)}
                       />
                     }
-                    label="Удалять из S3 при hard delete"
+                    label={t?.deleteFromS3OnHardDelete ?? 'Delete from S3 on hard delete'}
                   />
                 </Grid>
 
@@ -649,7 +653,7 @@ export default function MediaSettings() {
                 <Grid item xs={12}>
                   <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
                     <i className="ri-file-shred-line" style={{ marginRight: 8 }} />
-                    Очистка несвязанных файлов
+                    {t?.orphanCleanup ?? 'Orphan file cleanup'}
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
@@ -662,7 +666,7 @@ export default function MediaSettings() {
                         onChange={e => updateGlobal('autoDeleteOrphans', e.target.checked)}
                       />
                     }
-                    label="Удалять orphan файлы"
+                    label={t?.deleteOrphanFiles ?? 'Delete orphan files'}
                   />
                 </Grid>
                 
@@ -670,11 +674,11 @@ export default function MediaSettings() {
                   <TextField
                     fullWidth
                     type="number"
-                    label="Хранить orphans (дней)"
+                    label={t?.keepOrphans ?? 'Keep orphans (days)'}
                     value={globalSettings.orphanRetentionDays}
                     onChange={e => updateGlobal('orphanRetentionDays', parseInt(e.target.value))}
                     disabled={!globalSettings.autoDeleteOrphans}
-                    helperText="Файлы без привязки к сущности"
+                    helperText={t?.orphanFilesHelp ?? 'Files not linked to any entity'}
                   />
                 </Grid>
               </Grid>
@@ -686,7 +690,7 @@ export default function MediaSettings() {
       {/* Entity Settings */}
       <Grid item xs={12}>
         <Card>
-          <CardHeader title="Настройки по типам сущностей" />
+          <CardHeader title={t?.entityTypeSettings ?? 'Entity type settings'} />
           <CardContent>
             {entitySettings.map(settings => (
               <Accordion key={settings.id}>
@@ -696,7 +700,7 @@ export default function MediaSettings() {
                     <Chip label={settings.entityType} size="small" variant="outlined" />
                     <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
                       {settings.watermarkEnabled && (
-                        <Chip label="💧 Водяной знак" size="small" color="info" />
+                        <Chip label={`💧 ${t?.watermark ?? 'Watermark'}`} size="small" color="info" />
                       )}
                       <Chip label={formatBytes(settings.maxFileSize)} size="small" />
                     </Box>
@@ -706,37 +710,37 @@ export default function MediaSettings() {
                   <Grid container spacing={3}>
                     <Grid item xs={12} md={6}>
                       <Typography variant="body2" color="text.secondary" gutterBottom>
-                        {settings.description || 'Нет описания'}
+                        {settings.description || (t?.noDescription ?? 'No description')}
                       </Typography>
                       
                       <Table size="small">
                         <TableBody>
                           <TableRow>
-                            <TableCell>Макс. размер файла</TableCell>
+                            <TableCell>{t?.maxFileSizeLabel ?? 'Max file size'}</TableCell>
                             <TableCell>{formatBytes(settings.maxFileSize)}</TableCell>
                           </TableRow>
                           <TableRow>
-                            <TableCell>Макс. файлов</TableCell>
+                            <TableCell>{t?.maxFiles ?? 'Max files'}</TableCell>
                             <TableCell>{settings.maxFilesPerEntity}</TableCell>
                           </TableRow>
                           <TableRow>
-                            <TableCell>MIME типы</TableCell>
+                            <TableCell>{t?.mimeTypes ?? 'MIME types'}</TableCell>
                             <TableCell sx={{ wordBreak: 'break-all' }}>{settings.allowedMimeTypes}</TableCell>
                           </TableRow>
                           <TableRow>
-                            <TableCell>Качество</TableCell>
+                            <TableCell>{t?.quality ?? 'Quality'}</TableCell>
                             <TableCell>{settings.quality}%</TableCell>
                           </TableRow>
                           <TableRow>
-                            <TableCell>Стратегия хранения</TableCell>
+                            <TableCell>{t?.storageStrategy ?? 'Storage strategy'}</TableCell>
                             <TableCell>{settings.storageStrategy}</TableCell>
                           </TableRow>
                           <TableRow>
-                            <TableCell>Конвертация в WebP</TableCell>
+                            <TableCell>{t?.convertToWebPLabel ?? 'WebP conversion'}</TableCell>
                             <TableCell>{settings.convertToWebP ? '✅' : '❌'}</TableCell>
                           </TableRow>
                           <TableRow>
-                            <TableCell>Очистка метаданных</TableCell>
+                            <TableCell>{t?.stripMetadata ?? 'Strip metadata'}</TableCell>
                             <TableCell>{settings.stripMetadata ? '✅' : '❌'}</TableCell>
                           </TableRow>
                         </TableBody>
@@ -744,13 +748,13 @@ export default function MediaSettings() {
                     </Grid>
                     
                     <Grid item xs={12} md={6}>
-                      <Typography variant="subtitle2" gutterBottom>Варианты размеров</Typography>
+                      <Typography variant="subtitle2" gutterBottom>{t?.sizeVariants ?? 'Size variants'}</Typography>
                       <Table size="small">
                         <TableHead>
                           <TableRow>
-                            <TableCell>Имя</TableCell>
-                            <TableCell>Размер</TableCell>
-                            <TableCell>Fit</TableCell>
+                            <TableCell>{t?.name ?? 'Name'}</TableCell>
+                            <TableCell>{t?.size ?? 'Size'}</TableCell>
+                            <TableCell>{t?.fit ?? 'Fit'}</TableCell>
                           </TableRow>
                         </TableHead>
                         <TableBody>
@@ -766,7 +770,7 @@ export default function MediaSettings() {
                       
                       {settings.watermarkEnabled && (
                         <Alert severity="info" sx={{ mt: 2 }}>
-                          Водяной знак: {settings.watermarkPosition}, opacity: {settings.watermarkOpacity}
+                          {t?.watermark ?? 'Watermark'}: {settings.watermarkPosition}, opacity: {settings.watermarkOpacity}
                         </Alert>
                       )}
                     </Grid>
@@ -783,45 +787,45 @@ export default function MediaSettings() {
         <DialogTitle>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <i className="ri-add-circle-line" />
-            Создать новый S3 Bucket
+            {t?.createS3Bucket ?? 'Create new S3 Bucket'}
           </Box>
         </DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <TextField
               fullWidth
-              label="Имя bucket'а"
+              label={t?.bucketName ?? 'Bucket name'}
               value={newBucketName}
               onChange={e => setNewBucketName(e.target.value.toLowerCase())}
-              placeholder="my-media-bucket"
-              helperText="Только строчные буквы, цифры, точки и дефисы. Длина 3-63 символа."
+              placeholder={t?.bucketNamePlaceholder ?? 'my-media-bucket'}
+              helperText={t?.bucketNameHelp ?? 'Only lowercase letters, numbers, dots and hyphens. Length 3-63 characters.'}
               disabled={creatingBucket}
             />
             
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
-                <strong>Правила именования:</strong>
+                <strong>{t?.namingRules ?? 'Naming rules:'}</strong>
               </Typography>
               <ul style={{ margin: '8px 0', paddingLeft: 20 }}>
-                <li>Только строчные буквы (a-z), цифры (0-9), точки (.) и дефисы (-)</li>
-                <li>Должен начинаться и заканчиваться буквой или цифрой</li>
-                <li>Длина от 3 до 63 символов</li>
-                <li>Нельзя использовать формат IP-адреса (например, 192.168.1.1)</li>
+                <li>{t?.namingRule1 ?? 'Only lowercase letters (a-z), numbers (0-9), dots (.) and hyphens (-)'}</li>
+                <li>{t?.namingRule2 ?? 'Must start and end with a letter or number'}</li>
+                <li>{t?.namingRule3 ?? 'Length from 3 to 63 characters'}</li>
+                <li>{t?.namingRule4 ?? 'Cannot use IP address format (e.g., 192.168.1.1)'}</li>
               </ul>
             </Alert>
           </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCreateDialogOpen(false)} disabled={creatingBucket}>
-            Отмена
+            {t?.cancel ?? 'Cancel'}
           </Button>
           <Button 
             variant="contained" 
             onClick={createBucket}
             disabled={creatingBucket || !newBucketName.trim()}
-            startIcon={creatingBucket ? <CircularProgress size={16} /> : <i className="ri-add-line" />}
+            startIcon={creatingBucket ? <CircularProgress size={16} color="inherit" /> : <i className="ri-add-line" />}
           >
-            {creatingBucket ? 'Создание...' : 'Создать'}
+            {creatingBucket ? (t?.creating ?? 'Creating...') : (t?.create ?? 'Create')}
           </Button>
         </DialogActions>
       </Dialog>

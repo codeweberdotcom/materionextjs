@@ -120,7 +120,9 @@ export class ImageProcessingService {
     convertToWebP: boolean,
     defaultQuality: number
   ): Promise<ProcessedImage> {
-    const quality = config.quality || defaultQuality
+    // defaultQuality имеет приоритет (из глобальных настроек)
+    // config.quality используется только если defaultQuality не задан
+    const quality = defaultQuality || config.quality || 85
 
     let image = sharp(buffer).resize(config.width, config.height, {
       fit: FIT_MAP[config.fit] || 'cover',
