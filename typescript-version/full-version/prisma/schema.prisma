@@ -1042,53 +1042,63 @@ model Watermark {
 model MediaGlobalSettings {
   id String @id @default(cuid())
 
-  // Стратегия хранения по умолчанию
-  defaultStorageStrategy String @default("local_first")
+  // === S3 Settings ===
+  s3Enabled   Boolean @default(false) // Мастер-переключатель S3
+  s3ServiceId String? // NULL = default (ENV), или ID из ServiceConfiguration
 
-  // S3 настройки
+  // === Storage Location ===
+  // local = только локально
+  // s3 = только S3 (удалять локальные после sync)
+  // both = Local + S3 (хранить в обоих)
+  storageLocation String @default("local") // local | s3 | both
+
+  // === Sync Behavior ===
+  // immediate = синхронно в том же запросе
+  // background = сразу в очередь Bull
+  // delayed = в очередь с задержкой
+  // manual = только вручную
+  syncMode         String @default("background") // immediate | background | delayed | manual
+  syncDelayMinutes Int    @default(0) // Задержка для delayed режима (минуты)
+
+  // === Trash Settings ===
+  deleteMode         String  @default("soft") // soft | hard
+  trashRetentionDays Int     @default(30) // 0 = никогда не удалять, >0 = авто-удаление через N дней
+  s3DeleteWithLocal  Boolean @default(true) // Удалять S3 при hard delete
+
+  // === Legacy S3 settings (для совместимости) ===
   s3DefaultBucket   String?
   s3DefaultRegion   String?
   s3PublicUrlPrefix String? // CDN URL: "https://cdn.example.com"
 
-  // Локальное хранилище
+  // === Локальное хранилище ===
   localUploadPath      String @default("/uploads")
   localPublicUrlPrefix String @default("/uploads")
 
-  // Организация файлов
+  // === Организация файлов ===
   organizeByDate       Boolean @default(true) // /uploads/2025/11/file.webp
   organizeByEntityType Boolean @default(true) // /uploads/avatars/file.webp
 
-  // Лимиты
+  // === Лимиты ===
   globalMaxFileSize      Int  @default(20971520) // 20MB
   globalDailyUploadLimit Int? // Лимит загрузки в день (байты)
 
-  // Очистка
-  autoDeleteOrphans   Boolean @default(false) // Удалять несвязанные файлы
-  orphanRetentionDays Int     @default(30)
+  // === Обработка ===
+  defaultQuality        Int     @default(85)
+  defaultConvertToWebP  Boolean @default(true)
+  processingConcurrency Int     @default(3) // Параллельная обработка
 
-  // Автосинхронизация
-  autoSyncEnabled         Boolean @default(false)
-  autoSyncDelayMinutes    Int     @default(30)
-  autoCleanupLocalEnabled Boolean @default(false)
-  keepLocalDays           Int     @default(7)
-
-  // Обработка
-  defaultQuality       Int     @default(85)
-  defaultConvertToWebP Boolean @default(true)
-
-  // Очередь
-  processingConcurrency Int @default(3) // Параллельная обработка
-
-  // Режим удаления
-  deleteMode              String  @default("soft") // soft | hard
-  softDeleteRetentionDays Int     @default(30) // Дней до авто hard delete
-  autoCleanupEnabled      Boolean @default(true) // Авто-очистка soft deleted
-
-  // S3 расширенные настройки
-  s3Enabled         Boolean @default(false)
-  s3AutoSync        Boolean @default(true) // Авто-синхр. после upload
-  s3DeleteWithLocal Boolean @default(true) // Удалять S3 при hard delete
-  s3Endpoint        String? // Для MinIO/Yandex Object Storage
+  // === Legacy (deprecated, kept for migration) ===
+  defaultStorageStrategy  String  @default("local_first") // @deprecated: use storageLocation
+  autoSyncEnabled         Boolean @default(false) // @deprecated: use syncMode
+  autoSyncDelayMinutes    Int     @default(30) // @deprecated: use syncDelayMinutes  
+  autoCleanupLocalEnabled Boolean @default(false) // @deprecated: use storageLocation
+  keepLocalDays           Int     @default(7) // @deprecated: use storageLocation
+  softDeleteRetentionDays Int     @default(30) // @deprecated: use trashRetentionDays
+  autoCleanupEnabled      Boolean @default(true) // @deprecated: use trashRetentionDays > 0
+  autoDeleteOrphans       Boolean @default(false) // @deprecated: orphans not auto-deleted
+  orphanRetentionDays     Int     @default(30) // @deprecated: orphans not auto-deleted
+  s3AutoSync              Boolean @default(true) // @deprecated: use syncMode
+  s3Endpoint              String? // @deprecated: use s3ServiceId -> ServiceConfiguration
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

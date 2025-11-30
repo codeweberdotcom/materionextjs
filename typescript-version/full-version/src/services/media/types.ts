@@ -14,6 +14,12 @@ export type StorageStatus = 'local_only' | 'synced' | 's3_only' | 'sync_pending'
 
 export type StorageStrategy = 'local_only' | 'local_first' | 's3_only' | 'both'
 
+// NEW: Storage Location - где хранить файлы
+export type StorageLocation = 'local' | 's3' | 'both'
+
+// NEW: Sync Mode - когда синхронизировать
+export type SyncMode = 'immediate' | 'background' | 'delayed' | 'manual'
+
 export type SyncOperation = 'upload_to_s3' | 'download_from_s3' | 'delete_local' | 'delete_s3'
 
 export type SyncScope = 'all' | 'entity_type' | 'selected'
@@ -258,25 +264,52 @@ export interface ImageSettingsInput {
 }
 
 export interface MediaGlobalSettingsInput {
-  defaultStorageStrategy?: StorageStrategy
+  // S3 Settings
+  s3Enabled?: boolean
+  s3ServiceId?: string | null  // null = default (ENV)
+  
+  // Storage Location
+  storageLocation?: StorageLocation
+  
+  // Sync Behavior
+  syncMode?: SyncMode
+  syncDelayMinutes?: number
+  
+  // Trash Settings
+  deleteMode?: 'soft' | 'hard'
+  trashRetentionDays?: number
+  s3DeleteWithLocal?: boolean
+  
+  // Legacy S3 settings
   s3DefaultBucket?: string
   s3DefaultRegion?: string
   s3PublicUrlPrefix?: string
+  
+  // Local storage
   localUploadPath?: string
   localPublicUrlPrefix?: string
+  
+  // File organization
   organizeByDate?: boolean
   organizeByEntityType?: boolean
+  
+  // Limits
   globalMaxFileSize?: number
   globalDailyUploadLimit?: number
+  
+  // Processing
+  defaultQuality?: number
+  defaultConvertToWebP?: boolean
+  processingConcurrency?: number
+  
+  // Legacy (deprecated)
+  defaultStorageStrategy?: StorageStrategy
   autoDeleteOrphans?: boolean
   orphanRetentionDays?: number
   autoSyncEnabled?: boolean
   autoSyncDelayMinutes?: number
   autoCleanupLocalEnabled?: boolean
   keepLocalDays?: number
-  defaultQuality?: number
-  defaultConvertToWebP?: boolean
-  processingConcurrency?: number
 }
 
 // ========================================
@@ -324,6 +357,24 @@ export interface MediaStatistics {
   orphanFiles: number
   processingPending: number
   syncPending: number
+}
+
+// Orphan files statistics
+export interface OrphanStats {
+  dbOrphans: number       // Media records без entityId
+  diskOrphans: number     // Файлы на диске без записи в БД  
+  totalCount: number
+  totalSize: number       // bytes
+  totalSizeFormatted: string
+}
+
+export interface OrphanFile {
+  id?: string             // Media.id (если есть в БД)
+  path: string            // Путь к файлу
+  filename: string
+  size: number
+  type: 'db_only' | 'disk_only' | 'both'  // Где найден
+  createdAt?: Date
 }
 
 // ========================================

@@ -2287,28 +2287,58 @@ async function main() {
   // Глобальные настройки медиа
   await prisma.mediaGlobalSettings.upsert({
     where: { id: 'global-media-settings' },
-    update: {},
+    update: {
+      // Update new fields on existing records
+      s3Enabled: false,
+      s3ServiceId: null,
+      storageLocation: 'local',
+      syncMode: 'background',
+      syncDelayMinutes: 0,
+      deleteMode: 'soft',
+      trashRetentionDays: 30,
+      s3DeleteWithLocal: true,
+    },
     create: {
       id: 'global-media-settings',
-      defaultStorageStrategy: 'local_first',
+      // S3 Settings
+      s3Enabled: false,
+      s3ServiceId: null,
+      // Storage Location
+      storageLocation: 'local',  // local | s3 | both
+      // Sync Behavior
+      syncMode: 'background',    // immediate | background | delayed | manual
+      syncDelayMinutes: 0,
+      // Trash Settings
+      deleteMode: 'soft',
+      trashRetentionDays: 30,
+      s3DeleteWithLocal: true,
+      // Legacy S3 settings
       s3DefaultBucket: 'materio-bucket',
       s3DefaultRegion: 'us-east-1',
       s3PublicUrlPrefix: null,
+      // Local storage
       localUploadPath: '/uploads',
       localPublicUrlPrefix: '/uploads',
+      // File organization
       organizeByDate: true,
       organizeByEntityType: true,
+      // Limits
       globalMaxFileSize: 20 * 1024 * 1024, // 20MB
       globalDailyUploadLimit: null,
+      // Processing
+      defaultQuality: 85,
+      defaultConvertToWebP: true,
+      processingConcurrency: 3,
+      // Legacy (deprecated)
+      defaultStorageStrategy: 'local_first',
       autoDeleteOrphans: false,
       orphanRetentionDays: 30,
       autoSyncEnabled: false,
       autoSyncDelayMinutes: 30,
       autoCleanupLocalEnabled: false,
       keepLocalDays: 7,
-      defaultQuality: 85,
-      defaultConvertToWebP: true,
-      processingConcurrency: 3,
+      s3AutoSync: true,
+      s3Endpoint: null,
     }
   })
 

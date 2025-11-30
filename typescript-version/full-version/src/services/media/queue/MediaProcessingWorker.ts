@@ -94,23 +94,89 @@ export class MediaProcessingWorker {
 
       const media = uploadResult.media
 
-      // 4. Если стратегия local_first — создаём задачу на S3 синхронизацию
-      // Только если S3 действительно настроен
-      if (storageStrategy === 'local_first' && media.localPath) {
+      // 4. S3 синхронизация по глобальным настройкам
+      // Загружаем глобальные настройки
+      const globalSettings = await prisma.mediaGlobalSettings.findFirst()
+      
+      const s3Enabled = globalSettings?.s3Enabled ?? false
+      const storageLocation = globalSettings?.storageLocation ?? 'local'
+      const syncMode = globalSettings?.syncMode ?? 'background'
+      const syncDelayMinutes = globalSettings?.syncDelayMinutes ?? 0
+      
+      // Определяем нужна ли синхронизация
+      const needsS3Sync = s3Enabled && storageLocation !== 'local' && media.localPath
+      // Удалять локальные файлы только если storageLocation === 's3'
+      const deleteSourceAfterSync = storageLocation === 's3'
+      
+      if (needsS3Sync) {
         try {
           const { isS3Configured } = await import('../storage')
           const s3Available = await isS3Configured()
           
           if (s3Available) {
-            await mediaSyncQueue.add({
-              operation: 'upload_to_s3',
-              mediaId: media.id,
-              localPath: media.localPath,
-              deleteSource: false,
-            })
-            logger.info('[MediaProcessingWorker] S3 sync job queued', {
-              mediaId: media.id,
-            })
+            // Обработка по syncMode
+            switch (syncMode) {
+              case 'immediate':
+                // Immediate — синхронизируем сразу в этом же запросе
+                try {
+                  const storageService = await getStorageService()
+                  await storageService.syncToS3(media, deleteSourceAfterSync)
+                  logger.info('[MediaProcessingWorker] S3 sync completed (immediate)', {
+                    mediaId: media.id,
+                    deleteSource: deleteSourceAfterSync,
+                  })
+                } catch (immediateSyncError) {
+                  logger.error('[MediaProcessingWorker] Immediate S3 sync failed', {
+                    mediaId: media.id,
+                    error: immediateSyncError instanceof Error ? immediateSyncError.message : String(immediateSyncError),
+                  })
+                  // Не прерываем — файл всё равно сохранён локально
+                }
+                break
+                
+              case 'background':
+                // Сразу добавляем в очередь
+                await mediaSyncQueue.add({
+                  operation: 'upload_to_s3',
+                  mediaId: media.id,
+                  localPath: media.localPath,
+                  deleteSource: deleteSourceAfterSync,
+                })
+                logger.info('[MediaProcessingWorker] S3 sync job queued (background)', {
+                  mediaId: media.id,
+                  deleteSource: deleteSourceAfterSync,
+                })
+                break
+                
+              case 'delayed':
+                // Добавляем в очередь с задержкой
+                const delayMs = syncDelayMinutes * 60 * 1000
+                await mediaSyncQueue.add({
+                  operation: 'upload_to_s3',
+                  mediaId: media.id,
+                  localPath: media.localPath,
+                  deleteSource: deleteSourceAfterSync,
+                }, { delay: delayMs })
+                logger.info('[MediaProcessingWorker] S3 sync job queued (delayed)', {
+                  mediaId: media.id,
+                  delayMinutes: syncDelayMinutes,
+                  deleteSource: deleteSourceAfterSync,
+                })
+                break
+                
+              case 'manual':
+                // Ничего не делаем, sync только вручную
+                logger.debug('[MediaProcessingWorker] Sync mode is manual, skipping auto-sync', {
+                  mediaId: media.id,
+                })
+                break
+                
+              default:
+                logger.warn('[MediaProcessingWorker] Unknown sync mode', {
+                  mediaId: media.id,
+                  syncMode,
+                })
+            }
           } else {
             logger.debug('[MediaProcessingWorker] S3 not configured, skipping sync', {
               mediaId: media.id,
@@ -123,6 +189,13 @@ export class MediaProcessingWorker {
             error: syncError instanceof Error ? syncError.message : String(syncError),
           })
         }
+      } else {
+        logger.debug('[MediaProcessingWorker] S3 sync not needed', {
+          mediaId: media.id,
+          s3Enabled,
+          storageLocation,
+          hasLocalPath: !!media.localPath,
+        })
       }
 
       job.progress(85)

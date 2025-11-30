@@ -53,6 +53,7 @@
     "@fullcalendar/timegrid": "6.1.15",
     "@hookform/resolvers": "3.9.1",
     "@lucia-auth/adapter-prisma": "^4.0.1",
+    "@mui/icons-material": "^7.3.5",
     "@mui/lab": "6.0.0-beta.19",
     "@mui/material": "6.2.1",
     "@mui/material-nextjs": "6.2.1",

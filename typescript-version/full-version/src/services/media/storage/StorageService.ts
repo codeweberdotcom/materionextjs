@@ -733,70 +733,129 @@ let storageServiceInstance: StorageService | null = null
 
 /**
  * Получить S3 конфигурацию
- * Приоритет bucket: БД (s3DefaultBucket) > .env (S3_BUCKET)
- * Приоритет credentials: .env > БД
+ * 
+ * Приоритет:
+ * 1. s3ServiceId из MediaGlobalSettings → ServiceConfiguration
+ * 2. Если s3ServiceId === null → ENV (.env файл)
+ * 3. Fallback → первый enabled S3 из ServiceConfiguration
  */
 async function getS3Config(): Promise<S3AdapterConfig | undefined> {
-  // Credentials из .env
+  // Загружаем глобальные настройки
+  const globalSettings = await prisma.mediaGlobalSettings.findFirst()
+  
+  // Если S3 отключен — не настраиваем
+  if (!globalSettings?.s3Enabled) {
+    logger.debug('[StorageService] S3 disabled in settings')
+    return undefined
+  }
+  
+  const s3ServiceId = globalSettings?.s3ServiceId
+  
+  // ВАРИАНТ 1: Выбран конкретный сервис из ServiceConfiguration
+  if (s3ServiceId) {
+    const s3Service = await prisma.serviceConfiguration.findUnique({
+      where: { id: s3ServiceId }
+    })
+    
+    if (!s3Service || s3Service.type !== 'S3') {
+      logger.warn('[StorageService] Selected S3 service not found', { s3ServiceId })
+      return undefined
+    }
+    
+    if (!s3Service.enabled) {
+      logger.warn('[StorageService] Selected S3 service is disabled', { s3ServiceId })
+      return undefined
+    }
+    
+    if (!s3Service.username || !s3Service.password) {
+      logger.warn('[StorageService] Selected S3 service has no credentials', { s3ServiceId })
+      return undefined
+    }
+    
+    const { safeDecrypt } = await import('@/lib/config/encryption')
+    const metadata = JSON.parse(s3Service.metadata || '{}')
+    const protocol = (s3Service.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
+    const bucket = metadata.bucket || globalSettings?.s3DefaultBucket
+    
+    if (!bucket) {
+      logger.warn('[StorageService] No bucket configured for S3 service', { s3ServiceId })
+      return undefined
+    }
+    
+    logger.info('[StorageService] Using S3 config from ServiceConfiguration', { 
+      serviceId: s3ServiceId,
+      serviceName: s3Service.name,
+      bucket,
+    })
+    
+    return {
+      endpoint: s3Service.port 
+        ? `${protocol}://${s3Service.host}:${s3Service.port}`
+        : `${protocol}://${s3Service.host}`,
+      accessKeyId: s3Service.username,
+      secretAccessKey: safeDecrypt(s3Service.password),
+      bucket,
+      region: metadata.region || globalSettings?.s3DefaultRegion || 'us-east-1',
+      forcePathStyle: metadata.forcePathStyle ?? true,
+      publicUrlPrefix: globalSettings?.s3PublicUrlPrefix || undefined,
+    }
+  }
+  
+  // ВАРИАНТ 2: s3ServiceId === null → использовать ENV
   const envEndpoint = process.env.S3_ENDPOINT
   const envAccessKey = process.env.S3_ACCESS_KEY
   const envSecretKey = process.env.S3_SECRET_KEY
-  const envBucket = process.env.S3_BUCKET
+  const envBucket = process.env.S3_BUCKET || globalSettings?.s3DefaultBucket
   
-  // Получаем bucket из БД (приоритет над .env)
-  const globalSettings = await prisma.mediaGlobalSettings.findFirst()
-  const dbBucket = globalSettings?.s3DefaultBucket
-  
-  // Bucket: БД имеет приоритет над .env
-  const bucket = dbBucket || envBucket
-  
-  if (envEndpoint && envAccessKey && envSecretKey && bucket) {
-    logger.info('[StorageService] Using S3 config', { 
-      bucket,
-      bucketSource: dbBucket ? 'database' : 'env'
-    })
+  if (envEndpoint && envAccessKey && envSecretKey && envBucket) {
+    logger.info('[StorageService] Using S3 config from ENV', { bucket: envBucket })
     return {
       endpoint: envEndpoint,
       accessKeyId: envAccessKey,
       secretAccessKey: envSecretKey,
-      bucket,
-      region: process.env.S3_REGION || 'us-east-1',
+      bucket: envBucket,
+      region: process.env.S3_REGION || globalSettings?.s3DefaultRegion || 'us-east-1',
       forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== 'false',
+      publicUrlPrefix: globalSettings?.s3PublicUrlPrefix || undefined,
     }
   }
   
-  // Fallback: credentials из БД (ServiceConfiguration)
-  if (!dbBucket) {
-    return undefined
-  }
-  
-  const s3Config = await prisma.serviceConfiguration.findFirst({
+  // ВАРИАНТ 3: Fallback — первый enabled S3 сервис
+  const fallbackS3 = await prisma.serviceConfiguration.findFirst({
     where: { 
       type: 'S3',
       enabled: true,
     },
   })
   
-  if (!s3Config?.username || !s3Config?.password) {
-    return undefined
+  if (fallbackS3?.username && fallbackS3?.password) {
+    const { safeDecrypt } = await import('@/lib/config/encryption')
+    const metadata = JSON.parse(fallbackS3.metadata || '{}')
+    const protocol = (fallbackS3.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
+    const bucket = metadata.bucket || globalSettings?.s3DefaultBucket
+    
+    if (bucket) {
+      logger.info('[StorageService] Using S3 config from fallback ServiceConfiguration', { 
+        serviceName: fallbackS3.name,
+        bucket,
+      })
+      
+      return {
+        endpoint: fallbackS3.port 
+          ? `${protocol}://${fallbackS3.host}:${fallbackS3.port}`
+          : `${protocol}://${fallbackS3.host}`,
+        accessKeyId: fallbackS3.username,
+        secretAccessKey: safeDecrypt(fallbackS3.password),
+        bucket,
+        region: metadata.region || globalSettings?.s3DefaultRegion || 'us-east-1',
+        forcePathStyle: metadata.forcePathStyle ?? true,
+        publicUrlPrefix: globalSettings?.s3PublicUrlPrefix || undefined,
+      }
+    }
   }
   
-  logger.info('[StorageService] Using S3 config from database')
-  const { safeDecrypt } = await import('@/lib/config/encryption')
-  const metadata = JSON.parse(s3Config.metadata || '{}')
-  const protocol = (s3Config.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
-  
-  return {
-    bucket: dbBucket,
-    region: metadata.region || globalSettings?.s3DefaultRegion || 'us-east-1',
-    endpoint: s3Config.port 
-      ? `${protocol}://${s3Config.host}:${s3Config.port}`
-      : `${protocol}://${s3Config.host}`,
-    accessKeyId: s3Config.username,
-    secretAccessKey: safeDecrypt(s3Config.password),
-    forcePathStyle: metadata.forcePathStyle ?? true,
-    publicUrlPrefix: globalSettings?.s3PublicUrlPrefix || undefined,
-  }
+  logger.debug('[StorageService] No S3 configuration found')
+  return undefined
 }
 
 /**

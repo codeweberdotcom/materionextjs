@@ -39,18 +39,21 @@ export async function runMediaCleanup(dryRun: boolean = false): Promise<CleanupR
     // Получаем настройки
     const settings = await getGlobalSettings()
 
-    if (!settings.autoCleanupEnabled) {
-      logger.info('[MediaCleanup] Auto cleanup is disabled')
+    // trashRetentionDays: 0 = никогда не удалять автоматически, >0 = удалять через N дней
+    const trashRetentionDays = (settings as any).trashRetentionDays ?? 30
+    
+    if (trashRetentionDays <= 0) {
+      logger.info('[MediaCleanup] Auto cleanup is disabled (trashRetentionDays = 0)')
       result.skipped = -1 // Указываем что пропущено из-за настроек
       return result
     }
 
     // Вычисляем дату отсечки
     const cutoffDate = new Date()
-    cutoffDate.setDate(cutoffDate.getDate() - settings.softDeleteRetentionDays)
+    cutoffDate.setDate(cutoffDate.getDate() - trashRetentionDays)
 
     logger.info('[MediaCleanup] Starting cleanup', {
-      retentionDays: settings.softDeleteRetentionDays,
+      trashRetentionDays,
       cutoffDate: cutoffDate.toISOString(),
       dryRun,
     })

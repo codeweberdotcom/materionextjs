@@ -169,6 +169,9 @@ export default function MediaLibrary() {
   
   // Max file size from settings (default 10MB, loaded from API)
   const [maxFileSize, setMaxFileSize] = useState(10 * 1024 * 1024)
+  
+  // Parallel upload limit from settings (default 5, loaded from API)
+  const [parallelLimit, setParallelLimit] = useState(5)
 
   // Filters
   const [search, setSearch] = useState('')
@@ -204,7 +207,7 @@ export default function MediaLibrary() {
   // useAsyncUpload: true - файл сразу принимается, обработка в фоне
   const bulkUpload = useBulkUpload({
     entityType: uploadEntityType,
-    parallelLimit: 5,
+    parallelLimit, // Из настроек (processingConcurrency)
     maxFiles: 10000,
     maxFileSize, // Из настроек
     maxPreviews: 20,
@@ -299,7 +302,7 @@ export default function MediaLibrary() {
     }
   }, [])
 
-  // Fetch media settings (max file size)
+  // Fetch media settings (max file size, parallel limit)
   const fetchMediaSettings = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/media/settings')
@@ -307,6 +310,9 @@ export default function MediaLibrary() {
         const data = await response.json()
         if (data.global?.globalMaxFileSize) {
           setMaxFileSize(data.global.globalMaxFileSize)
+        }
+        if (data.global?.processingConcurrency) {
+          setParallelLimit(data.global.processingConcurrency)
         }
       }
     } catch {

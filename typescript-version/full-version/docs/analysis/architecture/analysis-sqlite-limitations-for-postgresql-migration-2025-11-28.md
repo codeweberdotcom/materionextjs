@@ -301,3 +301,4 @@ if (currentResults.length > 100) {
 - [План: PostgreSQL Docker Setup](../../plans/active/plan-postgresql-docker-setup-2025-11-28.md)
 - [Отчёт: Исправления SQLite timeout](../../reports/fixes/report-media-sync-sqlite-fixes-2025-11-28.md)
 
+

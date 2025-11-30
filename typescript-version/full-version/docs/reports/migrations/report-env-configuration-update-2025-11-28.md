@@ -344,3 +344,4 @@ GRAFANA_PASSWORD=your-secure-password  # Изменить с 'admin'
 
 Сгенерировано AI ассистентом на основе задачи пользователя.
 
+

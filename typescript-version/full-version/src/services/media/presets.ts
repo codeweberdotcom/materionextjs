@@ -200,25 +200,52 @@ export const IMAGE_PRESETS: Record<string, ImageSettingsInput> = {
  * Глобальные настройки по умолчанию
  */
 export const DEFAULT_GLOBAL_SETTINGS: MediaGlobalSettingsInput = {
-  defaultStorageStrategy: 'local_first',
+  // S3 Settings
+  s3Enabled: false,
+  s3ServiceId: null,  // null = use ENV settings
+  
+  // Storage Location
+  storageLocation: 'local',  // local | s3 | both
+  
+  // Sync Behavior
+  syncMode: 'background',    // immediate | background | delayed | manual
+  syncDelayMinutes: 0,
+  
+  // Trash Settings
+  deleteMode: 'soft',
+  trashRetentionDays: 30,    // 0 = never auto-delete
+  s3DeleteWithLocal: true,
+  
+  // Legacy S3 settings
   s3DefaultBucket: undefined,
   s3DefaultRegion: 'us-east-1',
   s3PublicUrlPrefix: undefined,
+  
+  // Local storage
   localUploadPath: '/uploads',
   localPublicUrlPrefix: '/uploads',
+  
+  // File organization
   organizeByDate: true,
   organizeByEntityType: true,
+  
+  // Limits
   globalMaxFileSize: 10 * 1024 * 1024, // 10MB
   globalDailyUploadLimit: undefined,
+  
+  // Processing
+  defaultQuality: 85,
+  defaultConvertToWebP: true,
+  processingConcurrency: 3,
+  
+  // Legacy (deprecated)
+  defaultStorageStrategy: 'local_first',
   autoDeleteOrphans: false,
   orphanRetentionDays: 30,
   autoSyncEnabled: false,
   autoSyncDelayMinutes: 30,
   autoCleanupLocalEnabled: false,
   keepLocalDays: 7,
-  defaultQuality: 85,
-  defaultConvertToWebP: true,
-  processingConcurrency: 3,
 }
 
 /**

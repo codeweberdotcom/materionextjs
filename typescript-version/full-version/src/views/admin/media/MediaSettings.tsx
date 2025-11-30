@@ -45,32 +45,49 @@ import DialogActions from '@mui/material/DialogActions'
 
 import { toast } from 'react-toastify'
 
+import CustomAvatar from '@core/components/mui/Avatar'
+
 interface GlobalSettings {
   id: string
-  defaultStorageStrategy: string
+  // S3 Settings
+  s3Enabled: boolean
+  s3ServiceId?: string | null
+  // Storage Location
+  storageLocation: string // 'local' | 's3' | 'both'
+  // Sync Behavior
+  syncMode: string // 'immediate' | 'background' | 'delayed' | 'manual'
+  syncDelayMinutes: number
+  // Trash Settings
+  deleteMode: string
+  trashRetentionDays: number
+  s3DeleteWithLocal: boolean
+  // Legacy S3 settings
   s3DefaultBucket?: string
   s3DefaultRegion?: string
   s3PublicUrlPrefix?: string
+  // Local storage
   localUploadPath: string
   localPublicUrlPrefix: string
+  // File organization
   organizeByDate: boolean
   organizeByEntityType: boolean
+  // Limits
   globalMaxFileSize: number
   globalDailyUploadLimit?: number
+  // Processing
+  defaultQuality: number
+  defaultConvertToWebP: boolean
+  processingConcurrency: number
+  // Legacy (deprecated)
+  defaultStorageStrategy: string
   autoDeleteOrphans: boolean
   orphanRetentionDays: number
   autoSyncEnabled: boolean
   autoSyncDelayMinutes: number
   autoCleanupLocalEnabled: boolean
   keepLocalDays: number
-  defaultQuality: number
-  defaultConvertToWebP: boolean
-  processingConcurrency: number
-  // Deletion settings
-  deleteMode: string
   softDeleteRetentionDays: number
   autoCleanupEnabled: boolean
-  s3DeleteWithLocal: boolean
 }
 
 interface EntitySettings {
@@ -110,6 +127,23 @@ interface BucketValidation {
   error?: string
 }
 
+interface S3Service {
+  id: string
+  name: string
+  displayName: string
+  type: string
+  enabled: boolean
+  host?: string
+}
+
+interface OrphanStats {
+  dbOrphans: number
+  diskOrphans: number
+  totalCount: number
+  totalSize: number
+  totalSizeFormatted: string
+}
+
 const formatBytes = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
@@ -122,7 +156,7 @@ export default function MediaSettings() {
   const [saving, setSaving] = useState(false)
   const [globalSettings, setGlobalSettings] = useState<GlobalSettings | null>(null)
   const [entitySettings, setEntitySettings] = useState<EntitySettings[]>([])
-  
+
   // S3 Bucket states
   const [s3Buckets, setS3Buckets] = useState<S3Bucket[]>([])
   const [s3Configured, setS3Configured] = useState(false)
@@ -134,16 +168,26 @@ export default function MediaSettings() {
   const [newBucketName, setNewBucketName] = useState('')
   const [creatingBucket, setCreatingBucket] = useState(false)
 
+  // S3 Services
+  const [s3Services, setS3Services] = useState<S3Service[]>([])
+  const [loadingServices, setLoadingServices] = useState(false)
+
+  // Orphan Stats
+  const [orphanStats, setOrphanStats] = useState<OrphanStats | null>(null)
+  const [loadingOrphans, setLoadingOrphans] = useState(false)
+
   useEffect(() => {
     fetchSettings()
     fetchBuckets()
+    fetchS3Services()
+    fetchOrphanStats()
   }, [])
 
   const fetchSettings = async () => {
     try {
       const response = await fetch('/api/admin/media/settings')
       if (!response.ok) throw new Error('Failed to fetch settings')
-      
+
       const data = await response.json()
       setGlobalSettings(data.global)
       setEntitySettings(data.entitySettings)
@@ -157,15 +201,15 @@ export default function MediaSettings() {
   const fetchBuckets = async () => {
     setLoadingBuckets(true)
     setS3Error(null)
-    
+
     try {
       const response = await fetch('/api/admin/media/s3/buckets')
       if (!response.ok) throw new Error('Failed to fetch buckets')
-      
+
       const data: S3BucketsResponse = await response.json()
       setS3Configured(data.configured)
       setS3Buckets(data.buckets)
-      
+
       if (data.error) {
         setS3Error(data.error)
       }
@@ -176,21 +220,51 @@ export default function MediaSettings() {
     }
   }
 
+  const fetchS3Services = async () => {
+    setLoadingServices(true)
+    try {
+      const response = await fetch('/api/admin/settings/services?type=S3')
+      if (!response.ok) throw new Error('Failed to fetch services')
+
+      const data = await response.json()
+      setS3Services(data.items || [])
+    } catch (error) {
+      console.error('Failed to fetch S3 services:', error)
+    } finally {
+      setLoadingServices(false)
+    }
+  }
+
+  const fetchOrphanStats = async () => {
+    setLoadingOrphans(true)
+    try {
+      const response = await fetch('/api/admin/media/orphans')
+      if (!response.ok) throw new Error('Failed to fetch orphan stats')
+
+      const data = await response.json()
+      setOrphanStats(data.stats)
+    } catch (error) {
+      console.error('Failed to fetch orphan stats:', error)
+    } finally {
+      setLoadingOrphans(false)
+    }
+  }
+
   const validateBucket = async (bucketName: string) => {
     if (!bucketName) {
       setBucketValidation(null)
       return
     }
-    
+
     setValidatingBucket(true)
-    
+
     try {
       const response = await fetch('/api/admin/media/s3/buckets/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bucketName }),
       })
-      
+
       const data: BucketValidation = await response.json()
       setBucketValidation(data)
     } catch (error) {
@@ -205,27 +279,27 @@ export default function MediaSettings() {
       toast.error(t?.enterBucketName ?? 'Enter bucket name')
       return
     }
-    
+
     setCreatingBucket(true)
-    
+
     try {
       const response = await fetch('/api/admin/media/s3/buckets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bucketName: newBucketName.trim() }),
       })
-      
+
       const data = await response.json()
-      
+
       if (!response.ok) {
         toast.error(data.error || (t?.bucketCreateError ?? 'Error creating bucket'))
         return
       }
-      
+
       toast.success(data.message || (t?.bucketCreated ?? 'Bucket created'))
       setCreateDialogOpen(false)
       setNewBucketName('')
-      
+
       // Refresh list and select new bucket
       await fetchBuckets()
       updateGlobal('s3DefaultBucket', newBucketName.trim())
@@ -238,7 +312,7 @@ export default function MediaSettings() {
 
   const handleBucketChange = (bucketName: string) => {
     updateGlobal('s3DefaultBucket', bucketName)
-    
+
     if (bucketName) {
       validateBucket(bucketName)
     } else {
@@ -255,7 +329,7 @@ export default function MediaSettings() {
 
   const saveGlobalSettings = async () => {
     if (!globalSettings) return
-    
+
     setSaving(true)
     try {
       const response = await fetch('/api/admin/media/settings', {
@@ -263,9 +337,9 @@ export default function MediaSettings() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(globalSettings),
       })
-      
+
       if (!response.ok) throw new Error('Failed to save settings')
-      
+
       toast.success(t?.saveSuccess ?? 'Settings saved')
     } catch (error) {
       toast.error(t?.saveError ?? 'Error saving settings')
@@ -284,7 +358,7 @@ export default function MediaSettings() {
       <Grid container spacing={6}>
         <Grid item xs={12}>
           <Card>
-            <CardHeader 
+            <CardHeader
               title={<Skeleton variant="text" width={200} height={32} />}
               action={<Skeleton variant="rounded" width={120} height={36} />}
             />
@@ -331,11 +405,11 @@ export default function MediaSettings() {
       {/* Global Settings */}
       <Grid item xs={12}>
         <Card>
-          <CardHeader 
+          <CardHeader
             title={t?.globalSettings ?? 'Global Settings'}
             action={
-              <Button 
-                variant="contained" 
+              <Button
+                variant="contained"
                 onClick={saveGlobalSettings}
                 disabled={saving}
                 startIcon={saving ? <CircularProgress size={16} color="inherit" /> : null}
@@ -349,13 +423,17 @@ export default function MediaSettings() {
               <Grid container spacing={4}>
                 {/* Storage */}
                 <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom>
-                    <i className="ri-hard-drive-2-line" style={{ marginRight: 8 }} />
-                    {t?.storage ?? 'Storage'}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                    <CustomAvatar color="primary" skin="light" size={38}>
+                      <i className="ri-hard-drive-2-line" />
+                    </CustomAvatar>
+                    <Typography variant="subtitle1" fontWeight={500}>
+                      {t?.storage ?? 'Storage'}
+                    </Typography>
+                  </Box>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
-                
+
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
@@ -365,7 +443,7 @@ export default function MediaSettings() {
                     helperText={t?.localPathHelp ?? 'Fixed path: /uploads'}
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
@@ -375,7 +453,7 @@ export default function MediaSettings() {
                     helperText={t?.publicUrlPrefixHelp ?? 'Fixed prefix: /uploads'}
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} md={4}>
                   <Box>
                     <FormControl fullWidth>
@@ -398,8 +476,8 @@ export default function MediaSettings() {
                                 </Tooltip>
                                 <Tooltip title={s3Configured ? (t?.createNewBucket ?? 'Create new bucket') : (t?.s3NotConfigured ?? 'S3 not configured')}>
                                   <span>
-                                    <IconButton 
-                                      size="small" 
+                                    <IconButton
+                                      size="small"
                                       onClick={() => setCreateDialogOpen(true)}
                                       disabled={!s3Configured}
                                     >
@@ -416,7 +494,7 @@ export default function MediaSettings() {
                           <em>{t?.notSelected ?? 'Not selected (S3 disabled)'}</em>
                         </MenuItem>
                         {/* Current bucket if not in list */}
-                        {globalSettings.s3DefaultBucket && 
+                        {globalSettings.s3DefaultBucket &&
                          !s3Buckets.some(b => b.name === globalSettings.s3DefaultBucket) && (
                           <MenuItem value={globalSettings.s3DefaultBucket}>
                             {globalSettings.s3DefaultBucket} ({t?.saved ?? 'saved'})
@@ -468,7 +546,7 @@ export default function MediaSettings() {
                     label={t?.organizeByDate ?? 'Organize by date (2025/11/)'}
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} md={4}>
                   <FormControlLabel
                     control={
@@ -483,13 +561,17 @@ export default function MediaSettings() {
 
                 {/* Processing */}
                 <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-                    <i className="ri-image-edit-line" style={{ marginRight: 8 }} />
-                    {t?.processing ?? 'Processing'}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, mt: 2 }}>
+                    <CustomAvatar color="info" skin="light" size={38}>
+                      <i className="ri-image-edit-line" />
+                    </CustomAvatar>
+                    <Typography variant="subtitle1" fontWeight={500}>
+                      {t?.processing ?? 'Processing'}
+                    </Typography>
+                  </Box>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
-                
+
                 <Grid item xs={12} md={3}>
                   <TextField
                     fullWidth
@@ -499,7 +581,7 @@ export default function MediaSettings() {
                     onChange={e => updateGlobal('globalMaxFileSize', parseInt(e.target.value) * 1024 * 1024)}
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} md={3}>
                   <TextField
                     fullWidth
@@ -510,7 +592,7 @@ export default function MediaSettings() {
                     inputProps={{ min: 1, max: 100 }}
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} md={3}>
                   <TextField
                     fullWidth
@@ -521,7 +603,7 @@ export default function MediaSettings() {
                     inputProps={{ min: 1, max: 10 }}
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} md={3}>
                   <FormControlLabel
                     control={
@@ -534,71 +616,143 @@ export default function MediaSettings() {
                   />
                 </Grid>
 
-                {/* Auto-sync */}
+                {/* S3 Settings */}
                 <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-                    <i className="ri-refresh-line" style={{ marginRight: 8 }} />
-                    {t?.autoSync ?? 'Auto-sync'}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, mt: 2 }}>
+                    <CustomAvatar color="success" skin="light" size={38}>
+                      <i className="ri-cloud-line" />
+                    </CustomAvatar>
+                    <Typography variant="subtitle1" fontWeight={500}>
+                      {t?.s3Settings ?? 'S3 Storage'}
+                    </Typography>
+                  </Box>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
-                
+
                 <Grid item xs={12} md={3}>
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={globalSettings.autoSyncEnabled}
-                        onChange={e => updateGlobal('autoSyncEnabled', e.target.checked)}
+                        checked={globalSettings.s3Enabled}
+                        onChange={e => updateGlobal('s3Enabled', e.target.checked)}
                       />
                     }
-                    label={t?.autoSyncToS3 ?? 'Auto-sync to S3'}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} md={3}>
-                  <TextField
-                    fullWidth
-                    type="number"
-                    label={t?.syncDelay ?? 'Sync delay (min)'}
-                    value={globalSettings.autoSyncDelayMinutes}
-                    onChange={e => updateGlobal('autoSyncDelayMinutes', parseInt(e.target.value))}
-                    disabled={!globalSettings.autoSyncEnabled}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} md={3}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={globalSettings.autoCleanupLocalEnabled}
-                        onChange={e => updateGlobal('autoCleanupLocalEnabled', e.target.checked)}
-                      />
-                    }
-                    label={t?.autoCleanupLocal ?? 'Auto-cleanup local'}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} md={3}>
-                  <TextField
-                    fullWidth
-                    type="number"
-                    label={t?.keepLocalDays ?? 'Keep local (days)'}
-                    value={globalSettings.keepLocalDays}
-                    onChange={e => updateGlobal('keepLocalDays', parseInt(e.target.value))}
-                    disabled={!globalSettings.autoCleanupLocalEnabled}
+                    label={t?.enableS3 ?? 'Enable S3'}
                   />
                 </Grid>
 
+                <Grid item xs={12} md={4}>
+                  <FormControl fullWidth disabled={!globalSettings.s3Enabled || loadingServices}>
+                    <InputLabel>{t?.s3Server ?? 'S3 Server'}</InputLabel>
+                    <Select
+                      value={globalSettings.s3ServiceId || ''}
+                      onChange={e => updateGlobal('s3ServiceId', e.target.value || null)}
+                      label={t?.s3Server ?? 'S3 Server'}
+                    >
+                      <MenuItem value="">
+                        <em>{t?.defaultEnv ?? 'Default (from .env)'}</em>
+                      </MenuItem>
+                      {s3Services.filter(s => s.enabled).map(service => (
+                        <MenuItem key={service.id} value={service.id}>
+                          {service.displayName} ({service.host})
+                        </MenuItem>
+                      ))}
+                    </Select>
+                    <FormHelperText>
+                      {loadingServices ? (t?.loading ?? 'Loading...') :
+                       s3Services.length === 0 ? (t?.noS3Services ?? 'No S3 services configured') :
+                       (t?.selectS3Server ?? 'Select S3 server or use default from .env')}
+                    </FormHelperText>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} md={5}>
+                  <FormControl fullWidth disabled={!globalSettings.s3Enabled}>
+                    <InputLabel>{t?.storageLocation ?? 'Storage Location'}</InputLabel>
+                    <Select
+                      value={globalSettings.storageLocation}
+                      onChange={e => updateGlobal('storageLocation', e.target.value)}
+                      label={t?.storageLocation ?? 'Storage Location'}
+                    >
+                      <MenuItem value="local">{t?.localOnly ?? 'Local only'}</MenuItem>
+                      <MenuItem value="s3">{t?.s3Only ?? 'S3 only (delete local after sync)'}</MenuItem>
+                      <MenuItem value="both">{t?.localAndS3 ?? 'Local + S3 (keep both)'}</MenuItem>
+                    </Select>
+                    <FormHelperText>
+                      {globalSettings.storageLocation === 'local' ? (t?.storageLocalHelp ?? 'Files stored only on local server') :
+                       globalSettings.storageLocation === 's3' ? (t?.storageS3Help ?? 'Local files deleted after S3 sync') :
+                       (t?.storageBothHelp ?? 'Files stored in both locations')}
+                    </FormHelperText>
+                  </FormControl>
+                </Grid>
+
+                {/* Sync Behavior */}
+                {globalSettings.s3Enabled && globalSettings.storageLocation !== 'local' && (
+                  <>
+                    <Grid item xs={12}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, mt: 2 }}>
+                        <CustomAvatar color="info" skin="light" size={38}>
+                          <i className="ri-refresh-line" />
+                        </CustomAvatar>
+                        <Typography variant="subtitle1" fontWeight={500}>
+                          {t?.syncBehavior ?? 'Sync Behavior'}
+                        </Typography>
+                      </Box>
+                      <Divider sx={{ mb: 2 }} />
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                      <FormControl fullWidth>
+                        <InputLabel>{t?.syncMode ?? 'Sync Mode'}</InputLabel>
+                        <Select
+                          value={globalSettings.syncMode}
+                          onChange={e => updateGlobal('syncMode', e.target.value)}
+                          label={t?.syncMode ?? 'Sync Mode'}
+                        >
+                          <MenuItem value="immediate">{t?.syncImmediate ?? 'Immediate (sync in same request)'}</MenuItem>
+                          <MenuItem value="background">{t?.syncBackground ?? 'Background (add to queue immediately)'}</MenuItem>
+                          <MenuItem value="delayed">{t?.syncDelayed ?? 'Delayed (add to queue with delay)'}</MenuItem>
+                          <MenuItem value="manual">{t?.syncManual ?? 'Manual (only via admin panel)'}</MenuItem>
+                        </Select>
+                        <FormHelperText>
+                          {globalSettings.syncMode === 'immediate' ? (t?.syncImmediateHelp ?? 'Slowest upload, fastest availability on S3') :
+                           globalSettings.syncMode === 'background' ? (t?.syncBackgroundHelp ?? 'Fast upload, sync happens in background') :
+                           globalSettings.syncMode === 'delayed' ? (t?.syncDelayedHelp ?? 'Sync after specified delay') :
+                           (t?.syncManualHelp ?? 'Sync only when triggered manually')}
+                        </FormHelperText>
+                      </FormControl>
+                    </Grid>
+
+                    {globalSettings.syncMode === 'delayed' && (
+                      <Grid item xs={12} md={6}>
+                        <TextField
+                          fullWidth
+                          type="number"
+                          label={t?.syncDelayMinutes ?? 'Sync delay (minutes)'}
+                          value={globalSettings.syncDelayMinutes}
+                          onChange={e => updateGlobal('syncDelayMinutes', parseInt(e.target.value) || 0)}
+                          inputProps={{ min: 0, max: 1440 }}
+                          helperText={t?.syncDelayHelp ?? 'How long to wait before syncing to S3'}
+                        />
+                      </Grid>
+                    )}
+                  </>
+                )}
+
                 {/* Trash / Deletion */}
                 <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-                    <i className="ri-delete-bin-line" style={{ marginRight: 8 }} />
-                    {t?.trashAndDeletion ?? 'Trash and deletion'}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, mt: 2 }}>
+                    <CustomAvatar color="error" skin="light" size={38}>
+                      <i className="ri-delete-bin-line" />
+                    </CustomAvatar>
+                    <Typography variant="subtitle1" fontWeight={500}>
+                      {t?.trashAndDeletion ?? 'Trash and deletion'}
+                    </Typography>
+                  </Box>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
-                
-                <Grid item xs={12} md={3}>
+
+                <Grid item xs={12} md={4}>
                   <TextField
                     select
                     fullWidth
@@ -612,37 +766,28 @@ export default function MediaSettings() {
                     <option value="hard">{t?.permanently ?? 'Permanently (hard)'}</option>
                   </TextField>
                 </Grid>
-                
-                <Grid item xs={12} md={3}>
+
+                <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
                     type="number"
-                    label={t?.keepInTrash ?? 'Keep in trash (days)'}
-                    value={globalSettings.softDeleteRetentionDays}
-                    onChange={e => updateGlobal('softDeleteRetentionDays', parseInt(e.target.value))}
-                    inputProps={{ min: 1, max: 365 }}
-                    helperText={t?.afterThisHardDelete ?? 'After this period — hard delete'}
+                    label={t?.trashRetentionDays ?? 'Trash retention (days)'}
+                    value={globalSettings.trashRetentionDays}
+                    onChange={e => updateGlobal('trashRetentionDays', parseInt(e.target.value) || 0)}
+                    inputProps={{ min: 0, max: 365 }}
+                    helperText={globalSettings.trashRetentionDays === 0
+                      ? (t?.trashNeverDelete ?? 'Never auto-delete from trash')
+                      : (t?.trashAutoDeleteAfter ?? `Auto-delete after ${globalSettings.trashRetentionDays} days`)}
                   />
                 </Grid>
-                
-                <Grid item xs={12} md={3}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={globalSettings.autoCleanupEnabled}
-                        onChange={e => updateGlobal('autoCleanupEnabled', e.target.checked)}
-                      />
-                    }
-                    label={t?.autoCleanupTrash ?? 'Auto-cleanup trash'}
-                  />
-                </Grid>
-                
-                <Grid item xs={12} md={3}>
+
+                <Grid item xs={12} md={4}>
                   <FormControlLabel
                     control={
                       <Switch
                         checked={globalSettings.s3DeleteWithLocal}
                         onChange={e => updateGlobal('s3DeleteWithLocal', e.target.checked)}
+                        disabled={!globalSettings.s3Enabled}
                       />
                     }
                     label={t?.deleteFromS3OnHardDelete ?? 'Delete from S3 on hard delete'}
@@ -651,13 +796,17 @@ export default function MediaSettings() {
 
                 {/* Cleanup */}
                 <Grid item xs={12}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-                    <i className="ri-file-shred-line" style={{ marginRight: 8 }} />
-                    {t?.orphanCleanup ?? 'Orphan file cleanup'}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, mt: 2 }}>
+                    <CustomAvatar color="warning" skin="light" size={38}>
+                      <i className="ri-file-shred-line" />
+                    </CustomAvatar>
+                    <Typography variant="subtitle1" fontWeight={500}>
+                      {t?.orphanCleanup ?? 'Orphan file cleanup'}
+                    </Typography>
+                  </Box>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
-                
+
                 <Grid item xs={12} md={4}>
                   <FormControlLabel
                     control={
@@ -669,7 +818,7 @@ export default function MediaSettings() {
                     label={t?.deleteOrphanFiles ?? 'Delete orphan files'}
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
@@ -712,7 +861,7 @@ export default function MediaSettings() {
                       <Typography variant="body2" color="text.secondary" gutterBottom>
                         {settings.description || (t?.noDescription ?? 'No description')}
                       </Typography>
-                      
+
                       <Table size="small">
                         <TableBody>
                           <TableRow>
@@ -746,7 +895,7 @@ export default function MediaSettings() {
                         </TableBody>
                       </Table>
                     </Grid>
-                    
+
                     <Grid item xs={12} md={6}>
                       <Typography variant="subtitle2" gutterBottom>{t?.sizeVariants ?? 'Size variants'}</Typography>
                       <Table size="small">
@@ -767,7 +916,7 @@ export default function MediaSettings() {
                           ))}
                         </TableBody>
                       </Table>
-                      
+
                       {settings.watermarkEnabled && (
                         <Alert severity="info" sx={{ mt: 2 }}>
                           {t?.watermark ?? 'Watermark'}: {settings.watermarkPosition}, opacity: {settings.watermarkOpacity}
@@ -801,7 +950,7 @@ export default function MediaSettings() {
               helperText={t?.bucketNameHelp ?? 'Only lowercase letters, numbers, dots and hyphens. Length 3-63 characters.'}
               disabled={creatingBucket}
             />
-            
+
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
                 <strong>{t?.namingRules ?? 'Naming rules:'}</strong>
@@ -819,8 +968,8 @@ export default function MediaSettings() {
           <Button onClick={() => setCreateDialogOpen(false)} disabled={creatingBucket}>
             {t?.cancel ?? 'Cancel'}
           </Button>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             onClick={createBucket}
             disabled={creatingBucket || !newBucketName.trim()}
             startIcon={creatingBucket ? <CircularProgress size={16} color="inherit" /> : <i className="ri-add-line" />}
