@@ -140,7 +140,7 @@ interface OrphanStats {
   dbOrphans: number
   diskOrphans: number
   totalCount: number
-  totalSize: number
+lSize: number
   totalSizeFormatted: string
 }
 
@@ -154,15 +154,15 @@ export default function MediaSettings() {
   const t = useTranslationSafe()?.mediaSettings
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [globalSettings, setGlobalSettings] = useState<GlobalSettings | null>(null)
+nst [globalSettings, setGlobalSettings] = useState<GlobalSettings | null>(null)
   const [entitySettings, setEntitySettings] = useState<EntitySettings[]>([])
 
   // S3 Bucket states
-  const [s3Buckets, setS3Buckets] = useState<S3Bucket[]>([])
+t [s3Buckets, setS3Buckets] = useState<S3Bucket[]>([])
   const [s3Configured, setS3Configured] = useState(false)
   const [s3Error, setS3Error] = useState<string | null>(null)
   const [loadingBuckets, setLoadingBuckets] = useState(false)
-  const [bucketValidation, setBucketValidation] = useState<BucketValidation | null>(null)
+t [bucketValidation, setBucketValidation] = useState<BucketValidation | null>(null)
   const [validatingBucket, setValidatingBucket] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [newBucketName, setNewBucketName] = useState('')
@@ -177,38 +177,71 @@ export default function MediaSettings() {
   const [loadingOrphans, setLoadingOrphans] = useState(false)
 
   useEffect(() => {
-    fetchSettings()
-    fetchBuckets()
-    fetchS3Services()
-    fetchOrphanStats()
+    const init = async () => {
+  try {
+        // First fetch settings to get s3ServiceId
+    const settingsRes = await fetch('/api/admin/media/settings')
+        if (settingsRes.ok) {
+          const data = await settingsRes.json()
+          setGlobalSettings(data.global || {})
+          setEntitySettings(Array.isArray(data.entities) ? data.entities : [])
+          // Fetch buckets for the configured service
+          // If no service configured (using env), set default bucket from env
+          const isUsingEnv = !data.global?.s3ServiceId
+          fetchBuckets(data.global?.s3ServiceId || null, isUsingEnv && !data.global?.s3DefaultBucket)
+        } else {
+          throw new Error('Failed to fetch settings')
+        }
+      } catch (error) {
+        toast.error(t?.loadError ?? 'Error loading settings')
+      } finally {
+        setLoading(false)
+      }
+      fetchS3Services()
+      fetchOrphanStats()
+    }
+    init()
   }, [])
 
   const fetchSettings = async () => {
-    try {
+try {
       const response = await fetch('/api/admin/media/settings')
-      if (!response.ok) throw new Error('Failed to fetch settings')
+  if (!response.ok) throw new Error('Failed to fetch settings')
 
       const data = await response.json()
       setGlobalSettings(data.global)
-      setEntitySettings(data.entitySettings)
+      setEntitySettings(Array.isArray(data.entities) ? data.entities : [])
     } catch (error) {
       toast.error(t?.loadError ?? 'Error loading settings')
-    } finally {
+finally {
       setLoading(false)
-    }
+
   }
 
-  const fetchBuckets = async () => {
+  const fetchBuckets = async (serviceId?: string | null, setDefaultBucket = false) => {
     setLoadingBuckets(true)
-    setS3Error(null)
+tS3Error(null)
 
     try {
-      const response = await fetch('/api/admin/media/s3/buckets')
+      // If serviceId provided, fetch buckets for that service
+const url = serviceId
+        ? `/api/admin/media/s3/buckets?serviceId=${serviceId}`
+        : '/api/admin/media/s3/buckets'
+
+      const response = await fetch(url)
       if (!response.ok) throw new Error('Failed to fetch buckets')
 
-      const data: S3BucketsResponse = await response.json()
+      const data = await response.json()
       setS3Configured(data.configured)
-      setS3Buckets(data.buckets)
+      setS3Buckets(data.buckets || [])
+
+      // If default bucket from env is returned, set it
+      if (data.defaultBucket && setDefaultBucket) {
+    setGlobalSettings(prev => prev ? {
+          ...prev,
+          s3DefaultBucket: data.defaultBucket
+        } : prev)
+      }
 
       if (data.error) {
         setS3Error(data.error)
@@ -220,14 +253,38 @@ export default function MediaSettings() {
     }
   }
 
+  // Handle S3 server change - fetch buckets for selected server
+nst handleS3ServerChange = (value: string) => {
+    const serviceId = value === 'default' ? null : value
+    const isDefault = value === 'default'
+    console.log('[S3 Server Change]', { value, serviceId, isDefault })
+
+    if (!globalSettings) return
+
+    // Clear buckets list and reset states
+tS3Buckets([])
+    setBucketValidation(null)
+tS3Error(null)
+
+    setGlobalSettings({
+      ...globalSettings,
+      s3ServiceId: serviceId,
+      s3DefaultBucket: '' // Clear bucket when server changes
+    })
+
+    // Fetch buckets for new server
+    // If default (env), also set the default bucket from env
+    fetchBuckets(serviceId, isDefault)
+  }
+
   const fetchS3Services = async () => {
     setLoadingServices(true)
     try {
       const response = await fetch('/api/admin/settings/services?type=S3')
       if (!response.ok) throw new Error('Failed to fetch services')
 
-      const data = await response.json()
-      setS3Services(data.items || [])
+      const result = awit response.json()
+      setS3Services(result.data || [])
     } catch (error) {
       console.error('Failed to fetch S3 services:', error)
     } finally {
@@ -262,7 +319,10 @@ export default function MediaSettings() {
       const response = await fetch('/api/admin/media/s3/buckets/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bucketName }),
+        body: JSON.stringify({
+          bucketName,
+          serviceId: globalSettings?.s3ServiceId || undefined
+        }),
       })
 
       const data: BucketValidation = await response.json()
@@ -270,11 +330,11 @@ export default function MediaSettings() {
     } catch (error) {
       setBucketValidation({ exists: false, accessible: false, error: t?.checkError ?? 'Check error' })
     } finally {
-      setValidatingBucket(false)
+      setValidatingBuket(false)
     }
   }
 
-  const createBucket = async () => {
+  const createBucket = async () =>
     if (!newBucketName.trim()) {
       toast.error(t?.enterBucketName ?? 'Enter bucket name')
       return
@@ -286,7 +346,10 @@ export default function MediaSettings() {
       const response = await fetch('/api/admin/media/s3/buckets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ bucketName: newBucketName.trim() }),
+        body: JSON.stringify({
+          bucketName: newBucketName.trim(),
+          serviceId: globalSettings?.s3ServiceId || undefined
+        }),
       })
 
       const data = await response.json()
@@ -300,7 +363,7 @@ export default function MediaSettings() {
       setCreateDialogOpen(false)
       setNewBucketName('')
 
-      // Refresh list and select new bucket
+ list and select new bucket
       await fetchBuckets()
       updateGlobal('s3DefaultBucket', newBucketName.trim())
     } catch (error) {
@@ -310,7 +373,7 @@ export default function MediaSettings() {
     }
   }
 
-  const handleBucketChange = (bucketName: string) => {
+cketChange = (bucketName: string) => {
     updateGlobal('s3DefaultBucket', bucketName)
 
     if (bucketName) {
@@ -334,7 +397,7 @@ export default function MediaSettings() {
     try {
       const response = await fetch('/api/admin/media/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/jsn' },
         body: JSON.stringify(globalSettings),
       })
 
@@ -403,7 +466,7 @@ export default function MediaSettings() {
   return (
     <Grid container spacing={6}>
       {/* Global Settings */}
-      <Grid item xs={12}>
+ xs={12}>
         <Card>
           <CardHeader
             title={t?.globalSettings ?? 'Global Settings'}
@@ -424,7 +487,7 @@ export default function MediaSettings() {
                 {/* Storage */}
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <CustomAvatar color="primary" skin="light" size={38}>
+    <CustomAvatar color="primary" skin="light" size={38}>
                       <i className="ri-hard-drive-2-line" />
                     </CustomAvatar>
                     <Typography variant="subtitle1" fontWeight={500}>
@@ -434,7 +497,7 @@ export default function MediaSettings() {
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
 
-                <Grid item xs={12} md={4}>
+<Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
                     label={t?.localPath ?? 'Local path'}
@@ -445,7 +508,7 @@ export default function MediaSettings() {
                 </Grid>
 
                 <Grid item xs={12} md={4}>
-                  <TextField
+  <TextField
                     fullWidth
                     label={t?.publicUrlPrefix ?? 'Public URL prefix'}
                     value={globalSettings.localPublicUrlPrefix}
@@ -454,100 +517,19 @@ export default function MediaSettings() {
                   />
                 </Grid>
 
-                <Grid item xs={12} md={4}>
-                  <Box>
-                    <FormControl fullWidth>
-                      <InputLabel id="s3-bucket-label">{t?.s3Bucket ?? 'S3 Bucket'}</InputLabel>
-                      <Select
-                        labelId="s3-bucket-label"
-                        value={globalSettings.s3DefaultBucket || ''}
-                        onChange={e => handleBucketChange(e.target.value)}
-                        label={t?.s3Bucket ?? 'S3 Bucket'}
-                        disabled={loadingBuckets}
-                        endAdornment={
-                          <Box sx={{ display: 'flex', mr: 5 }}>
-                            {loadingBuckets && <CircularProgress size={16} />}
-                            {!loadingBuckets && (
-                              <>
-                                <Tooltip title={t?.refreshList ?? 'Refresh list'}>
-                                  <IconButton size="small" onClick={fetchBuckets}>
-                                    <i className="ri-refresh-line" style={{ fontSize: 16 }} />
-                                  </IconButton>
-                                </Tooltip>
-                                <Tooltip title={s3Configured ? (t?.createNewBucket ?? 'Create new bucket') : (t?.s3NotConfigured ?? 'S3 not configured')}>
-                                  <span>
-                                    <IconButton
-                                      size="small"
-                                      onClick={() => setCreateDialogOpen(true)}
-                                      disabled={!s3Configured}
-                                    >
-                                      <i className="ri-add-line" style={{ fontSize: 16 }} />
-                                    </IconButton>
-                                  </span>
-                                </Tooltip>
-                              </>
-                            )}
-                          </Box>
-                        }
-                      >
-                        <MenuItem value="">
-                          <em>{t?.notSelected ?? 'Not selected (S3 disabled)'}</em>
-                        </MenuItem>
-                        {/* Current bucket if not in list */}
-                        {globalSettings.s3DefaultBucket &&
-                         !s3Buckets.some(b => b.name === globalSettings.s3DefaultBucket) && (
-                          <MenuItem value={globalSettings.s3DefaultBucket}>
-                            {globalSettings.s3DefaultBucket} ({t?.saved ?? 'saved'})
-                          </MenuItem>
-                        )}
-                        {s3Buckets.map(bucket => (
-                          <MenuItem key={bucket.name} value={bucket.name}>
-                            {bucket.name}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      <FormHelperText>
-                        {!s3Configured && s3Error ? (
-                          <Box component="span" sx={{ color: 'error.main' }}>
-                            {s3Error}
-                          </Box>
-                        ) : validatingBucket ? (
-                          t?.checking ?? 'Checking...'
-                        ) : bucketValidation ? (
-                          bucketValidation.accessible ? (
-                            <Box component="span" sx={{ color: 'success.main' }}>
-                              ✅ {t?.bucketAccessible ?? 'Bucket accessible'}
-                            </Box>
-                          ) : (
-                            <Box component="span" sx={{ color: 'error.main' }}>
-                              ❌ {bucketValidation.error || (t?.bucketNotAccessible ?? 'Bucket not accessible')}
-                            </Box>
-                          )
-                        ) : !s3Configured ? (
-                          <Box component="span" sx={{ color: 'warning.main' }}>
-                            ⚠️ {t?.configureS3InEnv ?? 'Configure S3 in .env file'}
-                          </Box>
-                        ) : (
-                          t?.selectOrCreateBucket ?? 'Select bucket or create new'
-                        )}
-                      </FormHelperText>
-                    </FormControl>
-                  </Box>
-                </Grid>
-
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={2}>
                   <FormControlLabel
-                    control={
+    control={
                       <Switch
                         checked={globalSettings.organizeByDate}
                         onChange={e => updateGlobal('organizeByDate', e.target.checked)}
                       />
                     }
-                    label={t?.organizeByDate ?? 'Organize by date (2025/11/)'}
+                    label={t?.organizeByDate ?? 'By date'}
                   />
                 </Grid>
 
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={2}>
                   <FormControlLabel
                     control={
                       <Switch
@@ -555,7 +537,7 @@ export default function MediaSettings() {
                         onChange={e => updateGlobal('organizeByEntityType', e.target.checked)}
                       />
                     }
-                    label={t?.organizeByEntityType ?? 'Organize by entity type'}
+                    label={t?.organizeByEntityType ?? 'By entity type'}
                   />
                 </Grid>
 
@@ -570,7 +552,7 @@ export default function MediaSettings() {
                     </Typography>
                   </Box>
                   <Divider sx={{ mb: 2 }} />
-                </Grid>
+</Grid>
 
                 <Grid item xs={12} md={3}>
                   <TextField
@@ -593,7 +575,7 @@ export default function MediaSettings() {
                   />
                 </Grid>
 
-                <Grid item xs={12} md={3}>
+<Grid item xs={12} md={3}>
                   <TextField
                     fullWidth
                     type="number"
@@ -613,7 +595,7 @@ export default function MediaSettings() {
                       />
                     }
                     label={t?.convertToWebP ?? 'Convert to WebP'}
-                  />
+  />
                 </Grid>
 
                 {/* S3 Settings */}
@@ -629,7 +611,7 @@ export default function MediaSettings() {
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
 
-                <Grid item xs={12} md={3}>
+                <Grid item xs={12}>
                   <FormControlLabel
                     control={
                       <Switch
@@ -641,32 +623,99 @@ export default function MediaSettings() {
                   />
                 </Grid>
 
-                <Grid item xs={12} md={4}>
-                  <FormControl fullWidth disabled={!globalSettings.s3Enabled || loadingServices}>
-                    <InputLabel>{t?.s3Server ?? 'S3 Server'}</InputLabel>
+                <Grid item xs={12} md={3}>
+                  <TextField
+                    select
+                    fullWidth
+                    disabled={!globalSettings?.s3Enabled || loadingServices}
+                    label={t?.s3Server ?? 'S3 Server'}
+                    value={globalSettings?.s3ServiceId ?? 'default'}
+                    onChange={e => handleS3ServerChange(e.target.value)}
+                    SelectProps={{ native: true }}
+                    helperText={loadingServices ? (t?.loading ?? 'Loading...') :
+                      s3Services.length === 0 ? (t?.noS3Services ?? 'No S3 services') :
+      (t?.selectS3Server ?? 'Select server')}
+                  >
+                    <option value="default">{t?.defaultEnv ?? 'Default (from .env)'}</option>
+                    {s3Services.map(service => (
+                      <option
+                        key={service.id}
+                        value={service.id}
+                        disabled={!service.enabled}
+                      >
+                        {service.displayName} ({service.host})
+                        {!service.enabled && ' ⚠️ disabled'}
+                      </option>
+                    ))}
+                  </TextField>
+                </Grid>
+
+                <Grid item xs={12} md={3}>
+                  <FormControl fullWidth disabled={!globalSettings.s3Enabled || loadingBuckets}>
+                    <InputLabel id="s3-bucket-label">{t?.s3Bucket ?? 'S3 Bucket'}</InputLabel>
                     <Select
-                      value={globalSettings.s3ServiceId || ''}
-                      onChange={e => updateGlobal('s3ServiceId', e.target.value || null)}
-                      label={t?.s3Server ?? 'S3 Server'}
+                      labelId="s3-bucket-label"
+      value={globalSettings.s3DefaultBucket || ''}
+                      onChange={e => handleBucketChange(e.target.value)}
+                      label={t?.s3Bucket ?? 'S3 Bucket'}
+                      endAdornment={
+                        <Box sx={{ display: 'flex', mr: 5 }}>
+                          {loadingBuckets && <CircularProgress size={16} />}
+                          {!loadingBuckets && (
+                            <>
+                              <Tooltip title={t?.refreshList ?? 'Refresh'}>
+                                <IconButton size="small" onClick={() => fetchBuckets(globalSettings.s3ServiceId)}>
+                                  <i className="ri-refresh-line" style={{ fontSize: 16 }} />
+                                </IconButton>
+              </Tooltip>
+                              <Tooltip title={s3Configured ? (t?.createNewBucket ?? 'Create') : (t?.s3NotConfigured ?? 'S3 not configured')}>
+                                <span>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => setCreateDialogOpen(true)}
+                                    disabled={!s3Configured || !globalSettings.s3Enabled}
+                                  >
+                                    <i className="ri-add-line" style={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </span>
+                              </Tooltip>
+                            </>
+                          )}
+                        </Box>
+                      }
                     >
                       <MenuItem value="">
-                        <em>{t?.defaultEnv ?? 'Default (from .env)'}</em>
+                        <em>{t?.notSelected ?? 'Not selected'}</em>
                       </MenuItem>
-                      {s3Services.filter(s => s.enabled).map(service => (
-                        <MenuItem key={service.id} value={service.id}>
-                          {service.displayName} ({service.host})
+                      {globalSettings.s3DefaultBucket &&
+                       !s3Buckets.some(b => b.name === globalSettings.s3DefaultBucket) && (
+                        <MenuItem value={globalSettings.s3DefaultBucket}>
+                          {globalSettings.s3DefaultBucket} ({t?.saved ?? 'saved'})
+                        </MenuItem>
+                      )}
+                      {s3Buckets.map(bucket => (
+                        <MenuItem key={bucket.name} value={bucket.name}>
+                          {bucket.name}
                         </MenuItem>
                       ))}
                     </Select>
                     <FormHelperText>
-                      {loadingServices ? (t?.loading ?? 'Loading...') :
-                       s3Services.length === 0 ? (t?.noS3Services ?? 'No S3 services configured') :
-                       (t?.selectS3Server ?? 'Select S3 server or use default from .env')}
+                      {!s3Configured && s3Error ? (
+                        <Box component="span" sx={{ color: 'error.main' }}>{s3Error}</Box>
+                      ) : validatingBucket ? (
+                        t?.checking ?? 'Checking...'
+                      ) : bucketValidation?.accessible ? (
+                        <Box component="span" sx={{ color: 'success.main' }}>✅ {t?.bucketAccessible ?? 'OK'}</Box>
+                      ) : bucketValidation ? (
+                        <Box component="span" sx={{ color: 'error.main' }}>❌ {t?.bucketNotAccessible ?? 'Error'}</Box>
+                      ) : (
+                        t?.selectOrCreateBucket ?? 'Select bucket'
+)}
                     </FormHelperText>
                   </FormControl>
                 </Grid>
 
-                <Grid item xs={12} md={5}>
+                <Grid item xs={12} md={3}>
                   <FormControl fullWidth disabled={!globalSettings.s3Enabled}>
                     <InputLabel>{t?.storageLocation ?? 'Storage Location'}</InputLabel>
                     <Select
@@ -675,15 +724,29 @@ export default function MediaSettings() {
                       label={t?.storageLocation ?? 'Storage Location'}
                     >
                       <MenuItem value="local">{t?.localOnly ?? 'Local only'}</MenuItem>
-                      <MenuItem value="s3">{t?.s3Only ?? 'S3 only (delete local after sync)'}</MenuItem>
-                      <MenuItem value="both">{t?.localAndS3 ?? 'Local + S3 (keep both)'}</MenuItem>
+                      <MenuItem value="s3">{t?.s3Only ?? 'S3 only'}</MenuItem>
+                      <MenuItem value="both">{t?.localAndS3 ?? 'Local + S3'}</MenuItem>
                     </Select>
                     <FormHelperText>
-                      {globalSettings.storageLocation === 'local' ? (t?.storageLocalHelp ?? 'Files stored only on local server') :
-                       globalSettings.storageLocation === 's3' ? (t?.storageS3Help ?? 'Local files deleted after S3 sync') :
-                       (t?.storageBothHelp ?? 'Files stored in both locations')}
+                      {globalSettings.storageLocation === 'local' ? (t?.storageLocalHelp ?? 'Only local') :
+                       globalSettings.storageLocation === 's3' ? (t?.storageS3Help ?? 'Delete local after sync') :
+                       (t?.storageBothHelp ?? 'Keep both copies')}
                     </FormHelperText>
                   </FormControl>
+                </Grid>
+
+                <Grid item xs={12} md={3}>
+                  <FormControlLabel
+                    sx={{ mt: 2 }}
+                    control={
+                      <Switch
+                        checked={globalSettings.s3DeleteWithLocal}
+                        onChange={e => updateGlobal('s3DeleteWithLocal', e.target.checked)}
+                        disabled={!globalSettings.s3Enabled}
+                      />
+}
+                    label={t?.deleteFromS3OnHardDelete ?? 'Delete S3 on hard delete'}
+                  />
                 </Grid>
 
                 {/* Sync Behavior */}
@@ -702,7 +765,7 @@ export default function MediaSettings() {
                     </Grid>
 
                     <Grid item xs={12} md={6}>
-                      <FormControl fullWidth>
+<FormControl fullWidth>
                         <InputLabel>{t?.syncMode ?? 'Sync Mode'}</InputLabel>
                         <Select
                           value={globalSettings.syncMode}
@@ -736,7 +799,7 @@ export default function MediaSettings() {
                         />
                       </Grid>
                     )}
-                  </>
+      </>
                 )}
 
                 {/* Trash / Deletion */}
@@ -752,9 +815,9 @@ export default function MediaSettings() {
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
 
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={6}>
                   <TextField
-                    select
+                   select
                     fullWidth
                     label={t?.defaultDeleteMode ?? 'Default delete mode'}
                     value={globalSettings.deleteMode}
@@ -767,7 +830,7 @@ export default function MediaSettings() {
                   </TextField>
                 </Grid>
 
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={6}>
                   <TextField
                     fullWidth
                     type="number"
@@ -781,55 +844,112 @@ export default function MediaSettings() {
                   />
                 </Grid>
 
-                <Grid item xs={12} md={4}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={globalSettings.s3DeleteWithLocal}
-                        onChange={e => updateGlobal('s3DeleteWithLocal', e.target.checked)}
-                        disabled={!globalSettings.s3Enabled}
-                      />
-                    }
-                    label={t?.deleteFromS3OnHardDelete ?? 'Delete from S3 on hard delete'}
-                  />
-                </Grid>
-
-                {/* Cleanup */}
+                {/* Orphan Files Statistics */}
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, mt: 2 }}>
                     <CustomAvatar color="warning" skin="light" size={38}>
                       <i className="ri-file-shred-line" />
                     </CustomAvatar>
                     <Typography variant="subtitle1" fontWeight={500}>
-                      {t?.orphanCleanup ?? 'Orphan file cleanup'}
+                      {t?.orphanFiles ?? 'Orphan Files'}
                     </Typography>
                   </Box>
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
 
-                <Grid item xs={12} md={4}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={globalSettings.autoDeleteOrphans}
-                        onChange={e => updateGlobal('autoDeleteOrphans', e.target.checked)}
-                      />
-                    }
-                    label={t?.deleteOrphanFiles ?? 'Delete orphan files'}
-                  />
-                </Grid>
-
-                <Grid item xs={12} md={4}>
-                  <TextField
-                    fullWidth
-                    type="number"
-                    label={t?.keepOrphans ?? 'Keep orphans (days)'}
-                    value={globalSettings.orphanRetentionDays}
-                    onChange={e => updateGlobal('orphanRetentionDays', parseInt(e.target.value))}
-                    disabled={!globalSettings.autoDeleteOrphans}
-                    helperText={t?.orphanFilesHelp ?? 'Files not linked to any entity'}
-                  />
-                </Grid>
+                {loadingOrphans ? (
+                  <Grid item xs={12}>
+                    <Skeleton variant="rectangular" height={120} />
+                  </Grid>
+                ) : orphanStats ? (
+                  <>
+                    <Grid item xs={12} md={3}>
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            {t?.dbOrphans ?? 'DB Orphans'}
+                          </Typography>
+                          <Typography variant="h5">
+                            {orphanStats.dbOrphans}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            {t?.diskOrphans ?? 'Disk Orphans'}
+                          </Typography>
+                          <Typography variant="h5">
+                            {orphanStats.diskOrphans}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            {t?.totalOrphans ?? 'Total'}
+                          </Typography>
+                          <Typography variant="h5">
+                            {orphanStats.totalCount}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12} md={3}>
+                      <Card variant="outlined">
+                        <CardContent>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            {t?.totalSize ?? 'Total Size'}
+                          </Typography>
+                          <Typography variant="h5">
+                            {orphanStats.totalSizeFormatted}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button
+                          variant="outlined"
+                          onClick={() => fetchOrphanStats()}
+                          startIcon={<i className="ri-refresh-line" />}
+                        >
+                          {t?.refresh ?? 'Refresh'}
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            // TODO: Open dialog with orphan files list
+                            toast.info('Orphan files list view - coming soon')
+                          }}
+                          startIcon={<i className="ri-eye-line" />}
+                        >
+                          {t?.view ?? 'View'}
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          onClick={() => {
+                            // TODO: Export orphan files list
+                            toast.info('Export orphan files - coming soon')
+                          }}
+                          startIcon={<i className="ri-download-line" />}
+                        >
+                          {t?.export ?? 'Export'}
+                        </Button>
+                      </Box>
+                    </Grid>
+                  </>
+                ) : (
+                  <Grid item xs={12}>
+                    <Alert severity="info">
+                      {t?.noOrphanStats ?? 'Orphan statistics not available'}
+                    </Alert>
+                  </Grid>
+                )}
               </Grid>
             )}
           </CardContent>

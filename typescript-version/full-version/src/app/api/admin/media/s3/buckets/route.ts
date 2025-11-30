@@ -9,12 +9,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { S3Adapter } from '@/services/media/storage/S3Adapter'
+import { prisma } from '@/libs/prisma'
+import { safeDecrypt } from '@/lib/config/encryption'
 import logger from '@/lib/logger'
 
 /**
  * Получить конфигурацию S3 из переменных окружения
  */
-function getS3Config() {
+function getS3ConfigFromEnv() {
   const endpoint = process.env.S3_ENDPOINT
   const accessKeyId = process.env.S3_ACCESS_KEY || process.env.S3_ACCESS_KEY_ID
   const secretAccessKey = process.env.S3_SECRET_KEY || process.env.S3_SECRET_ACCESS_KEY
@@ -35,8 +37,40 @@ function getS3Config() {
 }
 
 /**
+ * Получить конфигурацию S3 из ServiceConfiguration по ID
+ */
+async function getS3ConfigFromService(serviceId: string) {
+  const service = await prisma.serviceConfiguration.findUnique({
+    where: { id: serviceId }
+  })
+
+  if (!service || service.type !== 'S3') {
+    return null
+  }
+
+  if (!service.username || !service.password) {
+    return null
+  }
+
+  const metadata = JSON.parse(service.metadata || '{}')
+  const protocol = (service.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
+
+  return {
+    endpoint: service.port 
+      ? `${protocol}://${service.host}:${service.port}`
+      : `${protocol}://${service.host}`,
+    accessKeyId: service.username,
+    secretAccessKey: safeDecrypt(service.password),
+    region: metadata.region || 'us-east-1',
+    forcePathStyle: metadata.forcePathStyle ?? true,
+  }
+}
+
+/**
  * GET /api/admin/media/s3/buckets
  * Получить список всех bucket'ов
+ * Query params:
+ *   - serviceId: ID сервиса из ServiceConfiguration (опционально)
  */
 export async function GET(request: NextRequest) {
   try {
@@ -61,21 +95,48 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const s3Config = getS3Config()
+    // Check for serviceId query parameter
+    const { searchParams } = new URL(request.url)
+    const serviceId = searchParams.get('serviceId')
 
-    if (!s3Config) {
-      return NextResponse.json({
-        configured: false,
-        buckets: [],
-        error: 'S3 не настроен. Укажите S3_ENDPOINT, S3_ACCESS_KEY и S3_SECRET_KEY в .env',
-      })
+    let s3Config
+
+    if (serviceId) {
+      // Get config from ServiceConfiguration
+      s3Config = await getS3ConfigFromService(serviceId)
+      if (!s3Config) {
+        return NextResponse.json({
+          configured: false,
+          buckets: [],
+          error: 'S3 сервис не найден или не настроен',
+        })
+      }
+      logger.debug('[S3 Buckets API] Using service config', { serviceId })
+    } else {
+      // Get config from ENV
+      s3Config = getS3ConfigFromEnv()
+      const defaultBucket = process.env.S3_BUCKET
+      
+      if (!s3Config) {
+        return NextResponse.json({
+          configured: false,
+          buckets: [],
+          defaultBucket: defaultBucket || null,
+          error: 'S3 не настроен. Укажите S3_ENDPOINT, S3_ACCESS_KEY и S3_SECRET_KEY в .env',
+        })
+      }
+      logger.debug('[S3 Buckets API] Using ENV config', { defaultBucket })
     }
+
+    // Get default bucket from env (only for default/env config)
+    const defaultBucket = !serviceId ? process.env.S3_BUCKET : null
 
     try {
       const buckets = await S3Adapter.listBucketsStatic(s3Config)
 
       return NextResponse.json({
         configured: true,
+        defaultBucket: defaultBucket || null,
         buckets: buckets.map(b => ({
           name: b.name,
           creationDate: b.creationDate?.toISOString(),
@@ -84,6 +145,7 @@ export async function GET(request: NextRequest) {
     } catch (error: any) {
       logger.error('[S3 Buckets API] Failed to list buckets', {
         error: error.message,
+        serviceId,
       })
 
       return NextResponse.json({
@@ -118,7 +180,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { bucketName } = body
+    const { bucketName, serviceId } = body
 
     if (!bucketName || typeof bucketName !== 'string') {
       return NextResponse.json(
@@ -138,19 +200,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const s3Config = getS3Config()
+    let s3Config
 
-    if (!s3Config) {
-      return NextResponse.json(
-        { error: 'S3 не настроен. Укажите переменные окружения S3_*' },
-        { status: 400 }
-      )
+    if (serviceId) {
+      s3Config = await getS3ConfigFromService(serviceId)
+      if (!s3Config) {
+        return NextResponse.json(
+          { error: 'S3 сервис не найден или не настроен' },
+          { status: 400 }
+        )
+      }
+    } else {
+      s3Config = getS3ConfigFromEnv()
+      if (!s3Config) {
+        return NextResponse.json(
+          { error: 'S3 не настроен. Укажите переменные окружения S3_*' },
+          { status: 400 }
+        )
+      }
     }
 
     try {
       await S3Adapter.createBucketStatic(s3Config, bucketName)
 
-      logger.info('[S3 Buckets API] Bucket created', { bucketName })
+      logger.info('[S3 Buckets API] Bucket created', { bucketName, serviceId })
 
       return NextResponse.json({
         success: true,
@@ -160,6 +233,7 @@ export async function POST(request: NextRequest) {
     } catch (error: any) {
       logger.error('[S3 Buckets API] Failed to create bucket', {
         bucketName,
+        serviceId,
         error: error.message,
       })
 

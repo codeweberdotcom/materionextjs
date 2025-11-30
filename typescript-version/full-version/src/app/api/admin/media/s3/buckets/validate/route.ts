@@ -8,12 +8,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { S3Adapter } from '@/services/media/storage/S3Adapter'
+import { prisma } from '@/libs/prisma'
+import { safeDecrypt } from '@/lib/config/encryption'
 import logger from '@/lib/logger'
 
 /**
  * Получить конфигурацию S3 из переменных окружения
  */
-function getS3Config() {
+function getS3ConfigFromEnv() {
   const endpoint = process.env.S3_ENDPOINT
   const accessKeyId = process.env.S3_ACCESS_KEY || process.env.S3_ACCESS_KEY_ID
   const secretAccessKey = process.env.S3_SECRET_KEY || process.env.S3_SECRET_ACCESS_KEY
@@ -34,8 +36,41 @@ function getS3Config() {
 }
 
 /**
+ * Получить конфигурацию S3 из ServiceConfiguration по ID
+ */
+async function getS3ConfigFromService(serviceId: string) {
+  const service = await prisma.serviceConfiguration.findUnique({
+    where: { id: serviceId }
+  })
+
+  if (!service || service.type !== 'S3') {
+    return null
+  }
+
+  if (!service.username || !service.password) {
+    return null
+  }
+
+  const metadata = JSON.parse(service.metadata || '{}')
+  const protocol = (service.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
+
+  return {
+    endpoint: service.port 
+      ? `${protocol}://${service.host}:${service.port}`
+      : `${protocol}://${service.host}`,
+    accessKeyId: service.username,
+    secretAccessKey: safeDecrypt(service.password),
+    region: metadata.region || 'us-east-1',
+    forcePathStyle: metadata.forcePathStyle ?? true,
+  }
+}
+
+/**
  * POST /api/admin/media/s3/buckets/validate
  * Проверить существование и доступность bucket'а
+ * Body:
+ *   - bucketName: имя bucket
+ *   - serviceId: ID сервиса (опционально)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -49,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { bucketName } = body
+    const { bucketName, serviceId } = body
 
     if (!bucketName || typeof bucketName !== 'string') {
       return NextResponse.json(
@@ -58,14 +93,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const s3Config = getS3Config()
+    let s3Config
 
-    if (!s3Config) {
-      return NextResponse.json({
-        exists: false,
-        accessible: false,
-        error: 'S3 не настроен',
-      })
+    if (serviceId) {
+      s3Config = await getS3ConfigFromService(serviceId)
+      if (!s3Config) {
+        return NextResponse.json({
+          exists: false,
+          accessible: false,
+          error: 'S3 сервис не найден или не настроен',
+        })
+      }
+    } else {
+      s3Config = getS3ConfigFromEnv()
+      if (!s3Config) {
+        return NextResponse.json({
+          exists: false,
+          accessible: false,
+          error: 'S3 не настроен',
+        })
+      }
     }
 
     try {
@@ -73,6 +120,7 @@ export async function POST(request: NextRequest) {
 
       logger.debug('[S3 Validate API] Bucket validation', {
         bucketName,
+        serviceId,
         result,
       })
 
@@ -80,6 +128,7 @@ export async function POST(request: NextRequest) {
     } catch (error: any) {
       logger.error('[S3 Validate API] Validation failed', {
         bucketName,
+        serviceId,
         error: error.message,
       })
 
@@ -98,4 +147,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

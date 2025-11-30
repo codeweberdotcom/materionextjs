@@ -10,7 +10,8 @@ import { z } from 'zod'
 import fs from 'fs/promises'
 import path from 'path'
 
-import { checkRole } from '@/lib/auth-helpers'
+import { requireAuth } from '@/utils/auth/auth'
+import { isSuperadmin } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
 import type { OrphanStats, OrphanFile } from '@/services/media/types'
@@ -66,11 +67,12 @@ async function getAllFiles(dirPath: string, arrayOfFiles: string[] = []): Promis
 export async function GET(request: NextRequest) {
   try {
     // Check auth
-    const session = await checkRole(['admin', 'superadmin'])
-    if (!session) {
+    const { user } = await requireAuth(request)
+    
+    if (!isSuperadmin(user)) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
+        { error: 'Forbidden: Superadmin access required' },
+        { status: 403 }
       )
     }
 
@@ -231,4 +233,5 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
 

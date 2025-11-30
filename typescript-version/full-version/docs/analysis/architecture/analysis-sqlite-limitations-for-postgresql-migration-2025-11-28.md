@@ -302,3 +302,4 @@ if (currentResults.length > 100) {
 - [Отчёт: Исправления SQLite timeout](../../reports/fixes/report-media-sync-sqlite-fixes-2025-11-28.md)
 
 
+
