@@ -100,43 +100,69 @@ export async function GET(request: NextRequest) {
     const serviceId = searchParams.get('serviceId')
 
     let s3Config
+    const defaultBucket = process.env.S3_BUCKET || null
 
     if (serviceId) {
-      // Get config from ServiceConfiguration
+      // Get service from DB to check if bucket is pre-configured
+      const service = await prisma.serviceConfiguration.findUnique({
+        where: { id: serviceId }
+      })
+
+      if (!service || service.type !== 'S3') {
+        return NextResponse.json({
+          configured: false,
+          buckets: [],
+          error: 'S3 сервис не найден',
+        })
+      }
+
+      // Check if bucket is configured in service metadata
+      const metadata = JSON.parse(service.metadata || '{}')
+      if (metadata.bucket) {
+        // Bucket is pre-configured - return only this bucket without ListBuckets call
+        logger.debug('[S3 Buckets API] Using pre-configured bucket from service', { 
+          serviceId, 
+          bucket: metadata.bucket 
+        })
+        
+        return NextResponse.json({
+          configured: true,
+          buckets: [{ name: metadata.bucket }],
+          preConfigured: true, // Flag to indicate bucket was pre-configured
+        })
+      }
+
+      // No pre-configured bucket - try to list from server
       s3Config = await getS3ConfigFromService(serviceId)
       if (!s3Config) {
         return NextResponse.json({
           configured: false,
           buckets: [],
-          error: 'S3 сервис не найден или не настроен',
+          error: 'S3 сервис не настроен (нет credentials)',
         })
       }
-      logger.debug('[S3 Buckets API] Using service config', { serviceId })
+      logger.debug('[S3 Buckets API] Listing buckets from service', { serviceId })
     } else {
       // Get config from ENV
       s3Config = getS3ConfigFromEnv()
-      const defaultBucket = process.env.S3_BUCKET
       
       if (!s3Config) {
         return NextResponse.json({
           configured: false,
           buckets: [],
-          defaultBucket: defaultBucket || null,
+          defaultBucket,
           error: 'S3 не настроен. Укажите S3_ENDPOINT, S3_ACCESS_KEY и S3_SECRET_KEY в .env',
         })
       }
       logger.debug('[S3 Buckets API] Using ENV config', { defaultBucket })
     }
 
-    // Get default bucket from env (only for default/env config)
-    const defaultBucket = !serviceId ? process.env.S3_BUCKET : null
-
     try {
       const buckets = await S3Adapter.listBucketsStatic(s3Config)
 
       return NextResponse.json({
         configured: true,
-        defaultBucket: defaultBucket || null,
+        defaultBucket: serviceId ? null : defaultBucket, // Only return defaultBucket for ENV config
         buckets: buckets.map(b => ({
           name: b.name,
           creationDate: b.creationDate?.toISOString(),
@@ -251,4 +277,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-

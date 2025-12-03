@@ -18,6 +18,7 @@ import Box from '@mui/material/Box'
 import CircularProgress from '@mui/material/CircularProgress'
 import LinearProgress from '@mui/material/LinearProgress'
 import Chip from '@mui/material/Chip'
+import Checkbox from '@mui/material/Checkbox'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
@@ -35,6 +36,7 @@ import Alert from '@mui/material/Alert'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import Skeleton from '@mui/material/Skeleton'
+import Divider from '@mui/material/Divider'
 
 import { toast } from 'react-toastify'
 
@@ -187,6 +189,69 @@ export default function MediaSync() {
 
   const [accessDenied, setAccessDenied] = useState(false)
 
+  // Row selection for bulk operations
+  const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set())
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  
+  // Track cancelling jobs
+  const [cancellingJobs, setCancellingJobs] = useState<Set<string>>(new Set())
+
+  // Row selection handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedJobs(new Set(jobs.map(job => job.id)))
+    } else {
+      setSelectedJobs(new Set())
+    }
+  }
+
+  const handleSelectJob = (jobId: string, checked: boolean) => {
+    setSelectedJobs(prev => {
+      const newSet = new Set(prev)
+      if (checked) {
+        newSet.add(jobId)
+      } else {
+        newSet.delete(jobId)
+      }
+      return newSet
+    })
+  }
+
+  const isAllSelected = jobs.length > 0 && selectedJobs.size === jobs.length
+  const isSomeSelected = selectedJobs.size > 0 && selectedJobs.size < jobs.length
+
+  // Bulk delete handler
+  const handleBulkDelete = async () => {
+    if (selectedJobs.size === 0) return
+    
+    if (!confirm(t?.confirmBulkDelete?.replace('{count}', String(selectedJobs.size)) || `Delete ${selectedJobs.size} selected tasks?`)) {
+      return
+    }
+
+    setDeleteLoading(true)
+    try {
+      const response = await fetch('/api/admin/media/sync/bulk', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jobIds: Array.from(selectedJobs) }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to delete jobs')
+      }
+
+      const result = await response.json()
+      toast.success(t?.bulkDeleteSuccess?.replace('{count}', String(result.deleted)) || `Deleted ${result.deleted} tasks`)
+      setSelectedJobs(new Set())
+      fetchJobs()
+    } catch (error: any) {
+      toast.error(error.message || t?.bulkDeleteError || 'Error deleting tasks')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
   // Get translated operation label
   const getOperationLabel = useCallback((operation: string): string => {
     const operations = t?.operations as Record<string, string> | undefined
@@ -245,6 +310,9 @@ export default function MediaSync() {
     return () => clearInterval(interval)
   }, [fetchJobs])
 
+  // Abort controller for cancelling create request
+  const [createAbortController, setCreateAbortController] = useState<AbortController | null>(null)
+
   const createJob = async () => {
     if (!newAction) {
       toast.error(t?.selectAction || 'Select an action')
@@ -266,9 +334,22 @@ export default function MediaSync() {
     executeCreateJob(newAction)
   }
 
+  const cancelCreateJob = () => {
+    if (createAbortController) {
+      createAbortController.abort()
+      setCreateAbortController(null)
+      setCreating(false)
+      toast.info(t?.createCancelled || 'Task creation cancelled')
+    }
+  }
+
   const executeCreateJob = async (action: string) => {
     setCreating(true)
     setConfirmDangerOpen(false)
+    
+    // Create abort controller for this request
+    const controller = new AbortController()
+    setCreateAbortController(controller)
     try {
       const response = await fetch('/api/admin/media/sync', {
         method: 'POST',
@@ -278,6 +359,7 @@ export default function MediaSync() {
           scope: newScope,
           entityType: newScope === 'entity_type' ? newEntityType : undefined,
         }),
+        signal: controller.signal,
       })
       
       if (!response.ok) {
@@ -319,14 +401,19 @@ export default function MediaSync() {
       // Refresh task list
       fetchJobs()
     } catch (error: any) {
+      // Don't show error toast if request was aborted
+      if (error.name === 'AbortError') {
+        return
+      }
       toast.error(error.message || t?.createError || 'Error creating task')
     } finally {
       setCreating(false)
+      setCreateAbortController(null)
     }
   }
 
   const cancelJob = async (jobId: string) => {
-    if (!confirm(t?.cancelTask || 'Cancel this task?')) return
+    setCancellingJobs(prev => new Set(prev).add(jobId))
     
     try {
       const response = await fetch(`/api/admin/media/sync/${jobId}`, { method: 'DELETE' })
@@ -336,6 +423,12 @@ export default function MediaSync() {
       fetchJobs()
     } catch (error) {
       toast.error(t?.cancelError || 'Error cancelling task')
+    } finally {
+      setCancellingJobs(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(jobId)
+        return newSet
+      })
     }
   }
 
@@ -471,6 +564,43 @@ export default function MediaSync() {
               </Button>
             }
           />
+          {/* Bulk actions toolbar */}
+          {selectedJobs.size > 0 && (
+            <>
+              <Divider />
+              <Box sx={{ 
+                px: 3, 
+                py: 2, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                bgcolor: 'action.hover'
+              }}>
+                <Typography variant="body2" color="text.secondary">
+                  {t?.selected || 'Selected'}: <strong>{selectedJobs.size}</strong>
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => setSelectedJobs(new Set())}
+                  >
+                    {t?.clearSelection || 'Clear'}
+                  </Button>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    color="error"
+                    onClick={handleBulkDelete}
+                    disabled={deleteLoading}
+                    startIcon={deleteLoading ? <CircularProgress size={16} color="inherit" /> : <i className="ri-delete-bin-line" />}
+                  >
+                    {deleteLoading ? (t?.deleting || 'Deleting...') : (t?.deleteSelected || 'Delete selected')}
+                  </Button>
+                </Box>
+              </Box>
+            </>
+          )}
           <CardContent>
             {jobs.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 8 }}>
@@ -480,6 +610,13 @@ export default function MediaSync() {
               <Table>
                 <TableHead>
                   <TableRow>
+                    <TableCell padding="checkbox">
+                      <Checkbox
+                        checked={isAllSelected}
+                        indeterminate={isSomeSelected}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                      />
+                    </TableCell>
                     <TableCell>{t?.operation || 'Operation'}</TableCell>
                     <TableCell>{t?.scope || 'Scope'}</TableCell>
                     <TableCell>{t?.status || 'Status'}</TableCell>
@@ -492,7 +629,16 @@ export default function MediaSync() {
                 </TableHead>
                 <TableBody>
                   {jobs.map(job => (
-                    <TableRow key={job.id}>
+                    <TableRow 
+                      key={job.id}
+                      selected={selectedJobs.has(job.id)}
+                    >
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          checked={selectedJobs.has(job.id)}
+                          onChange={(e) => handleSelectJob(job.id, e.target.checked)}
+                        />
+                      </TableCell>
                       <TableCell>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -529,7 +675,7 @@ export default function MediaSync() {
                           color={getStatusColor(job.status)}
                         />
                       </TableCell>
-                      <TableCell sx={{ minWidth: 200 }}>
+                      <TableCell sx={{ minWidth: 250 }}>
                         {(() => {
                           // For parent job aggregate from children
                           const processedFiles = job.isParent && job.childJobs
@@ -539,13 +685,35 @@ export default function MediaSync() {
                             ? job.childJobs.reduce((sum, c) => sum + c.failedFiles, 0)
                             : job.failedFiles
                           
+                          const isCancelling = cancellingJobs.has(job.id)
+                          
                           return job.status === 'processing' ? (
                             <Box>
-                              <LinearProgress 
-                                variant="determinate" 
-                                value={job.totalFiles > 0 ? (processedFiles / job.totalFiles) * 100 : 0}
-                                sx={{ mb: 0.5 }}
-                              />
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                <Box sx={{ flex: 1 }}>
+                                  <LinearProgress 
+                                    variant="determinate" 
+                                    value={job.totalFiles > 0 ? (processedFiles / job.totalFiles) * 100 : 0}
+                                  />
+                                </Box>
+                                <Button
+                                  size="small"
+                                  color="error"
+                                  variant="outlined"
+                                  onClick={() => cancelJob(job.id)}
+                                  disabled={isCancelling}
+                                  startIcon={isCancelling ? <CircularProgress size={14} color="inherit" /> : <i className="ri-stop-circle-line" style={{ fontSize: 14 }} />}
+                                  sx={{ 
+                                    minWidth: 'auto', 
+                                    px: 1,
+                                    py: 0.25,
+                                    fontSize: '0.7rem',
+                                    lineHeight: 1.2
+                                  }}
+                                >
+                                  {isCancelling ? (t?.cancelling || 'Cancelling...') : (t?.stop || 'Stop')}
+                                </Button>
+                              </Box>
                               <Typography variant="caption" color="text.secondary">
                                 {processedFiles}/{job.totalFiles} {t?.files || 'files'}
                               </Typography>
@@ -591,26 +759,17 @@ export default function MediaSync() {
                         )}
                       </TableCell>
                       <TableCell align="right">
-                        {job.status === 'processing' && (
-                          <Tooltip title={t?.cancel || 'Cancel'}>
-                            <IconButton color="error" onClick={() => cancelJob(job.id)}>
-                              <i className="ri-stop-circle-line" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                        {(job.error || job.status === 'failed' || job.failedFiles > 0) && (
-                          <Tooltip title={t?.taskDetails || 'Task Details'}>
-                            <IconButton 
-                              color="error" 
-                              onClick={() => {
-                                setSelectedJob(job)
-                                setErrorDialogOpen(true)
-                              }}
-                            >
-                              <i className="ri-information-line" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
+                        <Tooltip title={t?.taskDetails || 'Task Details'}>
+                          <IconButton 
+                            color={(job.error || job.status === 'failed' || job.failedFiles > 0) ? 'error' : 'success'}
+                            onClick={() => {
+                              setSelectedJob(job)
+                              setErrorDialogOpen(true)
+                            }}
+                          >
+                            <i className="ri-information-line" />
+                          </IconButton>
+                        </Tooltip>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -683,6 +842,16 @@ export default function MediaSync() {
           <Button onClick={() => setDialogOpen(false)} variant="outlined" disabled={creating}>
             {t?.cancel || 'Cancel'}
           </Button>
+          {creating && (
+            <Button 
+              variant="outlined"
+              color="error"
+              onClick={cancelCreateJob}
+              startIcon={<i className="ri-close-line" />}
+            >
+              {t?.stopOperation || 'Stop'}
+            </Button>
+          )}
           <Button 
             variant="contained" 
             onClick={createJob}
@@ -958,9 +1127,20 @@ export default function MediaSync() {
               setConfirmDangerOpen(false)
               setPendingDangerAction('')
             }}
+            disabled={creating}
           >
             {t?.cancel || 'Cancel'}
           </Button>
+          {creating && (
+            <Button
+              variant="outlined"
+              color="warning"
+              onClick={cancelCreateJob}
+              startIcon={<i className="ri-close-line" />}
+            >
+              {t?.stopOperation || 'Stop'}
+            </Button>
+          )}
           <Button
             variant="contained"
             color="error"

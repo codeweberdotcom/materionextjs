@@ -7,8 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
-import { requireAuth } from '@/lib/auth/api-helpers'
-import { checkPermission } from '@/lib/permissions'
+import { requireAuth } from '@/utils/auth/auth'
+import { checkPermission } from '@/utils/permissions/permissions'
 import { slugService } from '@/services/slug'
 import { eventService } from '@/services/events'
 import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
@@ -28,7 +28,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { username: newUsername } = body
 
     // Проверяем права администратора
-    const hasPermission = await checkPermission(admin.id, 'users', 'edit')
+    const hasPermission = await checkPermission(admin, 'users', 'edit')
     if (!hasPermission) {
       return NextResponse.json(
         { error: 'Access denied. Admin permission required.' },

@@ -70,10 +70,9 @@ const AccountManagersPage = () => {
   }, [accountId])
 
   const handleAssignManager = async (email: string, permissions: {
-    canView: boolean
     canEdit: boolean
     canManage: boolean
-    canTransfer: boolean
+    canDelete: boolean
   }) => {
     setActionLoading(true)
     setError(null)

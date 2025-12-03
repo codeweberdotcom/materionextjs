@@ -19,6 +19,7 @@ import { getStorageService, StorageService } from '../storage'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
 import { mediaSyncQueue } from '../queue/MediaSyncQueue'
+import { eventService } from '@/services/events'
 
 /**
  * Конфигурация batch processing
@@ -56,7 +57,7 @@ export class MediaSyncService {
     createdBy?: string
   }) {
     return this.createSyncJob({
-      operation: 'upload_to_s3',
+      operation: 'upload_to_s3_with_delete',
       scope: options.scope,
       entityType: options.entityType,
       mediaIds: options.mediaIds,
@@ -77,7 +78,7 @@ export class MediaSyncService {
     createdBy?: string
   }) {
     return this.createSyncJob({
-      operation: 'upload_to_s3',
+      operation: 'upload_to_s3_keep_local',
       scope: options.scope,
       entityType: options.entityType,
       mediaIds: options.mediaIds,
@@ -97,8 +98,11 @@ export class MediaSyncService {
     deleteFromS3?: boolean
     createdBy?: string
   }) {
+    // Выбираем операцию в зависимости от флага deleteFromS3
+    const operation = options.deleteFromS3 ? 'download_from_s3_delete_s3' : 'download_from_s3'
+    
     return this.createSyncJob({
-      operation: 'download_from_s3',
+      operation,
       scope: options.scope,
       entityType: options.entityType,
       mediaIds: options.mediaIds,
@@ -118,7 +122,7 @@ export class MediaSyncService {
     createdBy?: string
   }) {
     return this.createSyncJob({
-      operation: 'delete_local',
+      operation: 'delete_local_only',
       scope: options.scope,
       entityType: options.entityType,
       mediaIds: options.mediaIds,
@@ -138,7 +142,7 @@ export class MediaSyncService {
     createdBy?: string
   }) {
     return this.createSyncJob({
-      operation: 'delete_s3',
+      operation: 'delete_s3_only',
       scope: options.scope,
       entityType: options.entityType,
       mediaIds: options.mediaIds,
@@ -211,18 +215,37 @@ export class MediaSyncService {
       totalFiles: mediaList.length,
     })
 
+    // Record event
+    await eventService.record({
+      source: 'media',
+      module: 'media',
+      type: 'media.sync_started',
+      severity: 'info',
+      message: `Задача синхронизации "${options.operation}" запущена (${mediaList.length} файлов)`,
+      payload: {
+        operation: options.operation,
+        scope: options.scope,
+        entityType: options.entityType,
+        totalFiles: mediaList.length,
+        deleteSource: options.deleteSource,
+        jobId: job.id,
+      },
+      actor: createdBy ? { type: 'user', id: createdBy } : undefined,
+      subject: { type: 'media_sync_job', id: job.id },
+    })
+
     // Добавляем все файлы в очередь параллельно
     await Promise.all(
       mediaList.map(media =>
         mediaSyncQueue.add({
-          operation: options.operation,
-          mediaId: media.id,
-          jobId: job.id,
-          options: {
-            deleteSource: options.deleteSource,
-            overwrite: options.overwrite,
-          },
-        })
+        operation: options.operation,
+        mediaId: media.id,
+        jobId: job.id,
+        options: {
+          deleteSource: options.deleteSource,
+          overwrite: options.overwrite,
+        },
+      })
       )
     )
 
@@ -255,12 +278,13 @@ export class MediaSyncService {
     const currentBucket = globalSettings?.s3DefaultBucket || process.env.S3_BUCKET || null
 
     // Создаём родительскую задачу
+    // Сохраняем mediaIds в parent для финальной проверки успеха (retries могут исправить ошибки)
     const parentJob = await prisma.mediaSyncJob.create({
       data: {
         operation: options.operation,
         scope: options.scope,
         entityType: options.entityType,
-        mediaIds: null, // Parent не хранит ID, они в child jobs
+        mediaIds: JSON.stringify(mediaList.map(m => m.id)),
         s3Bucket: currentBucket,
         deleteSource: options.deleteSource,
         overwrite: options.overwrite,
@@ -280,6 +304,26 @@ export class MediaSyncService {
       totalFiles: mediaList.length,
       batchCount: batches.length,
       batchSize,
+    })
+
+    // Record event for batch job
+    await eventService.record({
+      source: 'media',
+      module: 'media',
+      type: 'media.sync_started',
+      severity: 'info',
+      message: `Задача синхронизации "${options.operation}" запущена (${mediaList.length} файлов, ${batches.length} batch)`,
+      payload: {
+        operation: options.operation,
+        scope: options.scope,
+        entityType: options.entityType,
+        totalFiles: mediaList.length,
+        batchCount: batches.length,
+        deleteSource: options.deleteSource,
+        jobId: parentJob.id,
+      },
+      actor: createdBy ? { type: 'user', id: createdBy } : undefined,
+      subject: { type: 'media_sync_job', id: parentJob.id },
     })
 
     // Создаём child jobs для каждого batch
@@ -313,16 +357,16 @@ export class MediaSyncService {
       await Promise.all(
         batch.map(media =>
           mediaSyncQueue.add({
-            operation: options.operation,
-            mediaId: media.id,
-            jobId: childJob.id,
-            parentJobId: parentJob.id,
-            batchIndex: i,
-            options: {
-              deleteSource: options.deleteSource,
-              overwrite: options.overwrite,
-            },
-          })
+          operation: options.operation,
+          mediaId: media.id,
+          jobId: childJob.id,
+          parentJobId: parentJob.id,
+          batchIndex: i,
+          options: {
+            deleteSource: options.deleteSource,
+            overwrite: options.overwrite,
+          },
+        })
         )
       )
 
@@ -369,11 +413,13 @@ export class MediaSyncService {
 
     switch (options.operation) {
       case 'upload_to_s3':
-        // Файлы с локальным путём, которые:
-        // 1. Ещё не на S3 (s3Key = null), ИЛИ
-        // 2. Были загружены в другой bucket (s3Bucket != currentBucket)
+        // Файлы с локальным путём
         where.localPath = { not: null }
-        if (!options.overwrite) {
+        
+        // Если deleteSource=true — включаем ВСЕ файлы с localPath
+        // (чтобы удалить локальные даже если уже загружены на S3)
+        // Если deleteSource=false — только те что ещё не на S3
+        if (!options.deleteSource && !options.overwrite) {
           // Файлы которые нужно синхронизировать:
           // - s3Key = null (никогда не загружались)
           // - ИЛИ s3Bucket != currentBucket (загружены в другой bucket)
@@ -817,34 +863,61 @@ export class MediaSyncService {
       return
     }
 
-    // Агрегируем результаты
+    // Агрегируем результаты из дочерних задач
     const aggregated = childJobs.reduce(
       (acc, child) => ({
         processedFiles: acc.processedFiles + child.processedFiles,
-        failedFiles: acc.failedFiles + child.failedFiles,
+        attemptFailures: acc.attemptFailures + child.failedFiles, // Количество неудачных попыток (для отладки)
         processedBytes: acc.processedBytes + child.processedBytes,
         results: [...acc.results, ...JSON.parse(child.results || '[]')],
-        hasErrors: acc.hasErrors || child.failedFiles > 0,
       }),
-      { processedFiles: 0, failedFiles: 0, processedBytes: 0, results: [] as any[], hasErrors: false }
+      { processedFiles: 0, attemptFailures: 0, processedBytes: 0, results: [] as any[] }
     )
 
-    const status: SyncJobStatus = aggregated.failedFiles > 0 
+    // Получаем родительскую задачу для списка mediaIds
+    const parentJob = await prisma.mediaSyncJob.findUnique({
+      where: { id: parentJobId },
+      select: { mediaIds: true, operation: true }
+    })
+
+    // Для upload_to_s3: считаем реальное количество файлов без s3Key
+    // Это учитывает успешные retries - файл считается failed только если все попытки неуспешны
+    let realFailedFiles = 0
+    if (parentJob?.operation === 'upload_to_s3' && parentJob.mediaIds) {
+      const mediaIds = JSON.parse(parentJob.mediaIds)
+      const stillNotSynced = await prisma.media.count({
+        where: {
+          id: { in: mediaIds },
+          s3Key: null,
+          deletedAt: null
+        }
+      })
+      realFailedFiles = stillNotSynced
+    }
+
+    const status: SyncJobStatus = realFailedFiles > 0 
       ? (aggregated.processedFiles > 0 ? 'completed' : 'failed')
       : 'completed'
+
+    // Формируем сообщение об ошибках (включая информацию о retry)
+    let errorMessage: string | null = null
+    if (realFailedFiles > 0) {
+      errorMessage = `${realFailedFiles} files failed to sync`
+    } else if (aggregated.attemptFailures > 0) {
+      // Все файлы синхронизированы, но были неудачные попытки (исправлены retry)
+      errorMessage = null // Не ошибка, просто info в логах
+    }
 
     await prisma.mediaSyncJob.update({
       where: { id: parentJobId },
       data: {
         status,
         processedFiles: aggregated.processedFiles,
-        failedFiles: aggregated.failedFiles,
+        failedFiles: realFailedFiles,
         processedBytes: aggregated.processedBytes,
         completedAt: new Date(),
         results: JSON.stringify(aggregated.results),
-        error: aggregated.hasErrors 
-          ? `${aggregated.failedFiles} files failed across ${childJobs.length} batches`
-          : null,
+        error: errorMessage,
       },
     })
 
@@ -852,7 +925,9 @@ export class MediaSyncService {
       parentJobId,
       status,
       processedFiles: aggregated.processedFiles,
-      failedFiles: aggregated.failedFiles,
+      failedFiles: realFailedFiles,
+      attemptFailures: aggregated.attemptFailures, // Для отладки: сколько попыток было неудачных
+      retriedSuccessfully: aggregated.attemptFailures - realFailedFiles, // Успешно повторено
       batches: childJobs.length,
     })
   }

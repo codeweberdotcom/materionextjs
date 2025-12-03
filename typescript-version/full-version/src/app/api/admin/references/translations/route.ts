@@ -153,8 +153,9 @@ export async function POST(request: NextRequest) {
       type: 'translation.created',
       message: `Translation created: ${newTranslation.key} (${newTranslation.language})`,
       severity: 'info',
-      userId: currentUser.id,
-      details: {
+      actor: { type: 'user', id: currentUser.id },
+      subject: { type: 'translation', id: newTranslation.id },
+      payload: {
         translationId: newTranslation.id,
         key: newTranslation.key,
         language: newTranslation.language,

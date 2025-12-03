@@ -69,15 +69,17 @@ interface GlobalSettings {
   localUploadPath: string
   localPublicUrlPrefix: string
   // File organization
-  organizeByDate: boolean
+  pathOrganization: string // 'date' | 'hash' | 'flat'
   organizeByEntityType: boolean
+  organizeByDate: boolean // @deprecated
   // Limits
   globalMaxFileSize: number
   globalDailyUploadLimit?: number
   // Processing
   defaultQuality: number
-  defaultConvertToWebP: boolean
+  outputFormat: string // 'webp' | 'jpeg' | 'original'
   processingConcurrency: number
+  defaultConvertToWebP: boolean // @deprecated
   // Legacy (deprecated)
   defaultStorageStrategy: string
   autoDeleteOrphans: boolean
@@ -134,13 +136,16 @@ interface S3Service {
   type: string
   enabled: boolean
   host?: string
+  port?: number
+  protocol?: string
+  metadata?: string
 }
 
 interface OrphanStats {
   dbOrphans: number
   diskOrphans: number
   totalCount: number
-lSize: number
+  totalSize: number
   totalSizeFormatted: string
 }
 
@@ -154,19 +159,21 @@ export default function MediaSettings() {
   const t = useTranslationSafe()?.mediaSettings
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-nst [globalSettings, setGlobalSettings] = useState<GlobalSettings | null>(null)
+  const [globalSettings, setGlobalSettings] = useState<GlobalSettings | null>(null)
   const [entitySettings, setEntitySettings] = useState<EntitySettings[]>([])
 
   // S3 Bucket states
-t [s3Buckets, setS3Buckets] = useState<S3Bucket[]>([])
+  const [s3Buckets, setS3Buckets] = useState<S3Bucket[]>([])
   const [s3Configured, setS3Configured] = useState(false)
   const [s3Error, setS3Error] = useState<string | null>(null)
   const [loadingBuckets, setLoadingBuckets] = useState(false)
-t [bucketValidation, setBucketValidation] = useState<BucketValidation | null>(null)
+  const [bucketValidation, setBucketValidation] = useState<BucketValidation | null>(null)
   const [validatingBucket, setValidatingBucket] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [newBucketName, setNewBucketName] = useState('')
   const [creatingBucket, setCreatingBucket] = useState(false)
+  const [envDefaultBucket, setEnvDefaultBucket] = useState<string | null>(null)
+  const [bucketPreConfigured, setBucketPreConfigured] = useState(false)
 
   // S3 Services
   const [s3Services, setS3Services] = useState<S3Service[]>([])
@@ -178,17 +185,15 @@ t [bucketValidation, setBucketValidation] = useState<BucketValidation | null>(nu
 
   useEffect(() => {
     const init = async () => {
-  try {
+      try {
         // First fetch settings to get s3ServiceId
-    const settingsRes = await fetch('/api/admin/media/settings')
+        const settingsRes = await fetch('/api/admin/media/settings')
         if (settingsRes.ok) {
           const data = await settingsRes.json()
           setGlobalSettings(data.global || {})
           setEntitySettings(Array.isArray(data.entities) ? data.entities : [])
-          // Fetch buckets for the configured service
-          // If no service configured (using env), set default bucket from env
-          const isUsingEnv = !data.global?.s3ServiceId
-          fetchBuckets(data.global?.s3ServiceId || null, isUsingEnv && !data.global?.s3DefaultBucket)
+          // Pass serviceId to fetch buckets from correct server
+          fetchBuckets(data.global?.s3ServiceId || null)
         } else {
           throw new Error('Failed to fetch settings')
         }
@@ -204,42 +209,69 @@ t [bucketValidation, setBucketValidation] = useState<BucketValidation | null>(nu
   }, [])
 
   const fetchSettings = async () => {
-try {
+    try {
       const response = await fetch('/api/admin/media/settings')
-  if (!response.ok) throw new Error('Failed to fetch settings')
+      if (!response.ok) throw new Error('Failed to fetch settings')
 
       const data = await response.json()
       setGlobalSettings(data.global)
       setEntitySettings(Array.isArray(data.entities) ? data.entities : [])
+      // Fetch buckets for configured service (or env if null)
+      fetchBuckets(data.global?.s3ServiceId || null)
     } catch (error) {
       toast.error(t?.loadError ?? 'Error loading settings')
-finally {
+    } finally {
       setLoading(false)
-
+    }
   }
 
-  const fetchBuckets = async (serviceId?: string | null, setDefaultBucket = false) => {
+  const fetchBuckets = async (serviceId?: string | null) => {
     setLoadingBuckets(true)
-tS3Error(null)
+    setS3Error(null)
 
     try {
-      // If serviceId provided, fetch buckets for that service
-const url = serviceId
+      // Build URL with optional serviceId
+      const url = serviceId 
         ? `/api/admin/media/s3/buckets?serviceId=${serviceId}`
         : '/api/admin/media/s3/buckets'
-
+      
       const response = await fetch(url)
       if (!response.ok) throw new Error('Failed to fetch buckets')
 
       const data = await response.json()
       setS3Configured(data.configured)
       setS3Buckets(data.buckets || [])
+      setBucketPreConfigured(data.preConfigured || false)
+      
+      // Save default bucket from env (only when no serviceId)
+      if (!serviceId && data.defaultBucket) {
+        setEnvDefaultBucket(data.defaultBucket)
+      }
 
-      // If default bucket from env is returned, set it
-      if (data.defaultBucket && setDefaultBucket) {
-    setGlobalSettings(prev => prev ? {
+      // If bucket is pre-configured in service, auto-select it and set public URL
+      if (data.preConfigured && data.buckets?.length === 1) {
+        const preConfiguredBucket = data.buckets[0].name
+        const service = s3Services.find(s => s.id === serviceId)
+        
+        let publicUrl = ''
+        if (service?.host) {
+          const protocol = (service.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
+          const metadata = service.metadata ? JSON.parse(service.metadata) : {}
+          const forcePathStyle = metadata.forcePathStyle ?? true
+          
+          const baseUrl = service.port 
+            ? `${protocol}://${service.host}:${service.port}`
+            : `${protocol}://${service.host}`
+          
+          publicUrl = forcePathStyle 
+            ? `${baseUrl}/${preConfiguredBucket}`
+            : `${protocol}://${preConfiguredBucket}.${service.host}${service.port ? ':' + service.port : ''}`
+        }
+        
+        setGlobalSettings(prev => prev ? {
           ...prev,
-          s3DefaultBucket: data.defaultBucket
+          s3DefaultBucket: preConfiguredBucket,
+          s3PublicUrlPrefix: publicUrl || prev.s3PublicUrlPrefix
         } : prev)
       }
 
@@ -253,28 +285,28 @@ const url = serviceId
     }
   }
 
-  // Handle S3 server change - fetch buckets for selected server
-nst handleS3ServerChange = (value: string) => {
+  // Handle S3 server change
+  const handleS3ServerChange = (value: string) => {
     const serviceId = value === 'default' ? null : value
-    const isDefault = value === 'default'
-    console.log('[S3 Server Change]', { value, serviceId, isDefault })
 
     if (!globalSettings) return
 
-    // Clear buckets list and reset states
-tS3Buckets([])
-    setBucketValidation(null)
-tS3Error(null)
-
+    // Update settings - сбрасываем bucket и publicUrl при смене сервера
     setGlobalSettings({
       ...globalSettings,
       s3ServiceId: serviceId,
-      s3DefaultBucket: '' // Clear bucket when server changes
+      s3DefaultBucket: '', // Reset bucket when server changes
+      s3PublicUrlPrefix: '' // Reset public URL when server changes
     })
 
-    // Fetch buckets for new server
-    // If default (env), also set the default bucket from env
-    fetchBuckets(serviceId, isDefault)
+    // Clear current buckets and validation
+    setS3Buckets([])
+    setBucketValidation(null)
+    setS3Error(null)
+    setBucketPreConfigured(false)
+
+    // Fetch buckets for selected server
+    fetchBuckets(serviceId)
   }
 
   const fetchS3Services = async () => {
@@ -283,7 +315,7 @@ tS3Error(null)
       const response = await fetch('/api/admin/settings/services?type=S3')
       if (!response.ok) throw new Error('Failed to fetch services')
 
-      const result = awit response.json()
+      const result = await response.json()
       setS3Services(result.data || [])
     } catch (error) {
       console.error('Failed to fetch S3 services:', error)
@@ -330,11 +362,11 @@ tS3Error(null)
     } catch (error) {
       setBucketValidation({ exists: false, accessible: false, error: t?.checkError ?? 'Check error' })
     } finally {
-      setValidatingBuket(false)
+      setValidatingBucket(false)
     }
   }
 
-  const createBucket = async () =>
+  const createBucket = async () => {
     if (!newBucketName.trim()) {
       toast.error(t?.enterBucketName ?? 'Enter bucket name')
       return
@@ -363,8 +395,8 @@ tS3Error(null)
       setCreateDialogOpen(false)
       setNewBucketName('')
 
- list and select new bucket
-      await fetchBuckets()
+      // Refresh list and select new bucket
+      await fetchBuckets(globalSettings?.s3ServiceId)
       updateGlobal('s3DefaultBucket', newBucketName.trim())
     } catch (error) {
       toast.error(t?.bucketCreateError ?? 'Error creating bucket')
@@ -373,11 +405,48 @@ tS3Error(null)
     }
   }
 
-cketChange = (bucketName: string) => {
+  // Сформировать default S3 Public URL на основе сервера и bucket
+  const buildDefaultS3PublicUrl = (serviceId: string | null, bucket: string): string => {
+    if (!bucket) return ''
+    
+    // Если выбран внешний сервис
+    if (serviceId) {
+      const service = s3Services.find(s => s.id === serviceId)
+      if (service?.host) {
+        const protocol = (service.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
+        const metadata = service.metadata ? JSON.parse(service.metadata) : {}
+        const forcePathStyle = metadata.forcePathStyle ?? true
+        
+        let baseUrl = service.port 
+          ? `${protocol}://${service.host}:${service.port}`
+          : `${protocol}://${service.host}`
+        
+        // Path-style: http://host:port/bucket
+        if (forcePathStyle) {
+          return `${baseUrl}/${bucket}`
+        }
+        // Virtual-hosted style: http://bucket.host:port
+        return `${protocol}://${bucket}.${service.host}${service.port ? ':' + service.port : ''}`
+      }
+    }
+    
+    // Для ENV конфигурации - пустой (будет использоваться proxy)
+    return ''
+  }
+
+  const handleBucketChange = (bucketName: string) => {
     updateGlobal('s3DefaultBucket', bucketName)
 
     if (bucketName) {
       validateBucket(bucketName)
+      
+      // Автозаполнение S3 Public URL если он пустой
+      if (!globalSettings?.s3PublicUrlPrefix) {
+        const defaultUrl = buildDefaultS3PublicUrl(globalSettings?.s3ServiceId || null, bucketName)
+        if (defaultUrl) {
+          updateGlobal('s3PublicUrlPrefix', defaultUrl)
+        }
+      }
     } else {
       setBucketValidation(null)
     }
@@ -397,7 +466,7 @@ cketChange = (bucketName: string) => {
     try {
       const response = await fetch('/api/admin/media/settings', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/jsn' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(globalSettings),
       })
 
@@ -466,7 +535,7 @@ cketChange = (bucketName: string) => {
   return (
     <Grid container spacing={6}>
       {/* Global Settings */}
- xs={12}>
+      <Grid item xs={12}>
         <Card>
           <CardHeader
             title={t?.globalSettings ?? 'Global Settings'}
@@ -487,7 +556,7 @@ cketChange = (bucketName: string) => {
                 {/* Storage */}
                 <Grid item xs={12}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-    <CustomAvatar color="primary" skin="light" size={38}>
+                    <CustomAvatar color="primary" skin="light" size={38}>
                       <i className="ri-hard-drive-2-line" />
                     </CustomAvatar>
                     <Typography variant="subtitle1" fontWeight={500}>
@@ -497,7 +566,7 @@ cketChange = (bucketName: string) => {
                   <Divider sx={{ mb: 2 }} />
                 </Grid>
 
-<Grid item xs={12} md={4}>
+                <Grid item xs={12} md={4}>
                   <TextField
                     fullWidth
                     label={t?.localPath ?? 'Local path'}
@@ -517,16 +586,25 @@ cketChange = (bucketName: string) => {
                   />
                 </Grid>
 
-                <Grid item xs={12} md={2}>
-                  <FormControlLabel
-    control={
-                      <Switch
-                        checked={globalSettings.organizeByDate}
-                        onChange={e => updateGlobal('organizeByDate', e.target.checked)}
-                      />
+                <Grid item xs={12} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    label={t?.pathOrganization ?? 'Path organization'}
+                    value={globalSettings.pathOrganization || 'date'}
+                    onChange={e => updateGlobal('pathOrganization', e.target.value)}
+                    helperText={
+                      globalSettings.pathOrganization === 'hash' 
+                        ? (t?.pathHashHelp ?? 'Files organized by ID hash (hides date)')
+                        : globalSettings.pathOrganization === 'flat'
+                        ? (t?.pathFlatHelp ?? 'All files in one folder')
+                        : (t?.pathDateHelp ?? 'Files organized by upload date')
                     }
-                    label={t?.organizeByDate ?? 'By date'}
-                  />
+                  >
+                    <MenuItem value="date">{t?.organizeByDate ?? 'By date'} (2025/12/)</MenuItem>
+                    <MenuItem value="hash">{t?.organizeByHash ?? 'By hash'} (3e/uB/)</MenuItem>
+                    <MenuItem value="flat">{t?.organizeFlat ?? 'Flat'} ({t?.noSubfolders ?? 'no subfolders'})</MenuItem>
+                  </TextField>
                 </Grid>
 
                 <Grid item xs={12} md={2}>
@@ -539,6 +617,9 @@ cketChange = (bucketName: string) => {
                     }
                     label={t?.organizeByEntityType ?? 'By entity type'}
                   />
+                  <FormHelperText sx={{ ml: 0 }}>
+                    {t?.organizeByEntityTypeHelp ?? '/listings/, /avatars/'}
+                  </FormHelperText>
                 </Grid>
 
                 {/* Processing */}
@@ -587,15 +668,24 @@ cketChange = (bucketName: string) => {
                 </Grid>
 
                 <Grid item xs={12} md={3}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={globalSettings.defaultConvertToWebP}
-                        onChange={e => updateGlobal('defaultConvertToWebP', e.target.checked)}
-                      />
+                  <TextField
+                    select
+                    fullWidth
+                    label={t?.outputFormat ?? 'Output format'}
+                    value={globalSettings.outputFormat || 'webp'}
+                    onChange={e => updateGlobal('outputFormat', e.target.value)}
+                    helperText={
+                      globalSettings.outputFormat === 'jpeg'
+                        ? (t?.jpegHelp ?? 'Universal compatibility')
+                        : globalSettings.outputFormat === 'original'
+                        ? (t?.originalHelp ?? 'Keep PNG/JPEG as uploaded')
+                        : (t?.webpHelp ?? 'Best compression, modern browsers')
                     }
-                    label={t?.convertToWebP ?? 'Convert to WebP'}
-  />
+                  >
+                    <MenuItem value="webp">WebP ({t?.recommended ?? 'recommended'})</MenuItem>
+                    <MenuItem value="jpeg">JPEG</MenuItem>
+                    <MenuItem value="original">{t?.originalFormat ?? 'Original format'}</MenuItem>
+                  </TextField>
                 </Grid>
 
                 {/* S3 Settings */}
@@ -624,95 +714,138 @@ cketChange = (bucketName: string) => {
                 </Grid>
 
                 <Grid item xs={12} md={3}>
-                  <TextField
-                    select
-                    fullWidth
-                    disabled={!globalSettings?.s3Enabled || loadingServices}
-                    label={t?.s3Server ?? 'S3 Server'}
-                    value={globalSettings?.s3ServiceId ?? 'default'}
-                    onChange={e => handleS3ServerChange(e.target.value)}
-                    SelectProps={{ native: true }}
-                    helperText={loadingServices ? (t?.loading ?? 'Loading...') :
-                      s3Services.length === 0 ? (t?.noS3Services ?? 'No S3 services') :
-      (t?.selectS3Server ?? 'Select server')}
-                  >
-                    <option value="default">{t?.defaultEnv ?? 'Default (from .env)'}</option>
-                    {s3Services.map(service => (
-                      <option
-                        key={service.id}
-                        value={service.id}
-                        disabled={!service.enabled}
-                      >
-                        {service.displayName} ({service.host})
-                        {!service.enabled && ' ⚠️ disabled'}
-                      </option>
-                    ))}
-                  </TextField>
-                </Grid>
-
-                <Grid item xs={12} md={3}>
-                  <FormControl fullWidth disabled={!globalSettings.s3Enabled || loadingBuckets}>
-                    <InputLabel id="s3-bucket-label">{t?.s3Bucket ?? 'S3 Bucket'}</InputLabel>
+                  <FormControl fullWidth disabled={!globalSettings?.s3Enabled || loadingServices}>
+                    <InputLabel>{t?.s3Server ?? 'S3 Server'}</InputLabel>
                     <Select
-                      labelId="s3-bucket-label"
-      value={globalSettings.s3DefaultBucket || ''}
-                      onChange={e => handleBucketChange(e.target.value)}
-                      label={t?.s3Bucket ?? 'S3 Bucket'}
-                      endAdornment={
-                        <Box sx={{ display: 'flex', mr: 5 }}>
-                          {loadingBuckets && <CircularProgress size={16} />}
-                          {!loadingBuckets && (
-                            <>
-                              <Tooltip title={t?.refreshList ?? 'Refresh'}>
-                                <IconButton size="small" onClick={() => fetchBuckets(globalSettings.s3ServiceId)}>
-                                  <i className="ri-refresh-line" style={{ fontSize: 16 }} />
-                                </IconButton>
-              </Tooltip>
-                              <Tooltip title={s3Configured ? (t?.createNewBucket ?? 'Create') : (t?.s3NotConfigured ?? 'S3 not configured')}>
-                                <span>
-                                  <IconButton
-                                    size="small"
-                                    onClick={() => setCreateDialogOpen(true)}
-                                    disabled={!s3Configured || !globalSettings.s3Enabled}
-                                  >
-                                    <i className="ri-add-line" style={{ fontSize: 16 }} />
-                                  </IconButton>
-                                </span>
-                              </Tooltip>
-                            </>
-                          )}
-                        </Box>
-                      }
+                      value={globalSettings?.s3ServiceId ?? (s3Configured ? 'default' : '')}
+                      onChange={e => handleS3ServerChange(e.target.value as string)}
+                      label={t?.s3Server ?? 'S3 Server'}
                     >
-                      <MenuItem value="">
-                        <em>{t?.notSelected ?? 'Not selected'}</em>
-                      </MenuItem>
-                      {globalSettings.s3DefaultBucket &&
-                       !s3Buckets.some(b => b.name === globalSettings.s3DefaultBucket) && (
-                        <MenuItem value={globalSettings.s3DefaultBucket}>
-                          {globalSettings.s3DefaultBucket} ({t?.saved ?? 'saved'})
-                        </MenuItem>
+                      {/* Show Default (from .env) only if S3 is configured in env */}
+                      {s3Configured && (
+                        <MenuItem value="default">{t?.defaultEnv ?? 'Default (from .env)'}</MenuItem>
                       )}
-                      {s3Buckets.map(bucket => (
-                        <MenuItem key={bucket.name} value={bucket.name}>
-                          {bucket.name}
+                      {/* Show placeholder if nothing configured */}
+                      {!s3Configured && s3Services.length === 0 && (
+                        <MenuItem value="" disabled>{t?.noS3Available ?? 'No S3 configured'}</MenuItem>
+                      )}
+                      {s3Services.map(service => (
+                        <MenuItem
+                          key={service.id}
+                          value={service.id}
+                          disabled={!service.enabled}
+                        >
+                          {service.displayName} ({service.host})
+                          {!service.enabled && ' ⚠️ disabled'}
                         </MenuItem>
                       ))}
                     </Select>
                     <FormHelperText>
-                      {!s3Configured && s3Error ? (
-                        <Box component="span" sx={{ color: 'error.main' }}>{s3Error}</Box>
-                      ) : validatingBucket ? (
-                        t?.checking ?? 'Checking...'
-                      ) : bucketValidation?.accessible ? (
-                        <Box component="span" sx={{ color: 'success.main' }}>✅ {t?.bucketAccessible ?? 'OK'}</Box>
-                      ) : bucketValidation ? (
-                        <Box component="span" sx={{ color: 'error.main' }}>❌ {t?.bucketNotAccessible ?? 'Error'}</Box>
-                      ) : (
-                        t?.selectOrCreateBucket ?? 'Select bucket'
-)}
+                      {loadingServices ? (t?.loading ?? 'Loading...') :
+                        (!s3Configured && s3Services.length === 0) ? (t?.noS3Available ?? 'Configure S3 in .env or add External Service') :
+                        (t?.selectS3Server ?? 'Select server')}
                     </FormHelperText>
                   </FormControl>
+                </Grid>
+
+                <Grid item xs={12} md={3}>
+                  {/* When using Default (from .env), bucket is read-only from S3_BUCKET env */}
+                  {!globalSettings.s3ServiceId && s3Configured ? (
+                    <TextField
+                      fullWidth
+                      label={t?.s3Bucket ?? 'S3 Bucket'}
+                      value={envDefaultBucket || ''}
+                      disabled
+                      helperText={envDefaultBucket 
+                        ? (t?.bucketFromEnv ?? 'From .env (S3_BUCKET)') 
+                        : (t?.noBucketInEnv ?? 'S3_BUCKET not set in .env')}
+                      InputProps={{
+                        startAdornment: envDefaultBucket ? (
+                          <Box component="span" sx={{ color: 'success.main', mr: 1 }}>✅</Box>
+                        ) : (
+                          <Box component="span" sx={{ color: 'warning.main', mr: 1 }}>⚠️</Box>
+                        )
+                      }}
+                    />
+                  ) : !globalSettings.s3ServiceId && !s3Configured ? (
+                    <TextField
+                      fullWidth
+                      label={t?.s3Bucket ?? 'S3 Bucket'}
+                      value=""
+                      disabled
+                      helperText={t?.selectS3ServerFirst ?? 'Select S3 server first'}
+                    />
+                  ) : (
+                    <FormControl fullWidth disabled={!globalSettings.s3Enabled || loadingBuckets}>
+                      <InputLabel id="s3-bucket-label">{t?.s3Bucket ?? 'S3 Bucket'}</InputLabel>
+                      <Select
+                        labelId="s3-bucket-label"
+                        value={globalSettings.s3DefaultBucket || ''}
+                        onChange={e => handleBucketChange(e.target.value)}
+                        label={t?.s3Bucket ?? 'S3 Bucket'}
+                        disabled={bucketPreConfigured}
+                        endAdornment={
+                          <Box sx={{ display: 'flex', mr: 5 }}>
+                            {loadingBuckets && <CircularProgress size={16} />}
+                            {!loadingBuckets && !bucketPreConfigured && (
+                              <>
+                                <Tooltip title={t?.refreshList ?? 'Refresh'}>
+                                  <IconButton size="small" onClick={() => fetchBuckets(globalSettings?.s3ServiceId)}>
+                                    <i className="ri-refresh-line" style={{ fontSize: 16 }} />
+                                  </IconButton>
+                                </Tooltip>
+                                <Tooltip title={s3Configured ? (t?.createNewBucket ?? 'Create') : (t?.s3NotConfigured ?? 'S3 not configured')}>
+                                  <span>
+                                    <IconButton
+                                      size="small"
+                                      onClick={() => setCreateDialogOpen(true)}
+                                      disabled={!s3Configured || !globalSettings.s3Enabled}
+                                    >
+                                      <i className="ri-add-line" style={{ fontSize: 16 }} />
+                                    </IconButton>
+                                  </span>
+                                </Tooltip>
+                              </>
+                            )}
+                          </Box>
+                        }
+                      >
+                        {!bucketPreConfigured && (
+                          <MenuItem value="">
+                            <em>{t?.notSelected ?? 'Not selected'}</em>
+                          </MenuItem>
+                        )}
+                        {globalSettings.s3DefaultBucket &&
+                         !s3Buckets.some(b => b.name === globalSettings.s3DefaultBucket) && (
+                          <MenuItem value={globalSettings.s3DefaultBucket}>
+                            {globalSettings.s3DefaultBucket} ({t?.saved ?? 'saved'})
+                          </MenuItem>
+                        )}
+                        {s3Buckets.map(bucket => (
+                          <MenuItem key={bucket.name} value={bucket.name}>
+                            {bucket.name} {bucketPreConfigured && `(${t?.fixedInService ?? 'fixed'})`}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      <FormHelperText>
+                        {bucketPreConfigured ? (
+                          <Box component="span" sx={{ color: 'info.main' }}>
+                            🔒 {t?.bucketFixedInService ?? 'Bucket is fixed in service settings'}
+                          </Box>
+                        ) : !s3Configured && s3Error && !globalSettings.s3ServiceId && s3Services.length === 0 ? (
+                          <Box component="span" sx={{ color: 'error.main' }}>{s3Error}</Box>
+                        ) : validatingBucket ? (
+                          t?.checking ?? 'Checking...'
+                        ) : bucketValidation?.accessible ? (
+                          <Box component="span" sx={{ color: 'success.main' }}>✅ {t?.bucketAccessible ?? 'OK'}</Box>
+                        ) : bucketValidation ? (
+                          <Box component="span" sx={{ color: 'error.main' }}>❌ {t?.bucketNotAccessible ?? 'Error'}</Box>
+                        ) : (
+                          t?.selectOrCreateBucket ?? 'Select bucket'
+                        )}
+                      </FormHelperText>
+                    </FormControl>
+                  )}
                 </Grid>
 
                 <Grid item xs={12} md={3}>
@@ -746,6 +879,37 @@ cketChange = (bucketName: string) => {
                       />
 }
                     label={t?.deleteFromS3OnHardDelete ?? 'Delete S3 on hard delete'}
+                  />
+                </Grid>
+
+                {/* S3 CDN / Public URL */}
+                <Grid item xs={12} md={6}>
+                  <TextField
+                    fullWidth
+                    label={t?.s3PublicUrlPrefix ?? 'S3 Public URL / CDN'}
+                    value={globalSettings.s3PublicUrlPrefix || ''}
+                    onChange={e => updateGlobal('s3PublicUrlPrefix', e.target.value || null)}
+                    disabled={!globalSettings.s3Enabled}
+                    placeholder="https://cdn.example.com или http://localhost:9000/bucket"
+                    helperText={t?.s3PublicUrlPrefixHelp ?? 'Public URL for images (CDN or direct S3). Leave empty to use proxy.'}
+                    InputProps={{
+                      endAdornment: globalSettings.s3Enabled && globalSettings.s3DefaultBucket && (
+                        <Tooltip title={t?.resetToDefault ?? 'Reset to default'}>
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const defaultUrl = buildDefaultS3PublicUrl(
+                                globalSettings.s3ServiceId || null,
+                                globalSettings.s3DefaultBucket || ''
+                              )
+                              updateGlobal('s3PublicUrlPrefix', defaultUrl || null)
+                            }}
+                          >
+                            <i className="ri-refresh-line" style={{ fontSize: 16 }} />
+                          </IconButton>
+                        </Tooltip>
+                      )
+                    }}
                   />
                 </Grid>
 

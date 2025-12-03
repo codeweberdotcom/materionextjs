@@ -77,15 +77,13 @@ export async function POST(request: NextRequest) {
     })
 
     // Логируем событие
-    await eventService.create({
+    await eventService.record({
       source: 'api',
       module: 'account',
       type: 'account.created',
       severity: 'info',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'account',
-      subjectId: account.id,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'account', id: account.id },
       message: `Пользователь ${user.email || user.id} создал аккаунт ${account.name}`,
       payload: {
         accountType: type,

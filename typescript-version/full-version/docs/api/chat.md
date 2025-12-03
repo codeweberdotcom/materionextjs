@@ -8,16 +8,19 @@ The chat system is a real-time messaging platform built with Next.js, WebSocket 
 
 ### Components
 - **Frontend**: React components with Redux state management
-- **Backend**: Next.js API routes with Socket.IO server
-- **Database**: Prisma ORM with SQLite/PostgreSQL
+- **Backend**: Next.js API routes (Port 3000)
+- **WebSocket Server**: Standalone Socket.IO server (Port 3001)
+- **Database**: Prisma ORM with PostgreSQL
 - **Real-time**: WebSocket connections for instant messaging
 
 ### Key Files
-- `src/server/websocket-server.js` - WebSocket server logic
-- `src/hooks/useChat.ts` - React hook for chat functionality
+- `src/server/websocket-standalone.ts` - Standalone WebSocket server (Port 3001)
+- `src/lib/sockets/` - Socket.IO logic (namespaces, middleware, auth)
+- `src/hooks/useChatNew.ts` - React hook for chat functionality with Socket/HTTP fallback
+- `src/contexts/SocketProvider.tsx` - Socket.IO client provider
 - `src/redux-store/slices/chat.ts` - Redux state management
 - `src/views/apps/chat/` - UI components
-- `src/app/api/chat/` - API endpoints
+- `src/app/api/chat/` - HTTP fallback API endpoints
 
 ## 🔌 WebSocket Events
 
@@ -55,7 +58,16 @@ The chat system is a real-time messaging platform built with Next.js, WebSocket 
 ### Аутентификация
 JWT (Lucia) передаётся в `auth.token` при подключении:
 ```javascript
-const socket = io('http://localhost:3000', { auth: { token: 'jwt-token-here' } })
+// Клиент автоматически подключается к порту 3001
+const socket = io(process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001', { 
+  auth: { token: 'jwt-token-here' } 
+})
+```
+
+**ENV переменные:**
+```env
+WEBSOCKET_PORT=3001
+NEXT_PUBLIC_WS_URL=http://localhost:3001
 ```
 
 ### Rate limiting

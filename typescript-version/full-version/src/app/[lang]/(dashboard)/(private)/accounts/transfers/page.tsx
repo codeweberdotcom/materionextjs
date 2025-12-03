@@ -154,8 +154,8 @@ const AccountTransfersPage = () => {
   }
 
   // Фильтрация по типу (входящие/исходящие)
-  const incomingTransfers = transfers.filter(t => t.toUserId === t.initiatedById)
-  const outgoingTransfers = transfers.filter(t => t.fromUserId === t.initiatedById)
+  const incomingTransfers = transfers.filter(t => t.toUserId === t.requestedBy)
+  const outgoingTransfers = transfers.filter(t => t.fromAccount?.ownerId === t.requestedBy || t.fromAccount?.userId === t.requestedBy)
 
   const displayedTransfers = activeTab === 0 ? incomingTransfers : outgoingTransfers
 

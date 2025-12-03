@@ -53,11 +53,17 @@ export const initializeSocketServer = async (httpServer: HTTPServer): Promise<Ty
     return io
   }
 
+  // CORS origins из ENV или defaults
+  const corsOrigins = process.env.NODE_ENV === 'production'
+    ? (process.env.FRONTEND_URL || false)
+    : [
+        process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",  // Next.js dev server
+        `http://${process.env.NETWORK_IP || '10.8.0.14'}:3000`       // Network access
+      ]
+
   io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
     cors: {
-      origin: process.env.NODE_ENV === 'production'
-        ? process.env.FRONTEND_URL || false
-        : ["http://localhost:3000"],
+      origin: corsOrigins,
       methods: ["GET", "POST"],
       credentials: true
     },

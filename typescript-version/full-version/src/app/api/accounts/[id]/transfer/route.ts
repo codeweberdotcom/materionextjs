@@ -12,10 +12,11 @@ import { eventService } from '@/services/events/EventService'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { id } = await params
 
     if (!user?.id) {
       return NextResponse.json(
@@ -40,22 +41,20 @@ export async function POST(
     const { toUserId } = validationResult.data
 
     const transfer = await accountTransferService.requestTransfer(
-      params.id,
+      id,
       user.id,
       toUserId,
       user.id
     )
 
     // Логируем событие
-    await eventService.create({
+    await eventService.record({
       source: 'api',
       module: 'account',
       type: 'transfer.requested',
       severity: 'info',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'account',
-      subjectId: params.id,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'account', id: id },
       message: `Пользователь ${user.email || user.id} запросил передачу аккаунта`,
       payload: {
         toUserId,
@@ -86,10 +85,11 @@ export async function POST(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { id } = await params
 
     if (!user?.id) {
       return NextResponse.json(
@@ -103,7 +103,7 @@ export async function GET(
 
     // Находим запрос для этого аккаунта
     const transfer = [...transfers.incoming, ...transfers.outgoing].find(
-      t => t.fromAccountId === params.id
+      t => t.fromAccountId === id
     )
 
     if (!transfer) {

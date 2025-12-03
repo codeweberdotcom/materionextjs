@@ -7,9 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
-
-import { authOptions } from '@/lib/auth'
+import { requireAuth } from '@/utils/auth/auth'
 import { listingWorkflowService } from '@/services/workflows/ListingWorkflowService'
 import { listingStateLabels, listingEventLabels } from '@/services/workflows/machines/ListingMachine'
 
@@ -24,9 +22,9 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: 'Требуется авторизация' }, { status: 401 })
     }
 
@@ -35,7 +33,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const workflowState = await listingWorkflowService.getWorkflowState(
       listingId,
-      session.user.id,
+      user.id,
       userRole
     )
 
@@ -78,9 +76,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: 'Требуется авторизация' }, { status: 401 })
     }
 
@@ -130,7 +128,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const result = await listingWorkflowService.transition({
       listingId,
       event,
-      actorId: session.user.id,
+      actorId: user.id,
       actorRole: userRole,
       reason,
       metadata

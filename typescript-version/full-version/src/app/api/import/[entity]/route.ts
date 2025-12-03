@@ -13,11 +13,12 @@ import { getEnvironmentFromRequest } from '@/lib/metrics/helpers'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { entity: string } }
+  { params }: { params: Promise<{ entity: string }> }
 ) {
   try {
+    const resolvedParams = await params
     // Валидация параметров пути
-    const paramsValidation = importParamsSchema.safeParse(params)
+    const paramsValidation = importParamsSchema.safeParse(resolvedParams)
     if (!paramsValidation.success) {
       logger.warn('[import] Invalid path parameters', {
         params,
@@ -55,7 +56,7 @@ export async function POST(
 
       logger.warn('[import] Rate limit exceeded', {
         key: rateLimitKey,
-        entity: params.entity,
+        entity: resolvedParams.entity,
         remaining: rateLimitResult.remaining
       })
 
@@ -92,7 +93,7 @@ export async function POST(
     const fileValidation = importFileSchema.safeParse({ file })
     if (!fileValidation.success) {
       logger.warn('[import] File validation failed', {
-        entity: params.entity,
+        entity: resolvedParams.entity,
         fileName: file.name,
         fileSize: file.size,
         errors: fileValidation.error.errors
@@ -112,7 +113,7 @@ export async function POST(
     const formDataValidation = importFormDataSchema.safeParse(formDataToValidate)
     if (!formDataValidation.success) {
       logger.warn('[import] FormData validation failed', {
-        entity: params.entity,
+        entity: resolvedParams.entity,
         errors: formDataValidation.error.errors
       })
       return NextResponse.json(
@@ -124,7 +125,7 @@ export async function POST(
     const { mode, skipValidation } = formDataValidation.data
 
     // Импорт данных (используем файл после валидации)
-    const result = await importService.importData(params.entity, fileValidation.data.file, {
+    const result = await importService.importData(resolvedParams.entity, fileValidation.data.file, {
       mode,
       skipValidation,
       actorId: user?.id ?? null // Передаем ID пользователя для записи в события
@@ -135,7 +136,7 @@ export async function POST(
   } catch (error) {
     logger.error('[import] API error', {
       error: error instanceof Error ? error.message : error,
-      entity: params.entity,
+      entity: resolvedParams.entity,
       file: 'src/app/api/import/[entity]/route.ts'
     })
     return NextResponse.json(

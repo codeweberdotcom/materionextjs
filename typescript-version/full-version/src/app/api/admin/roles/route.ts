@@ -7,7 +7,7 @@ import { checkPermission, isSuperadmin, parsePermissions } from '@/utils/permiss
 import { canModifyRole, canModifyRoleByObject, getRoleLevel, getRoleLevelFromRole, ROLE_HIERARCHY } from '@/utils/formatting/string'
 import { getPermissionValidationErrors } from '@/utils/permissions/validation'
 import { createRoleCacheStore } from '@/lib/role-cache'
-import type { Role } from '@/lib/role-cache/types'
+import type { Role, RoleCacheStore } from '@/lib/role-cache/types'
 import logger from '@/lib/logger'
 import { eventService } from '@/services/events/EventService'
 import { markRoleOperation, recordRoleOperationDuration, markRoleEvent } from '@/lib/metrics/roles'
@@ -15,13 +15,13 @@ import { buildRoleError } from './utils/error-helper'
 import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 // Lazy initialization хранилища кэша ролей (Redis с fallback на in-memory или только in-memory)
-let roleCacheStorePromise: Promise<ReturnType<typeof createRoleCacheStore>> | null = null
+let roleCacheStorePromise: Promise<RoleCacheStore> | null = null
 
 const getRoleCacheStore = async () => {
   if (!roleCacheStorePromise) {
     roleCacheStorePromise = createRoleCacheStore()
   }
-  return roleCacheStorePromise
+  return await roleCacheStorePromise
 }
 
 const CACHE_KEY = 'all-roles'

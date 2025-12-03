@@ -21,8 +21,9 @@ async function main() {
       adminRole = await prisma.role.create({
         data: {
           name: 'admin',
+          code: 'admin',
           description: 'Administrator role',
-          permissions: {}
+          permissions: '{}'
         }
       })
     }
@@ -37,8 +38,9 @@ async function main() {
       userRole = await prisma.role.create({
         data: {
           name: 'user',
+          code: 'user',
           description: 'Regular user role',
-          permissions: {}
+          permissions: '{}'
         }
       })
     }

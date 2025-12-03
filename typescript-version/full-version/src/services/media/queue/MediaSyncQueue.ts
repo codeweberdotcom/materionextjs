@@ -65,6 +65,8 @@ export class MediaSyncQueue {
   private processor: SyncJobProcessor | null = null
   private initialized: boolean = false
   private processorRegistered: boolean = false
+  private storageReady: boolean = false
+  private storageReadyPromise: Promise<void> | null = null
 
   private constructor() {}
 
@@ -108,10 +110,54 @@ export class MediaSyncQueue {
   }
 
   /**
+   * Предварительная инициализация StorageService
+   * Предотвращает race condition "S3 not configured" при первых задачах
+   */
+  private async warmupStorageService(): Promise<void> {
+    if (this.storageReady) return
+    
+    if (this.storageReadyPromise) {
+      await this.storageReadyPromise
+      return
+    }
+    
+    this.storageReadyPromise = (async () => {
+      try {
+        const { getStorageService } = await import('../storage/StorageService')
+        const storageService = await getStorageService()
+        this.storageReady = true
+        logger.info('[MediaSyncQueue] StorageService ready', {
+          hasS3: storageService.isS3Available(),
+        })
+      } catch (error) {
+        logger.warn('[MediaSyncQueue] StorageService warmup failed', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+        // Не блокируем - задачи будут использовать retry
+        this.storageReady = true
+      }
+    })()
+    
+    await this.storageReadyPromise
+  }
+  
+  /**
+   * Ожидание готовности StorageService
+   * Вызывается перед добавлением S3 задач
+   */
+  async waitForStorageReady(): Promise<void> {
+    if (this.storageReady) return
+    await this.warmupStorageService()
+  }
+
+  /**
    * Инициализация Bull очереди
    */
   private async initializeQueue(): Promise<void> {
     try {
+      // Pre-initialize StorageService to avoid race condition
+      await this.warmupStorageService()
+      
       const redisConfig = await serviceConfigResolver.getConfig('redis')
 
       if (!redisConfig.url) {
@@ -340,6 +386,12 @@ export class MediaSyncQueue {
     options?: { delay?: number; priority?: number }
   ): Promise<Queue.Job<MediaSyncJobData> | { id: string; type: 'in-memory' } | null> {
     await this.initialize()
+    
+    // Ждём готовности StorageService для S3 операций
+    // Это предотвращает ошибку "S3 not configured"
+    if (data.operation === 'upload_to_s3' || data.operation === 'delete_from_s3') {
+      await this.waitForStorageReady()
+    }
 
     const delay = options?.delay || 0
 

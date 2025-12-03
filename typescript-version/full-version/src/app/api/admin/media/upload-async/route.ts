@@ -109,13 +109,11 @@ export async function POST(request: NextRequest) {
     // Записываем событие
     await eventService.record({
       source: 'media',
+      module: 'media',
       type: 'media.async_upload_queued',
       severity: 'info',
-      entityType: 'media',
-      entityId: jobId?.toString(),
-      userId: user.id,
       message: `Файл "${file.name}" принят в async обработку`,
-      details: {
+      payload: {
         filename: file.name,
         fileSize: buffer.length,
         mimeType: file.type,
@@ -123,6 +121,8 @@ export async function POST(request: NextRequest) {
         entityId: entityId || undefined,
         jobId,
       },
+      actor: { type: 'user', id: user.id },
+      subject: jobId ? { type: 'media', id: jobId.toString() } : undefined,
     })
 
     logger.info('[API] Async media upload queued', {

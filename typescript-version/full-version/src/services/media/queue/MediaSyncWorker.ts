@@ -40,18 +40,23 @@ export class MediaSyncWorker {
 
       switch (operation) {
         case 'upload_to_s3':
+        case 'upload_to_s3_with_delete':
+        case 'upload_to_s3_keep_local':
           result = await this.uploadToS3(job, storageService)
           break
 
         case 'download_from_s3':
+        case 'download_from_s3_delete_s3':
           result = await this.downloadFromS3(job, storageService)
           break
 
         case 'delete_s3':
+        case 'delete_s3_only':
           result = await this.deleteS3(job, storageService)
           break
 
         case 'delete_local':
+        case 'delete_local_only':
           result = await this.deleteLocal(job, storageService)
           break
 
@@ -184,7 +189,9 @@ export class MediaSyncWorker {
     job: Queue.Job<MediaSyncJobData>,
     storageService: Awaited<ReturnType<typeof getStorageService>>
   ): Promise<MediaSyncResult> {
-    const { mediaId, deleteSource } = job.data
+    const { mediaId, options, deleteSource: directDeleteSource } = job.data
+    // Check both direct deleteSource and options.deleteSource for backwards compatibility
+    const deleteSource = directDeleteSource ?? options?.deleteSource ?? false
 
     const media = await prisma.media.findUnique({ where: { id: mediaId } })
     if (!media) {
@@ -249,7 +256,9 @@ export class MediaSyncWorker {
     job: Queue.Job<MediaSyncJobData>,
     storageService: Awaited<ReturnType<typeof getStorageService>>
   ): Promise<MediaSyncResult> {
-    const { mediaId, deleteSource } = job.data
+    const { mediaId, options, deleteSource: directDeleteSource } = job.data
+    // Check both direct deleteSource and options.deleteSource for backwards compatibility
+    const deleteSource = directDeleteSource ?? options?.deleteSource ?? false
 
     const media = await prisma.media.findUnique({ where: { id: mediaId } })
     if (!media) {

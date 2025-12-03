@@ -302,7 +302,7 @@ async function buildRunSummary({
           
           // 6. Последний fallback
           if (!scriptIdentifier) {
-            scriptIdentifier = normalizedPath || filePath || selectedTestTitle
+            scriptIdentifier = normalizedPath || filePath || selectedTestTitle || 'unknown'
           }
 
           // Get timeout from the script if available
@@ -311,9 +311,9 @@ async function buildRunSummary({
 
           scripts.push({
             runId,
-            scriptId: scriptIdentifier,
-            title: test.title || spec.title || selectedTestTitle,
-            file: filePath || normalizedPath,
+            scriptId: scriptIdentifier || 'unknown',
+            title: test.title || spec.title || selectedTestTitle || 'Unknown Test',
+            file: filePath || normalizedPath || 'unknown',
             status: result.status === 'passed' ? 'passed' : 'failed',
             duration,
             startedAt,

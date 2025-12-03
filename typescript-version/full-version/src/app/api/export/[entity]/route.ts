@@ -14,11 +14,12 @@ import { getEnvironmentFromRequest } from '@/lib/metrics/helpers'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { entity: string } }
+  { params }: { params: Promise<{ entity: string }> }
 ) {
   try {
+    const resolvedParams = await params
     // Валидация параметров пути
-    const paramsValidation = exportParamsSchema.safeParse(params)
+    const paramsValidation = exportParamsSchema.safeParse(resolvedParams)
     if (!paramsValidation.success) {
       logger.warn('[export] Invalid path parameters', {
         params,
@@ -56,7 +57,7 @@ export async function POST(
 
       logger.warn('[export] Rate limit exceeded', {
         key: rateLimitKey,
-        entity: params.entity,
+        entity: resolvedParams.entity,
         remaining: rateLimitResult.remaining
       })
 
@@ -96,7 +97,7 @@ export async function POST(
     const validation = exportRequestSchema.safeParse(requestBody)
     if (!validation.success) {
       logger.warn('[export] Validation failed', {
-        entity: params.entity,
+        entity: resolvedParams.entity,
         errors: validation.error.errors
       })
       return NextResponse.json(
@@ -108,7 +109,7 @@ export async function POST(
     const { format, filters, selectedIds, includeHeaders, filename } = validation.data
 
     // Экспорт данных
-    const result = await exportService.exportData(params.entity, {
+    const result = await exportService.exportData(resolvedParams.entity, {
       format,
       filters,
       selectedIds,
@@ -141,7 +142,7 @@ export async function POST(
   } catch (error) {
     logger.error('[export] API error', {
       error: error instanceof Error ? error.message : error,
-      entity: params.entity,
+      entity: resolvedParams.entity,
       file: 'src/app/api/export/[entity]/route.ts'
     })
     return NextResponse.json(

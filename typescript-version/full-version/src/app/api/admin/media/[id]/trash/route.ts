@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
-import { isAdminOrHigher } from '@/utils/permissions/permissions'
+import { isSuperadmin } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import { createReadStream, existsSync } from 'fs'
 import { stat } from 'fs/promises'
@@ -19,7 +19,7 @@ export async function GET(
   try {
     const { user } = await requireAuth(request)
     
-    if (!isAdminOrHigher(user)) {
+    if (!isSuperadmin(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

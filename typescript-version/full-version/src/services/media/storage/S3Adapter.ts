@@ -26,10 +26,14 @@ export class S3Adapter implements StorageAdapter {
   private client: S3Client
   private bucket: string
   private publicUrlPrefix?: string
+  private endpoint?: string
+  private forcePathStyle: boolean
 
   constructor(config: S3AdapterConfig) {
     this.bucket = config.bucket
     this.publicUrlPrefix = config.publicUrlPrefix
+    this.endpoint = config.endpoint
+    this.forcePathStyle = config.forcePathStyle ?? false
     
     this.client = new S3Client({
       region: config.region,
@@ -38,7 +42,7 @@ export class S3Adapter implements StorageAdapter {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
       },
-      forcePathStyle: config.forcePathStyle ?? false,
+      forcePathStyle: this.forcePathStyle,
     })
   }
 
@@ -177,11 +181,24 @@ export class S3Adapter implements StorageAdapter {
   getUrl(path: string): string {
     const key = this.normalizeKey(path)
     
+    // Если есть CDN/public URL prefix — используем его
     if (this.publicUrlPrefix) {
       return `${this.publicUrlPrefix}/${key}`
     }
     
-    // Формируем стандартный S3 URL
+    // Если есть custom endpoint (MinIO, Yandex, etc)
+    if (this.endpoint) {
+      if (this.forcePathStyle) {
+        // Path-style: http://endpoint/bucket/key
+        return `${this.endpoint}/${this.bucket}/${key}`
+      } else {
+        // Virtual-hosted style: http://bucket.endpoint/key
+        const endpointUrl = new URL(this.endpoint)
+        return `${endpointUrl.protocol}//${this.bucket}.${endpointUrl.host}/${key}`
+      }
+    }
+    
+    // Формируем стандартный AWS S3 URL
     // Примечание: это работает только для публичных bucket'ов
     return `https://${this.bucket}.s3.amazonaws.com/${key}`
   }

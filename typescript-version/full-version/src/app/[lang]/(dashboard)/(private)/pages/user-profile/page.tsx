@@ -46,7 +46,7 @@ const tabContentList = (data?: Data): { [key: string]: ReactElement } => ({
 
 const ProfilePage = async () => {
   // Vars
-  const data = await getProfileData()
+  const data = await getProfileData() as Data | undefined
 
   return <UserProfile data={data} tabContentList={tabContentList(data)} />
 }

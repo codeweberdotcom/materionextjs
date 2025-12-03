@@ -2297,6 +2297,10 @@ async function main() {
       deleteMode: 'soft',
       trashRetentionDays: 30,
       s3DeleteWithLocal: true,
+      // File organization
+      pathOrganization: 'date',    // date | hash | flat
+      // Processing
+      outputFormat: 'webp',        // webp | jpeg | original
     },
     create: {
       id: 'global-media-settings',
@@ -2320,15 +2324,17 @@ async function main() {
       localUploadPath: '/uploads',
       localPublicUrlPrefix: '/uploads',
       // File organization
-      organizeByDate: true,
+      pathOrganization: 'date',    // date | hash | flat
       organizeByEntityType: true,
+      organizeByDate: true,        // @deprecated
       // Limits
       globalMaxFileSize: 20 * 1024 * 1024, // 20MB
       globalDailyUploadLimit: null,
       // Processing
       defaultQuality: 85,
-      defaultConvertToWebP: true,
+      outputFormat: 'webp',        // webp | jpeg | original
       processingConcurrency: 3,
+      defaultConvertToWebP: true,  // @deprecated
       // Legacy (deprecated)
       defaultStorageStrategy: 'local_first',
       autoDeleteOrphans: false,

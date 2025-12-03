@@ -10,9 +10,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
-import { isAdminOrHigher } from '@/utils/permissions/permissions'
+import { isSuperadmin } from '@/utils/permissions/permissions'
 import { getMediaService } from '@/services/media'
-import { getStorageService } from '@/services/media/storage'
 import logger from '@/lib/logger'
 
 /**
@@ -26,7 +25,7 @@ export async function GET(
   try {
     const { user } = await requireAuth(request)
 
-    if (!isAdminOrHigher(user)) {
+    if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -47,26 +46,53 @@ export async function GET(
       )
     }
 
-    // Получаем URL для всех вариантов - используем storageService напрямую (без доп. запросов к БД)
-    const storageService = await getStorageService()
+    // Получаем настройки для s3PublicUrlPrefix
+    const { prisma } = await import('@/libs/prisma')
+    const globalSettings = await prisma.mediaGlobalSettings.findFirst({
+      select: { s3PublicUrlPrefix: true }
+    })
+    const s3PublicUrlPrefix = globalSettings?.s3PublicUrlPrefix
+
+    // Получаем URL для всех вариантов
     const variants = JSON.parse(media.variants || '{}')
     const urls: Record<string, string> = {}
 
-    // getUrl - синхронный метод, быстро получаем все URL
-    for (const name of Object.keys(variants)) {
-      try {
-        urls[name] = storageService.getUrl(media, name)
-      } catch {
-        // Игнорируем
+    // Функция для формирования URL
+    const buildUrl = (localPath: string | null, s3Key: string | null, variantName?: string): string => {
+      // 1. Публичный S3 URL (если есть prefix)
+      if (s3PublicUrlPrefix && s3Key) {
+        const prefix = s3PublicUrlPrefix.endsWith('/') ? s3PublicUrlPrefix.slice(0, -1) : s3PublicUrlPrefix
+        const key = s3Key.startsWith('/') ? s3Key.slice(1) : s3Key
+        return `${prefix}/${key}`
       }
+      
+      // 2. Локальный путь
+      if (localPath) {
+        let path = localPath.replace(/^public\//, '').replace(/^\//, '')
+        while (path.startsWith('uploads/')) path = path.substring(8)
+        return `/uploads/${path}`
+      }
+      
+      // 3. Proxy URL (fallback)
+      if (s3Key) {
+        return variantName 
+          ? `/api/admin/media/${id}/file?variant=${variantName}`
+          : `/api/admin/media/${id}/file`
+      }
+      
+      return ''
+    }
+    
+    // URLs вариантов
+    for (const name of Object.keys(variants)) {
+      const variant = variants[name]
+      const url = buildUrl(variant.localPath, variant.s3Key, name)
+      if (url) urls[name] = url
     }
 
     // URL оригинала
-    try {
-      urls.original = storageService.getUrl(media)
-    } catch {
-      // Игнорируем
-    }
+    const originalUrl = buildUrl(media.localPath, media.s3Key)
+    if (originalUrl) urls.original = originalUrl
 
     return NextResponse.json({
       media,
@@ -95,7 +121,7 @@ export async function PUT(
   try {
     const { user } = await requireAuth(request)
 
-    if (!isAdminOrHigher(user)) {
+    if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -156,7 +182,7 @@ export async function PATCH(
   try {
     const { user } = await requireAuth(request)
 
-    if (!isAdminOrHigher(user)) {
+    if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -211,7 +237,7 @@ export async function DELETE(
   try {
     const { user } = await requireAuth(request)
 
-    if (!isAdminOrHigher(user)) {
+    if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }

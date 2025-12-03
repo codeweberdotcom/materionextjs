@@ -135,10 +135,11 @@ const generateJson = (events: Array<Record<string, any>>): string => {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { format: string } }
+  { params }: { params: Promise<{ format: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { format: formatParam } = await params
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -157,7 +158,7 @@ export async function GET(
     }
 
     // Валидация формата
-    const format = params.format.toLowerCase()
+    const format = formatParam.toLowerCase()
     if (format !== 'csv' && format !== 'json') {
       return NextResponse.json({ error: 'Invalid format. Supported: csv, json' }, { status: 400 })
     }
@@ -318,7 +319,7 @@ export async function GET(
           },
           hasSensitiveData: canViewSensitive
         }
-      })
+      }))
     } catch (error) {
       logger.warn('Failed to record export event', { error })
       // Не прерываем экспорт из-за ошибки записи события
@@ -345,7 +346,6 @@ export async function GET(
 
     logger.error('Failed to export events', {
       error: errorDetails,
-      format,
       url: request.url,
       timestamp: new Date().toISOString()
     })

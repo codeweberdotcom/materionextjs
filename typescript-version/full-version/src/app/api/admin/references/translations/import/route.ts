@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
       type: 'translation.imported',
       message: `Imported ${result.importedCount} translations for languages: ${result.languages.join(', ')}`,
       severity: 'info',
-      userId: currentUser.id,
-      details: {
+      actor: { type: 'user', id: currentUser.id },
+      payload: {
         importedCount: result.importedCount,
         languages: result.languages
       }

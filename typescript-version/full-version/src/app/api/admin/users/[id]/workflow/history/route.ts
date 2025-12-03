@@ -6,9 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
-
-import { authOptions } from '@/lib/auth'
+import { requireAuth } from '@/utils/auth/auth'
 import { userWorkflowService } from '@/services/workflows/UserWorkflowService'
 
 interface RouteParams {
@@ -25,9 +23,9 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: 'Требуется авторизация' }, { status: 401 })
     }
 

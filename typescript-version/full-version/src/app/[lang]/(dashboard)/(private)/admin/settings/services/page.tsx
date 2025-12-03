@@ -789,10 +789,11 @@ export default function ExternalServicesPage() {
                 </FormControl>
 
                 <TextField
-                  label='Тестовый Bucket (опционально)'
+                  label='Bucket'
                   value={formData.s3Bucket}
                   onChange={e => setFormData(prev => ({ ...prev, s3Bucket: e.target.value }))}
-                  helperText='Для проверки доступа при тестировании подключения'
+                  helperText='Имя бакета для хранения файлов'
+                  required
                 />
 
                 <FormControlLabel

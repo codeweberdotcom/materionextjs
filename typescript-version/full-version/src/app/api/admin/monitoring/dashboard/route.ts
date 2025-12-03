@@ -209,7 +209,7 @@ export async function GET(request: NextRequest) {
     logger.info('[monitoring] Dashboard data requested', { userId: user.id })
 
     // 1. Получаем статус системы
-    let databaseStatus = { status: 'down' as const }
+    let databaseStatus: { status: string; latency?: number; activeConnections?: number; error?: string } = { status: 'down' }
     try {
       databaseStatus = await getDatabaseMetrics()
     } catch (error) {
@@ -458,7 +458,7 @@ export async function GET(request: NextRequest) {
         return {
           grafana: grafanaConfig?.url || 'http://localhost:9091',
           prometheus: prometheusConfig?.url || 'http://localhost:9090',
-          sentry: sentryConfig?.url || sentryConfig?.apiKey || null
+          sentry: sentryConfig?.url || (sentryConfig?.token ? `https://sentry.io` : null)
         }
       })()
     })

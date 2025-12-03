@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         skip,
         take: limit
       }),
-      prisma.count ? prisma.user.count({ where: whereCondition }) : 0
+      prisma.user.count({ where: whereCondition })
     ])
 
     // Трансформируем данные

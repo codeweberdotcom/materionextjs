@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
-import { getMediaSyncService, SyncScope, SyncOperation, initializeMediaQueues } from '@/services/media'
+import { getMediaSyncService, SyncScope, SyncOperation, initializeMediaQueues, getStorageService } from '@/services/media'
 import logger from '@/lib/logger'
 
 type SyncAction = 
@@ -78,6 +78,26 @@ export async function POST(request: NextRequest) {
 
     // Инициализируем очереди и workers
     await initializeMediaQueues()
+
+    // Проверяем S3 конфигурацию для операций с S3
+    const s3RequiredActions = [
+      'upload_to_s3_with_delete', 
+      'upload_to_s3_keep_local',
+      'download_from_s3',
+      'download_from_s3_delete_s3',
+      'delete_s3_only',
+      'purge_s3',
+    ]
+    
+    if (s3RequiredActions.includes(action)) {
+      const storageService = await getStorageService()
+      if (!storageService.isS3Available()) {
+        return NextResponse.json(
+          { error: 'S3 не настроен. Настройте S3 в настройках медиатеки или добавьте внешний S3 сервис.' },
+          { status: 400 }
+        )
+      }
+    }
 
     const syncService = getMediaSyncService()
     let job

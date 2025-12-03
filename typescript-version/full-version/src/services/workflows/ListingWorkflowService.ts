@@ -10,7 +10,7 @@
 
 import { createActor } from 'xstate'
 
-import prisma from '@/libs/prisma'
+import { prisma } from '@/libs/prisma'
 import { eventService } from '@/services/events/EventService'
 
 import { listingMachine, type ListingContext, type ListingState, listingStateLabels } from './machines/ListingMachine'

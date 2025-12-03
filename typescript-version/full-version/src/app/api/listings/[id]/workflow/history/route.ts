@@ -6,12 +6,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
-
-import { authOptions } from '@/lib/auth'
+import { requireAuth } from '@/utils/auth/auth'
 import { listingWorkflowService } from '@/services/workflows/ListingWorkflowService'
 import { listingStateLabels, listingEventLabels } from '@/services/workflows/machines/ListingMachine'
-import prisma from '@/libs/prisma'
+import { prisma } from '@/libs/prisma'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -27,9 +25,9 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: 'Требуется авторизация' }, { status: 401 })
     }
 

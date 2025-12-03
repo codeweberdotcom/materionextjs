@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         status: 400,
         code: 'SEND_PHONE_CODE_VALIDATION_ERROR',
         message: 'Validation error',
-        details: validationResult.error.errors,
+        details: validationResult.error.errors.map(e => e.message),
         logLevel: 'warn',
         route: 'verify/phone/send',
         context: { route: 'verify/phone/send', errors: validationResult.error.errors }

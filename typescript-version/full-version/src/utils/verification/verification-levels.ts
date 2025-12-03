@@ -90,14 +90,14 @@ export function getVerificationStatus(user: User): VerificationStatus {
 /**
  * Проверяет, может ли пользователь видеть админку
  */
-export function canViewAdmin(user: User): boolean {
+export function canViewAdmin(user: Pick<User, 'emailVerified' | 'phoneVerified'>): boolean {
   return !!user.emailVerified || !!user.phoneVerified
 }
 
 /**
  * Проверяет, может ли пользователь управлять (полный доступ)
  */
-export function canManage(user: User): boolean {
+export function canManage(user: Pick<User, 'emailVerified' | 'phoneVerified'>): boolean {
   return !!user.emailVerified && !!user.phoneVerified
 }
 

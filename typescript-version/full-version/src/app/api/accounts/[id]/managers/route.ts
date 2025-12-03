@@ -12,10 +12,11 @@ import { eventService } from '@/services/events/EventService'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { id } = await params
 
     if (!user?.id) {
       return NextResponse.json(
@@ -24,7 +25,7 @@ export async function GET(
       )
     }
 
-    const managers = await accountManagerService.getAccountManagers(params.id, user.id)
+    const managers = await accountManagerService.getAccountManagers(id, user.id)
 
     return NextResponse.json({
       success: true,
@@ -48,10 +49,11 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { id } = await params
 
     if (!user?.id) {
       return NextResponse.json(
@@ -76,7 +78,7 @@ export async function POST(
     const { userId, permissions } = validationResult.data
 
     const manager = await accountManagerService.assignManager(
-      params.id,
+      id,
       user.id,
       userId,
       permissions,
@@ -84,15 +86,13 @@ export async function POST(
     )
 
     // Логируем событие
-    await eventService.create({
+    await eventService.record({
       source: 'api',
       module: 'account',
       type: 'manager.assigned',
       severity: 'info',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'account',
-      subjectId: params.id,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'account', id: id },
       message: `Пользователь ${user.email || user.id} назначил менеджера для аккаунта`,
       payload: {
         managerUserId: userId,

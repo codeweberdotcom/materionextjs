@@ -8,8 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
-import { requireAuth } from '@/lib/auth/api-helpers'
-import { checkPermission } from '@/lib/permissions'
+import { requireAuth } from '@/utils/auth/auth'
+import { checkPermission } from '@/utils/permissions/permissions'
 import { eventService } from '@/services/events'
 import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const { user } = await requireAuth(request)
 
     // Проверяем права администратора
-    const hasPermission = await checkPermission(user.id, 'settings', 'read')
+    const hasPermission = await checkPermission(user, 'settings', 'read')
     if (!hasPermission) {
       return NextResponse.json(
         { error: 'Access denied' },
@@ -69,7 +69,7 @@ export async function PUT(request: NextRequest) {
     const { user } = await requireAuth(request)
 
     // Проверяем права администратора
-    const hasPermission = await checkPermission(user.id, 'settings', 'edit')
+    const hasPermission = await checkPermission(user, 'settings', 'edit')
     if (!hasPermission) {
       return NextResponse.json(
         { error: 'Access denied' },

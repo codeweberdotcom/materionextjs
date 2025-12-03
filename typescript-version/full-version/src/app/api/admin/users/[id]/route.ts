@@ -68,7 +68,7 @@ export async function GET(
       role: targetUser.role?.name || 'subscriber',
       company: 'N/A',
       contact: 'N/A',
-      username: targetUser.email.split('@')[0],
+      username: targetUser.email?.split('@')[0] || 'user',
       country: targetUser.country,
       currentPlan: 'basic',
       status: targetUser.status || 'active',
@@ -137,7 +137,8 @@ export async function PUT(
         id: true,
         role: {
           select: {
-            name: true
+            name: true,
+            code: true
           }
         }
       }
@@ -313,7 +314,7 @@ export async function PUT(
       role: uiRole,
       company: 'N/A',
       contact: 'N/A',
-      username: updatedUser.email.split('@')[0],
+      username: updatedUser.email?.split('@')[0] || 'user',
       country: updatedUser.country,
       currentPlan: 'basic',
       status: (updatedUser.isActive ?? true) ? 'active' : 'inactive',
@@ -374,7 +375,8 @@ export async function PATCH(
         isActive: true,
         role: {
           select: {
-            name: true
+            name: true,
+            code: true
           }
         }
       }
@@ -459,7 +461,7 @@ export async function PATCH(
       role: uiRole,
       company: 'N/A',
       contact: 'N/A',
-      username: updatedUser.email.split('@')[0],
+      username: updatedUser.email?.split('@')[0] || 'user',
       country: updatedUser.country,
       currentPlan: 'basic',
       status: (updatedUser.isActive ?? true) ? 'active' : 'inactive',
@@ -522,7 +524,8 @@ export async function DELETE(
         id: true,
         role: {
           select: {
-            name: true
+            name: true,
+            code: true
           }
         }
       }

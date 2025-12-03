@@ -12,10 +12,11 @@ import { eventService } from '@/services/events/EventService'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { transferId: string } }
+  { params }: { params: Promise<{ transferId: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { transferId } = await params
 
     if (!user?.id) {
       return NextResponse.json(
@@ -40,21 +41,19 @@ export async function POST(
     const { reason } = validationResult.data || {}
 
     const transfer = await accountTransferService.rejectTransfer(
-      params.transferId,
+      transferId,
       user.id,
       reason
     )
 
     // Логируем событие
-    await eventService.create({
+    await eventService.record({
       source: 'api',
       module: 'account',
       type: 'transfer.rejected',
       severity: 'info',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'account',
-      subjectId: transfer.fromAccountId,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'account', id: transfer.fromAccountId },
       message: `Пользователь ${user.email || user.id} отклонил передачу аккаунта`,
       payload: {
         transferId: transfer.id,

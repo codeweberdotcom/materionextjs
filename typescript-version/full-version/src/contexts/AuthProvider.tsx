@@ -28,6 +28,7 @@ interface AuthContextType {
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
+  refreshSession: () => Promise<void>
 }
 
 interface RateLimitError extends Error {
@@ -181,13 +182,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logger.info('🧹 [AUTH] Local state cleared')
   }
 
+  const refreshSession = async () => {
+    await checkAuth()
+  }
+
   return (
     <AuthContext.Provider value={{
       user,
       session,
       isLoading,
       login,
-      logout
+      logout,
+      refreshSession
     }}>
       {children}
     </AuthContext.Provider>

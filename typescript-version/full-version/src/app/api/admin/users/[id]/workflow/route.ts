@@ -7,9 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-import { getServerSession } from 'next-auth'
-
-import { authOptions } from '@/lib/auth'
+import { requireAuth } from '@/utils/auth/auth'
 import { userWorkflowService } from '@/services/workflows/UserWorkflowService'
 import { userStateLabels, userEventLabels } from '@/services/workflows/machines/UserMachine'
 
@@ -24,15 +22,15 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: 'Требуется авторизация' }, { status: 401 })
     }
 
     const { id: userId } = await params
 
-    const workflowState = await userWorkflowService.getWorkflowState(userId, session.user.id)
+    const workflowState = await userWorkflowService.getWorkflowState(userId, user.id)
 
     if (!workflowState) {
       return NextResponse.json({ error: 'Пользователь не найден' }, { status: 404 })
@@ -73,9 +71,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions)
+    const { user } = await requireAuth(request)
 
-    if (!session?.user?.id) {
+    if (!user?.id) {
       return NextResponse.json({ error: 'Требуется авторизация' }, { status: 401 })
     }
 
@@ -109,7 +107,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const result = await userWorkflowService.transition({
       userId,
       event: event as 'SUSPEND' | 'RESTORE' | 'BLOCK' | 'UNBLOCK' | 'DELETE',
-      actorId: session.user.id,
+      actorId: user.id,
       reason,
       metadata
     })

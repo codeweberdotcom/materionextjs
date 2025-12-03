@@ -14,7 +14,7 @@
  * @module hooks/useBulkUpload
  */
 
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 
 /**
  * Статус файла в очереди
@@ -129,10 +129,10 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
   const mutexRef = useRef<Promise<void>>(Promise.resolve())
   
   // Опции (актуальные значения)
-  const optionsRef = useRef({ entityType, entityId, endpoint, useAsyncUpload })
+  const optionsRef = useRef({ entityType, entityId, endpoint, useAsyncUpload, parallelLimit })
   useEffect(() => {
-    optionsRef.current = { entityType, entityId, endpoint, useAsyncUpload }
-  }, [entityType, entityId, endpoint, useAsyncUpload])
+    optionsRef.current = { entityType, entityId, endpoint, useAsyncUpload, parallelLimit }
+  }, [entityType, entityId, endpoint, useAsyncUpload, parallelLimit])
 
   // Callbacks refs
   const callbacksRef = useRef({ onFileSuccess, onFileError, onComplete })
@@ -144,13 +144,13 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
   const uiUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   const syncQueueToUI = useCallback(() => {
-    // Batch UI updates - не чаще чем раз в 100ms
+    // Batch UI updates - не чаще чем раз в 250ms (optimized for performance)
     if (uiUpdateTimeoutRef.current) return
     
     uiUpdateTimeoutRef.current = setTimeout(() => {
       uiUpdateTimeoutRef.current = null
       setFiles([...queueRef.current])
-    }, 100)
+    }, 250)
   }, [])
   
   const syncQueueToUIImmediate = useCallback(() => {
@@ -173,24 +173,38 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
     }
   }, [])
 
-  // === STATISTICS ===
+  // === STATISTICS (optimized - single pass) ===
   const calculateStats = useCallback((): UploadStats => {
     const queue = queueRef.current
     const total = queue.length
-    const pending = queue.filter(f => f.status === 'pending').length
-    const uploading = queue.filter(f => f.status === 'uploading').length
-    const success = queue.filter(f => f.status === 'success').length
-    const error = queue.filter(f => f.status === 'error').length
-    const cancelled = queue.filter(f => f.status === 'cancelled').length
+    
+    // Single pass through array for all counts
+    let pending = 0, uploading = 0, success = 0, error = 0, cancelled = 0
+    let bytesTotal = 0, bytesUploaded = 0
+    
+    for (const f of queue) {
+      bytesTotal += f.file.size
+      
+      switch (f.status) {
+        case 'pending': pending++; break
+        case 'uploading': 
+          uploading++
+          bytesUploaded += f.file.size * f.progress / 100
+          break
+        case 'success': 
+          success++
+          bytesUploaded += f.file.size
+          break
+        case 'error': error++; break
+        case 'cancelled': cancelled++; break
+      }
+    }
 
-    const bytesTotal = queue.reduce((sum, f) => sum + f.file.size, 0)
-    const bytesUploaded = queue.reduce((sum, f) => {
-      if (f.status === 'success') return sum + f.file.size
-      if (f.status === 'uploading') return sum + (f.file.size * f.progress / 100)
-      return sum
-    }, 0)
+    // Uploadable = pending + uploading + success + cancelled (not error from validation)
+    const uploadableTotal = pending + uploading + success + cancelled
 
-    const progress = total > 0 ? Math.round(((success + error + cancelled) / total) * 100) : 0
+    // Progress based only on uploadable files (excluding validation errors)
+    const progress = uploadableTotal > 0 ? Math.round(((success + cancelled) / uploadableTotal) * 100) : 0
 
     const elapsed = uploadStartTimeRef.current 
       ? (Date.now() - uploadStartTimeRef.current) / 1000 
@@ -205,8 +219,8 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
     }
   }, [])
 
-  // Computed stats from UI state
-  const stats = calculateStats()
+  // Memoized stats - only recalculate when files state changes
+  const stats = useMemo(() => calculateStats(), [files, calculateStats])
 
   // === QUEUE OPERATIONS ===
   
@@ -217,10 +231,11 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
     if (allowedCount <= 0) return
     
     const filesToAdd = newFiles.slice(0, allowedCount)
+    const maxSizeMB = Math.round(maxFileSize / (1024 * 1024))
     
-    const queuedFiles: QueuedFile[] = filesToAdd.map((file, index) => {
+    // Fast path: create queued files without previews first
+    const queuedFiles: QueuedFile[] = filesToAdd.map((file) => {
       const exceedsMaxSize = file.size > maxFileSize
-      const maxSizeMB = Math.round(maxFileSize / (1024 * 1024))
       
       return {
         id: generateId(),
@@ -229,15 +244,39 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
         progress: 0,
         retryCount: 0,
         error: exceedsMaxSize ? `File size exceeds ${maxSizeMB} MB limit` : undefined,
-        preview: (currentCount + index < maxPreviews && file.type.startsWith('image/'))
-          ? URL.createObjectURL(file)
-          : undefined,
+        preview: undefined, // Will be created asynchronously
       }
     })
 
     queueRef.current = [...queueRef.current, ...queuedFiles]
-    syncQueueToUIImmediate()
-  }, [maxFiles, maxFileSize, maxPreviews, syncQueueToUIImmediate])
+    
+    // Debounced UI update (not immediate - prevents blocking on large batches)
+    syncQueueToUI()
+    
+    // Create previews asynchronously for first N files only
+    const previewsToCreate = queuedFiles
+      .filter((f, i) => currentCount + i < maxPreviews && f.file.type.startsWith('image/') && f.status !== 'error')
+      .slice(0, Math.max(0, maxPreviews - currentCount))
+    
+    if (previewsToCreate.length > 0) {
+      // Use requestIdleCallback or setTimeout for non-blocking preview creation
+      const createPreviews = () => {
+        for (const qf of previewsToCreate) {
+          const fileInQueue = queueRef.current.find(f => f.id === qf.id)
+          if (fileInQueue && !fileInQueue.preview) {
+            fileInQueue.preview = URL.createObjectURL(qf.file)
+          }
+        }
+        syncQueueToUI() // Batch update after all previews created
+      }
+      
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(createPreviews, { timeout: 500 })
+      } else {
+        setTimeout(createPreviews, 50)
+      }
+    }
+  }, [maxFiles, maxFileSize, maxPreviews, syncQueueToUI])
 
   const removeFile = useCallback((id: string) => {
     const file = queueRef.current.find(f => f.id === id)
@@ -319,14 +358,30 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
       const result = await new Promise<{ success: boolean; mediaId?: string; jobId?: string; error?: string }>((resolve) => {
         const xhr = new XMLHttpRequest()
         
+        // Throttle progress updates - update only every 5% or 500ms
+        let lastProgressUpdate = 0
+        let lastProgressValue = 0
+        
         xhr.upload.addEventListener('progress', (e) => {
           if (e.lengthComputable) {
             const progress = Math.round((e.loaded / e.total) * 100)
-            // Update progress in queue
-            const index = queueRef.current.findIndex(f => f.id === queuedFile.id)
-            if (index !== -1) {
-              queueRef.current[index] = { ...queueRef.current[index], progress }
-              syncQueueToUI()
+            const now = Date.now()
+            
+            // Only update if: progress changed by 5%+ OR 500ms passed OR completed
+            const significantChange = progress - lastProgressValue >= 5
+            const timeElapsed = now - lastProgressUpdate >= 500
+            const isComplete = progress >= 100
+            
+            if (significantChange || timeElapsed || isComplete) {
+              lastProgressUpdate = now
+              lastProgressValue = progress
+              
+              // Direct update without findIndex (we know the file)
+              const index = queueRef.current.findIndex(f => f.id === queuedFile.id)
+              if (index !== -1) {
+                queueRef.current[index].progress = progress
+                syncQueueToUI()
+              }
             }
           }
         })
@@ -445,7 +500,8 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
     const pending = queueRef.current.filter(f => f.status === 'pending')
     if (pending.length === 0) return
 
-    console.log(`[useBulkUpload] Starting upload of ${pending.length} files with ${parallelLimit} workers`)
+    const currentParallelLimit = optionsRef.current.parallelLimit
+    console.log(`[useBulkUpload] Starting upload of ${pending.length} files with ${currentParallelLimit} workers`)
     
     isUploadingRef.current = true
     isPausedRef.current = false
@@ -455,7 +511,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
     setIsPaused(false)
 
     // Start workers
-    const workerPromises = Array(parallelLimit)
+    const workerPromises = Array(currentParallelLimit)
       .fill(null)
       .map((_, i) => runWorker(i + 1))
 
@@ -469,7 +525,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
       const finalStats = calculateStats()
       callbacksRef.current.onComplete?.(finalStats)
     })
-  }, [parallelLimit, runWorker, syncQueueToUIImmediate, calculateStats])
+  }, [runWorker, syncQueueToUIImmediate, calculateStats])
 
   const pauseUpload = useCallback(() => {
     console.log('[useBulkUpload] Pausing')

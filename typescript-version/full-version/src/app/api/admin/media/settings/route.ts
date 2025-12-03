@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       global: globalSettings,
-      entitySettings,
+      entities: entitySettings, // фронтенд ожидает 'entities'
       availablePresets,
       defaultPresets: IMAGE_PRESETS,
     })

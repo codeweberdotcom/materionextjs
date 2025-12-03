@@ -6,14 +6,15 @@ import { rateLimitService } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { user } = await requireAuth(request)
+    const { id } = await params
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -24,11 +25,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    if (!params?.id) {
+    if (!id) {
       return NextResponse.json({ error: 'Event ID is required' }, { status: 400 })
     }
 
-    const success = await rateLimitService.deleteEvent(params.id)
+    const success = await rateLimitService.deleteEvent(id)
     if (!success) {
       return NextResponse.json({ error: 'Failed to delete event' }, { status: 500 })
     }

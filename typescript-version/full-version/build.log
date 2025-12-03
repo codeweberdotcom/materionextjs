@@ -1,0 +1,11 @@
+
+> materio-mui-nextjs-admin-template@5.0.0 build C:\laragon\www\materionextjs\typescript-version\full-version
+> next build
+
+   ▲ Next.js 15.1.2
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+   Skipping linting
+   Checking validity of types ...
+ ELIFECYCLE  Command failed with exit code 1.

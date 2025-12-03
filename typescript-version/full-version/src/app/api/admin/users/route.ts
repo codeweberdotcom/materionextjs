@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         email: validatedData.email,
         password: hashedPassword,
         roleId: dbRole.id,
-        country: validatedData.country || null,
+        country: validatedData.country || undefined,
         status: userStatus,
         image: imagePath
       },

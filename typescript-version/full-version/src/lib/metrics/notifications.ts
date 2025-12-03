@@ -176,3 +176,41 @@ export const markRetry = (
 ) => {
   notificationRetriesCounter.inc({ channel, attempt: String(attempt), environment })
 }
+
+// Alias для обратной совместимости
+export const markRetryAttempt = markRetry
+
+/**
+ * Установить размер очереди (alias для updateQueueSize)
+ */
+export const setQueueSize = (
+  status: 'waiting' | 'active' | 'completed' | 'failed',
+  size: number,
+  queueType: 'bull' | 'in-memory',
+  environment: string = process.env.NODE_ENV || 'development'
+) => {
+  notificationQueueSize.set({ queue_type: `${queueType}_${status}`, environment }, size)
+}
+
+/**
+ * Отметить ошибку очереди
+ */
+export const markQueueError = (
+  errorType: string,
+  environment: string = process.env.NODE_ENV || 'development'
+) => {
+  notificationsFailedCounter.inc({ channel: 'queue', error_type: errorType, environment })
+}
+
+/**
+ * Начать таймер задачи
+ */
+export const startJobTimer = () => {
+  const startTime = Date.now()
+  return {
+    end: (channel: 'email' | 'sms' | 'browser' | 'telegram') => {
+      const duration = (Date.now() - startTime) / 1000
+      notificationSendDuration.observe({ channel, environment: process.env.NODE_ENV || 'development' }, duration)
+    }
+  }
+}

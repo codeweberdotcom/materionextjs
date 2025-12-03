@@ -173,6 +173,9 @@ export default function MediaLibrary() {
   // Parallel upload limit from settings (default 5, loaded from API)
   const [parallelLimit, setParallelLimit] = useState(5)
 
+  // S3 Public URL prefix for direct S3 access (no proxy)
+  const [s3PublicUrlPrefix, setS3PublicUrlPrefix] = useState<string | null>(null)
+
   // Filters
   const [search, setSearch] = useState('')
   const [entityType, setEntityType] = useState('')
@@ -213,20 +216,16 @@ export default function MediaLibrary() {
     maxPreviews: 20,
     useAsyncUpload: true, // Async upload - мгновенный ответ, обработка в очереди
     onFileSuccess: () => {
-      // Обновляем список после каждого успешного файла с debounce
-      setTimeout(() => {
-        fetchMedia()
-      }, 1000)
+      // Не обновляем список после каждого файла - только в onComplete
     },
     onFileError: (file, error) => {
       console.warn('[MediaLibrary] Upload error:', file.file.name, error)
     },
     onComplete: (stats) => {
-      // Финальное обновление списка после завершения всех загрузок
+      // Обновляем список ТОЛЬКО после завершения ВСЕХ загрузок
       if (stats.success > 0) {
-        setTimeout(() => {
           fetchMedia()
-        }, 1500)
+        fetchTrashCount()
       }
       // Не закрываем диалог автоматически - пользователь должен видеть результаты
     },
@@ -302,7 +301,7 @@ export default function MediaLibrary() {
     }
   }, [])
 
-  // Fetch media settings (max file size, parallel limit)
+  // Fetch media settings (max file size, parallel limit, storage location)
   const fetchMediaSettings = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/media/settings')
@@ -314,6 +313,16 @@ export default function MediaLibrary() {
         if (data.global?.processingConcurrency) {
           setParallelLimit(data.global.processingConcurrency)
         }
+        // S3 Public URL prefix for direct access
+        setS3PublicUrlPrefix(data.global?.s3PublicUrlPrefix || null)
+        
+        // Set storage indicators based on storageLocation
+        const storageLocation = data.global?.storageLocation || 'local'
+        const s3Active = data.global?.s3Enabled ?? false
+        
+        // local = only local, s3 = only s3, both = local + s3
+        setLocalEnabled(storageLocation === 'local' || storageLocation === 'both')
+        setS3Enabled(s3Active && (storageLocation === 's3' || storageLocation === 'both'))
       }
     } catch {
       // Use default
@@ -324,8 +333,7 @@ export default function MediaLibrary() {
   useEffect(() => {
     fetchMedia()
     fetchTrashCount()
-    fetchS3Status()
-    fetchMediaSettings()
+    fetchMediaSettings() // Also sets localEnabled/s3Enabled based on storageLocation
   }, [])
 
   // Re-fetch when filters change
@@ -436,6 +444,7 @@ export default function MediaLibrary() {
   }
 
   const [deleteProgress, setDeleteProgress] = useState({ current: 0, total: 0 })
+  const [restoreProgress, setRestoreProgress] = useState({ current: 0, total: 0, isRestoring: false })
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return
@@ -517,7 +526,10 @@ export default function MediaLibrary() {
   }
 
   // Restore from trash
+  const [restoringIds, setRestoringIds] = useState<string[]>([])
+  
   const handleRestore = async (id: string) => {
+    setRestoringIds(prev => [...prev, id])
     try {
       const response = await fetch(`/api/admin/media/${id}`, {
         method: 'PATCH',
@@ -530,26 +542,55 @@ export default function MediaLibrary() {
       fetchTrashCount()
     } catch (error) {
       toast.error('Ошибка восстановления')
+    } finally {
+      setRestoringIds(prev => prev.filter(i => i !== id))
     }
   }
 
   // Bulk restore from trash
   const handleBulkRestore = async () => {
     if (selectedIds.length === 0) return
+    
+    const total = selectedIds.length
+    setRestoreProgress({ current: 0, total, isRestoring: true })
+    
+    let successCount = 0
+    let errorCount = 0
+    
     try {
-      for (const id of selectedIds) {
-        await fetch(`/api/admin/media/${id}`, {
+      for (let i = 0; i < selectedIds.length; i++) {
+        const id = selectedIds[i]
+        try {
+          const response = await fetch(`/api/admin/media/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'restore' })
         })
+          if (response.ok) {
+            successCount++
+          } else {
+            errorCount++
+          }
+        } catch {
+          errorCount++
+        }
+        setRestoreProgress({ current: i + 1, total, isRestoring: true })
       }
-      toast.success(t?.filesRestored?.replace('{count}', String(selectedIds.length)) ?? `Restored: ${selectedIds.length} files`)
+      
+      if (successCount > 0) {
+        toast.success(t?.filesRestored?.replace('{count}', String(successCount)) ?? `Restored: ${successCount} files`)
+      }
+      if (errorCount > 0) {
+        toast.error(`Failed to restore: ${errorCount} files`)
+      }
+      
       setSelectedIds([])
       fetchMedia()
       fetchTrashCount()
     } catch (error) {
       toast.error(t?.restoreError ?? 'Restore error')
+    } finally {
+      setRestoreProgress({ current: 0, total: 0, isRestoring: false })
     }
   }
 
@@ -601,6 +642,14 @@ export default function MediaLibrary() {
       return `/api/admin/media/${m.id}/trash?variant=original`
     }
 
+    // Если есть S3 и настроен публичный URL — используем прямой доступ
+    if (m.s3Key && s3PublicUrlPrefix) {
+      const prefix = s3PublicUrlPrefix.endsWith('/') 
+        ? s3PublicUrlPrefix.slice(0, -1) 
+        : s3PublicUrlPrefix
+      return `${prefix}/${m.s3Key}`
+    }
+
     if (m.localPath) {
       // Исправляем путь: добавляем /uploads/ если нужно и убираем дубли
       let path = m.localPath
@@ -614,7 +663,13 @@ export default function MediaLibrary() {
 
       return `/uploads/${path}`
     }
+    
+    // Fallback: proxy через API (если S3 публичный URL не настроен)
+    if (m.s3Key) {
     return `/api/admin/media/${m.id}/file`
+    }
+    
+    return undefined
   }
 
   return (
@@ -968,6 +1023,7 @@ export default function MediaLibrary() {
                         borderColor: selectedIds.includes(m.id) ? 'primary.main' : 'divider',
                       }}
                     >
+                      {getMediaUrl(m) ? (
                       <img
                         src={getMediaUrl(m)}
                         alt={m.alt || m.filename}
@@ -981,6 +1037,21 @@ export default function MediaLibrary() {
                         }}
                         onClick={() => openDetail(m)}
                       />
+                      ) : (
+                        <Box
+                          sx={{
+                            width: '100%',
+                            height: 164,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            bgcolor: 'action.hover',
+                          }}
+                          onClick={() => openDetail(m)}
+                        >
+                          <i className="ri-image-line" style={{ fontSize: 48, opacity: 0.3 }} />
+                        </Box>
+                      )}
                     </Box>
                     <Box sx={{ pt: 1, minWidth: 0 }}>
                       <Typography
@@ -1019,13 +1090,17 @@ export default function MediaLibrary() {
                               <IconButton
                                 size="small"
                                 color="success"
+                                disabled={restoringIds.includes(m.id)}
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   handleRestore(m.id)
                                 }}
                                 sx={{ p: 0.25 }}
                               >
-                                <i className="ri-arrow-go-back-line" style={{ fontSize: 16 }} />
+                                {restoringIds.includes(m.id) 
+                                  ? <CircularProgress size={16} color="inherit" />
+                                  : <i className="ri-arrow-go-back-line" style={{ fontSize: 16 }} />
+                                }
                               </IconButton>
                             </Tooltip>
                             <Tooltip title={t?.deletePermanently ?? 'Delete permanently'}>
@@ -1088,7 +1163,7 @@ export default function MediaLibrary() {
                         <TableCell>
                           <Avatar
                             variant="rounded"
-                            src={getMediaUrl(m)}
+                            src={getMediaUrl(m) || undefined}
                             sx={{ width: 48, height: 48 }}
                           >
                             <i className="ri-image-line" />
@@ -1144,9 +1219,13 @@ export default function MediaLibrary() {
                                 <IconButton
                                   size="small"
                                   color="success"
+                                  disabled={restoringIds.includes(m.id)}
                                   onClick={() => handleRestore(m.id)}
                                 >
-                                  <i className="ri-arrow-go-back-line" />
+                                  {restoringIds.includes(m.id) 
+                                    ? <CircularProgress size={20} color="inherit" />
+                                    : <i className="ri-arrow-go-back-line" />
+                                  }
                                 </IconButton>
                               </Tooltip>
                               <Tooltip title={t?.deletePermanently ?? 'Delete permanently'}>
@@ -1248,7 +1327,7 @@ export default function MediaLibrary() {
           {uploading && (
             <LinearProgress
               variant="determinate"
-              value={bulkUpload.stats.progress}
+              value={bulkUpload.stats.progress || 0}
               sx={{ mt: 1 }}
             />
           )}
@@ -1475,7 +1554,7 @@ export default function MediaLibrary() {
                       {uploadFile.status === 'uploading' && (
                         <LinearProgress
                           variant="determinate"
-                          value={uploadFile.progress}
+                          value={uploadFile.progress || 0}
                           sx={{ mt: 0.5, height: 4, borderRadius: 2 }}
                         />
                       )}
@@ -1682,7 +1761,7 @@ export default function MediaLibrary() {
               </Typography>
               <LinearProgress
                 variant="determinate"
-                value={(deleteProgress.current / deleteProgress.total) * 100}
+                value={deleteProgress.total > 0 ? (deleteProgress.current / deleteProgress.total) * 100 : 0}
                 sx={{ height: 8, borderRadius: 1 }}
               />
             </Box>
@@ -1782,15 +1861,24 @@ export default function MediaLibrary() {
                 color="success"
                 size="small"
                 variant="contained"
-                startIcon={<i className="ri-arrow-go-back-line" />}
+                disabled={restoreProgress.isRestoring}
+                startIcon={
+                  restoreProgress.isRestoring 
+                    ? <CircularProgress size={16} color="inherit" />
+                    : <i className="ri-arrow-go-back-line" />
+                }
                 onClick={handleBulkRestore}
               >
-                {t?.restore ?? 'Restore'}
+                {restoreProgress.isRestoring 
+                  ? `${restoreProgress.current}/${restoreProgress.total}`
+                  : (t?.restore ?? 'Restore')
+                }
               </Button>
               <Button
                 color="error"
                 size="small"
                 variant="outlined"
+                disabled={restoreProgress.isRestoring}
                 startIcon={<i className="ri-delete-bin-line" />}
                 onClick={() => openDeleteConfirm('bulk', 'hard')}
               >

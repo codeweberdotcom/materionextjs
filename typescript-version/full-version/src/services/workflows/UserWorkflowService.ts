@@ -12,7 +12,7 @@
 
 import { createActor } from 'xstate'
 
-import prisma from '@/libs/prisma'
+import { prisma } from '@/libs/prisma'
 import { eventService } from '@/services/events/EventService'
 import { checkPermission, type UserWithRoleLike } from '@/utils/permissions/permissions'
 
@@ -448,15 +448,13 @@ class UserWorkflowService {
     // Логирование события безопасности
     const severity = ['blocked', 'deleted'].includes(toState) ? 'error' : 'warning'
 
-    await eventService.create({
+    await eventService.record({
       source: 'workflow',
       module: 'user',
       type: `user.${event.toLowerCase()}`,
       severity,
-      actorType: 'admin',
-      actorId,
-      subjectType: 'user',
-      subjectId: user.id,
+      actor: { type: 'admin', id: actorId },
+      subject: { type: 'user', id: user.id },
       message: `Пользователь ${user.email || user.id} переведён из состояния '${userStateLabels[fromState]}' в '${userStateLabels[toState]}'`,
       payload: {
         fromState,

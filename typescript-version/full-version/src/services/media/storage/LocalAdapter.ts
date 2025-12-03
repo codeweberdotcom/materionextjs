@@ -262,37 +262,125 @@ export class LocalAdapter implements StorageAdapter {
   }
 
   /**
-   * Переместить файл
+   * Переместить файл (использует reliableMove)
    */
   async move(sourcePath: string, destinationPath: string): Promise<string> {
     const sourceAbsolute = this.getAbsolutePath(sourcePath)
     const destAbsolute = this.getAbsolutePath(destinationPath)
     
+    await this.reliableMove(sourceAbsolute, destAbsolute)
+    
+    // Очищаем пустые директории после перемещения
+    await this.cleanupEmptyDirs(path.dirname(sourceAbsolute))
+    
+    return destinationPath
+  }
+
+  /**
+   * Надёжное перемещение файла между любыми путями (абсолютные пути)
+   * Copy + Verify + Delete с retry
+   * Если не удалось - откат и ошибка
+   */
+  async reliableMove(sourceAbsolute: string, destAbsolute: string): Promise<void> {
+    // Проверяем существование источника
+    if (!existsSync(sourceAbsolute)) {
+      throw new Error(`Source file not found: ${sourceAbsolute}`)
+    }
+    
+    // Создаём директорию назначения
+    const destDir = path.dirname(destAbsolute)
+    if (!existsSync(destDir)) {
+      await fs.mkdir(destDir, { recursive: true })
+    }
+    
+    // 1. Копируем файл
     try {
-      if (!existsSync(sourceAbsolute)) {
-        throw new Error(`Source file not found: ${sourcePath}`)
-      }
-      
-      await this.ensureDirectory(destAbsolute)
-      await fs.rename(sourceAbsolute, destAbsolute)
-      
-      logger.debug('[LocalAdapter] File moved', {
-        source: sourcePath,
-        destination: destinationPath,
-      })
-      
-      // Очищаем пустые директории после перемещения
-      await this.cleanupEmptyDirs(path.dirname(sourceAbsolute))
-      
-      return destinationPath
+      await fs.copyFile(sourceAbsolute, destAbsolute)
     } catch (error) {
-      logger.error('[LocalAdapter] Move failed', {
-        source: sourcePath,
-        destination: destinationPath,
+      logger.error('[LocalAdapter] reliableMove: copy failed', {
+        source: sourceAbsolute,
+        dest: destAbsolute,
         error: error instanceof Error ? error.message : String(error),
       })
-      throw error
+      throw new Error(`Failed to copy file: ${error instanceof Error ? error.message : String(error)}`)
     }
+    
+    // 2. Проверяем что копия создана и размер совпадает
+    try {
+      const [srcStat, dstStat] = await Promise.all([
+        fs.stat(sourceAbsolute),
+        fs.stat(destAbsolute),
+      ])
+      
+      if (srcStat.size !== dstStat.size) {
+        // Удаляем битую копию
+        await fs.unlink(destAbsolute).catch(() => {})
+        throw new Error(`Copy verification failed: size mismatch (${srcStat.size} vs ${dstStat.size})`)
+      }
+    } catch (error) {
+      if ((error as Error).message.includes('verification failed')) {
+        throw error
+      }
+      // Удаляем копию при ошибке проверки
+      await fs.unlink(destAbsolute).catch(() => {})
+      throw new Error(`Failed to verify copy: ${error instanceof Error ? error.message : String(error)}`)
+    }
+    
+    // 3. Удаляем оригинал с retry (3 попытки)
+    let deleteSuccess = false
+    let lastError: Error | null = null
+    
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        await fs.unlink(sourceAbsolute)
+        deleteSuccess = true
+        break
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error))
+        logger.warn('[LocalAdapter] reliableMove: delete attempt failed', {
+          source: sourceAbsolute,
+          attempt,
+          error: lastError.message,
+        })
+        
+        if (attempt < 3) {
+          // Ждём перед следующей попыткой (100ms, 200ms)
+          await new Promise(resolve => setTimeout(resolve, 100 * attempt))
+        }
+      }
+    }
+    
+    // 4. Если не удалось удалить оригинал - откатываем (удаляем копию)
+    if (!deleteSuccess) {
+      logger.error('[LocalAdapter] reliableMove: failed to delete source, rolling back', {
+        source: sourceAbsolute,
+        dest: destAbsolute,
+      })
+      
+      await fs.unlink(destAbsolute).catch(() => {})
+      throw new Error(`Failed to delete source file after 3 attempts: ${lastError?.message}`)
+    }
+    
+    logger.debug('[LocalAdapter] reliableMove: success', {
+      source: sourceAbsolute,
+      dest: destAbsolute,
+    })
+  }
+
+  /**
+   * Надёжное перемещение с относительными путями
+   */
+  async reliableMoveRelative(sourcePath: string, destPath: string): Promise<void> {
+    const sourceAbsolute = this.getAbsolutePath(sourcePath)
+    const destAbsolute = this.getAbsolutePath(destPath)
+    await this.reliableMove(sourceAbsolute, destAbsolute)
+  }
+
+  /**
+   * Получить базовый путь (для использования в StorageService)
+   */
+  getBasePath(): string {
+    return this.basePath
   }
 }
 

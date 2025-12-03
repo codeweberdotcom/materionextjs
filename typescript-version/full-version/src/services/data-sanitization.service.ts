@@ -109,6 +109,7 @@ export class DataSanitizationService {
   private prisma: PrismaClient
   private redisStore?: RateLimitStore
   private options: DataSanitizationServiceOptions
+  private redisInitialized = false
 
   constructor(options: DataSanitizationServiceOptions = {}) {
     this.prisma = new PrismaClient()
@@ -118,16 +119,21 @@ export class DataSanitizationService {
       enableFileCleanup: true,
       ...options
     }
+  }
 
-    // Initialize Redis store if enabled
-    if (this.options.enableRedisCleanup) {
-      try {
-        const { createRateLimitStore } = await import('@/lib/rate-limit/stores')
-        this.redisStore = await createRateLimitStore(this.prisma)
-        logger.info('[DataSanitizationService] Redis cleanup enabled')
-      } catch (error) {
-        logger.warn('[DataSanitizationService] Redis cleanup disabled due to initialization error', { error })
-      }
+  /**
+   * Ленивая инициализация Redis store
+   */
+  private async initRedisStore(): Promise<void> {
+    if (this.redisInitialized || !this.options.enableRedisCleanup) return
+    
+    this.redisInitialized = true
+    try {
+      const { createRateLimitStore } = await import('@/lib/rate-limit/stores')
+      this.redisStore = await createRateLimitStore(this.prisma)
+      logger.info('[DataSanitizationService] Redis cleanup enabled')
+    } catch (error) {
+      logger.warn('[DataSanitizationService] Redis cleanup disabled due to initialization error', { error })
     }
   }
 
@@ -135,6 +141,9 @@ export class DataSanitizationService {
    * Основной метод санитизации данных
    */
   async sanitize(target: SanitizationTarget, options: SanitizationOptions, throwOnValidationError = false): Promise<SanitizationResult> {
+    // Инициализируем Redis store при первом вызове
+    await this.initRedisStore()
+    
     const startTime = Date.now()
     const result: SanitizationResult = {
       id: `sanitize-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

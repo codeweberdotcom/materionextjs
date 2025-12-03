@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
           status: 400,
           code: 'RESEND_VERIFICATION_VALIDATION_ERROR',
           message: 'Validation error',
-          details: validationResult.error.errors,
+          details: validationResult.error.errors.map(e => e.message),
           logLevel: 'warn',
           route: 'verify/resend',
           context: { route: 'verify/resend', errors: validationResult.error.errors }
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
           status: 400,
           code: 'RESEND_VERIFICATION_VALIDATION_ERROR',
           message: 'Validation error',
-          details: validationResult.error.errors,
+          details: validationResult.error.errors.map(e => e.message),
           logLevel: 'warn',
           route: 'verify/resend',
           context: { route: 'verify/resend', errors: validationResult.error.errors }
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
           status: 400,
           code: 'RESEND_VERIFICATION_VALIDATION_ERROR',
           message: 'Validation error. Provide either email, phone, or identifier with type',
-          details: validationResult.error.errors,
+          details: validationResult.error.errors.map(e => e.message),
           logLevel: 'warn',
           route: 'verify/resend',
           context: { route: 'verify/resend', errors: validationResult.error.errors }

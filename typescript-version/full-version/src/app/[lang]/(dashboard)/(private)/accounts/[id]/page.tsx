@@ -328,9 +328,9 @@ const AccountDetailPage = () => {
                     {account?.tariffPlan?.name || 'Free'}
                   </Typography>
                 </Box>
-                {account?.tariffPlan?.priceMonthly ? (
+                {account?.tariffPlan?.price ? (
                   <Typography variant='body2' color='text.secondary'>
-                    {account.tariffPlan.priceMonthly} ₽/мес
+                    {account.tariffPlan.price} ₽/мес
                   </Typography>
                 ) : (
                   <Typography variant='body2' color='text.secondary'>

@@ -133,7 +133,7 @@ export async function POST(
       execution: {
         id: newExecution.id,
         status: 'pending',
-        originalId: params.id
+        originalId: id
       }
     })
   } catch (error) {

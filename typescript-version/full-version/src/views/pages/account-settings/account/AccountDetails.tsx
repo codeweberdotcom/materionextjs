@@ -23,6 +23,7 @@ import { toast } from 'react-toastify'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
+import { useAuth } from '@/contexts/AuthProvider'
 
 type Data = {
   firstName: string
@@ -93,6 +94,7 @@ const FormSkeleton = () => (
 const AccountDetails = () => {
   // Hooks
   const dictionary = useTranslation()
+  const { refreshSession } = useAuth()
 
   // States
   const [formData, setFormData] = useState<Data>(initialData)
@@ -169,6 +171,9 @@ const AccountDetails = () => {
 
         setImgSrc(result.avatarUrl)
         toast.success('Avatar uploaded successfully!')
+        
+        // Refresh session to update avatar in header
+        await refreshSession()
       } else {
         const error = await response.json()
 
@@ -212,6 +217,9 @@ const AccountDetails = () => {
       setFileInput('')
       setImgSrc('/images/avatars/1.png')
       toast.success(dictionary.navigation.avatarResetSuccess || 'Avatar reset successfully')
+      
+      // Refresh session to update avatar in header
+      await refreshSession()
     } catch (error) {
       console.error('Error resetting avatar:', error)
       setImgSrc(previousImage)

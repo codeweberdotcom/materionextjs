@@ -1094,6 +1094,10 @@
     "author": "Author",
     "actions": "Actions",
     "cancel": "Cancel",
+    "stop": "Stop",
+    "cancelling": "Cancelling...",
+    "stopOperation": "Stop operation",
+    "createCancelled": "Task creation cancelled",
     "cancelTask": "Cancel this task?",
     "taskCancelled": "Task cancelled",
     "cancelError": "Error cancelling task",
@@ -1116,7 +1120,7 @@
       "download_from_s3_delete_s3": "💾 Download from S3 and delete from S3",
       "delete_local_only": "🗑️ Delete local only",
       "delete_s3_only": "🗑️ Delete from S3 only",
-      "purge_s3": "⚠️ Purge S3",
+      "purge_s3": "⚠️ Purge S3 bucket",
       "verify_status": "🔍 Verify statuses (check with S3)"
     },
     "scopes": {
@@ -1178,7 +1182,14 @@
     "s3": "S3",
     "allStatusesCorrect": "All statuses are correct! No changes needed.",
     "verifiedCount": "Verified: {total}, updated: {updated}",
-    "deletedFromS3": "Deleted {count} files from S3"
+    "deletedFromS3": "Deleted {count} files from S3",
+    "selected": "Selected",
+    "clearSelection": "Clear",
+    "deleteSelected": "Delete selected",
+    "deleting": "Deleting...",
+    "confirmBulkDelete": "Delete {count} selected tasks?",
+    "bulkDeleteSuccess": "Deleted {count} tasks",
+    "bulkDeleteError": "Error deleting tasks"
   },
   "mediaSettings": {
     "title": "Media Settings",
@@ -1205,6 +1216,8 @@
     "checkError": "Check error",
     "configureS3InEnv": "Configure S3 in .env file",
     "selectOrCreateBucket": "Select bucket or create new",
+    "bucketFixedInService": "Bucket is fixed in service settings",
+    "fixedInService": "fixed",
     "organizeByDate": "Organize by date (2025/11/)",
     "organizeByEntityType": "Organize by entity type",
     "processing": "Processing",
@@ -1226,6 +1239,8 @@
     "afterThisHardDelete": "After this period — hard delete",
     "autoCleanupTrash": "Auto-cleanup trash",
     "deleteFromS3OnHardDelete": "Delete from S3 on hard delete",
+    "s3PublicUrlPrefix": "S3 Public URL / CDN",
+    "s3PublicUrlPrefixHelp": "Public URL for images (CDN or direct S3). Leave empty to use proxy.",
     "orphanCleanup": "Orphan file cleanup",
     "deleteOrphanFiles": "Delete orphan files",
     "keepOrphans": "Keep orphans (days)",

@@ -12,10 +12,11 @@ import { eventService } from '@/services/events/EventService'
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; managerId: string } }
+  { params }: { params: Promise<{ id: string; managerId: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { id, managerId } = await params
 
     if (!user?.id) {
       return NextResponse.json(
@@ -40,25 +41,23 @@ export async function PUT(
     const { permissions } = validationResult.data
 
     const manager = await accountManagerService.updateManagerPermissions(
-      params.id,
+      id,
       user.id,
-      params.managerId,
+      managerId,
       permissions
     )
 
     // Логируем событие
-    await eventService.create({
+    await eventService.record({
       source: 'api',
       module: 'account',
       type: 'manager.updated',
       severity: 'info',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'account',
-      subjectId: params.id,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'account', id: id },
       message: `Пользователь ${user.email || user.id} обновил права менеджера`,
       payload: {
-        managerId: params.managerId,
+        managerId: managerId,
         permissions
       }
     })
@@ -86,10 +85,11 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; managerId: string } }
+  { params }: { params: Promise<{ id: string; managerId: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { id, managerId } = await params
 
     if (!user?.id) {
       return NextResponse.json(
@@ -99,25 +99,23 @@ export async function DELETE(
     }
 
     await accountManagerService.revokeManager(
-      params.id,
+      id,
       user.id,
-      params.managerId,
+      managerId,
       user.id
     )
 
     // Логируем событие
-    await eventService.create({
+    await eventService.record({
       source: 'api',
       module: 'account',
       type: 'manager.revoked',
       severity: 'warning',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'account',
-      subjectId: params.id,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'account', id: id },
       message: `Пользователь ${user.email || user.id} отозвал права менеджера`,
       payload: {
-        managerId: params.managerId
+        managerId: managerId
       }
     })
 

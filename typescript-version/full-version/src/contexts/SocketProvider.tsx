@@ -16,7 +16,12 @@ type SocketContextValue = {
 }
 
 const SOCKETS_ENABLED = (process.env.NEXT_PUBLIC_ENABLE_SOCKET_IO ?? 'true') !== 'false'
-const SOCKET_BASE_URL = process.env.NEXT_PUBLIC_SOCKET_URL?.replace(/\/$/, '')
+// Приоритет: NEXT_PUBLIC_WS_URL > NEXT_PUBLIC_SOCKET_URL > текущий хост на порту 3001
+const SOCKET_BASE_URL = (
+  process.env.NEXT_PUBLIC_WS_URL?.replace(/\/$/, '') ||
+  process.env.NEXT_PUBLIC_SOCKET_URL?.replace(/\/$/, '') ||
+  (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://localhost:3001')
+)
 const SOCKET_PATH = process.env.NEXT_PUBLIC_SOCKET_PATH || '/socket.io'
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '')
 const SESSION_TOKEN_ENDPOINT = API_BASE_URL

@@ -27,6 +27,7 @@ import { getStorageService, StorageService } from './storage'
 import { getImageProcessingService, ImageProcessingService } from './ImageProcessingService'
 import { getWatermarkService, WatermarkService } from './WatermarkService'
 import { getPresetForEntityType, isMimeTypeAllowed, isFileSizeAllowed } from './presets'
+import { mediaSyncQueue } from './queue/MediaSyncQueue'
 import { prisma } from '@/libs/prisma'
 import { eventService } from '@/services/events'
 import logger from '@/lib/logger'
@@ -97,10 +98,69 @@ export class MediaService {
 
       // Генерируем slug и путь
       const slug = nanoid(12)
-      const date = new Date()
-      const datePath = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}`
-      const extension = preset.convertToWebP ? '.webp' : path.extname(filename) || '.jpg'
-      const relativePath = `${options.entityType}/${datePath}/${slug}${extension}`
+      
+      // Определяем выходной формат
+      const outputFormat = globalSettings?.outputFormat || 'webp'
+      let extension: string
+      switch (outputFormat) {
+        case 'jpeg':
+          extension = '.jpg'
+          break
+        case 'original':
+          extension = path.extname(filename) || '.jpg'
+          break
+        case 'webp':
+        default:
+          extension = '.webp'
+          break
+      }
+      
+      // Определяем организацию пути из настроек
+      const pathOrganization = globalSettings?.pathOrganization || 'date'
+      const organizeByEntityType = globalSettings?.organizeByEntityType ?? true
+      
+      logger.info('[MediaService] Path organization settings', {
+        pathOrganization,
+        organizeByEntityType,
+        outputFormat,
+        slug,
+        extension,
+      })
+      
+      // Строим путь в зависимости от настроек
+      let subPath = ''
+      
+      // 1. По типу сущности (если включено)
+      if (organizeByEntityType) {
+        subPath = options.entityType
+      }
+      
+      // 2. По организации пути
+      switch (pathOrganization) {
+        case 'date': {
+          const date = new Date()
+          const datePath = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}`
+          subPath = subPath ? `${subPath}/${datePath}` : datePath
+          break
+        }
+        case 'hash': {
+          // Первые 4 символа slug разбиваем на 2 папки: ab/cd/
+          const hashPath = `${slug.slice(0, 2)}/${slug.slice(2, 4)}`
+          subPath = subPath ? `${subPath}/${hashPath}` : hashPath
+          break
+        }
+        case 'flat':
+        default:
+          // Без дополнительных папок
+          break
+      }
+      
+      const relativePath = subPath ? `${subPath}/${slug}${extension}` : `${slug}${extension}`
+      
+      logger.info('[MediaService] Generated path', {
+        relativePath,
+        subPath,
+      })
 
       // Обрабатываем изображение
       // Всегда добавляем оригинал с единым максимумом 1920×1280
@@ -133,9 +193,10 @@ export class MediaService {
       ]
 
       const processingResult = await this.imageProcessingService.processImage(buffer, variants, {
-        convertToWebP: settings?.convertToWebP ?? globalSettings?.defaultConvertToWebP ?? preset.convertToWebP,
+        convertToWebP: outputFormat === 'webp',
         stripMetadata: settings?.stripMetadata ?? preset.stripMetadata,
         quality: effectiveQuality,
+        outputFormat, // Pass format for future use (e.g., AVIF support)
       })
 
       if (!processingResult.success) {
@@ -164,7 +225,7 @@ export class MediaService {
       for (const variant of processingResult.variants) {
         if (variant.name === 'original') continue
 
-        const variantPath = `${options.entityType}/${datePath}/${slug}_${variant.name}${extension}`
+        const variantPath = subPath ? `${subPath}/${slug}_${variant.name}${extension}` : `${slug}_${variant.name}${extension}`
         const variantStorage = await this.storageService.upload(
           variant.buffer,
           variantPath,
@@ -226,6 +287,35 @@ export class MediaService {
         size: media.size,
         storageStatus,
       })
+
+      // Автоматическая синхронизация с S3 для стратегии local_first
+      if (
+        storageStatus === 'local_only' &&
+        preset.storageStrategy === 'local_first' &&
+        this.storageService.isS3Available()
+      ) {
+        try {
+          // Добавляем задачу в очередь на синхронизацию
+          await mediaSyncQueue.add({
+            operation: 'upload_to_s3',
+            mediaId: media.id,
+            options: {
+              overwrite: false,
+              deleteSource: false, // Оставляем локальную копию
+            },
+          })
+          logger.info('[MediaService] Auto-sync job queued', {
+            mediaId: media.id,
+            entityType: options.entityType,
+          })
+        } catch (syncError) {
+          // Ошибка создания задачи не должна прерывать upload
+          logger.warn('[MediaService] Failed to queue auto-sync job', {
+            mediaId: media.id,
+            error: syncError instanceof Error ? syncError.message : String(syncError),
+          })
+        }
+      }
 
       return {
         success: true,
@@ -375,6 +465,8 @@ export class MediaService {
     data: Partial<{
       alt: string
       title: string
+      caption: string
+      description: string
       position: number
       entityId: string
     }>
@@ -413,19 +505,26 @@ export class MediaService {
       // Soft delete - перемещаем в .trash и удаляем с S3
       const variants = JSON.parse(media.variants || '{}')
       const originalVariants: Record<string, string> = {}
+      const originalS3Variants: Record<string, string> = {}
       for (const [name, v] of Object.entries(variants) as [string, any][]) {
         if (v.localPath) {
           originalVariants[name] = v.localPath
+        }
+        if (v.s3Key) {
+          originalS3Variants[name] = v.s3Key
         }
       }
 
       const { trashPath, trashVariants } = await this.storageService.moveToTrash(media)
 
       // Сохраняем метаданные для восстановления
+      // Если localPath был null (s3_only), используем s3Key для генерации пути восстановления
       const trashMetadata = JSON.stringify({
-        originalPath: media.localPath,
+        originalPath: media.localPath || media.s3Key, // s3Key содержит относительный путь
+        originalS3Key: media.s3Key,
         trashPath,
         originalVariants,
+        originalS3Variants,
         trashVariants,
       })
 

@@ -70,7 +70,7 @@ const MonitoringMetricsPage = () => {
               const match = line.match(/^([a-zA-Z_:][a-zA-Z0-9_:]*)/)
               return match ? match[1] : null
             })
-            .filter(Boolean)
+            .filter((name): name is string => name !== null)
           
           const httpMetrics = allMetricNames.filter(name => 
             name.toLowerCase().includes('http') || name.toLowerCase().includes('request')

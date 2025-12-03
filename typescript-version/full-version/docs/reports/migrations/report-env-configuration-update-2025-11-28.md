@@ -346,3 +346,8 @@ GRAFANA_PASSWORD=your-secure-password  # Изменить с 'admin'
 
 
 
+
+
+
+
+

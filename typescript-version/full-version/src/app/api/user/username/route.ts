@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
-import { requireAuth } from '@/lib/auth/api-helpers'
+import { requireAuth } from '@/utils/auth/auth'
 import { slugService } from '@/services/slug'
 import { eventService } from '@/services/events'
 import { enrichEventInputFromRequest } from '@/services/events/event-helpers'

@@ -2397,6 +2397,56 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 ---
 
+## ☁️ Прямой доступ к S3 в медиатеке (добавлено 2025-12-01)
+
+### Архитектура URL
+
+| Условие | URL | Тип |
+|---------|-----|-----|
+| В корзине | `/api/admin/media/{id}/trash` | Proxy |
+| S3 + `s3PublicUrlPrefix` настроен | `{s3PublicUrlPrefix}/{s3Key}` | Прямой |
+| Локальный файл | `/uploads/{path}` | Прямой |
+| Только S3 (без prefix) | `/api/admin/media/{id}/file` | Proxy |
+
+### Настройка s3PublicUrlPrefix
+
+1. Перейти в `/admin/media/settings`
+2. Заполнить поле **"S3 Public URL / CDN"**: `http://localhost:9000/555`
+3. Сохранить настройки
+
+### Настройка публичного доступа к MinIO
+
+```bash
+# Создать alias с credentials
+docker exec materio-s3 mc alias set local http://localhost:9000 minioadmin minioadmin123 --api S3v4
+
+# Сделать bucket публичным
+docker exec materio-s3 mc anonymous set download local/555
+```
+
+### Синхронизация вариантов
+
+При синхронизации на S3 загружаются:
+- Оригинал: `{s3Key}` (например: `other/2025/12/abc.webp`)
+- Варианты: `{s3Key}_thumb.webp`, `{s3Key}_medium.webp`, `{s3Key}_large.webp`
+
+**Важно:** Логика в `StorageService.ts` независимо проверяет каждый вариант через `s3Adapter.exists()` и загружает недостающие.
+
+### Затронутые файлы
+
+| Файл | Изменения |
+|------|-----------|
+| `src/services/media/storage/StorageService.ts` | Независимая загрузка вариантов |
+| `src/views/admin/media/MediaLibrary.tsx` | Добавлен `s3PublicUrlPrefix`, обновлён `getMediaUrl` |
+
+### Связанные документы
+
+- [Анализ](analysis/architecture/analysis-media-s3-direct-access-2025-12-01.md)
+- [План](plans/completed/plan-media-s3-direct-access-2025-12-01.md)
+- [Отчёт](reports/deployment/report-media-s3-direct-access-2025-12-01.md)
+
+---
+
 ## 📝 Конфигурация .env (обновлено 2025-11-28)
 
 Все настройки серверов централизованы в `.env` файле.
@@ -2446,6 +2496,110 @@ grafana:
     - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
     - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
 ```
+
+---
+
+## 🔌 WebSocket Server (Standalone) (добавлено 2025-12-03)
+
+### Архитектура
+
+Standalone WebSocket сервер на отдельном порту (3001) без зависимости от Next.js для устранения конфликтов и соответствия современным стандартам микросервисной архитектуры.
+
+### Структура
+
+```
+┌─────────────────┐         ┌─────────────────┐
+│   Next.js       │         │  WebSocket      │
+│   Port 3000     │         │  Port 3001      │
+│   (Pages/API)   │         │  (Real-time)    │
+└─────────────────┘         └─────────────────┘
+         ↑                           ↑
+         └───────────┬───────────────┘
+                     ↓
+            ┌─────────────────┐
+            │  Redis PubSub   │
+            │  (Optional)     │
+            └─────────────────┘
+```
+
+### Структура файлов
+
+| Путь | Назначение |
+|------|------------|
+| **Server** |
+| `src/server/websocket-standalone.ts` | Главный файл WebSocket сервера (без Next.js) |
+| `src/lib/sockets/index.ts` | Инициализация Socket.IO, CORS, Redis adapter |
+| `src/lib/sockets/namespaces/chat/index.ts` | Namespace /chat (messages, rooms) |
+| `src/lib/sockets/namespaces/notifications/index.ts` | Namespace /notifications (alerts, presence) |
+| `src/lib/sockets/middleware/auth.ts` | Lucia JWT аутентификация |
+| `src/lib/sockets/middleware/rateLimit.ts` | Rate limiting middleware |
+| `src/lib/sockets/middleware/errorHandler.ts` | Error handling |
+| **Client** |
+| `src/contexts/SocketProvider.tsx` | React Context для Socket.IO клиента |
+| `src/hooks/useChatNew.ts` | Chat hook с Socket/HTTP fallback |
+| **Metrics** |
+| `src/lib/metrics/socket.ts` | 11 Prometheus метрик |
+| **Monitoring** |
+| `monitoring/grafana/dashboards/socket-dashboard.json` | Grafana дашборд |
+
+### Порты
+
+| Сервис | Dev | Production |
+|--------|-----|------------|
+| Next.js | 3000 | 3000 |
+| WebSocket | 3001 | 3001 |
+
+### ENV переменные
+
+```env
+# WebSocket Standalone Server
+WEBSOCKET_PORT=3001
+NEXT_PUBLIC_WS_URL=http://localhost:3001
+
+# Production
+# NEXT_PUBLIC_WS_URL=https://ws.yoursite.ru
+```
+
+### NPM скрипты
+
+| Команда | Описание |
+|---------|----------|
+| `pnpm dev:socket` | Только WebSocket сервер (Port 3001) |
+| `pnpm dev` | Только Next.js (Port 3000) |
+| `pnpm full` | Всё вместе (Docker + WebSocket + Next.js) |
+| `pnpm start:socket` | Production WebSocket |
+
+### Namespaces
+
+| Namespace | События | Описание |
+|-----------|---------|----------|
+| `/chat` | `sendMessage`, `receiveMessage`, `getOrCreateRoom`, `markMessagesRead` | Чат сообщения |
+| `/notifications` | `newNotification`, `markAsRead`, `ping`, `presence:sync` | Уведомления и presence |
+
+### Fallback механизмы
+
+**Уровни fallback:**
+1. **Socket.IO Auto-reconnect** - 5 попыток с exponential backoff
+2. **WebSocket → Long-polling** - автоматический fallback на HTTP polling
+3. **Socket → HTTP API** - `/api/chat/messages`, `/api/notifications`
+4. **Offline Queue** - IndexedDB (Redux persist) для offline сообщений
+
+### Мониторинг
+
+| Компонент | Тип | Доступ |
+|-----------|-----|--------|
+| **Prometheus метрики** | 11 метрик | http://localhost:3000/api/metrics |
+| **Grafana Dashboard** | Socket.IO Overview | http://localhost:9091/d/materio-socket |
+| **Health Check** | JSON endpoint | http://localhost:3001/health |
+| **Логи** | Winston | `logs/application-{date}.log` |
+
+### Связанные документы
+
+- [Socket Client Configuration](configuration/socket-client.md)
+- [Socket Requirements](configuration/socket-requirements.md)
+- [WebSocket ENV Setup](development/websocket-env-setup.md)
+- [Анализ рефакторинга](analysis/architecture/analysis-websocket-standalone-refactor-2025-12-02.md)
+- [План реализации](plans/active/plan-websocket-standalone-refactor-2025-12-02.md)
 
 ---
 

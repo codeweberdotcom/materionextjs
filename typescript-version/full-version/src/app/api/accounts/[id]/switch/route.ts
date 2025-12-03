@@ -10,10 +10,11 @@ import { eventService } from '@/services/events/EventService'
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { id } = await params
 
     if (!user?.id) {
       return NextResponse.json(
@@ -23,7 +24,7 @@ export async function POST(
     }
 
     // Проверяем доступ к аккаунту
-    const hasAccess = await accountAccessService.canAccessAccount(user.id, params.id)
+    const hasAccess = await accountAccessService.canAccessAccount(user.id, id)
     if (!hasAccess) {
       return NextResponse.json(
         {
@@ -35,7 +36,7 @@ export async function POST(
     }
 
     // Получаем аккаунт
-    const account = await accountService.getAccountById(params.id, user.id)
+    const account = await accountService.getAccountById(id, user.id)
     if (!account) {
       return NextResponse.json(
         {
@@ -47,18 +48,16 @@ export async function POST(
     }
 
     // Устанавливаем текущий аккаунт (TODO: сохранить в сессию/контекст)
-    await accountAccessService.setCurrentAccount(user.id, params.id)
+    await accountAccessService.setCurrentAccount(user.id, id)
 
     // Логируем событие
-    await eventService.create({
+    await eventService.record({
       source: 'api',
       module: 'account',
       type: 'account.switched',
       severity: 'info',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'account',
-      subjectId: account.id,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'account', id: account.id },
       message: `Пользователь ${user.email || user.id} переключился на аккаунт ${account.name}`
     })
 

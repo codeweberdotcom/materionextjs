@@ -20,7 +20,15 @@ export type StorageLocation = 'local' | 's3' | 'both'
 // NEW: Sync Mode - когда синхронизировать
 export type SyncMode = 'immediate' | 'background' | 'delayed' | 'manual'
 
-export type SyncOperation = 'upload_to_s3' | 'download_from_s3' | 'delete_local' | 'delete_s3'
+export type SyncOperation = 
+  | 'upload_to_s3_with_delete' 
+  | 'upload_to_s3_keep_local' 
+  | 'download_from_s3' 
+  | 'download_from_s3_delete_s3' 
+  | 'delete_local_only' 
+  | 'delete_s3_only'
+  | 'purge_s3'
+  | 'verify_status'
 
 export type SyncScope = 'all' | 'entity_type' | 'selected'
 

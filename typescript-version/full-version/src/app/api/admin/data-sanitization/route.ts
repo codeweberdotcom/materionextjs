@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       }
 
       const validTypes = Object.values(DataType)
-      const invalidTypes = target.dataTypes.filter(type => !validTypes.includes(type))
+      const invalidTypes = target.dataTypes.filter((type: any) => !validTypes.includes(type))
       if (invalidTypes.length > 0) {
         return NextResponse.json(
           { success: false, error: `Неверные типы данных: ${invalidTypes.join(', ')}. Допустимые: ${validTypes.join(', ')}` },

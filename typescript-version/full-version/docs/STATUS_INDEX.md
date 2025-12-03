@@ -2,7 +2,7 @@
 
 Этот документ отслеживает статус всех ТЗ, планов, анализов и отчетов для быстрого понимания текущего состояния проекта.
 
-**Последнее обновление:** 2025-11-30 (Добавлен анализ и план настроек синхронизации медиа с S3)
+**Последнее обновление:** 2025-12-03 (Рефакторинг WebSocket на standalone архитектуру)
 
 ---
 
@@ -34,6 +34,7 @@
 - Нет активных ТЗ
 
 ### Планы работ
+- [План: Рефакторинг WebSocket на standalone архитектуру](plans/active/plan-websocket-standalone-refactor-2025-12-02.md) ✅ (Завершено 2025-12-03)
 - [План: Настройки синхронизации медиа с S3](plans/active/plan-media-s3-sync-settings-2025-11-30.md) ⏳ (Согласовано, готов к реализации)
 - [План реализации модуля сценариев уведомлений](plans/active/plan-notification-scenarios-module-2025-01-24.md) ⏳ (В работе, ~75% - Этапы 1-4 завершены)
 - [План реализации модуля конфигурации внешних сервисов](plans/active/plan-service-configuration-module-2025-11-25.md) ⏳ (В работе, ~80% - Этапы 1-8 завершены)
@@ -60,6 +61,7 @@
 - [План реализации модуля сценариев уведомлений](plans/active/plan-notification-scenarios-module-2025-01-24.md) ⏳ (Планируется, ~0%)
 
 ### Анализы
+- [Анализ: Прямой доступ к S3 в медиатеке](analysis/architecture/analysis-media-s3-direct-access-2025-12-01.md) ✅ (Завершен 2025-12-01)
 - [Анализ: Настройки синхронизации медиа с S3](analysis/architecture/analysis-media-s3-sync-settings-2025-11-30.md) ✅ (Завершен 2025-11-30)
 - [Анализ SQLite ограничений для миграции на PostgreSQL](analysis/architecture/analysis-sqlite-limitations-for-postgresql-migration-2025-11-28.md) ✅ (Завершен 2025-11-28)
 - [Анализ S3/MinIO Docker Setup](analysis/architecture/analysis-s3-minio-docker-setup-2025-11-26.md) ✅ (Завершен 2025-11-26)
@@ -79,6 +81,8 @@
 - Нет завершенных ТЗ
 
 ### Планы работ
+- [План: Рефакторинг WebSocket на standalone архитектуру](plans/active/plan-websocket-standalone-refactor-2025-12-02.md) ✅ (Завершен 2025-12-03)
+- [План: Прямой доступ к S3 в медиатеке](plans/completed/plan-media-s3-direct-access-2025-12-01.md) ✅ (Завершен 2025-12-01)
 - [План реализации модуля лицензий медиа](plans/completed/plan-media-licenses-module-2025-11-26.md) ✅ (Завершен 2025-11-26)
 - [План улучшений медиатеки](plans/completed/plan-media-library-improvements-2025-11-26.md) ✅ (Завершен 2025-11-26)
 - [План интеграции Bull Queue с Media](plans/completed/plan-media-bull-queue-integration-2025-11-26.md) ✅ (Завершен 2025-11-26)
@@ -97,6 +101,8 @@
 - [План реализации системы аккаунтов пользователей](plans/active/plan-user-accounts-system-2025-01-25.md) ✅ (Завершён 2025-11-26)
 
 ### Анализы
+- [Анализ: Рефакторинг WebSocket на standalone архитектуру](analysis/architecture/analysis-websocket-standalone-refactor-2025-12-02.md) ✅ (2025-12-03)
+- [Анализ Socket.IO архитектуры](analysis/socket-io-analysis.md) ✅ (Обновлён 2025-12-03)
 - [Анализ использования Tailwind CSS в шаблоне Materio](analysis/architecture/tailwind-usage-analysis.md) ✅
 - [Анализ компонентов Tailwind](analysis/architecture/tailwind-components-analysis.md) ✅
 - [Детальный анализ модуля Chat](analysis/architecture/CHAT_MODULE_DETAILED_ANALYSIS.md) ✅
@@ -121,6 +127,7 @@
 - [План: Расширение метрик и дашбордов Grafana](plans/active/plan-grafana-dashboards-extension-2025-11-26.md) ✅ (завершён)
 
 ### Отчеты
+- [Отчёт: Рефакторинг WebSocket на standalone](reports/deployment/report-websocket-standalone-2025-12-03.md) ✅ (Завершен 2025-12-03)
 - [Отчёт: Обновление .env и удаление SQLite](reports/migrations/report-env-configuration-update-2025-11-28.md) ✅ (Завершен 2025-11-28)
 - [Отчёт: Миграция на PostgreSQL](reports/migrations/report-postgresql-migration-2025-11-28.md) ✅ (Завершен 2025-11-28)
 - [Отчёт: Исправления Media Sync и SQLite timeout](reports/fixes/report-media-sync-sqlite-fixes-2025-11-28.md) ✅ (Завершен 2025-11-28)

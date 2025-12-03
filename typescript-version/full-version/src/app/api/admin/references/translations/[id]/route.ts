@@ -81,8 +81,9 @@ export async function PATCH(
       type: 'translation.toggled',
       message: `Translation ${updatedTranslation.isActive ? 'activated' : 'deactivated'}: ${updatedTranslation.key} (${updatedTranslation.language})`,
       severity: 'info',
-      userId: currentUser.id,
-      details: {
+      actor: { type: 'user', id: currentUser.id },
+      subject: { type: 'translation', id: updatedTranslation.id },
+      payload: {
         translationId: updatedTranslation.id,
         key: updatedTranslation.key,
         language: updatedTranslation.language,
@@ -206,8 +207,9 @@ export async function PUT(
       type: 'translation.updated',
       message: `Translation updated: ${updatedTranslation.key} (${updatedTranslation.language})`,
       severity: 'info',
-      userId: currentUser.id,
-      details: {
+      actor: { type: 'user', id: currentUser.id },
+      subject: { type: 'translation', id: updatedTranslation.id },
+      payload: {
         translationId: updatedTranslation.id,
         key: updatedTranslation.key,
         language: updatedTranslation.language,
@@ -293,8 +295,9 @@ export async function DELETE(
         type: 'translation.deleted',
         message: `Translation deleted: ${deletedTranslation.key} (${deletedTranslation.language})`,
         severity: 'warning',
-        userId: currentUser.id,
-        details: {
+        actor: { type: 'user', id: currentUser.id },
+        subject: { type: 'translation', id: deletedTranslation.id },
+        payload: {
           translationId: deletedTranslation.id,
           key: deletedTranslation.key,
           language: deletedTranslation.language,

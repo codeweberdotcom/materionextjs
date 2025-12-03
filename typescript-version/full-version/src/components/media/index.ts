@@ -1,11 +1,6 @@
 /**
- * Экспорт компонентов Media
+ * Media components
  * @module components/media
  */
 
-export { BulkUploadProgress } from './BulkUploadProgress'
-
-
-
-
-
+export { MediaImage, MediaImg, MediaPicture } from './MediaImage'

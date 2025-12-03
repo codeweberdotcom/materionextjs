@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
-import { isAdminOrHigher } from '@/utils/permissions/permissions'
+import { isSuperadmin } from '@/utils/permissions/permissions'
 import { mediaProcessingQueue, mediaSyncQueue } from '@/services/media'
 import logger from '@/lib/logger'
 
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { user } = await requireAuth(request)
 
-    if (!isAdminOrHigher(user)) {
+    if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
@@ -37,8 +37,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const isSyncJob = jobId.startsWith('inmem_sync_') || jobId.includes('sync')
     const queue = isSyncJob ? mediaSyncQueue : mediaProcessingQueue
 
-    // Получаем задачу
-    const job = await queue.getJob(jobId)
+    // Получаем задачу из Bull queue (если доступна)
+    const job = (queue as any).queue?.getJob ? await (queue as any).queue.getJob(jobId) : null
 
     if (!job) {
       return NextResponse.json(

@@ -4,9 +4,11 @@ import { requireAuth } from '@/utils/auth/auth'
 import { isAdminByCode, isSuperadmin } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user } = await requireAuth(request)
+    const { id } = await params
+    
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -16,11 +18,11 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    if (!params?.id) {
+    if (!id) {
       return NextResponse.json({ error: 'State ID required' }, { status: 400 })
     }
 
-    const success = await rateLimitService.clearState(params.id)
+    const success = await rateLimitService.clearState(id)
     if (!success) {
       return NextResponse.json({ error: 'Rate limit state not found' }, { status: 404 })
     }

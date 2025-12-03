@@ -54,6 +54,8 @@ model User {
   documentsRejectedAt     DateTime? // Дата отклонения документов
   documentsRejectedReason String? // Причина отклонения документов
   image                   String?
+  avatarMediaId           String?            // Ссылка на Media с аватаром
+  avatarMedia             Media?             @relation("UserAvatar", fields: [avatarMediaId], references: [id], onDelete: SetNull)
   roleId                  String
   language                String             @default("Russian")
   currency                String             @default("RUB")
@@ -903,6 +905,9 @@ model Media {
   // Связь с лицензиями
   licenses MediaLicenseItem[]
 
+  // Обратная связь с User (аватар)
+  userAvatars User[] @relation("UserAvatar")
+
   @@index([entityType, entityId])
   @@index([storageStatus])
   @@index([isProcessed])
@@ -960,7 +965,7 @@ model MediaSyncJob {
   id String @id @default(cuid())
 
   // Тип операции
-  operation String // 'upload_to_s3' | 'download_from_s3' | 'delete_local' | 'delete_s3'
+  operation String // 'upload_to_s3_with_delete' | 'upload_to_s3_keep_local' | 'download_from_s3' | 'download_from_s3_delete_s3' | 'delete_local_only' | 'delete_s3_only' | 'purge_s3' | 'verify_status'
 
   // Область применения
   scope      String  @default("selected") // 'all' | 'entity_type' | 'selected'
@@ -1075,8 +1080,12 @@ model MediaGlobalSettings {
   localPublicUrlPrefix String @default("/uploads")
 
   // === Организация файлов ===
+  // pathOrganization: date = /2025/12/, hash = /3e/uB/, flat = нет подпапок
+  pathOrganization     String  @default("date") // date | hash | flat
+  organizeByEntityType Boolean @default(true) // /listings/, /avatars/ и т.д.
+  
+  // @deprecated: use pathOrganization
   organizeByDate       Boolean @default(true) // /uploads/2025/11/file.webp
-  organizeByEntityType Boolean @default(true) // /uploads/avatars/file.webp
 
   // === Лимиты ===
   globalMaxFileSize      Int  @default(20971520) // 20MB
@@ -1084,8 +1093,11 @@ model MediaGlobalSettings {
 
   // === Обработка ===
   defaultQuality        Int     @default(85)
-  defaultConvertToWebP  Boolean @default(true)
+  outputFormat          String  @default("webp") // webp | jpeg | original
   processingConcurrency Int     @default(3) // Параллельная обработка
+  
+  // @deprecated: use outputFormat
+  defaultConvertToWebP  Boolean @default(true)
 
   // === Legacy (deprecated, kept for migration) ===
   defaultStorageStrategy  String  @default("local_first") // @deprecated: use storageLocation

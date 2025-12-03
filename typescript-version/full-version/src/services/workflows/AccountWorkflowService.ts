@@ -362,15 +362,13 @@ class AccountWorkflowService {
     // Логирование события
     const severity = ['suspended', 'archived'].includes(toState) ? 'warning' : 'info'
 
-    await eventService.create({
+    await eventService.record({
       source: 'workflow',
       module: 'account',
       type: `account.${event.toLowerCase()}`,
       severity,
-      actorType: 'user',
-      actorId,
-      subjectType: 'account',
-      subjectId: account.id,
+      actor: { type: 'user', id: actorId },
+      subject: { type: 'account', id: account.id },
       message: `Аккаунт ${account.name} переведён из состояния '${accountStateLabels[fromState]}' в '${accountStateLabels[toState]}'`,
       payload: {
         fromState,

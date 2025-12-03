@@ -12,10 +12,11 @@ import { eventService } from '@/services/events/EventService'
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { id } = await params
 
     if (!user?.id) {
       return NextResponse.json(
@@ -24,7 +25,7 @@ export async function GET(
       )
     }
 
-    const account = await accountService.getAccountById(params.id, user.id)
+    const account = await accountService.getAccountById(id, user.id)
 
     if (!account) {
       return NextResponse.json(
@@ -58,10 +59,11 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { id } = await params
 
     if (!user?.id) {
       return NextResponse.json(
@@ -84,21 +86,19 @@ export async function PUT(
     }
 
     const account = await accountService.updateAccount(
-      params.id,
+      id,
       user.id,
       validationResult.data
     )
 
     // Логируем событие
-    await eventService.create({
+    await eventService.record({
       source: 'api',
       module: 'account',
       type: 'account.updated',
       severity: 'info',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'account',
-      subjectId: account.id,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'account', id: account.id },
       message: `Пользователь ${user.email || user.id} обновил аккаунт ${account.name}`
     })
 
@@ -125,10 +125,11 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { user } = await requireAuth(request)
+    const { id } = await params
 
     if (!user?.id) {
       return NextResponse.json(
@@ -138,7 +139,7 @@ export async function DELETE(
     }
 
     // Получаем аккаунт перед удалением для логирования
-    const account = await accountService.getAccountById(params.id, user.id)
+    const account = await accountService.getAccountById(id, user.id)
     
     if (!account) {
       return NextResponse.json(
@@ -150,18 +151,16 @@ export async function DELETE(
       )
     }
 
-    await accountService.deleteAccount(params.id, user.id)
+    await accountService.deleteAccount(id, user.id)
 
     // Логируем событие
-    await eventService.create({
+    await eventService.record({
       source: 'api',
       module: 'account',
       type: 'account.deleted',
       severity: 'warning',
-      actorType: 'user',
-      actorId: user.id,
-      subjectType: 'account',
-      subjectId: params.id,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'account', id: id },
       message: `Пользователь ${user.email || user.id} удалил аккаунт ${account.name}`
     })
 

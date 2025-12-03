@@ -223,8 +223,8 @@ export class StorageService {
       const variants = JSON.parse(media.variants)
       const variant = variants[variantName]
       if (variant) {
-        // Предпочитаем S3 URL если есть CDN
-        if (variant.s3Key && this.s3Adapter && this.config.s3?.publicUrlPrefix) {
+        // Предпочитаем S3 URL
+        if (variant.s3Key && this.s3Adapter) {
           return this.s3Adapter.getUrl(variant.s3Key)
         }
         if (variant.localPath) {
@@ -234,8 +234,8 @@ export class StorageService {
     }
     
     // Возвращаем URL оригинала
-    // Предпочитаем S3 если есть CDN
-    if (media.s3Key && this.s3Adapter && this.config.s3?.publicUrlPrefix) {
+    // Предпочитаем S3 если файл там есть
+    if (media.s3Key && this.s3Adapter) {
       return this.s3Adapter.getUrl(media.s3Key)
     }
     
@@ -276,20 +276,33 @@ export class StorageService {
     }
     
     try {
-      // Загружаем оригинал
-      const buffer = await this.localAdapter.download(media.localPath)
-      const s3Key = await this.s3Adapter.upload(buffer, media.localPath, media.mimeType)
-      
-      // Синхронизируем варианты
       const variants = JSON.parse(media.variants || '{}')
+      let s3Key = media.s3Key
+      
+      // Загружаем оригинал на S3 только если ещё не загружен
+      const originalOnS3 = !!media.s3Key && media.s3Bucket === this.config.s3!.bucket
+      
+      if (!originalOnS3) {
+        // Загружаем оригинал
+        const buffer = await this.localAdapter.download(media.localPath)
+        s3Key = await this.s3Adapter.upload(buffer, media.localPath, media.mimeType)
+      }
+      
+      // Синхронизируем варианты (независимо от оригинала)
       for (const [name, variant] of Object.entries(variants) as [string, any][]) {
-        if (variant.localPath && !variant.s3Key) {
-          const variantBuffer = await this.localAdapter.download(variant.localPath)
-          variant.s3Key = await this.s3Adapter.upload(
-            variantBuffer, 
-            variant.localPath, 
-            variant.mimeType || media.mimeType
-          )
+        // Загружаем вариант если есть localPath и (нет s3Key ИЛИ нужно удалить локальный)
+        if (variant.localPath) {
+          // Проверяем реально ли вариант на S3
+          const variantOnS3 = variant.s3Key ? await this.s3Adapter.exists(variant.s3Key) : false
+          
+          if (!variantOnS3) {
+            const variantBuffer = await this.localAdapter.download(variant.localPath)
+            variant.s3Key = await this.s3Adapter.upload(
+              variantBuffer, 
+              variant.localPath, 
+              variant.mimeType || media.mimeType
+            )
+          }
         }
       }
       
@@ -485,6 +498,8 @@ export class StorageService {
    * Переместить файл в корзину (storage/.trash)
    * Перемещает локальные файлы в storage/.trash/{mediaId}/ и удаляет с S3
    * Корзина находится вне public/ и недоступна по прямому URL
+   * 
+   * ГАРАНТИЯ: если операция не удалась - откат, файлы остаются на месте
    */
   async moveToTrash(media: Media): Promise<{ 
     trashPath: string | null
@@ -493,186 +508,313 @@ export class StorageService {
     const trashDir = path.join(this.getTrashBasePath(), media.id)
     let trashPath: string | null = null
     const trashVariants: Record<string, string> = {}
+    const movedFiles: Array<{ source: string; dest: string }> = [] // Для rollback
     
     // Создаём директорию для корзины
     const fs = await import('fs/promises')
     await fs.mkdir(trashDir, { recursive: true })
     
-    // Перемещаем оригинал в корзину
-    if (media.localPath) {
-      const filename = media.localPath.split('/').pop() || 'file'
-      const trashFilePath = path.join(trashDir, filename)
-      const sourceAbsPath = path.join(this.config.local.basePath, media.localPath)
-      
-      try {
-        await fs.rename(sourceAbsPath, trashFilePath)
-        trashPath = trashFilePath // Сохраняем абсолютный путь
+    const variants = JSON.parse(media.variants || '{}')
+    
+    try {
+      // Перемещаем/скачиваем оригинал в корзину
+      if (media.localPath) {
+        // Есть локальный файл - перемещаем его
+        const filename = media.localPath.split('/').pop() || 'file'
+        const trashFilePath = path.join(trashDir, filename)
+        const sourceAbsPath = path.join(this.config.local.basePath, media.localPath)
+        
+        await this.localAdapter.reliableMove(sourceAbsPath, trashFilePath)
+        trashPath = trashFilePath
+        movedFiles.push({ source: sourceAbsPath, dest: trashFilePath })
+        
         logger.info('[StorageService] File moved to trash', {
           mediaId: media.id,
           from: media.localPath,
           to: trashPath,
         })
-      } catch (error) {
-        logger.warn('[StorageService] Failed to move file to trash', {
-          mediaId: media.id,
-          error: error instanceof Error ? error.message : String(error),
-        })
-        trashPath = null
-      }
-    }
-    
-    // Перемещаем варианты в корзину
-    const variants = JSON.parse(media.variants || '{}')
-    for (const [name, variant] of Object.entries(variants) as [string, any][]) {
-      if (variant.localPath) {
-        const variantFilename = variant.localPath.split('/').pop() || `${name}.webp`
-        const variantTrashFilePath = path.join(trashDir, variantFilename)
-        const variantSourceAbsPath = path.join(this.config.local.basePath, variant.localPath)
+      } else if (media.s3Key && this.s3Adapter) {
+        // Файл только на S3 - скачиваем в trash перед удалением
+        const filename = media.s3Key.split('/').pop() || 'file'
+        const trashFilePath = path.join(trashDir, filename)
         
         try {
-          await fs.rename(variantSourceAbsPath, variantTrashFilePath)
-          trashVariants[name] = variantTrashFilePath // Абсолютный путь
-        } catch (error) {
-          logger.warn('[StorageService] Failed to move variant to trash', {
-            mediaId: media.id,
-            variant: name,
-            error: error instanceof Error ? error.message : String(error),
-          })
-        }
-      }
-    }
-    
-    // Удаляем с S3
-    if (this.s3Adapter) {
-      if (media.s3Key) {
-        try {
-          await this.s3Adapter.delete(media.s3Key)
-          logger.info('[StorageService] S3 file deleted (trash)', {
+          const buffer = await this.s3Adapter.download(media.s3Key)
+          await fs.writeFile(trashFilePath, buffer)
+          trashPath = trashFilePath
+          
+          logger.info('[StorageService] S3 file downloaded to trash', {
             mediaId: media.id,
             s3Key: media.s3Key,
+            to: trashPath,
           })
         } catch (error) {
-          logger.warn('[StorageService] Failed to delete S3 file', {
+          logger.error('[StorageService] Failed to download S3 file for trash', {
             mediaId: media.id,
+            s3Key: media.s3Key,
             error: error instanceof Error ? error.message : String(error),
           })
+          throw error
         }
       }
       
-      // Удаляем варианты с S3
+      // Перемещаем/скачиваем варианты в корзину
       for (const [name, variant] of Object.entries(variants) as [string, any][]) {
-        if (variant.s3Key) {
+        if (variant.localPath) {
+          // Есть локальный вариант - перемещаем
+          const variantFilename = variant.localPath.split('/').pop() || `${name}.webp`
+          const variantTrashFilePath = path.join(trashDir, variantFilename)
+          const variantSourceAbsPath = path.join(this.config.local.basePath, variant.localPath)
+          
+          await this.localAdapter.reliableMove(variantSourceAbsPath, variantTrashFilePath)
+          trashVariants[name] = variantTrashFilePath
+          movedFiles.push({ source: variantSourceAbsPath, dest: variantTrashFilePath })
+        } else if (variant.s3Key && this.s3Adapter) {
+          // Вариант только на S3 - скачиваем в trash
+          const variantFilename = variant.s3Key.split('/').pop() || `${name}.webp`
+          const variantTrashFilePath = path.join(trashDir, variantFilename)
+          
           try {
-            await this.s3Adapter.delete(variant.s3Key)
+            const buffer = await this.s3Adapter.download(variant.s3Key)
+            await fs.writeFile(variantTrashFilePath, buffer)
+            trashVariants[name] = variantTrashFilePath
+            
+            logger.info('[StorageService] S3 variant downloaded to trash', {
+              mediaId: media.id,
+              variant: name,
+              s3Key: variant.s3Key,
+            })
           } catch (error) {
-            logger.warn('[StorageService] Failed to delete S3 variant', {
+            logger.warn('[StorageService] Failed to download S3 variant for trash', {
               mediaId: media.id,
               variant: name,
               error: error instanceof Error ? error.message : String(error),
             })
+            // Продолжаем с другими вариантами
           }
         }
       }
+      
+      // Удаляем с S3 (только после успешного сохранения в trash)
+      if (this.s3Adapter) {
+        if (media.s3Key) {
+          try {
+            await this.s3Adapter.delete(media.s3Key)
+            logger.info('[StorageService] S3 file deleted (trash)', {
+              mediaId: media.id,
+              s3Key: media.s3Key,
+            })
+          } catch (error) {
+            logger.warn('[StorageService] Failed to delete S3 file', {
+              mediaId: media.id,
+              error: error instanceof Error ? error.message : String(error),
+            })
+            // S3 deletion не критична, продолжаем
+          }
+        }
+        
+        // Удаляем варианты с S3
+        for (const [name, variant] of Object.entries(variants) as [string, any][]) {
+          if (variant.s3Key) {
+            try {
+              await this.s3Adapter.delete(variant.s3Key)
+            } catch (error) {
+              logger.warn('[StorageService] Failed to delete S3 variant', {
+                mediaId: media.id,
+                variant: name,
+                error: error instanceof Error ? error.message : String(error),
+              })
+            }
+          }
+        }
+      }
+      
+      // Очищаем пустые директории в uploads
+      if (media.localPath) {
+        const uploadsDir = path.dirname(path.join(this.config.local.basePath, media.localPath))
+        await this.cleanupEmptyDirs(uploadsDir)
+      }
+      
+      return { trashPath, trashVariants }
+      
+    } catch (error) {
+      // ROLLBACK: возвращаем файлы обратно
+      logger.error('[StorageService] moveToTrash failed, rolling back', {
+        mediaId: media.id,
+        error: error instanceof Error ? error.message : String(error),
+        movedFilesCount: movedFiles.length,
+      })
+      
+      for (const { source, dest } of movedFiles) {
+        try {
+          // Используем обычный rename для отката (файл уже не занят)
+          await fs.rename(dest, source)
+          logger.info('[StorageService] Rollback: file restored', { source, dest })
+        } catch (rollbackError) {
+          logger.error('[StorageService] Rollback failed', {
+            source,
+            dest,
+            error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError),
+          })
+        }
+      }
+      
+      // Удаляем пустую папку trash если создали
+      try {
+        await fs.rmdir(trashDir)
+      } catch {
+        // Игнорируем
+      }
+      
+      throw error
     }
-    
-    return { trashPath, trashVariants }
+  }
+  
+  /**
+   * Очистить пустые директории вверх по иерархии
+   */
+  private async cleanupEmptyDirs(dirPath: string): Promise<void> {
+    const fs = await import('fs/promises')
+    try {
+      const basePath = this.config.local.basePath
+      if (dirPath === basePath || !dirPath.startsWith(basePath)) {
+        return
+      }
+      
+      const files = await fs.readdir(dirPath)
+      if (files.length === 0) {
+        await fs.rmdir(dirPath)
+        await this.cleanupEmptyDirs(path.dirname(dirPath))
+      }
+    } catch {
+      // Игнорируем ошибки
+    }
   }
 
   /**
    * Восстановить файл из корзины (storage/.trash)
    * Перемещает файлы из storage/.trash обратно в public/uploads и перезаливает на S3
+   * 
+   * ГАРАНТИЯ: если операция не удалась - откат, файлы остаются в корзине
    */
   async restoreFromTrash(media: Media): Promise<Media> {
     const trashMeta = media.trashMetadata ? JSON.parse(media.trashMetadata) : null
     
     if (!trashMeta) {
-      logger.warn('[StorageService] No trash metadata for restore', { mediaId: media.id })
-      return media
+      throw new Error(`No trash metadata for media ${media.id}`)
     }
     
-    const { originalPath, trashPath, originalVariants, trashVariants } = trashMeta
+    const { originalPath, trashPath, originalVariants, originalS3Variants, trashVariants } = trashMeta
     let restoredLocalPath: string | null = null
     const variants = JSON.parse(media.variants || '{}')
     const fs = await import('fs/promises')
+    const movedFiles: Array<{ source: string; dest: string }> = [] // Для rollback
     
-    // Восстанавливаем оригинал (trashPath теперь абсолютный)
-    if (trashPath && originalPath) {
-      try {
+    try {
+      // Восстанавливаем оригинал (trashPath - абсолютный путь)
+      if (trashPath && originalPath) {
         const destAbsPath = path.join(this.config.local.basePath, originalPath)
-        // Создаём директорию назначения
+        
+        // Создаём директорию если нужно
         await fs.mkdir(path.dirname(destAbsPath), { recursive: true })
-        await fs.rename(trashPath, destAbsPath)
+        
+        await this.localAdapter.reliableMove(trashPath, destAbsPath)
         restoredLocalPath = originalPath
+        movedFiles.push({ source: trashPath, dest: destAbsPath })
+        
         logger.info('[StorageService] File restored from trash', {
           mediaId: media.id,
           from: trashPath,
           to: originalPath,
         })
-      } catch (error) {
-        logger.error('[StorageService] Failed to restore file from trash', {
-          mediaId: media.id,
-          error: error instanceof Error ? error.message : String(error),
-        })
       }
-    }
-    
-    // Восстанавливаем варианты (trashVariants содержит абсолютные пути)
-    if (trashVariants && originalVariants) {
-      for (const [name, trashVariantPath] of Object.entries(trashVariants) as [string, string][]) {
-        const originalVariantPath = originalVariants[name]
-        if (originalVariantPath) {
-          try {
+      
+      // Восстанавливаем варианты (trashVariants содержит абсолютные пути)
+      // Используем originalVariants или originalS3Variants для определения пути назначения
+      if (trashVariants) {
+        const variantPaths = originalVariants || originalS3Variants || {}
+        for (const [name, trashVariantPath] of Object.entries(trashVariants) as [string, string][]) {
+          const originalVariantPath = variantPaths[name]
+          if (originalVariantPath) {
             const destAbsPath = path.join(this.config.local.basePath, originalVariantPath)
+            
+            // Создаём директорию если нужно
             await fs.mkdir(path.dirname(destAbsPath), { recursive: true })
-            await fs.rename(trashVariantPath, destAbsPath)
+            
+            await this.localAdapter.reliableMove(trashVariantPath, destAbsPath)
+            movedFiles.push({ source: trashVariantPath, dest: destAbsPath })
+            
             if (variants[name]) {
               variants[name].localPath = originalVariantPath
             }
-          } catch (error) {
-            logger.warn('[StorageService] Failed to restore variant from trash', {
-              mediaId: media.id,
-              variant: name,
-              error: error instanceof Error ? error.message : String(error),
-            })
           }
         }
       }
-    }
-    
-    // Удаляем пустую директорию корзины для этого файла
-    try {
-      const trashDir = path.join(this.getTrashBasePath(), media.id)
-      await fs.rmdir(trashDir)
-    } catch {
-      // Игнорируем ошибки удаления директории
-    }
-    
-    // Обновляем запись в БД
-    const updateData: any = {
-      localPath: restoredLocalPath,
-      storageStatus: 'local_only',
-      trashMetadata: null, // Очищаем метаданные корзины
-      variants: JSON.stringify(variants),
-    }
-    
-    const updatedMedia = await prisma.media.update({
-      where: { id: media.id },
-      data: updateData,
-    })
-    
-    // Перезаливаем на S3 если доступен
-    if (this.s3Adapter && restoredLocalPath) {
+      
+      // Удаляем пустую директорию корзины для этого файла
       try {
-        return await this.syncToS3(updatedMedia, false)
-      } catch (error) {
-        logger.warn('[StorageService] Failed to re-sync to S3 after restore', {
-          mediaId: media.id,
-          error: error instanceof Error ? error.message : String(error),
-        })
+        const trashDir = path.join(this.getTrashBasePath(), media.id)
+        await fs.rmdir(trashDir)
+      } catch {
+        // Игнорируем ошибки удаления директории
       }
+      
+      // Обновляем запись в БД
+      const updateData: any = {
+        localPath: restoredLocalPath,
+        storageStatus: 'local_only',
+        trashMetadata: null, // Очищаем метаданные корзины
+        variants: JSON.stringify(variants),
+      }
+      
+      let updatedMedia = await prisma.media.update({
+        where: { id: media.id },
+        data: updateData,
+      })
+      
+      // Перезаливаем на S3 если доступен и удаляем локальные если нужно
+      if (this.s3Adapter && restoredLocalPath) {
+        // Определяем нужно ли удалять локальные файлы после загрузки на S3
+        const globalSettings = await prisma.mediaGlobalSettings.findFirst()
+        const storageLocation = globalSettings?.storageLocation || 'local'
+        
+        // Если storageLocation = 's3' - удаляем локальные после загрузки
+        const deleteLocalAfterS3 = storageLocation === 's3'
+        
+        logger.info('[StorageService] Restoring to S3', {
+          mediaId: media.id,
+          storageLocation,
+          deleteLocalAfterS3,
+        })
+        
+        updatedMedia = await this.syncToS3(updatedMedia, deleteLocalAfterS3)
+      }
+      
+      return updatedMedia
+      
+    } catch (error) {
+      // ROLLBACK: возвращаем файлы обратно в корзину
+      logger.error('[StorageService] restoreFromTrash failed, rolling back', {
+        mediaId: media.id,
+        error: error instanceof Error ? error.message : String(error),
+        movedFilesCount: movedFiles.length,
+      })
+      
+      for (const { source, dest } of movedFiles) {
+        try {
+          await fs.rename(dest, source)
+          logger.info('[StorageService] Rollback: file returned to trash', { source, dest })
+        } catch (rollbackError) {
+          logger.error('[StorageService] Rollback failed', {
+            source,
+            dest,
+            error: rollbackError instanceof Error ? rollbackError.message : String(rollbackError),
+          })
+        }
+      }
+      
+      throw error
     }
-    
-    return updatedMedia
   }
 
   /**
@@ -858,16 +1000,35 @@ async function getS3Config(): Promise<S3AdapterConfig | undefined> {
   return undefined
 }
 
+// Promise для предотвращения race condition при инициализации
+let initializationPromise: Promise<StorageService> | null = null
+
 /**
  * Получить или создать singleton StorageService
+ * Использует promise-based lock для предотвращения race condition
  */
 export async function getStorageService(): Promise<StorageService> {
+  // Если уже инициализирован - возвращаем
   if (storageServiceInstance) {
     return storageServiceInstance
   }
   
-  // Загружаем глобальные настройки из БД
-  const globalSettings = await prisma.mediaGlobalSettings.findFirst()
+  // Если инициализация уже идёт - ждём её завершения
+  if (initializationPromise) {
+    return initializationPromise
+  }
+  
+  // Начинаем инициализацию с блокировкой
+  initializationPromise = (async () => {
+    // Двойная проверка после получения блокировки
+    if (storageServiceInstance) {
+      return storageServiceInstance
+    }
+    
+    logger.debug('[StorageService] Initializing singleton...')
+    
+    // Загружаем глобальные настройки из БД
+    const globalSettings = await prisma.mediaGlobalSettings.findFirst()
   
   // Базовая конфигурация
   const config: StorageServiceConfig = {
@@ -879,10 +1040,24 @@ export async function getStorageService(): Promise<StorageService> {
   }
   
   // Добавляем S3 конфигурацию (.env приоритетнее БД)
-  config.s3 = await getS3Config()
+    config.s3 = await getS3Config()
+    
+    storageServiceInstance = new StorageService(config)
+    logger.debug('[StorageService] Singleton initialized', { 
+      hasS3: !!config.s3,
+      strategy: config.defaultStrategy 
+    })
+    
+    return storageServiceInstance
+  })()
   
-  storageServiceInstance = new StorageService(config)
-  return storageServiceInstance
+  try {
+    const instance = await initializationPromise
+    return instance
+  } finally {
+    // Сбрасываем promise после завершения (успех или ошибка)
+    initializationPromise = null
+  }
 }
 
 /**
@@ -890,6 +1065,7 @@ export async function getStorageService(): Promise<StorageService> {
  */
 export function resetStorageService(): void {
   storageServiceInstance = null
+  initializationPromise = null
 }
 
 /**

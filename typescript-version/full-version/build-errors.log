@@ -1,0 +1,93 @@
+
+> materio-mui-nextjs-admin-template@5.0.0 build C:\laragon\www\materionextjs\typescript-version\full-version
+> next build
+
+   ▲ Next.js 15.1.2
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+   Skipping linting
+   Checking validity of types ...
+ ELIFECYCLE  Command failed with exit code 1.
+
+> materio-mui-nextjs-admin-template@5.0.0 build C:\laragon\www\materionextjs\typescript-version\full-version
+> next build
+
+   ▲ Next.js 15.1.2
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings
+
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+opentelemetry@8.55._a7eee88a1e264f514a0f6a5d5024fa3e/node_modules/@sentry/opentelemetry/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/server/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/services/notifications/NotificationQueue.ts
+./src/services/notifications/scenarios/ScenarioEngine.ts
+./src/services/notifications/scenarios/index.ts
+./src/app/api/admin/notification-scenarios/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/require-in-the-middle@7.5.2/node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/.pnpm/require-in-the-middle@7.5.2/node_modules/require-in-the-middle/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+opentelemetry@8.55._a7eee88a1e264f514a0f6a5d5024fa3e/node_modules/@sentry/opentelemetry/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/server/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/services/notifications/NotificationQueue.ts
+./src/services/notifications/scenarios/ScenarioEngine.ts
+./src/services/notifications/scenarios/index.ts
+./src/app/api/admin/notification-scenarios/route.ts
+
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./src/app/api/admin/media/upload-async/route.ts:114:7
+Type error: Object literal may only specify known properties, and 'entityType' does not exist in type 'RecordEventInput'.
+
+[0m [90m 112 |[39m       type[33m:[39m [32m'media.async_upload_queued'[39m[33m,[39m[0m
+[0m [90m 113 |[39m       severity[33m:[39m [32m'info'[39m[33m,[39m[0m
+[0m[31m[1m>[22m[39m[90m 114 |[39m       entityType[33m:[39m [32m'media'[39m[33m,[39m[0m
+[0m [90m     |[39m       [31m[1m^[22m[39m[0m
+[0m [90m 115 |[39m       entityId[33m:[39m jobId[33m?[39m[33m.[39mtoString()[33m,[39m[0m
+[0m [90m 116 |[39m       userId[33m:[39m user[33m.[39mid[33m,[39m[0m
+[0m [90m 117 |[39m       message[33m:[39m [32m`Файл "${file.name}" принят в async обработку`[39m[33m,[39m[0m
+ ELIFECYCLE  Command failed with exit code 1.

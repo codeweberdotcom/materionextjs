@@ -79,10 +79,14 @@ export async function POST(
 
     // Записываем событие
     await eventService.record(enrichEventInputFromRequest(request, {
-      eventType: 'DOCUMENTS_REJECTED',
-      actorId: adminUser.id,
-      targetId: userId,
-      details: {
+      source: 'admin',
+      module: 'users',
+      type: 'user.documents_rejected',
+      severity: 'warning',
+      message: `Documents rejected for user ${targetUser.name || targetUser.email}`,
+      actor: { type: 'user', id: adminUser.id },
+      subject: { type: 'user', id: userId },
+      payload: {
         userId: userId,
         userName: targetUser.name,
         rejectedBy: adminUser.id,

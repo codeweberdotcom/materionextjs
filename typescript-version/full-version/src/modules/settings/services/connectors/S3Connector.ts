@@ -194,7 +194,17 @@ export class S3Connector extends BaseConnector {
       let bucketLocation: string | null = null
       let testBucketError: string | null = null
 
-      // Пробуем получить список бакетов
+      // Bucket обязателен для проверки
+      const testBucket = metadata.bucket
+      if (!testBucket) {
+        return {
+          success: false,
+          latency: Date.now() - startTime,
+          error: 'Bucket обязателен для проверки подключения'
+        }
+      }
+
+      // Пробуем получить список бакетов (опционально, некоторые провайдеры не поддерживают)
       const stopListTimer = startS3OperationTimer('list')
       try {
         const listResult = await client.send(new ListBucketsCommand({}))
@@ -210,37 +220,41 @@ export class S3Connector extends BaseConnector {
         })
       }
 
-      // Если указан bucket, проверяем его доступность
-      const testBucket = metadata.bucket
-      if (testBucket) {
-        const stopHeadTimer = startS3OperationTimer('head')
-        try {
-          await client.send(new HeadBucketCommand({ Bucket: testBucket }))
-          bucketExists = true
-          stopHeadTimer()
-          trackS3OperationSuccess('head', testBucket)
+      // Проверяем существование и доступность bucket
+      const stopHeadTimer = startS3OperationTimer('head')
+      try {
+        await client.send(new HeadBucketCommand({ Bucket: testBucket }))
+        bucketExists = true
+        stopHeadTimer()
+        trackS3OperationSuccess('head', testBucket)
 
-          // Пробуем получить локацию bucket
-          try {
-            const locationResult = await client.send(new GetBucketLocationCommand({ Bucket: testBucket }))
-            bucketLocation = locationResult.LocationConstraint || region
-          } catch {
-            // Некоторые провайдеры не поддерживают GetBucketLocation
-          }
-        } catch (headError: any) {
-          stopHeadTimer()
-          bucketExists = false
-          const errorType = headError.name === 'NotFound' ? 'not_found' : 
-                           headError.name === 'Forbidden' ? 'forbidden' : 'unknown'
-          trackS3OperationError('head', testBucket, errorType)
-          
-          if (headError.name === 'NotFound' || headError.$metadata?.httpStatusCode === 404) {
-            testBucketError = `Bucket "${testBucket}" не найден`
-          } else if (headError.name === 'Forbidden' || headError.$metadata?.httpStatusCode === 403) {
-            testBucketError = `Нет доступа к bucket "${testBucket}"`
-          } else {
-            testBucketError = headError.message || 'Ошибка проверки bucket'
-          }
+        // Пробуем получить локацию bucket
+        try {
+          const locationResult = await client.send(new GetBucketLocationCommand({ Bucket: testBucket }))
+          bucketLocation = locationResult.LocationConstraint || region
+        } catch {
+          // Некоторые провайдеры не поддерживают GetBucketLocation
+        }
+      } catch (headError: any) {
+        stopHeadTimer()
+        bucketExists = false
+        const errorType = headError.name === 'NotFound' ? 'not_found' : 
+                         headError.name === 'Forbidden' ? 'forbidden' : 'unknown'
+        trackS3OperationError('head', testBucket, errorType)
+        
+        if (headError.name === 'NotFound' || headError.$metadata?.httpStatusCode === 404) {
+          testBucketError = `Bucket "${testBucket}" не найден`
+        } else if (headError.name === 'Forbidden' || headError.$metadata?.httpStatusCode === 403) {
+          testBucketError = `Нет доступа к bucket "${testBucket}"`
+        } else {
+          testBucketError = headError.message || 'Ошибка проверки bucket'
+        }
+
+        // Возвращаем ошибку если bucket не существует или нет доступа
+        return {
+          success: false,
+          latency: Date.now() - startTime,
+          error: testBucketError
         }
       }
 
@@ -268,10 +282,9 @@ export class S3Connector extends BaseConnector {
           storageType: metadata.storageType,
           bucketsCount: buckets.length,
           bucketNames: buckets.slice(0, 10).map((b: any) => b.Name),
-          testBucket: testBucket || null,
-          testBucketExists: testBucket ? bucketExists : null,
-          testBucketLocation: bucketLocation,
-          testBucketError,
+          bucket: testBucket,
+          bucketExists,
+          bucketLocation,
           forcePathStyle: metadata.forcePathStyle,
           signatureVersion: metadata.signatureVersion || 'v4'
         }

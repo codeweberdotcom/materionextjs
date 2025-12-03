@@ -27,24 +27,24 @@ import Link from '@mui/material/Link'
 import classnames from 'classnames'
 
 // Type Imports
-import type { AccountType } from '@/types/accounts/types'
+import { AccountType } from '@/types/accounts/types'
 import type { Locale } from '@configs/i18n'
 
 const accountTypes: { value: AccountType; label: string; description: string; icon: string }[] = [
   {
-    value: 'LISTING',
+    value: AccountType.LISTING,
     label: 'Для объявлений',
     description: 'Публикация и управление объявлениями',
     icon: 'ri-file-list-3-line'
   },
   {
-    value: 'COMPANY',
+    value: AccountType.COMPANY,
     label: 'Компания',
     description: 'Размещение компании и услуг',
     icon: 'ri-building-line'
   },
   {
-    value: 'NETWORK',
+    value: AccountType.NETWORK,
     label: 'Сеть компаний',
     description: 'Управление несколькими аккаунтами и назначение менеджеров',
     icon: 'ri-group-line'

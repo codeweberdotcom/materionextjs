@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: true, message: `Queue ${queueName} resumed` })
 
       case 'clean':
-        await targetQueue.clean()
+        await (targetQueue as any).clean?.()
         logger.info(`[API] Queue ${queueName} cleaned`, { by: user.id })
         return NextResponse.json({ success: true, message: `Queue ${queueName} cleaned` })
 

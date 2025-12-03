@@ -360,26 +360,13 @@ export default function MediaDetailSidebar({
 
   // Формируем URL изображения
   const getImageUrl = () => {
+    // Для файлов в корзине используем API (корзина недоступна публично)
+    if (media?.deletedAt && media?.trashMetadata) {
+      return `/api/admin/media/${media.id}/trash?variant=original`
+    }
+    
     if (urls.thumbnail) return fixUploadsPath(urls.thumbnail)
     if (urls.original) return fixUploadsPath(urls.original)
-    
-    // Для файлов в корзине используем trashPath
-    if (media?.deletedAt && media?.trashMetadata) {
-      try {
-        const trashMeta = JSON.parse(media.trashMetadata)
-        if (trashMeta.trashPath) {
-          let path = trashMeta.trashPath
-            .replace(/^public\//, '')
-            .replace(/^\//, '')
-          while (path.startsWith('uploads/')) {
-            path = path.substring(8)
-          }
-          return `/uploads/${path}`
-        }
-      } catch {
-        // Игнорируем ошибки парсинга
-      }
-    }
     
     if (media?.localPath) {
       let path = media.localPath
@@ -392,6 +379,12 @@ export default function MediaDetailSidebar({
       
       return `/uploads/${path}`
     }
+    
+    // Для файлов на S3 используем API endpoint
+    if (media?.s3Key) {
+      return `/api/admin/media/${media.id}/file`
+    }
+    
     return ''
   }
   
@@ -689,49 +682,49 @@ export default function MediaDetailSidebar({
 
               {/* Column 2 - SEO Fields (скрыты для файлов в корзине) */}
               {!isInTrash && (
-                <Grid item xs={12} md={6}>
-                  <Typography variant='h6' className='mbe-4'>
+              <Grid item xs={12} md={6}>
+                <Typography variant='h6' className='mbe-4'>
                     {t?.seoSettings ?? 'SEO Settings'}
-                  </Typography>
+                </Typography>
 
-                  <div className='flex flex-col gap-2'>
-                    <TextField
-                      fullWidth
+                <div className='flex flex-col gap-2'>
+                  <TextField
+                    fullWidth
                       label={t?.altText ?? 'Alt text'}
                       placeholder={dictionary?.navigation?.altTextPlaceholder ?? 'Image description for search engines'}
-                      value={alt}
-                      onChange={(e) => setAlt(e.target.value)}
-                    />
+                    value={alt}
+                    onChange={(e) => setAlt(e.target.value)}
+                  />
 
-                    <TextField
-                      fullWidth
+                  <TextField
+                    fullWidth
                       label={t?.titleText ?? 'Title'}
                       placeholder={dictionary?.navigation?.titlePlaceholder ?? 'Image title'}
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                    />
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
 
-                    <TextField
-                      fullWidth
+                  <TextField
+                    fullWidth
                       label={t?.caption ?? 'Caption'}
                       placeholder={dictionary?.navigation?.captionPlaceholder ?? 'Image caption'}
-                      value={caption}
-                      onChange={(e) => setCaption(e.target.value)}
-                      multiline
-                      rows={2}
-                    />
+                    value={caption}
+                    onChange={(e) => setCaption(e.target.value)}
+                    multiline
+                    rows={2}
+                  />
 
-                    <TextField
-                      fullWidth
+                  <TextField
+                    fullWidth
                       label={t?.description ?? 'Description'}
                       placeholder={dictionary?.navigation?.descriptionPlaceholder ?? 'Detailed file description'}
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      multiline
-                      rows={3}
-                    />
-                  </div>
-                </Grid>
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    multiline
+                    rows={3}
+                  />
+                </div>
+              </Grid>
               )}
             </Grid>
 
@@ -761,60 +754,60 @@ export default function MediaDetailSidebar({
               </div>
             ) : (
               // Кнопки для обычных файлов
-              <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
-                <Button
+            <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
+              <Button
                   type='button'
-                  variant='contained'
-                  onClick={handleSave}
-                  disabled={saving}
-                  startIcon={saving ? <CircularProgress size={18} color='inherit' /> : <i className='ri-save-line' />}
-                >
+                variant='contained'
+                onClick={handleSave}
+                disabled={saving}
+                startIcon={saving ? <CircularProgress size={18} color='inherit' /> : <i className='ri-save-line' />}
+              >
                   {saving ? (t?.saving ?? 'Saving...') : (t?.save ?? 'Save')}
-                </Button>
-                {(media.storageStatus === 'local_only' || media.storageStatus === 'sync_error') && (
-                  <Button
-                    type='button'
-                    variant='outlined'
-                    onClick={() => handleSyncToS3(false)}
-                    disabled={syncing}
-                    color={media.storageStatus === 'sync_error' ? 'warning' : 'primary'}
-                    startIcon={syncing ? <CircularProgress size={18} /> : <i className='ri-cloud-line' />}
-                  >
-                    {syncing ? (t?.uploading ?? 'Uploading...') : media.storageStatus === 'sync_error' ? (t?.retry ?? 'Retry') : (t?.toS3 ?? 'To S3')}
-                  </Button>
-                )}
-                {media.storageStatus === 'synced' && media.localPath && (
-                  <Button
-                    type='button'
-                    variant='outlined'
-                    onClick={() => handleSyncToS3(true)}
-                    disabled={syncing}
-                    startIcon={syncing ? <CircularProgress size={18} /> : <i className='ri-refresh-line' />}
-                  >
-                    {syncing ? (t?.uploading ?? 'Uploading...') : (t?.reupload ?? 'Re-upload')}
-                  </Button>
-                )}
-                {imageUrl && (
-                  <Button
-                    type='button'
-                    variant='outlined'
-                    href={imageUrl}
-                    target='_blank'
-                    startIcon={<i className='ri-download-line' />}
-                  >
-                    {t?.download ?? 'Download'}
-                  </Button>
-                )}
+              </Button>
+              {(media.storageStatus === 'local_only' || media.storageStatus === 'sync_error') && (
                 <Button
-                  type='button'
+                    type='button'
                   variant='outlined'
-                  color='error'
-                  onClick={handleDelete}
-                  startIcon={<i className='ri-delete-bin-line' />}
+                  onClick={() => handleSyncToS3(false)}
+                  disabled={syncing}
+                  color={media.storageStatus === 'sync_error' ? 'warning' : 'primary'}
+                  startIcon={syncing ? <CircularProgress size={18} /> : <i className='ri-cloud-line' />}
                 >
-                  {t?.delete ?? 'Delete'}
+                    {syncing ? (t?.uploading ?? 'Uploading...') : media.storageStatus === 'sync_error' ? (t?.retry ?? 'Retry') : (t?.toS3 ?? 'To S3')}
                 </Button>
-              </div>
+              )}
+              {media.storageStatus === 'synced' && media.localPath && (
+                <Button
+                    type='button'
+                  variant='outlined'
+                  onClick={() => handleSyncToS3(true)}
+                  disabled={syncing}
+                  startIcon={syncing ? <CircularProgress size={18} /> : <i className='ri-refresh-line' />}
+                >
+                    {syncing ? (t?.uploading ?? 'Uploading...') : (t?.reupload ?? 'Re-upload')}
+                </Button>
+              )}
+              {imageUrl && (
+                <Button
+                    type='button'
+                  variant='outlined'
+                  href={imageUrl}
+                  target='_blank'
+                  startIcon={<i className='ri-download-line' />}
+                >
+                    {t?.download ?? 'Download'}
+                </Button>
+              )}
+              <Button
+                  type='button'
+                variant='outlined'
+                color='error'
+                onClick={handleDelete}
+                startIcon={<i className='ri-delete-bin-line' />}
+              >
+                  {t?.delete ?? 'Delete'}
+              </Button>
+            </div>
             )}
           </div>
         ) : (

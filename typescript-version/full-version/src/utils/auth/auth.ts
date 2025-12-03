@@ -27,15 +27,20 @@ export async function requireAuth(request?: NextRequest) {
     throw new Error('Unauthorized')
   }
 
-  const role = user.roleId
-    ? await prisma.role.findUnique({
-        where: { id: user.roleId }
-      })
-    : null
+  // Fetch fresh user data from DB to get latest avatar and other fields
+  const freshUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    include: { role: true }
+  })
+
+  if (!freshUser) {
+    throw new Error('User not found')
+  }
 
   const enrichedUser: NonNullable<AuthenticatedUser> = {
     ...user,
-    role
+    image: freshUser.image, // Use fresh image from DB
+    role: freshUser.role
   }
 
   return { session, user: enrichedUser }
