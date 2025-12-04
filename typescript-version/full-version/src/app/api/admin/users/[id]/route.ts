@@ -1,9 +1,4 @@
-﻿import { writeFile, mkdir } from 'fs/promises'
-
-import { NextRequest, NextResponse } from 'next/server'
-import path from 'path'
-
-import { existsSync } from 'fs'
+﻿import { NextRequest, NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import type { UserWithRole } from '@/utils/permissions/permissions'
@@ -17,6 +12,8 @@ import {
   formatZodError,
   avatarFileSchema
 } from '@/lib/validations/user-schemas'
+import { getMediaService } from '@/services/media'
+import logger from '@/lib/logger'
 
 // GET - Get user by id (admin only)
 export async function GET(
@@ -250,26 +247,81 @@ export async function PUT(
     }
 
     if (newAvatar && newAvatar instanceof File) {
-      // Ensure uploads directory exists
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars')
+      try {
+        // Get current user to check for existing avatar
+        const currentUser = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { avatarMediaId: true }
+        })
 
-      if (!existsSync(uploadsDir)) {
-        await mkdir(uploadsDir, { recursive: true })
+        // Delete old avatar if exists
+        if (currentUser?.avatarMediaId) {
+          try {
+            const mediaService = getMediaService()
+            await mediaService.delete(currentUser.avatarMediaId, true)
+            logger.info('[Admin] Old avatar deleted', {
+              userId,
+              oldMediaId: currentUser.avatarMediaId
+            })
+          } catch (error) {
+            logger.warn('[Admin] Failed to delete old avatar', {
+              userId,
+              error: error instanceof Error ? error.message : String(error)
+            })
+          }
+        }
+
+        // Upload new avatar through MediaService
+        const mediaService = getMediaService()
+        const buffer = Buffer.from(await newAvatar.arrayBuffer())
+
+        const result = await mediaService.upload(buffer, newAvatar.name, newAvatar.type, {
+          entityType: 'user_avatar',
+          entityId: userId,
+        })
+
+        if (result.success && result.media) {
+          // Get S3 settings
+          const globalSettings = await prisma.mediaGlobalSettings.findFirst()
+          const s3Enabled = globalSettings?.s3Enabled ?? false
+          const s3PublicUrlPrefix = globalSettings?.s3PublicUrlPrefix
+
+          const variants = JSON.parse(result.media.variants || '{}')
+          const mediumVariant = variants.medium
+
+          const s3Key = mediumVariant?.s3Key || result.media.s3Key
+          const localPath = mediumVariant?.localPath || result.media.localPath
+
+          let avatarUrl: string
+
+          if (s3Enabled && s3PublicUrlPrefix && s3Key) {
+            avatarUrl = `${s3PublicUrlPrefix}/${s3Key}`
+          } else if (localPath) {
+            let path = localPath.replace(/^public\//, '').replace(/^\//, '')
+            while (path.startsWith('uploads/')) {
+              path = path.substring(8)
+            }
+            avatarUrl = `/uploads/${path}`
+          } else {
+            avatarUrl = `/api/media/${result.media.id}?variant=medium`
+          }
+
+          updateData.image = avatarUrl
+          updateData.avatarMediaId = result.media.id
+
+          logger.info('[Admin] Avatar uploaded for user', {
+            userId,
+            mediaId: result.media.id,
+            avatarUrl
+          })
+        }
+      } catch (error) {
+        logger.error('[Admin] Failed to upload avatar', {
+          userId,
+          error: error instanceof Error ? error.message : String(error)
+        })
+        // Continue without updating avatar
       }
-
-      // Generate unique filename
-      const fileExtension = path.extname(newAvatar.name) || '.jpg'
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}${fileExtension}`
-      const filePath = path.join(uploadsDir, fileName)
-
-      // Save the file
-      const bytes = await newAvatar.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-
-      await writeFile(filePath, buffer)
-
-      // Set the relative path for the database
-      updateData.image = `/uploads/avatars/${fileName}`
     }
 
     const updatedUser = await prisma.user.update({

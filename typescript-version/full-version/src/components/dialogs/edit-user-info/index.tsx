@@ -158,7 +158,7 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
       setFormData({
         firstName,
         lastName,
-        email: data.email,
+        email: data.email || '',
         role: dbRole,
         company: data.company,
         contact: data.contact,
@@ -194,7 +194,7 @@ const EditUserInfo = ({ open, setOpen, data }: EditUserInfoProps) => {
       setFormData({
         firstName,
         lastName,
-        email: data.email,
+        email: data.email || '',
         role: isEditingOwnProfile ? '' : dbRole,
         company: data.company,
         contact: data.contact,

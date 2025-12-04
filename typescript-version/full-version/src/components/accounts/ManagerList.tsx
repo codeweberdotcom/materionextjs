@@ -114,14 +114,14 @@ const ManagerList = ({
                 <TableCell>
                   <Box className='flex items-center gap-3'>
                     <Avatar
-                      src={manager.user.avatar || ''}
-                      alt={manager.user.fullName || manager.user.email || ''}
+                      src={manager.user.image || ''}
+                      alt={manager.user.name || manager.user.email || ''}
                     >
-                      {(manager.user.fullName || manager.user.email || '?')[0].toUpperCase()}
+                      {(manager.user.name || manager.user.email || '?')[0].toUpperCase()}
                     </Avatar>
                     <Box>
                       <Typography variant='body2' className='font-medium'>
-                        {manager.user.fullName || 'Без имени'}
+                        {manager.user.name || 'Без имени'}
                       </Typography>
                       <Typography variant='caption' color='text.secondary'>
                         {manager.user.email}

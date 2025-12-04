@@ -16,8 +16,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ entity: string }> }
 ) {
+  const resolvedParams = await params
   try {
-    const resolvedParams = await params
     // Валидация параметров пути
     const paramsValidation = exportParamsSchema.safeParse(resolvedParams)
     if (!paramsValidation.success) {
@@ -38,7 +38,7 @@ export async function POST(
     const keyType = user?.id ? 'user' : 'ip'
 
     // Проверка rate limit через централизованную систему
-    const environment = getEnvironmentFromRequest(request)
+    const environment = getEnvironmentFromRequest(request) as 'production' | 'test' | undefined
     const rateLimitResult = await rateLimitService.checkLimit(rateLimitKey, 'export', {
       increment: true,
       userId: user?.id ?? null,
@@ -115,7 +115,7 @@ export async function POST(
       selectedIds,
       includeHeaders,
       filename,
-      actorId: user?.id ?? null // Передаем ID пользователя для записи в события
+      actorId: user?.id ?? undefined // Передаем ID пользователя для записи в события
     })
 
     if (!result.success) {

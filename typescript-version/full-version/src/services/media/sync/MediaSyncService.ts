@@ -238,7 +238,7 @@ export class MediaSyncService {
     await Promise.all(
       mediaList.map(media =>
         mediaSyncQueue.add({
-        operation: options.operation,
+        operation: options.operation as any,
         mediaId: media.id,
         jobId: job.id,
         options: {
@@ -357,7 +357,7 @@ export class MediaSyncService {
       await Promise.all(
         batch.map(media =>
           mediaSyncQueue.add({
-          operation: options.operation,
+          operation: options.operation as any,
           mediaId: media.id,
           jobId: childJob.id,
           parentJobId: parentJob.id,
@@ -411,7 +411,7 @@ export class MediaSyncService {
     const globalSettings = await prisma.mediaGlobalSettings.findFirst()
     const currentBucket = globalSettings?.s3DefaultBucket || process.env.S3_BUCKET
 
-    switch (options.operation) {
+    switch (options.operation as any) {
       case 'upload_to_s3':
         // Файлы с локальным путём
         where.localPath = { not: null }
@@ -615,7 +615,7 @@ export class MediaSyncService {
     }
 
     try {
-      switch (options.operation) {
+      switch (options.operation as any) {
         case 'upload_to_s3':
           const uploadedMedia = await this.storageService.syncToS3(
             media,
@@ -663,7 +663,7 @@ export class MediaSyncService {
     const job = await prisma.mediaSyncJob.findUnique({
       where: { id: jobId },
       include: {
-        childJobs: job?.isParent ? true : false,
+        childJobs: true,
       } as any,
     })
 

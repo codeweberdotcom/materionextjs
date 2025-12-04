@@ -5,7 +5,7 @@ try {
   const logger = (await import('@/lib/logger')).default as any
   for (const level of ['info', 'warn', 'error', 'debug']) {
     if (typeof logger[level] === 'function') {
-      vi.spyOn(logger, level as keyof typeof logger).mockImplementation(() => {})
+      vi.spyOn(logger, level as any).mockImplementation(() => {})
     }
   }
 } catch (error) {

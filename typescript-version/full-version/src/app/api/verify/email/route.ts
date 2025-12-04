@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
         status: 400,
         code: 'VERIFY_EMAIL_VALIDATION_ERROR',
         message: 'Validation error',
-        details: validationResult.error.errors,
+        details: validationResult.error.errors.map(e => e.message),
         logLevel: 'warn',
         route: 'verify/email',
         context: { route: 'verify/email', errors: validationResult.error.errors }

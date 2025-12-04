@@ -5,5 +5,6 @@
   "password": "5MMDglTub2ViWemQK4LW",
   "encryption": "tls",
   "fromEmail": "info@codeweber.com",
-  "fromName": "Test User"
+  "fromName": "Test User",
+  "updatedAt": "2025-12-04T11:51:56.537Z"
 }

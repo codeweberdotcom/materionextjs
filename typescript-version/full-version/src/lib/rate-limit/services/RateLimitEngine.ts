@@ -233,39 +233,37 @@ export class RateLimitEngine implements IRateLimitEngine {
     states: Array<{ id: string; key: string; module: string }>
     dryRun?: boolean
   }> {
-    const where: Prisma.RateLimitStateWhereInput = {
-      AND: []
-    }
+    const andConditions: Prisma.RateLimitStateWhereInput[] = []
 
     // Фильтры по идентификаторам
     if (params.module) {
-      where.AND!.push({ module: params.module })
+      andConditions.push({ module: params.module })
     }
 
     if (params.key) {
-      where.AND!.push({ key: params.key })
+      andConditions.push({ key: params.key })
     }
 
     if (params.userId) {
-      where.AND!.push({ key: { contains: params.userId } })
+      andConditions.push({ key: { contains: params.userId } })
     }
 
     if (params.ipAddress) {
-      where.AND!.push({ key: params.ipAddress })
+      andConditions.push({ key: params.ipAddress })
     }
 
     if (params.email) {
-      where.AND!.push({ key: params.email })
+      andConditions.push({ key: params.email })
     }
 
     // Фильтры по времени
     if (params.olderThanDays) {
       const cutoffDate = new Date(Date.now() - params.olderThanDays * 24 * 60 * 60 * 1000)
-      where.AND!.push({ windowStart: { lt: cutoffDate } })
+      andConditions.push({ windowStart: { lt: cutoffDate } })
     }
 
     if (params.onlyExpired) {
-      where.AND!.push({
+      andConditions.push({
         OR: [
           { blockedUntil: { lt: new Date() } },
           {
@@ -280,7 +278,7 @@ export class RateLimitEngine implements IRateLimitEngine {
 
     // Фильтры по состоянию
     if (params.onlyBlocked) {
-      where.AND!.push({
+      andConditions.push({
         AND: [
           { blockedUntil: { not: null } },
           { blockedUntil: { gt: new Date() } }
@@ -289,12 +287,14 @@ export class RateLimitEngine implements IRateLimitEngine {
     }
 
     if (params.minCount !== undefined) {
-      where.AND!.push({ count: { gte: params.minCount } })
+      andConditions.push({ count: { gte: params.minCount } })
     }
 
     if (params.maxCount !== undefined) {
-      where.AND!.push({ count: { lte: params.maxCount } })
+      andConditions.push({ count: { lte: params.maxCount } })
     }
+
+    const where: Prisma.RateLimitStateWhereInput = { AND: andConditions }
 
     // Получить состояния для обработки
     const states = await this.prisma.rateLimitState.findMany({
@@ -616,20 +616,17 @@ export class RateLimitEngine implements IRateLimitEngine {
     }
 
     // Получить manual блоки
-    const manualBlocksWhere: Prisma.UserBlockWhereInput = {
-      isActive: true,
-      AND: [
-        {
-          OR: [
-            { unblockedAt: null },
-            { unblockedAt: { gt: new Date() } }
-          ]
-        }
-      ]
-    }
+    const manualBlocksAnd: Prisma.UserBlockWhereInput[] = [
+      {
+        OR: [
+          { unblockedAt: null },
+          { unblockedAt: { gt: new Date() } }
+        ]
+      }
+    ]
 
     if (params.module) {
-      manualBlocksWhere.AND!.push({
+      manualBlocksAnd.push({
         OR: [
           { module: params.module },
           { module: 'all' }
@@ -638,7 +635,7 @@ export class RateLimitEngine implements IRateLimitEngine {
     }
 
     if (params.search) {
-      manualBlocksWhere.AND!.push({
+      manualBlocksAnd.push({
         OR: [
           { userId: { contains: params.search, mode: 'insensitive' } },
           { email: { contains: params.search, mode: 'insensitive' } },
@@ -648,6 +645,11 @@ export class RateLimitEngine implements IRateLimitEngine {
       })
     }
 
+    const manualBlocksWhere: Prisma.UserBlockWhereInput = {
+      isActive: true,
+      AND: manualBlocksAnd
+    }
+
     const manualBlocks = await this.prisma.userBlock.findMany({
       where: manualBlocksWhere,
       include: {
@@ -655,12 +657,6 @@ export class RateLimitEngine implements IRateLimitEngine {
           select: {
             id: true,
             name: true,
-            email: true
-          }
-        },
-        blockedByUser: {
-          select: {
-            id: true,
             email: true
           }
         }
@@ -697,7 +693,6 @@ export class RateLimitEngine implements IRateLimitEngine {
         targetCidr: block.cidr,
         targetAsn: block.asn,
         blockedBy: block.blockedBy,
-        blockedByUser: block.blockedByUser,
         config,
         source: 'manual',
         user: block.user,
@@ -712,25 +707,27 @@ export class RateLimitEngine implements IRateLimitEngine {
       })
     }
 
-    const totalManualWhere: Prisma.UserBlockWhereInput = {
-      isActive: true,
-      AND: [
-        {
-          OR: [
-            { unblockedAt: null },
-            { unblockedAt: { gt: new Date() } }
-          ]
-        }
-      ]
-    }
+    const totalManualAnd: Prisma.UserBlockWhereInput[] = [
+      {
+        OR: [
+          { unblockedAt: null },
+          { unblockedAt: { gt: new Date() } }
+        ]
+      }
+    ]
 
     if (params.module) {
-      totalManualWhere.AND!.push({
+      totalManualAnd.push({
         OR: [
           { module: params.module },
           { module: 'all' }
         ]
       })
+    }
+
+    const totalManualWhere: Prisma.UserBlockWhereInput = {
+      isActive: true,
+      AND: totalManualAnd
     }
 
     const [totalStates, totalManual] = await Promise.all([
@@ -902,50 +899,48 @@ export class RateLimitEngine implements IRateLimitEngine {
    * List blocks with flexible filtering
    */
   async listBlocks(params: ListBlocksParams = {}) {
-    const where: Prisma.UserBlockWhereInput = {
-      AND: []
-    }
+    const andConditions: Prisma.UserBlockWhereInput[] = []
 
     if (params.module) {
-      where.AND!.push({
+      andConditions.push({
         OR: [{ module: params.module }, { module: 'all' }]
       })
     }
 
     if (params.isActive !== undefined) {
-      where.AND!.push({ isActive: params.isActive })
+      andConditions.push({ isActive: params.isActive })
     }
 
     if (params.blockType === 'automatic') {
-      where.AND!.push({ blockedBy: 'system' })
+      andConditions.push({ blockedBy: 'system' })
     } else if (params.blockType === 'manual') {
-      where.AND!.push({ blockedBy: { not: 'system' } })
+      andConditions.push({ blockedBy: { not: 'system' } })
     }
 
     if (params.targetType === 'user') {
-      where.AND!.push({ userId: { not: null } })
+      andConditions.push({ userId: { not: null } })
     } else if (params.targetType === 'ip') {
-      where.AND!.push({ ipAddress: { not: null } })
+      andConditions.push({ ipAddress: { not: null } })
     } else if (params.targetType === 'email') {
-      where.AND!.push({ email: { not: null } })
+      andConditions.push({ email: { not: null } })
     } else if (params.targetType === 'domain') {
-      where.AND!.push({ mailDomain: { not: null } })
+      andConditions.push({ mailDomain: { not: null } })
     }
 
     if (params.blockedBy) {
-      where.AND!.push({ blockedBy: params.blockedBy })
+      andConditions.push({ blockedBy: params.blockedBy })
     }
 
     if (params.createdBefore) {
-      where.AND!.push({ blockedAt: { lt: params.createdBefore } })
+      andConditions.push({ blockedAt: { lt: params.createdBefore } })
     }
 
     if (params.createdAfter) {
-      where.AND!.push({ blockedAt: { gt: params.createdAfter } })
+      andConditions.push({ blockedAt: { gt: params.createdAfter } })
     }
 
     if (params.expiresBefore) {
-      where.AND!.push({
+      andConditions.push({
         OR: [
           { unblockedAt: { lt: params.expiresBefore } },
           { unblockedAt: null }
@@ -954,11 +949,11 @@ export class RateLimitEngine implements IRateLimitEngine {
     }
 
     if (params.expiresAfter) {
-      where.AND!.push({ unblockedAt: { gt: params.expiresAfter } })
+      andConditions.push({ unblockedAt: { gt: params.expiresAfter } })
     }
 
     if (params.search) {
-      where.AND!.push({
+      andConditions.push({
         OR: [
           { userId: { contains: params.search, mode: 'insensitive' } },
           { email: { contains: params.search, mode: 'insensitive' } },
@@ -968,6 +963,8 @@ export class RateLimitEngine implements IRateLimitEngine {
         ]
       })
     }
+
+    const where: Prisma.UserBlockWhereInput = andConditions.length > 0 ? { AND: andConditions } : {}
 
     const limit = params.limit && params.limit > 0 ? Math.min(params.limit, 100) : 20
     const take = limit + 1
@@ -979,12 +976,6 @@ export class RateLimitEngine implements IRateLimitEngine {
           select: {
             id: true,
             name: true,
-            email: true
-          }
-        },
-        blockedByUser: {
-          select: {
-            id: true,
             email: true
           }
         }
@@ -1013,8 +1004,7 @@ export class RateLimitEngine implements IRateLimitEngine {
         unblockedAt: block.unblockedAt,
         isActive: block.isActive,
         notes: block.notes,
-        user: block.user,
-        blockedByUser: block.blockedByUser
+        user: block.user
       })),
       total,
       nextCursor
@@ -1025,46 +1015,44 @@ export class RateLimitEngine implements IRateLimitEngine {
    * Bulk deactivate blocks by criteria
    */
   async bulkDeactivateBlocks(params: BulkDeactivateBlocksParams) {
-    const where: Prisma.UserBlockWhereInput = {
-      AND: [{ isActive: true }]
-    }
+    const andConditions: Prisma.UserBlockWhereInput[] = [{ isActive: true }]
 
     if (params.module) {
-      where.AND!.push({
+      andConditions.push({
         OR: [{ module: params.module }, { module: 'all' }]
       })
     }
 
     if (params.isActive !== undefined) {
-      where.AND!.push({ isActive: params.isActive })
+      andConditions.push({ isActive: params.isActive })
     }
 
     if (params.blockType === 'automatic') {
-      where.AND!.push({ blockedBy: 'system' })
+      andConditions.push({ blockedBy: 'system' })
     } else if (params.blockType === 'manual') {
-      where.AND!.push({ blockedBy: { not: 'system' } })
+      andConditions.push({ blockedBy: { not: 'system' } })
     }
 
     if (params.targetType === 'user') {
-      where.AND!.push({ userId: { not: null } })
+      andConditions.push({ userId: { not: null } })
     } else if (params.targetType === 'ip') {
-      where.AND!.push({ ipAddress: { not: null } })
+      andConditions.push({ ipAddress: { not: null } })
     } else if (params.targetType === 'email') {
-      where.AND!.push({ email: { not: null } })
+      andConditions.push({ email: { not: null } })
     } else if (params.targetType === 'domain') {
-      where.AND!.push({ mailDomain: { not: null } })
+      andConditions.push({ mailDomain: { not: null } })
     }
 
     if (params.blockedBy) {
-      where.AND!.push({ blockedBy: params.blockedBy })
+      andConditions.push({ blockedBy: params.blockedBy })
     }
 
     if (params.createdBefore) {
-      where.AND!.push({ blockedAt: { lt: params.createdBefore } })
+      andConditions.push({ blockedAt: { lt: params.createdBefore } })
     }
 
     if (params.expiresBefore) {
-      where.AND!.push({
+      andConditions.push({
         OR: [
           { unblockedAt: { lt: params.expiresBefore } },
           { unblockedAt: null }
@@ -1073,8 +1061,10 @@ export class RateLimitEngine implements IRateLimitEngine {
     }
 
     if (params.blockIds && params.blockIds.length > 0) {
-      where.AND!.push({ id: { in: params.blockIds } })
+      andConditions.push({ id: { in: params.blockIds } })
     }
+
+    const where: Prisma.UserBlockWhereInput = { AND: andConditions }
 
     const blocks = await this.prisma.userBlock.findMany({
       where,
@@ -1126,18 +1116,16 @@ export class RateLimitEngine implements IRateLimitEngine {
    * Cleanup expired or old blocks
    */
   async cleanupBlocks(params: CleanupBlocksParams = {}) {
-    const where: Prisma.UserBlockWhereInput = {
-      AND: []
-    }
+    const andConditions: Prisma.UserBlockWhereInput[] = []
 
     if (params.module) {
-      where.AND!.push({
+      andConditions.push({
         OR: [{ module: params.module }, { module: 'all' }]
       })
     }
 
     if (params.onlyExpired) {
-      where.AND!.push({
+      andConditions.push({
         AND: [
           { isActive: true },
           {
@@ -1155,18 +1143,21 @@ export class RateLimitEngine implements IRateLimitEngine {
       })
     } else if (params.olderThanDays) {
       const cutoffDate = new Date(Date.now() - params.olderThanDays * 24 * 60 * 60 * 1000)
-      where.AND!.push({ blockedAt: { lt: cutoffDate } })
+      andConditions.push({ blockedAt: { lt: cutoffDate } })
     }
 
     if (params.onlyAutomatic) {
-      where.AND!.push({ blockedBy: 'system' })
+      andConditions.push({ blockedBy: 'system' })
     }
+
+    const where: Prisma.UserBlockWhereInput = andConditions.length > 0 ? { AND: andConditions } : {}
 
     if (params.dryRun) {
       const count = await this.prisma.userBlock.count({ where })
       return {
         wouldDelete: count,
-        dryRun: true
+        dryRun: true,
+        blocks: []
       }
     }
 

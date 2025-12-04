@@ -19,7 +19,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import Alert from '@mui/material/Alert'
 
 // Type Imports
-import type { AccountType } from '@/types/accounts/types'
+import { AccountType } from '@/types/accounts/types'
 
 type AccountFormData = {
   name: string
@@ -37,17 +37,17 @@ type Props = {
 
 const accountTypes: { value: AccountType; label: string; description: string }[] = [
   {
-    value: 'LISTING',
+    value: AccountType.LISTING,
     label: 'Для объявлений',
     description: 'Публикация и управление объявлениями'
   },
   {
-    value: 'COMPANY',
+    value: AccountType.COMPANY,
     label: 'Компания',
     description: 'Размещение компании и услуг'
   },
   {
-    value: 'NETWORK',
+    value: AccountType.NETWORK,
     label: 'Сеть компаний',
     description: 'Управление несколькими аккаунтами и назначение менеджеров'
   }
@@ -63,7 +63,7 @@ const AccountForm = ({
   const [formData, setFormData] = useState<AccountFormData>({
     name: initialData?.name || '',
     description: initialData?.description || '',
-    type: initialData?.type || 'LISTING'
+    type: initialData?.type || AccountType.LISTING
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

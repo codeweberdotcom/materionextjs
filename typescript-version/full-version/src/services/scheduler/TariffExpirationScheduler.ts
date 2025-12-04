@@ -95,7 +95,7 @@ export class TariffExpirationScheduler {
           // Обрабатываем как обычный тариф
         }
 
-        await this.processAccount(account)
+        await this.processAccount(account as any)
       }
 
       // Проверяем истёкшие тарифы для downgrade
@@ -299,7 +299,7 @@ export class TariffExpirationScheduler {
       return
     }
 
-    await this.processAccount(account)
+    await this.processAccount(account as any)
   }
 }
 

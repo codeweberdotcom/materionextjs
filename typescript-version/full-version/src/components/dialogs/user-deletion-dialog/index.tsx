@@ -13,7 +13,7 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
-import { styled, shouldForwardProp } from '@mui/material/styles'
+import { styled } from '@mui/material/styles'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'

@@ -99,37 +99,26 @@ export async function POST(request: NextRequest) {
     const variants = JSON.parse(result.media.variants || '{}')
     const mediumVariant = variants.medium
     
-    // Если S3 включен и есть публичный URL префикс
-    if (s3Enabled && s3PublicUrlPrefix) {
-      // Проверяем есть ли S3 ключ у варианта medium или оригинала
-      const s3Key = mediumVariant?.s3Key || result.media.s3Key
-      if (s3Key) {
-        // Прямой S3 URL
-        avatarUrl = `${s3PublicUrlPrefix}/${s3Key}`
-      } else {
-        // S3 включен но файл еще не на S3, используем локальный
-        const localPath = mediumVariant?.localPath || result.media.localPath
-        if (localPath) {
-          let path = localPath.replace(/^public\//, '').replace(/^\//, '')
-          while (path.startsWith('uploads/')) {
-            path = path.substring(8)
-          }
-          avatarUrl = `/uploads/${path}`
-        } else {
-          avatarUrl = `/api/media/${result.media.id}?variant=medium`
-        }
-      }
-    } else if (result.media.localPath || mediumVariant?.localPath) {
-      // S3 отключен, используем локальный URL
-      const localPath = mediumVariant?.localPath || result.media.localPath
+    // Приоритет: S3 (если включен и файл там есть) > Локальный файл > API endpoint
+    const s3Key = mediumVariant?.s3Key || result.media.s3Key
+    const localPath = mediumVariant?.localPath || result.media.localPath
+    
+    if (s3Enabled && s3PublicUrlPrefix && s3Key) {
+      // Используем прямой S3 URL
+      avatarUrl = `${s3PublicUrlPrefix}/${s3Key}`
+      logger.info('[Avatar] Using S3 URL', { s3Key, avatarUrl })
+    } else if (localPath) {
+      // Используем локальный URL
       let path = localPath.replace(/^public\//, '').replace(/^\//, '')
       while (path.startsWith('uploads/')) {
         path = path.substring(8)
       }
       avatarUrl = `/uploads/${path}`
+      logger.info('[Avatar] Using local URL', { localPath, avatarUrl })
     } else {
       // Fallback: используем API endpoint (для совместимости)
       avatarUrl = `/api/media/${result.media.id}?variant=medium`
+      logger.info('[Avatar] Using API endpoint', { mediaId: result.media.id, avatarUrl })
     }
 
     // Обновляем пользователя

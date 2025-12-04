@@ -161,7 +161,7 @@ class RulesEngine {
   addRule(rule: RuleDefinition): void {
     const engineRule = new Rule({
       name: rule.name,
-      conditions: rule.conditions as Parameters<typeof Rule>[0]['conditions'],
+      conditions: rule.conditions as any,
       event: rule.event,
       priority: rule.priority || 1
     })
@@ -207,16 +207,16 @@ class RulesEngine {
       const duration = Date.now() - startTime
 
       const events: RuleResult[] = result.events.map((e: JREResult['event']) => ({
-        type: e.type,
-        params: (e.params || {}) as Record<string, unknown>,
-        ruleName: e.type
+        type: e!.type,
+        params: (e!.params || {}) as Record<string, unknown>,
+        ruleName: e!.type
       }))
 
       // failureEvents доступны для отладки
       const failureEvents: RuleResult[] = (result.failureEvents || []).map((e: JREResult['event']) => ({
-        type: e.type,
-        params: (e.params || {}) as Record<string, unknown>,
-        ruleName: e.type
+        type: e!.type,
+        params: (e!.params || {}) as Record<string, unknown>,
+        ruleName: e!.type
       }))
 
       return {
@@ -243,14 +243,14 @@ class RulesEngine {
    * Получить количество загруженных правил
    */
   getRulesCount(): number {
-    return this.engine.rules?.length || 0
+    return (this.engine as any).rules?.length || 0
   }
 
   /**
    * Проверить, загружено ли правило
    */
   hasRule(ruleName: string): boolean {
-    return this.engine.rules?.some((r: Rule) => r.name === ruleName) || false
+    return (this.engine as any).rules?.some((r: Rule) => r.name === ruleName) || false
   }
 }
 

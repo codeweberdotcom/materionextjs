@@ -111,7 +111,7 @@ class ListingWorkflowService {
       const eventPayload = this.buildEventPayload(event, actorId, reason)
 
       // Проверяем можно ли выполнить переход
-      if (!snapshot.can(eventPayload)) {
+      if (!snapshot.can(eventPayload as any)) {
         actor.stop()
 
         return {
@@ -124,7 +124,7 @@ class ListingWorkflowService {
       }
 
       // Выполняем переход
-      actor.send(eventPayload)
+      actor.send(eventPayload as any)
 
       const newSnapshot = actor.getSnapshot()
       const toState = (typeof newSnapshot.value === 'string' ? newSnapshot.value : 'draft') as ListingState

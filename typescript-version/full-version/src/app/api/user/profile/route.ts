@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       role: uiRole,
       company: 'N/A',
       contact: 'N/A',
-      username: userProfile?.email.split('@')[0],
+      username: userProfile?.email?.split('@')[0] || 'unknown',
       country: userProfile?.country || 'russia',
       language: userProfile?.language || 'ru',
       currency: userProfile?.currency || 'RUB',
@@ -123,9 +123,9 @@ export async function PUT(request: NextRequest) {
       data: {
         ...(validatedData.name && { name: validatedData.name }),
         ...(validatedData.email && { email: validatedData.email }),
-        ...(validatedData.language !== undefined && { language: validatedData.language }),
-        ...(validatedData.currency !== undefined && { currency: validatedData.currency }),
-        ...(validatedData.country !== undefined && { country: validatedData.country })
+        ...(validatedData.language !== undefined && { language: validatedData.language || undefined }),
+        ...(validatedData.currency !== undefined && { currency: validatedData.currency || undefined }),
+        ...(validatedData.country !== undefined && { country: validatedData.country || undefined })
       },
       include: {
         role: true
@@ -156,7 +156,7 @@ export async function PUT(request: NextRequest) {
       role: uiRole,
       company: 'N/A',
       contact: 'N/A',
-      username: updatedUser.email.split('@')[0],
+      username: updatedUser.email?.split('@')[0] || 'unknown',
       country: updatedUser.country || 'russia',
       language: updatedUser.language || 'ru',
       currency: updatedUser.currency || 'RUB',

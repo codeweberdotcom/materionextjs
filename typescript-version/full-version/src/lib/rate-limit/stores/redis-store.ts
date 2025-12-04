@@ -268,13 +268,13 @@ export class RedisRateLimitStore implements RateLimitStore {
     const blockKey = this.blockKey(module, key)
 
     const pipeline = this.redis.multi()
-    pipeline.set(countKey, count.toString())
+    ;(pipeline as any).set(countKey, count.toString())
 
     if (blockedUntil) {
       const ttl = Math.max(1000, blockedUntil.getTime() - Date.now())
-      pipeline.psetex(blockKey, ttl, blockedUntil.getTime().toString())
+      ;(pipeline as any).psetex(blockKey, ttl, blockedUntil.getTime().toString())
     } else {
-      pipeline.del(blockKey)
+      ;(pipeline as any).del(blockKey)
     }
     await pipeline.exec()
   }

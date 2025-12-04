@@ -1,0 +1,82 @@
+
+> materio-mui-nextjs-admin-template@5.0.0 build C:\laragon\www\materionextjs\typescript-version\full-version
+> next build
+
+   ▲ Next.js 15.1.2
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings
+
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+opentelemetry@8.55._a7eee88a1e264f514a0f6a5d5024fa3e/node_modules/@sentry/opentelemetry/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/server/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/services/media/queue/MediaSyncQueue.ts
+./src/services/media/MediaService.ts
+./src/services/media/index.ts
+./src/app/api/admin/media/[id]/file/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/require-in-the-middle@7.5.2/node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/.pnpm/require-in-the-middle@7.5.2/node_modules/require-in-the-middle/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+opentelemetry@8.55._a7eee88a1e264f514a0f6a5d5024fa3e/node_modules/@sentry/opentelemetry/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/server/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/services/media/queue/MediaSyncQueue.ts
+./src/services/media/MediaService.ts
+./src/services/media/index.ts
+./src/app/api/admin/media/[id]/file/route.ts
+
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./src/components/accounts/AccountCard.tsx:195:31
+Type error: Property 'priceMonthly' does not exist on type '{ currency: string; code: string; id: string; name: string; description: string | null; isSystem: boolean; createdAt: Date; updatedAt: Date; isActive: boolean; price: number; features: string; maxAccounts: number | null; }'.
+
+[0m [90m 193 |[39m             [33mСоздан[39m[33m:[39m {[36mnew[39m [33mDate[39m(account[33m.[39mcreatedAt)[33m.[39mtoLocaleDateString([32m'ru-RU'[39m)}[0m
+[0m [90m 194 |[39m           [33m<[39m[33m/[39m[33mTypography[39m[33m>[39m[0m
+[0m[31m[1m>[22m[39m[90m 195 |[39m           {account[33m.[39mtariffPlan[33m.[39mpriceMonthly [33m>[39m [35m0[39m [33m&&[39m ([0m
+[0m [90m     |[39m                               [31m[1m^[22m[39m[0m
+[0m [90m 196 |[39m             [33m<[39m[33mTypography[39m variant[33m=[39m[32m'caption'[39m color[33m=[39m[32m'text.secondary'[39m[33m>[39m[0m
+[0m [90m 197 |[39m               {account[33m.[39mtariffPlan[33m.[39mpriceMonthly} ₽[33m/[39mмес[0m
+[0m [90m 198 |[39m             [33m<[39m[33m/[39m[33mTypography[39m[33m>[39m[0m
+ ELIFECYCLE  Command failed with exit code 1.

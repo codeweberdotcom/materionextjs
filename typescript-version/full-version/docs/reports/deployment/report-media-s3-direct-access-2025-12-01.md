@@ -130,3 +130,5 @@ docker exec materio-s3 mc ls local/555/ --recursive
 
 Добавлен раздел о прямом доступе к S3 в описании модуля Media.
 
+
+

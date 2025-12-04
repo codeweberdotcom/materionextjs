@@ -22,7 +22,7 @@ export { ImageProcessingService, getImageProcessingService } from './ImageProces
 export { WatermarkService, getWatermarkService } from './WatermarkService'
 
 // Storage
-export * from './storage'
+export { StorageService, getStorageService } from './storage'
 
 // Sync
 export { MediaSyncService, getMediaSyncService } from './sync'

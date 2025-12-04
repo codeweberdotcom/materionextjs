@@ -38,7 +38,7 @@ export class MediaSyncWorker {
     try {
       const storageService = await getStorageService()
 
-      switch (operation) {
+      switch (operation as any) {
         case 'upload_to_s3':
         case 'upload_to_s3_with_delete':
         case 'upload_to_s3_keep_local':
@@ -427,14 +427,14 @@ export class MediaSyncWorker {
       source: 'media',
       type: 'media.hard_deleted',
       severity: 'warning',
-      entityType: 'media',
-      entityId: mediaId,
+      module: 'media',
       message: `Медиа файл "${media.filename}" безвозвратно удалён`,
-      details: {
+      payload: {
         filename: media.filename,
         entityType: media.entityType,
         operation: 'hard_delete',
       },
+      subject: { type: 'media', id: mediaId },
     })
 
     return {

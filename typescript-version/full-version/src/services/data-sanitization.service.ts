@@ -1140,8 +1140,8 @@ export class DataSanitizationService {
       // Очистка аватаров пользователей
       const usersWithAvatars = await this.findUsersWithAvatars(target)
       for (const user of usersWithAvatars) {
-        if (user.avatarImage) {
-          const deleted = await this.deleteAvatarFile(user.avatarImage)
+        if (user.image) {
+          const deleted = await this.deleteAvatarFile(user.image)
           if (deleted) {
             avatarsDeleted++
           }
@@ -1298,16 +1298,16 @@ export class DataSanitizationService {
       whereClause.email = { endsWith: `@${target.emailDomain}` }
     }
 
-    // Ищем пользователей с avatarImage
+    // Ищем пользователей с image
     const users = await this.prisma.user.findMany({
       where: {
         ...whereClause,
-        avatarImage: { not: null }
+        image: { not: null }
       },
       select: {
         id: true,
         email: true,
-        avatarImage: true
+        image: true
       }
     })
 
@@ -1422,7 +1422,7 @@ export class DataSanitizationService {
 
       for (const user of users) {
         // Проверяем, есть ли данные пользователя в Redis
-        const redisData = await this.redisStore.getCache(user.id)
+        const redisData = await (this.redisStore as any).getCache(user.id)
 
         if (!redisData) {
           // Если данных нет в Redis, но пользователь существует в БД,
@@ -1431,7 +1431,7 @@ export class DataSanitizationService {
             where: { senderId: user.id }
           })
 
-          await this.redisStore.setCache(user.id, { messageCount }, 3600) // 1 час
+          await (this.redisStore as any).setCache(user.id, { messageCount }, 3600) // 1 час
           result.synced.databaseToRedis++
         }
       }
@@ -1524,14 +1524,14 @@ export class DataSanitizationService {
 
       for (const user of usersWithAvatars) {
         // Проверяем существование файла аватара
-        const fileExists = await this.checkAvatarFileExists(user.avatarImage)
+        const fileExists = await this.checkAvatarFileExists(user.image)
 
         if (!fileExists) {
           // Если аватар указан в БД, но файл не существует,
           // очищаем ссылку в базе данных
           await this.prisma.user.update({
             where: { id: user.id },
-            data: { avatarImage: null }
+            data: { image: null }
           })
           result.synced.databaseToFilesystem++
         }
@@ -1555,10 +1555,10 @@ export class DataSanitizationService {
           // Проверяем, существует ли пользователь в базе данных
           const user = await this.prisma.user.findUnique({
             where: { id: userId },
-            select: { id: true, avatarImage: true }
+            select: { id: true, image: true }
           })
 
-          if (!user || !user.avatarImage) {
+          if (!user || !user.image) {
             // Если файла есть, но пользователя нет в БД или нет ссылки,
             // удаляем файл
             await this.deleteAvatarFile(filePath)

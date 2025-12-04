@@ -52,8 +52,8 @@ async function initializeSentry(): Promise<void> {
     // Приоритет: Admin (БД) → ENV (.env) → Default
     const sentryConfig = await serviceConfigResolver.getConfig('sentry')
     
-    // Получаем DSN из конфигурации (может быть в url, apiKey или token)
-    const dsn = sentryConfig.url || sentryConfig.apiKey || sentryConfig.token || 
+    // Получаем DSN из конфигурации (может быть в url или token)
+    const dsn = sentryConfig.url || sentryConfig.token || 
                 process.env.SENTRY_DSN || process.env.GLITCHTIP_DSN
 
     if (!dsn) {

@@ -43,7 +43,7 @@ export class ImportPreviewService {
 
     // Валидируем данные через адаптер
     // validateImportData возвращает ValidationError[]
-    const validationErrors: ValidationError[] = adapter.validateImportData(parsedData)
+    const validationErrors: any = adapter.validateImportData(parsedData)
     
     const allErrors: ValidationError[] = []
     const allWarnings: ImportWarning[] = []
@@ -114,8 +114,8 @@ export class ImportPreviewService {
     const validationErrors = adapter.validateImportData([row])
     
     // Находим ошибки для этой строки
-    const rowErrors = validationErrors.filter(
-      (error: ValidationError) => error.row === rowIndex
+    const rowErrors = (validationErrors as any).filter(
+      (error: any) => error.row === rowIndex
     )
 
     const rowWarnings: ImportWarning[] = []

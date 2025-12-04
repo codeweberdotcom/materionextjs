@@ -142,7 +142,7 @@ export default function ExportButton({
       case 'xlsx': return 'Excel (XLSX)'
       case 'xls': return 'Excel (XLS)'
       case 'csv': return 'CSV'
-      default: return format.toUpperCase()
+      default: return String(format).toUpperCase()
     }
   }
 

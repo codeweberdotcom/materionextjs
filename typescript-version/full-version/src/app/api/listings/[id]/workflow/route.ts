@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     const { id: listingId } = await params
-    const userRole = (session.user as { role?: { code?: string } }).role?.code
+    const userRole = user.role?.code
 
     const workflowState = await listingWorkflowService.getWorkflowState(
       listingId,
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    const userRole = (session.user as { role?: { code?: string } }).role?.code
+    const userRole = user.role?.code
 
     // Проверка прав на модерацию
     const moderatorEvents = ['APPROVE', 'REJECT']

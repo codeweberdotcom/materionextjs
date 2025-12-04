@@ -29,7 +29,7 @@ export const userBulkActivateConfig: BulkOperationConfig = {
       
       // Исключаем superadmin
       return users
-        .filter(u => u.role?.code !== 'SUPERADMIN')
+        .filter(u => (u.role as any)?.code !== 'SUPERADMIN')
         .map(u => u.id)
     },
     
@@ -86,7 +86,7 @@ export const userBulkDeactivateConfig: BulkOperationConfig = {
       // Исключаем superadmin и текущего пользователя
       return users
         .filter(u => {
-          if (u.role?.code === 'SUPERADMIN') return false
+          if ((u.role as any)?.code === 'SUPERADMIN') return false
           if (u.id === context.currentUser.id) return false
           return true
         })
@@ -153,7 +153,7 @@ export const userBulkDeleteConfig: BulkOperationConfig = {
       // Исключаем superadmin и текущего пользователя
       return users
         .filter(u => {
-          if (u.role?.code === 'SUPERADMIN') return false
+          if ((u.role as any)?.code === 'SUPERADMIN') return false
           if (u.id === context.currentUser.id) return false
           return true
         })

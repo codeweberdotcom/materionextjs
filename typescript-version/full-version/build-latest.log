@@ -1,0 +1,15 @@
+
+> materio-mui-nextjs-admin-template@5.0.0 build C:\laragon\www\materionextjs\typescript-version\full-version
+> next build
+
+   ▲ Next.js 15.1.2
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+uncaughtException [Error: EPERM: operation not permitted, open 'C:\laragon\www\materionextjs\typescript-version\full-version\.next\trace'] {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'open',
+  path: 'C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\trace'
+}
+ ELIFECYCLE  Command failed with exit code 1.

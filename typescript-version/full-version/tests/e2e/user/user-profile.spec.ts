@@ -216,7 +216,7 @@ test.describe('User Profile E2E', () => {
         )
 
         // Upload file
-        if (avatarButton.evaluate(el => el.tagName === 'INPUT')) {
+        if (await avatarButton.evaluate(el => el.tagName === 'INPUT')) {
           await avatarButton.setInputFiles({
             name: 'test-avatar.png',
             mimeType: 'image/png',

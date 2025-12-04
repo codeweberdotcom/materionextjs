@@ -1,4 +1,4 @@
-import type * as ImportExportMetrics from './import-export'
+type ImportExportMetrics = typeof import('./import-export')
 
 let metricsModulePromise: Promise<ImportExportMetrics> | null = null
 

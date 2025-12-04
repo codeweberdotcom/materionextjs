@@ -1,12 +1,7 @@
-import { writeFile, mkdir } from 'fs/promises'
-
 import { NextRequest, NextResponse } from 'next/server'
-import path from 'path'
 import crypto from 'crypto'
 
 import bcrypt from 'bcryptjs'
-
-import { existsSync } from 'fs'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
@@ -18,6 +13,8 @@ import {
   formatZodError,
   avatarFileSchema
 } from '@/lib/validations/user-schemas'
+import { getMediaService } from '@/services/media'
+import logger from '@/lib/logger'
 
 // Кеш для пользователей (простая in-memory кеш)
 let usersCache: any[] | null = null
@@ -118,25 +115,122 @@ export async function POST(request: NextRequest) {
     // Map status (default to 'active')
     const userStatus = validatedData.status || 'active'
 
-    // Create the user
-    let imagePath = null
+    // Upload avatar through MediaService if provided
+    let avatarUrl = null
+    let avatarMediaId = null
 
     if (avatar) {
-      const uploadsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars')
-      if (!existsSync(uploadsDir)) {
-        await mkdir(uploadsDir, { recursive: true })
+      try {
+        const mediaService = getMediaService()
+        const buffer = Buffer.from(await avatar.arrayBuffer())
+        
+        // Create user first to get ID for entityId
+        const tempUser = await prisma.user.create({
+          data: {
+            name: validatedData.fullName,
+            email: validatedData.email,
+            password: hashedPassword,
+            roleId: dbRole.id,
+            country: validatedData.country || undefined,
+            status: userStatus,
+            image: null,
+            avatarMediaId: null
+          },
+          include: {
+            role: true
+          }
+        })
+
+        const result = await mediaService.upload(buffer, avatar.name, avatar.type, {
+          entityType: 'user_avatar',
+          entityId: tempUser.id,
+        })
+
+        if (result.success && result.media) {
+          // Get S3 settings
+          const globalSettings = await prisma.mediaGlobalSettings.findFirst()
+          const s3Enabled = globalSettings?.s3Enabled ?? false
+          const s3PublicUrlPrefix = globalSettings?.s3PublicUrlPrefix
+
+          const variants = JSON.parse(result.media.variants || '{}')
+          const mediumVariant = variants.medium
+
+          const s3Key = mediumVariant?.s3Key || result.media.s3Key
+          const localPath = mediumVariant?.localPath || result.media.localPath
+
+          if (s3Enabled && s3PublicUrlPrefix && s3Key) {
+            avatarUrl = `${s3PublicUrlPrefix}/${s3Key}`
+          } else if (localPath) {
+            let path = localPath.replace(/^public\//, '').replace(/^\//, '')
+            while (path.startsWith('uploads/')) {
+              path = path.substring(8)
+            }
+            avatarUrl = `/uploads/${path}`
+          } else {
+            avatarUrl = `/api/media/${result.media.id}?variant=medium`
+          }
+
+          avatarMediaId = result.media.id
+
+          // Update user with avatar
+          await prisma.user.update({
+            where: { id: tempUser.id },
+            data: {
+              image: avatarUrl,
+              avatarMediaId: avatarMediaId
+            }
+          })
+
+          logger.info('[Admin] Avatar uploaded for new user', {
+            userId: tempUser.id,
+            mediaId: avatarMediaId,
+            avatarUrl
+          })
+        }
+
+        // Return the temp user (will be updated with avatar if successful)
+        const newUser = await prisma.user.findUnique({
+          where: { id: tempUser.id },
+          include: { role: true }
+        })
+
+        if (!newUser) {
+          throw new Error('Failed to retrieve created user')
+        }
+
+        // Transform and return
+        const transformedUser = {
+          id: newUser.id,
+          fullName: newUser.name || 'Unknown User',
+          company: 'N/A',
+          role: newUser.role?.name || 'subscriber',
+          username: newUser.email?.split('@')[0] || 'unknown',
+          country: newUser.country,
+          contact: 'N/A',
+          email: newUser.email,
+          currentPlan: 'basic',
+          status: (newUser.isActive ?? true) ? 'active' : 'inactive',
+          isActive: newUser.isActive ?? true,
+          avatar: newUser.image || '',
+          avatarColor: 'primary' as const
+        }
+
+        usersCache = null
+        usersCacheTimestamp = 0
+
+        return NextResponse.json({
+          ...transformedUser,
+          ...(validatedData.password ? {} : { temporaryPassword: plainPassword })
+        })
+      } catch (error) {
+        logger.warn('[Admin] Failed to upload avatar for new user', {
+          error: error instanceof Error ? error.message : String(error)
+        })
+        // Continue without avatar
       }
-
-      const bytes = await avatar.arrayBuffer()
-      const buffer = Buffer.from(bytes)
-      const extension = path.extname(avatar.name) || '.jpg'
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}${extension}`
-      const avatarPath = path.join(uploadsDir, fileName)
-
-      await writeFile(avatarPath, buffer)
-      imagePath = `/uploads/avatars/${fileName}`
     }
 
+    // No avatar or avatar upload failed - create user without avatar
     const newUser = await prisma.user.create({
       data: {
         name: validatedData.fullName,
@@ -145,7 +239,8 @@ export async function POST(request: NextRequest) {
         roleId: dbRole.id,
         country: validatedData.country || undefined,
         status: userStatus,
-        image: imagePath
+        image: null,
+        avatarMediaId: null
       },
       include: {
         role: true
@@ -158,7 +253,7 @@ export async function POST(request: NextRequest) {
       fullName: newUser.name || 'Unknown User',
       company: 'N/A',
       role: newUser.role?.name || 'subscriber',
-      username: newUser.email.split('@')[0],
+      username: newUser.email?.split('@')[0] || 'unknown',
       country: newUser.country,
       contact: 'N/A',
       email: newUser.email,

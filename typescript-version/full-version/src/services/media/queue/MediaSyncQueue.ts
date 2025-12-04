@@ -389,7 +389,7 @@ export class MediaSyncQueue {
     
     // Ждём готовности StorageService для S3 операций
     // Это предотвращает ошибку "S3 not configured"
-    if (data.operation === 'upload_to_s3' || data.operation === 'delete_from_s3') {
+    if (data.operation === 'upload_to_s3' || data.operation === 'delete_s3') {
       await this.waitForStorageReady()
     }
 

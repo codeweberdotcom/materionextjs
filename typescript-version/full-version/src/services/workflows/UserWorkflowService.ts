@@ -53,7 +53,7 @@ export interface UserWorkflowState {
   canDelete: boolean
 }
 
-class UserWorkflowService {
+export class UserWorkflowService {
   private static instance: UserWorkflowService
 
   static getInstance(): UserWorkflowService {
@@ -184,7 +184,7 @@ class UserWorkflowService {
       const eventPayload = this.buildEventPayload(event, actorId, actor.role.level, hasPermission, reason)
 
       // Проверяем можно ли выполнить переход
-      if (!snapshot.can(eventPayload)) {
+      if (!snapshot.can(eventPayload as any)) {
         actorMachine.stop()
 
         return {
@@ -197,7 +197,7 @@ class UserWorkflowService {
       }
 
       // Выполняем переход
-      actorMachine.send(eventPayload)
+      actorMachine.send(eventPayload as any)
 
       const newSnapshot = actorMachine.getSnapshot()
       const toState = (typeof newSnapshot.value === 'string' ? newSnapshot.value : 'active') as UserState

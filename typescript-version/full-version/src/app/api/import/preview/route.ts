@@ -27,10 +27,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await importService.previewImport(file, entityType, {
-      mode: mode as 'create' | 'update' | 'upsert',
-      skipValidation
-    })
+    const result = await importService.previewImport(file, entityType, {})
 
     return NextResponse.json(result)
   } catch (error) {

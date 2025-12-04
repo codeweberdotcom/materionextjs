@@ -15,7 +15,7 @@ export const httpRequestDuration = new promClient.Histogram({
 
 // Проверяем, что метрика зарегистрирована
 if (typeof window === 'undefined') {
-  console.log('[metrics] HTTP request duration metric registered:', httpRequestDuration.name)
+  console.log('[metrics] HTTP request duration metric registered')
 }
 
 // WebSocket соединения

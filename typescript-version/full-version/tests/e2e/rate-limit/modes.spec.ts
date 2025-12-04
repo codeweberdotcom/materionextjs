@@ -174,7 +174,7 @@ test.describe('Rate Limit - Modes', () => {
     // 4. Переключить в enforce mode
     await setupRateLimitConfig(page, 'chat-messages', {
       mode: 'enforce'
-    })
+    } as any)
     
     // 5. Попытка отправить сообщение должна быть заблокирована
     await messageInput.fill('Blocked message')

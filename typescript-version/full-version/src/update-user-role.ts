@@ -9,6 +9,7 @@ async function main() {
     adminRole = await prisma.role.create({
       data: {
         name: 'Admin',
+        code: 'ADMIN',
         description: 'Administrator role with full permissions'
       }
     })

@@ -182,7 +182,8 @@ export const listServicesQuerySchema = z.object({
 // Types from Schemas
 // ========================================
 
-export type CreateServiceConfigurationInput = z.infer<typeof createServiceConfigurationSchema>
-export type UpdateServiceConfigurationInput = z.infer<typeof updateServiceConfigurationSchema>
+// CreateServiceConfigurationInput и UpdateServiceConfigurationInput экспортируются из types.ts
+type _CreateServiceConfigurationInput = z.infer<typeof createServiceConfigurationSchema>
+type _UpdateServiceConfigurationInput = z.infer<typeof updateServiceConfigurationSchema>
 export type ListServicesQuery = z.infer<typeof listServicesQuerySchema>
 

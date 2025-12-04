@@ -81,7 +81,7 @@ export async function getImageSettings(entityType: string): Promise<ImageSetting
         stripMetadata: dbSettings.stripMetadata,
         quality: dbSettings.quality,
         watermarkEnabled: dbSettings.watermarkEnabled,
-        watermarkId: dbSettings.watermarkId,
+        watermarkId: (dbSettings as any).watermarkId,
         watermarkPosition: dbSettings.watermarkPosition,
         watermarkOpacity: dbSettings.watermarkOpacity,
         storageStrategy: dbSettings.storageStrategy,
@@ -105,9 +105,9 @@ export async function getImageSettings(entityType: string): Promise<ImageSetting
       entityType,
       displayName: preset.displayName,
       description: null,
-      maxFileSize: preset.maxFileSize,
+      maxFileSize: preset.maxFileSize || 10485760,
       maxFilesPerEntity: preset.maxFilesPerEntity || 1,
-      allowedMimeTypes: preset.allowedMimeTypes, // Уже строка, не нужен .join()
+      allowedMimeTypes: preset.allowedMimeTypes || '', // Уже строка, не нужен .join()
       variants: JSON.stringify(preset.variants),
       convertToWebP: preset.convertToWebP ?? true,
       stripMetadata: preset.stripMetadata ?? true,

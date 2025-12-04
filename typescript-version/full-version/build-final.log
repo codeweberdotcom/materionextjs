@@ -6,6 +6,837 @@
    - Environments: .env.local, .env
 
    Creating an optimized production build ...
+ ⚠ Compiled with warnings
+
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+opentelemetry@8.55._a7eee88a1e264f514a0f6a5d5024fa3e/node_modules/@sentry/opentelemetry/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/server/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/services/media/queue/MediaSyncQueue.ts
+./src/services/media/MediaService.ts
+./src/services/media/index.ts
+./src/app/api/admin/media/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/require-in-the-middle@7.5.2/node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/.pnpm/require-in-the-middle@7.5.2/node_modules/require-in-the-middle/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+opentelemetry@8.55._a7eee88a1e264f514a0f6a5d5024fa3e/node_modules/@sentry/opentelemetry/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/server/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/services/media/queue/MediaSyncQueue.ts
+./src/services/media/MediaService.ts
+./src/services/media/index.ts
+./src/app/api/admin/media/route.ts
+
    Skipping linting
    Checking validity of types ...
- ELIFECYCLE  Command failed with exit code 1.
+   Collecting page data ...
+[metrics] HTTP request duration metric registered
+[Az.Morph] Глобальная инициализация...
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[metrics] HTTP request duration metric registered
+[metrics] HTTP request duration metric registered
+[32minfo[39m: Lucia auth configured for Socket.IO middleware {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.338Z"}
+[metrics] HTTP request duration metric registered
+[metrics] HTTP request duration metric registered
+[metrics] HTTP request duration metric registered
+[32minfo[39m: Lucia auth configured for Socket.IO middleware {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.353Z"}
+[32minfo[39m: Lucia auth configured for Socket.IO middleware {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.358Z"}
+[32minfo[39m: Lucia auth configured for Socket.IO middleware {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.393Z"}
+[metrics] HTTP request duration metric registered
+[32minfo[39m: Lucia auth configured for Socket.IO middleware {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.418Z"}
+[32minfo[39m: Lucia auth configured for Socket.IO middleware {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.602Z"}
+[32minfo[39m: Lucia auth configured for Socket.IO middleware {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.661Z"}
+[32minfo[39m: [RulesEngine] Инициализация... {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.683Z"}
+[32minfo[39m: Lucia auth configured for Socket.IO middleware {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.725Z"}
+[32minfo[39m: [RulesEngine] Инициализация... {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.750Z"}
+[32minfo[39m: [RulesEngine] Инициализация... {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.816Z"}
+[32minfo[39m: [RulesEngine] Инициализация... {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.926Z"}
+[32minfo[39m: [RulesEngine] Инициализация... {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:30.999Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.151Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.156Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.151Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.156Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.151Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.157Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.193Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.220Z"}
+[32minfo[39m: [NotificationQueue] Initializing with Redis {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.248Z"}
+[32minfo[39m: [NotificationQueue] Bull queue initialized successfully {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.297Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.274Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.296Z"}
+[32minfo[39m: [NotificationQueue] Initializing with Redis {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.322Z"}
+[32minfo[39m: [NotificationQueue] Bull queue initialized successfully {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.361Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.418Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.425Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.343Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.356Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.511Z"}
+[32minfo[39m: [NotificationQueue] Initializing with Redis {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.409Z"}
+[32minfo[39m: [NotificationQueue] Bull queue initialized successfully {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.435Z"}
+[32minfo[39m: [NotificationQueue] Initializing with Redis {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.430Z"}
+[32minfo[39m: [NotificationQueue] Bull queue initialized successfully {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.453Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.425Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.446Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.492Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.514Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.538Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.552Z"}
+[32minfo[39m: [RulesEngine] Создано правило: auto-block-on-reports {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.684Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила welcome-email: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.711Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила password-reset: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.730Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила auto-block-on-reports: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22972)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.591Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.602Z"}
+[32minfo[39m: [RulesEngine] Создано правило: auto-archive-listings-on-owner-block {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.693Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила welcome-email: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.705Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.607Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.627Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.646Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.649Z"}
+[32minfo[39m: [RulesEngine] Создано правило: auto-suspend-on-spam {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.682Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.687Z"}
+[32minfo[39m: [RulesEngine] Создано правило: welcome-email {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.717Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила password-reset: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\6596.js:1:5859\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.744Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила listing-approved: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\6596.js:1:5859\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.769Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила verification-completed: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\6596.js:1:5859\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.779Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила account-blocked: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\6596.js:1:5859\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.788Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.674Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила auto-block-on-reports: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22972)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.691Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила password-reset: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.730Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила phone-verification-sms: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.743Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила new-message: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.755Z"}
+[32minfo[39m: [RulesEngine] Создано правило: listing-approved {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.779Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.674Z"}
+[32minfo[39m: [NotificationQueue] Initializing with Redis {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:32.715Z"}
+[32minfo[39m: [NotificationQueue] Bull queue initialized successfully {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.750Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.796Z"}
+[32minfo[39m: [RulesEngine] Создано правило: password-reset {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.737Z"}
+[32minfo[39m: [RulesEngine] Создано правило: new-message {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.761Z"}
+[32minfo[39m: [RulesEngine] Создано правило: verification-completed {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.781Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила account-blocked: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.791Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила new-notification: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.799Z"}
+[32minfo[39m: [RulesEngine] Создано правило: company-approved {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.839Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила account-approved: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.846Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила listing-returned-for-revision: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.854Z"}
+[32minfo[39m: [RulesEngine] Создано правило: listing-blocked {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.868Z"}
+[32minfo[39m: [RulesEngine] Создано правило: phone-verification-sms {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.751Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила listing-approved: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.767Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила verification-completed: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.777Z"}
+[32minfo[39m: [RulesEngine] Создано правило: account-blocked {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.793Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила account-approved: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.845Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила listing-returned-for-revision: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.855Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила listing-blocked: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.863Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила company-returned-for-revision: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.874Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила new-notification: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\6596.js:1:5859\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.801Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила account-approved: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\6596.js:1:5859\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.845Z"}
+[32minfo[39m: [RulesEngine] Создано правило: listing-returned-for-revision {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.860Z"}
+[32minfo[39m: [RulesEngine] Создано правило: new-notification {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.809Z"}
+[32minfo[39m: [RulesEngine] Создано правило: account-approved {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.850Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила listing-blocked: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.864Z"}
+prisma:error 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`)
+[33mwarn[39m: [RulesEngine] Ошибка создания правила company-returned-for-revision: 
+Invalid `prisma.businessRule.create()` invocation:
+
+
+Unique constraint failed on the fields: (`name`) {"clientVersion":"5.22.0","code":"P2002","meta":{"modelName":"BusinessRule","target":["name"]},"name":"PrismaClientKnownRequestError","service":"materio-nextjs","stack":"PrismaClientKnownRequestError: \nInvalid `prisma.businessRule.create()` invocation:\n\n\nUnique constraint failed on the fields: (`name`)\n    at $n.handleRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:7315)\n    at $n.handleAndLogRequestError (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6623)\n    at $n.request (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:121:6307)\n    at async l (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\node_modules\\.pnpm\\@prisma+client@5.22.0_prisma@5.22.0\\node_modules\\@prisma\\client\\runtime\\library.js:130:9633)\n    at async C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9281.js:1:3436\n    at async u.createRule (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\1092.js:1:10214)\n    at async q (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:23211)\n    at async R (C:\\laragon\\www\\materionextjs\\typescript-version\\full-version\\.next\\server\\chunks\\9498.js:1:22558)","timestamp":"2025-12-04T11:03:32.873Z"}
+[RulesService] Загружено 27 правил
+[32minfo[39m: [RulesEngine] Загружено 27 правил из БД {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.896Z"}
+[32minfo[39m: [EventRulesHandler] Started listening to events {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.897Z"}
+[32minfo[39m: [RulesEngine] Обработчик событий запущен {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.898Z"}
+[32minfo[39m: [RulesEngine] Инициализация завершена {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.899Z"}
+[32minfo[39m: [RulesEngine] Создано правило: company-returned-for-revision {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.890Z"}
+[RulesService] Загружено 27 правил
+[32minfo[39m: [RulesEngine] Загружено 27 правил из БД {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.904Z"}
+[32minfo[39m: [EventRulesHandler] Started listening to events {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.905Z"}
+[32minfo[39m: [RulesEngine] Обработчик событий запущен {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.905Z"}
+[32minfo[39m: [RulesEngine] Инициализация завершена {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.906Z"}
+[RulesService] Загружено 27 правил
+[32minfo[39m: [RulesEngine] Загружено 27 правил из БД {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.897Z"}
+[32minfo[39m: [EventRulesHandler] Started listening to events {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.898Z"}
+[32minfo[39m: [RulesEngine] Обработчик событий запущен {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.900Z"}
+[32minfo[39m: [RulesEngine] Инициализация завершена {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.900Z"}
+[RulesService] Загружено 27 правил
+[32minfo[39m: [RulesEngine] Загружено 27 правил из БД {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.898Z"}
+[32minfo[39m: [EventRulesHandler] Started listening to events {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.901Z"}
+[32minfo[39m: [RulesEngine] Обработчик событий запущен {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.902Z"}
+[32minfo[39m: [RulesEngine] Инициализация завершена {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.902Z"}
+[RulesService] Загружено 27 правил
+[32minfo[39m: [RulesEngine] Загружено 27 правил из БД {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.900Z"}
+[32minfo[39m: [EventRulesHandler] Started listening to events {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.902Z"}
+[32minfo[39m: [RulesEngine] Обработчик событий запущен {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.902Z"}
+[32minfo[39m: [RulesEngine] Инициализация завершена {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:32.902Z"}
+   Generating static pages (0/129) ...
+   Generating static pages (32/129) 
+   Generating static pages (64/129) 
+[Az.Morph] Глобальная инициализация...
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:47.201Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.208Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:46.329Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:46.379Z"}
+[metrics] HTTP request duration metric registered
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:46.499Z"}
+[32minfo[39m: Lucia auth configured for Socket.IO middleware {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:46.508Z"}
+[32minfo[39m: [RulesEngine] Инициализация... {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:46.694Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:47.023Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.029Z"}
+[32minfo[39m: [NotificationQueue] Initializing with Redis {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:47.049Z"}
+[32minfo[39m: [NotificationQueue] Bull queue initialized successfully {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.057Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.200Z"}
+   Generating static pages (96/129) 
+[metrics] HTTP request duration metric registered
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:47.059Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.067Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.215Z"}
+[metrics] HTTP request duration metric registered
+[32minfo[39m: Lucia auth configured for Socket.IO middleware {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:46.877Z"}
+[32minfo[39m: [rate-limit] Using Redis backend for rate limiting. {"host":"localhost","port":6379,"service":"materio-nextjs","source":"env","timestamp":"2025-12-04T11:03:47.111Z"}
+[32minfo[39m: [StoreManager] Rate limit store initialized {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.116Z"}
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[Az.Morph] Ошибка теста: Error: Please call Az.Morph.init() before using this module.
+    at Object.v [as Morph] (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:44245)
+    at Timeout._onTimeout (C:\laragon\www\materionextjs\typescript-version\full-version\.next\server\app\api\admin\tools\web-scraper\route.js:51:293)
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.237Z"}
+[RulesService] Загружено 27 правил
+[32minfo[39m: [RulesEngine] Загружено 27 правил из БД {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.253Z"}
+[32minfo[39m: [EventRulesHandler] Started listening to events {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.254Z"}
+[32minfo[39m: [RulesEngine] Обработчик событий запущен {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.254Z"}
+[32minfo[39m: [RulesEngine] Инициализация завершена {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.255Z"}
+[32minfo[39m: Synced 3 active blocks from database to store {"service":"materio-nextjs","timestamp":"2025-12-04T11:03:47.296Z"}
+ ✓ Generating static pages (129/129)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                      Size     First Load JS
+┌ ○ /_not-found                                                  991 B           107 kB
+├ ƒ /[lang]/[...not-found]                                       2 kB            481 kB
+├ ƒ /[lang]/accounts                                             4.22 kB         230 kB
+├ ƒ /[lang]/accounts/[id]                                        6.57 kB         204 kB
+├ ƒ /[lang]/accounts/[id]/managers                               3.92 kB         231 kB
+├ ƒ /[lang]/accounts/create                                      7.43 kB         187 kB
+├ ƒ /[lang]/accounts/managers                                    8.35 kB         175 kB
+├ ƒ /[lang]/accounts/tariffs                                     10 kB           159 kB
+├ ƒ /[lang]/accounts/transfers                                   8.41 kB         165 kB
+├ ƒ /[lang]/admin/blocks                                         15.5 kB         477 kB
+├ ƒ /[lang]/admin/events                                         7.54 kB         450 kB
+├ ƒ /[lang]/admin/maintenance                                    4.48 kB         147 kB
+├ ƒ /[lang]/admin/media                                          19.1 kB         262 kB
+├ ƒ /[lang]/admin/media/licenses                                 7.46 kB         214 kB
+├ ƒ /[lang]/admin/media/licenses/[id]                            11.1 kB         196 kB
+├ ƒ /[lang]/admin/media/settings                                 19.2 kB         225 kB
+├ ƒ /[lang]/admin/media/sync                                     16 kB           218 kB
+├ ƒ /[lang]/admin/media/watermarks                               12.3 kB         222 kB
+├ ƒ /[lang]/admin/monitoring/application-insights                1 kB            149 kB
+├ ƒ /[lang]/admin/monitoring/dashboard                           7.22 kB         181 kB
+├ ƒ /[lang]/admin/monitoring/error-tracking                      933 B           149 kB
+├ ƒ /[lang]/admin/monitoring/metrics                             11.4 kB         159 kB
+├ ƒ /[lang]/admin/monitoring/testing                             9.35 kB         209 kB
+├ ƒ /[lang]/admin/notifications/dashboard                        8.72 kB         520 kB
+├ ƒ /[lang]/admin/notifications/executions                       9.13 kB         465 kB
+├ ƒ /[lang]/admin/notifications/scenarios                        12.8 kB         468 kB
+├ ƒ /[lang]/admin/rate-limits                                    13.2 kB         488 kB
+├ ƒ /[lang]/admin/rate-limits/events                             18.2 kB         560 kB
+├ ƒ /[lang]/admin/settings/services                              16.2 kB         210 kB
+├ ƒ /[lang]/admin/settings/slug                                  8.48 kB         197 kB
+├ ƒ /[lang]/admin/tools/web-scraper                              12.4 kB         211 kB
+├ ƒ /[lang]/apps/academy/course-details                          6.86 kB         167 kB
+├ ƒ /[lang]/apps/academy/dashboard                               222 B           238 kB
+├ ƒ /[lang]/apps/academy/my-courses                              9.69 kB         205 kB
+├ ƒ /[lang]/apps/calendar                                        92.5 kB         369 kB
+├ ƒ /[lang]/apps/chat                                            140 kB          631 kB
+├ ƒ /[lang]/apps/ecommerce/customers/details/[id]                19.7 kB         268 kB
+├ ƒ /[lang]/apps/ecommerce/customers/list                        12.1 kB         229 kB
+├ ƒ /[lang]/apps/ecommerce/dashboard                             193 B           200 kB
+├ ƒ /[lang]/apps/ecommerce/manage-reviews                        12.5 kB         236 kB
+├ ƒ /[lang]/apps/ecommerce/orders/details/[id]                   9.6 kB          244 kB
+├ ƒ /[lang]/apps/ecommerce/orders/list                           5.14 kB         230 kB
+├ ƒ /[lang]/apps/ecommerce/products/add                          13.2 kB         386 kB
+├ ƒ /[lang]/apps/ecommerce/products/category                     10.4 kB         235 kB
+├ ƒ /[lang]/apps/ecommerce/products/list                         13.2 kB         232 kB
+├ ƒ /[lang]/apps/ecommerce/referrals                             9.76 kB         212 kB
+├ ƒ /[lang]/apps/ecommerce/settings                              15.8 kB         230 kB
+├ ƒ /[lang]/apps/email                                           218 B           316 kB
+├ ƒ /[lang]/apps/email/[folder]                                  217 B           316 kB
+├ ƒ /[lang]/apps/email/label/[label]                             218 B           316 kB
+├ ƒ /[lang]/apps/invoice/add                                     3.72 kB         286 kB
+├ ƒ /[lang]/apps/invoice/edit/[id]                               3.63 kB         286 kB
+├ ƒ /[lang]/apps/invoice/list                                    5.37 kB         230 kB
+├ ƒ /[lang]/apps/invoice/preview/[id]                            3.95 kB         270 kB
+├ ƒ /[lang]/apps/kanban                                          21.2 kB         316 kB
+├ ƒ /[lang]/apps/logistics/dashboard                             221 B           240 kB
+├ ƒ /[lang]/apps/logistics/fleet                                 14.1 kB         184 kB
+├ ƒ /[lang]/apps/notifications                                   215 B           477 kB
+├ ƒ /[lang]/apps/notifications/status/[status]                   215 B           477 kB
+├ ƒ /[lang]/apps/notifications/status/[status]/type/[type]       215 B           477 kB
+├ ƒ /[lang]/apps/notifications/type/[type]                       216 B           477 kB
+├ ƒ /[lang]/apps/permissions                                     11.5 kB         213 kB
+├ ƒ /[lang]/apps/references/cities                               11.5 kB         240 kB
+├ ƒ /[lang]/apps/references/countries                            7.16 kB         493 kB
+├ ƒ /[lang]/apps/references/currencies                           9.86 kB         224 kB
+├ ƒ /[lang]/apps/references/districts                            5.6 kB          475 kB
+├ ƒ /[lang]/apps/references/languages                            3.62 kB         222 kB
+├ ƒ /[lang]/apps/references/states                               6.14 kB         492 kB
+├ ƒ /[lang]/apps/references/translations                         17.2 kB         246 kB
+├ ƒ /[lang]/apps/roles                                           17.2 kB         542 kB
+├ ƒ /[lang]/apps/settings/email-templates                        13.3 kB         217 kB
+├ ƒ /[lang]/apps/settings/registration                           10.8 kB         448 kB
+├ ƒ /[lang]/apps/settings/sms-ru                                 11.1 kB         449 kB
+├ ƒ /[lang]/apps/settings/smtp                                   6.5 kB          441 kB
+├ ƒ /[lang]/apps/settings/telegram                               11.6 kB         449 kB
+├ ƒ /[lang]/apps/user/documents-verification                     9.35 kB         218 kB
+├ ƒ /[lang]/apps/user/list                                       33 kB           564 kB
+├ ƒ /[lang]/apps/user/view                                       18.4 kB         537 kB
+├ ƒ /[lang]/charts/apex-charts                                   7.74 kB         147 kB
+├ ƒ /[lang]/charts/recharts                                      14.7 kB         261 kB
+├ ƒ /[lang]/company/[slug]                                       7.46 kB         155 kB
+├ ƒ /[lang]/dashboards/academy                                   222 B           238 kB
+├ ƒ /[lang]/dashboards/analytics                                 4.09 kB         186 kB
+├ ƒ /[lang]/dashboards/crm                                       9.55 kB         211 kB
+├ ƒ /[lang]/dashboards/ecommerce                                 193 B           200 kB
+├ ƒ /[lang]/dashboards/logistics                                 223 B           240 kB
+├ ƒ /[lang]/forgot-password                                      6.11 kB         187 kB
+├ ƒ /[lang]/forms/form-layouts                                   13.4 kB         278 kB
+├ ƒ /[lang]/forms/form-validation                                9.07 kB         283 kB
+├ ƒ /[lang]/forms/form-wizard                                    11 kB           212 kB
+├ ƒ /[lang]/login                                                14.3 kB         460 kB
+├ ƒ /[lang]/pages/account-settings                               36 kB           538 kB
+├ ƒ /[lang]/pages/auth/forgot-password-v1                        6.39 kB         187 kB
+├ ƒ /[lang]/pages/auth/forgot-password-v2                        6.21 kB         187 kB
+├ ƒ /[lang]/pages/auth/login-v1                                  4.54 kB         193 kB
+├ ƒ /[lang]/pages/auth/login-v2                                  4.75 kB         193 kB
+├ ƒ /[lang]/pages/auth/register-multi-steps                      11.9 kB         197 kB
+├ ƒ /[lang]/pages/auth/register-v1                               4.5 kB          193 kB
+├ ƒ /[lang]/pages/auth/register-v2                               4.75 kB         193 kB
+├ ƒ /[lang]/pages/auth/reset-password-v1                         8.32 kB         189 kB
+├ ƒ /[lang]/pages/auth/reset-password-v2                         8.26 kB         189 kB
+├ ƒ /[lang]/pages/auth/two-steps-v1                              2.43 kB         161 kB
+├ ƒ /[lang]/pages/auth/two-steps-v2                              1.56 kB         160 kB
+├ ƒ /[lang]/pages/auth/verify-email                              11.1 kB         198 kB
+├ ƒ /[lang]/pages/auth/verify-email-v1                           7.04 kB         156 kB
+├ ƒ /[lang]/pages/auth/verify-email-v2                           6.21 kB         156 kB
+├ ƒ /[lang]/pages/auth/verify-phone                              6.67 kB         203 kB
+├ ƒ /[lang]/pages/dialog-examples                                13.6 kB         240 kB
+├ ƒ /[lang]/pages/faq                                            6 kB            191 kB
+├ ƒ /[lang]/pages/misc/401-not-authorized                        3.97 kB         153 kB
+├ ƒ /[lang]/pages/misc/404-not-found                             3.97 kB         153 kB
+├ ƒ /[lang]/pages/misc/coming-soon                               3.64 kB         181 kB
+├ ƒ /[lang]/pages/misc/under-maintenance                         3.95 kB         153 kB
+├ ƒ /[lang]/pages/pricing                                        7.78 kB         155 kB
+├ ƒ /[lang]/pages/user-profile                                   14.4 kB         240 kB
+├ ƒ /[lang]/pages/widget-examples/actions                        6.58 kB         154 kB
+├ ƒ /[lang]/pages/widget-examples/advanced                       11.4 kB         239 kB
+├ ƒ /[lang]/pages/widget-examples/basic                          9.62 kB         178 kB
+├ ƒ /[lang]/pages/widget-examples/charts                         13.4 kB         191 kB
+├ ƒ /[lang]/pages/widget-examples/gamification                   1.47 kB         146 kB
+├ ƒ /[lang]/pages/widget-examples/statistics                     4.73 kB         182 kB
+├ ƒ /[lang]/pages/wizard-examples/checkout                       256 B           221 kB
+├ ƒ /[lang]/pages/wizard-examples/create-deal                    15 kB           274 kB
+├ ƒ /[lang]/pages/wizard-examples/property-listing               8.63 kB         286 kB
+├ ƒ /[lang]/react-table                                          11.7 kB         212 kB
+├ ƒ /[lang]/register                                             15.8 kB         452 kB
+├ ƒ /[lang]/user/[username]                                      8.59 kB         157 kB
+├ ƒ /api/account/[id]/slug                                       622 B           107 kB
+├ ƒ /api/accounts                                                622 B           107 kB
+├ ƒ /api/accounts/[id]                                           622 B           107 kB
+├ ƒ /api/accounts/[id]/managers                                  622 B           107 kB
+├ ƒ /api/accounts/[id]/managers/[managerId]                      622 B           107 kB
+├ ƒ /api/accounts/[id]/switch                                    622 B           107 kB
+├ ƒ /api/accounts/[id]/transfer                                  622 B           107 kB
+├ ƒ /api/accounts/current                                        622 B           107 kB
+├ ƒ /api/accounts/transfers                                      622 B           107 kB
+├ ƒ /api/accounts/transfers/[transferId]/accept                  622 B           107 kB
+├ ƒ /api/accounts/transfers/[transferId]/cancel                  622 B           107 kB
+├ ƒ /api/accounts/transfers/[transferId]/reject                  622 B           107 kB
+├ ƒ /api/admin/data-sanitization                                 622 B           107 kB
+├ ƒ /api/admin/events                                            622 B           107 kB
+├ ƒ /api/admin/events/export/[format]                            622 B           107 kB
+├ ƒ /api/admin/events/retention                                  622 B           107 kB
+├ ƒ /api/admin/html-report                                       622 B           107 kB
+├ ƒ /api/admin/maintenance/retention                             622 B           107 kB
+├ ƒ /api/admin/media                                             622 B           107 kB
+├ ƒ /api/admin/media/[id]                                        622 B           107 kB
+├ ƒ /api/admin/media/[id]/file                                   622 B           107 kB
+├ ƒ /api/admin/media/[id]/restore                                622 B           107 kB
+├ ƒ /api/admin/media/[id]/trash                                  622 B           107 kB
+├ ƒ /api/admin/media/cleanup                                     622 B           107 kB
+├ ƒ /api/admin/media/jobs/[jobId]                                622 B           107 kB
+├ ƒ /api/admin/media/licenses                                    622 B           107 kB
+├ ƒ /api/admin/media/licenses/[id]                               622 B           107 kB
+├ ƒ /api/admin/media/licenses/[id]/document                      622 B           107 kB
+├ ƒ /api/admin/media/orphans                                     622 B           107 kB
+├ ƒ /api/admin/media/queue                                       622 B           107 kB
+├ ƒ /api/admin/media/s3/buckets                                  622 B           107 kB
+├ ƒ /api/admin/media/s3/buckets/validate                         622 B           107 kB
+├ ƒ /api/admin/media/scan                                        622 B           107 kB
+├ ƒ /api/admin/media/settings                                    622 B           107 kB
+├ ƒ /api/admin/media/settings/test-s3                            622 B           107 kB
+├ ƒ /api/admin/media/sync                                        622 B           107 kB
+├ ƒ /api/admin/media/sync/[jobId]                                622 B           107 kB
+├ ƒ /api/admin/media/sync/bulk                                   622 B           107 kB
+├ ƒ /api/admin/media/upload-async                                622 B           107 kB
+├ ƒ /api/admin/media/watermarks                                  622 B           107 kB
+├ ƒ /api/admin/media/watermarks/[id]                             622 B           107 kB
+├ ƒ /api/admin/media/watermarks/[id]/preview                     622 B           107 kB
+├ ƒ /api/admin/monitoring/dashboard                              622 B           107 kB
+├ ƒ /api/admin/notification-scenarios                            622 B           107 kB
+├ ƒ /api/admin/notification-scenarios/[id]                       622 B           107 kB
+├ ƒ /api/admin/notifications/executions                          622 B           107 kB
+├ ƒ /api/admin/notifications/executions/[id]                     622 B           107 kB
+├ ƒ /api/admin/notifications/executions/[id]/retry               622 B           107 kB
+├ ƒ /api/admin/notifications/stats                               622 B           107 kB
+├ ƒ /api/admin/rate-limits                                       622 B           107 kB
+├ ƒ /api/admin/rate-limits/[id]                                  622 B           107 kB
+├ ƒ /api/admin/rate-limits/blocks                                622 B           107 kB
+├ ƒ /api/admin/rate-limits/blocks/[id]                           622 B           107 kB
+├ ƒ /api/admin/rate-limits/events                                622 B           107 kB
+├ ƒ /api/admin/rate-limits/events/[id]                           622 B           107 kB
+├ ƒ /api/admin/rate-limits/health                                622 B           107 kB
+├ ƒ /api/admin/redis-cleanup                                     622 B           107 kB
+├ ƒ /api/admin/references/cities                                 622 B           107 kB
+├ ƒ /api/admin/references/cities/[id]                            622 B           107 kB
+├ ƒ /api/admin/references/countries                              622 B           107 kB
+├ ƒ /api/admin/references/countries/[id]                         622 B           107 kB
+├ ƒ /api/admin/references/currencies                             622 B           107 kB
+├ ƒ /api/admin/references/currencies/[id]                        622 B           107 kB
+├ ƒ /api/admin/references/districts                              622 B           107 kB
+├ ƒ /api/admin/references/districts/[id]                         622 B           107 kB
+├ ƒ /api/admin/references/languages                              622 B           107 kB
+├ ƒ /api/admin/references/languages/[id]                         622 B           107 kB
+├ ƒ /api/admin/references/states                                 622 B           107 kB
+├ ƒ /api/admin/references/states/[id]                            622 B           107 kB
+├ ƒ /api/admin/references/translations                           622 B           107 kB
+├ ƒ /api/admin/references/translations/[id]                      622 B           107 kB
+├ ƒ /api/admin/references/translations/export                    622 B           107 kB
+├ ƒ /api/admin/references/translations/import                    622 B           107 kB
+├ ƒ /api/admin/roles                                             622 B           107 kB
+├ ƒ /api/admin/roles/[id]                                        622 B           107 kB
+├ ƒ /api/admin/run-tests                                         622 B           107 kB
+├ ƒ /api/admin/settings/services                                 622 B           107 kB
+├ ƒ /api/admin/settings/services/[id]                            622 B           107 kB
+├ ƒ /api/admin/settings/services/[id]/test                       622 B           107 kB
+├ ƒ /api/admin/settings/services/[id]/toggle                     622 B           107 kB
+├ ƒ /api/admin/settings/services/status                          622 B           107 kB
+├ ƒ /api/admin/settings/slug                                     622 B           107 kB
+├ ƒ /api/admin/test-configs                                      622 B           107 kB
+├ ƒ /api/admin/test-results                                      622 B           107 kB
+├ ƒ /api/admin/test-runs                                         622 B           107 kB
+├ ƒ /api/admin/tools/web-scraper                                 622 B           107 kB
+├ ƒ /api/admin/users                                             622 B           107 kB
+├ ƒ /api/admin/users/[id]                                        622 B           107 kB
+├ ƒ /api/admin/users/[id]/reject-documents                       622 B           107 kB
+├ ƒ /api/admin/users/[id]/username                               622 B           107 kB
+├ ƒ /api/admin/users/[id]/verify-documents                       622 B           107 kB
+├ ƒ /api/admin/users/[id]/workflow                               622 B           107 kB
+├ ƒ /api/admin/users/[id]/workflow/history                       622 B           107 kB
+├ ƒ /api/admin/users/active                                      622 B           107 kB
+├ ƒ /api/admin/users/bulk/activate                               622 B           107 kB
+├ ƒ /api/admin/users/bulk/deactivate                             622 B           107 kB
+├ ƒ /api/admin/users/bulk/delete                                 622 B           107 kB
+├ ƒ /api/admin/users/pending-verification                        622 B           107 kB
+├ ƒ /api/admin/users/update-by-email                             622 B           107 kB
+├ ƒ /api/admin/users/upsert                                      622 B           107 kB
+├ ƒ /api/ads                                                     622 B           107 kB
+├ ƒ /api/apps/academy                                            622 B           107 kB
+├ ƒ /api/apps/ecommerce                                          622 B           107 kB
+├ ƒ /api/apps/invoice                                            622 B           107 kB
+├ ƒ /api/apps/logistics                                          622 B           107 kB
+├ ƒ /api/apps/permissions                                        622 B           107 kB
+├ ƒ /api/apps/user-list                                          622 B           107 kB
+├ ƒ /api/auth/[...lucia]                                         622 B           107 kB
+├ ƒ /api/auth/login                                              622 B           107 kB
+├ ƒ /api/auth/logout                                             622 B           107 kB
+├ ƒ /api/auth/session                                            622 B           107 kB
+├ ƒ /api/auth/session-token                                      622 B           107 kB
+├ ƒ /api/chat/last-messages                                      622 B           107 kB
+├ ƒ /api/chat/messages                                           622 B           107 kB
+├ ƒ /api/chat/messages/check-rate-limit                          622 B           107 kB
+├ ƒ /api/chat/messages/read                                      622 B           107 kB
+├ ƒ /api/chat/rooms                                              622 B           107 kB
+├ ƒ /api/chat/unread                                             622 B           107 kB
+├ ƒ /api/chat/unread-by-contact                                  622 B           107 kB
+├ ƒ /api/cities                                                  622 B           107 kB
+├ ƒ /api/countries                                               622 B           107 kB
+├ ƒ /api/currencies                                              622 B           107 kB
+├ ƒ /api/districts                                               622 B           107 kB
+├ ƒ /api/email/send                                              622 B           107 kB
+├ ƒ /api/events/record                                           622 B           107 kB
+├ ƒ /api/export                                                  622 B           107 kB
+├ ƒ /api/export/[entity]                                         622 B           107 kB
+├ ƒ /api/health                                                  622 B           107 kB
+├ ƒ /api/import                                                  622 B           107 kB
+├ ƒ /api/import/[entity]                                         622 B           107 kB
+├ ƒ /api/import/preview                                          622 B           107 kB
+├ ƒ /api/languages                                               622 B           107 kB
+├ ƒ /api/listings/[id]/workflow                                  622 B           107 kB
+├ ƒ /api/listings/[id]/workflow/history                          622 B           107 kB
+├ ƒ /api/login                                                   622 B           107 kB
+├ ƒ /api/media/[id]                                              622 B           107 kB
+├ ƒ /api/menu                                                    622 B           107 kB
+├ ƒ /api/metrics                                                 622 B           107 kB
+├ ƒ /api/notifications                                           622 B           107 kB
+├ ƒ /api/notifications/[id]                                      622 B           107 kB
+├ ƒ /api/notifications/clear-all                                 622 B           107 kB
+├ ƒ /api/notifications/mark-all                                  622 B           107 kB
+├ ƒ /api/pages/faq                                               622 B           107 kB
+├ ƒ /api/pages/pricing                                           622 B           107 kB
+├ ƒ /api/pages/profile                                           622 B           107 kB
+├ ƒ /api/pages/widget-examples                                   622 B           107 kB
+├ ƒ /api/register                                                622 B           107 kB
+├ ƒ /api/settings/email-templates                                622 B           107 kB
+├ ƒ /api/settings/email-templates/[id]                           622 B           107 kB
+├ ƒ /api/settings/registration                                   622 B           107 kB
+├ ƒ /api/settings/sms-ru                                         622 B           107 kB
+├ ƒ /api/settings/sms-ru/balance                                 622 B           107 kB
+├ ƒ /api/settings/sms-ru/test                                    622 B           107 kB
+├ ƒ /api/settings/smtp                                           622 B           107 kB
+├ ƒ /api/settings/smtp/send-test                                 622 B           107 kB
+├ ƒ /api/settings/smtp/test                                      622 B           107 kB
+├ ƒ /api/settings/telegram                                       622 B           107 kB
+├ ƒ /api/settings/telegram/test                                  622 B           107 kB
+├ ƒ /api/states                                                  622 B           107 kB
+├ ƒ /api/tariff-plans                                            622 B           107 kB
+├ ƒ /api/user/avatar                                             622 B           107 kB
+├ ƒ /api/user/change-password                                    622 B           107 kB
+├ ƒ /api/user/profile                                            622 B           107 kB
+├ ƒ /api/user/username                                           622 B           107 kB
+├ ƒ /api/user/username/check                                     622 B           107 kB
+├ ƒ /api/users                                                   622 B           107 kB
+├ ƒ /api/verify/email                                            622 B           107 kB
+├ ƒ /api/verify/phone/check                                      622 B           107 kB
+├ ƒ /api/verify/phone/send                                       622 B           107 kB
+├ ƒ /api/verify/resend                                           622 B           107 kB
+├ ƒ /front-pages/checkout                                        2.19 kB         223 kB
+├ ƒ /front-pages/help-center                                     13.8 kB         193 kB
+├ ƒ /front-pages/help-center/article/how-to-add-product-in-cart  6.43 kB         158 kB
+├ ƒ /front-pages/landing-page                                    37.4 kB         237 kB
+├ ƒ /front-pages/payment                                         10.4 kB         196 kB
+└ ƒ /front-pages/pricing                                         10.6 kB         168 kB
++ First Load JS shared by all                                    107 kB
+  ├ chunks/45275-e9c49864c26c96db.js                             50.7 kB
+  ├ chunks/ff8e130a-72d0782852f49da6.js                          53 kB
+  └ other shared chunks (total)                                  2.82 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

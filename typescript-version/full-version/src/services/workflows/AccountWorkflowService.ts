@@ -51,7 +51,7 @@ export interface AccountWorkflowState {
   canActivate: boolean
 }
 
-class AccountWorkflowService {
+export class AccountWorkflowService {
   private static instance: AccountWorkflowService
 
   static getInstance(): AccountWorkflowService {
@@ -127,7 +127,7 @@ class AccountWorkflowService {
 
       // Проверяем можно ли выполнить переход
       const snapshot = actorMachine.getSnapshot()
-      if (!snapshot.can(eventPayload)) {
+      if (!snapshot.can(eventPayload as any)) {
         actorMachine.stop()
 
         return {
@@ -140,7 +140,7 @@ class AccountWorkflowService {
       }
 
       // Выполняем переход
-      actorMachine.send(eventPayload)
+      actorMachine.send(eventPayload as any)
 
       const newSnapshot = actorMachine.getSnapshot()
       const toState = (typeof newSnapshot.value === 'string' ? newSnapshot.value : 'active') as AccountState

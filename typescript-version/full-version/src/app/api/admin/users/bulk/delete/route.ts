@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get environment for metrics
-    const environment = getEnvironmentFromRequest(request)
+    const environment = getEnvironmentFromRequest(request) as 'production' | 'test' | undefined
 
     // Execute bulk operation using universal service
     const result = await bulkOperationsService.bulkDeleteWithContext(

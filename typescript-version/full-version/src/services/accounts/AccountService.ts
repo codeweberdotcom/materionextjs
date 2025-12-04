@@ -30,7 +30,7 @@ export class AccountService {
     }
 
     // Получаем тарифный план (по умолчанию FREE)
-    const planCode = tariffPlanCode || 'FREE'
+    const planCode = (tariffPlanCode || 'FREE') as any
     const tariffPlan = await tariffPlanService.getPlanByCode(planCode)
     
     if (!tariffPlan) {
@@ -71,7 +71,7 @@ export class AccountService {
     userId: string,
     data: CreateAccountInput
   ): Promise<UserAccountWithRelations> {
-    const planCode = data.tariffPlanCode || 'FREE'
+    const planCode = (data.tariffPlanCode || 'FREE') as any
     const tariffPlan = await tariffPlanService.getPlanByCode(planCode)
     
     if (!tariffPlan) {

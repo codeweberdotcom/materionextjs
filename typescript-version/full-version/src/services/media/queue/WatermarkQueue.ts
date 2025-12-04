@@ -165,11 +165,13 @@ export async function addWatermarkJob(
   const jobId = ++inMemoryJobId
 
   inMemoryQueue.push({
-    id: jobId,
+    id: String(jobId),
     data,
     status: 'pending',
     attempts: 0,
-    createdAt: new Date(),
+    scheduledAt: new Date(),
+    maxAttempts: 3,
+    progress: 0
   })
 
   logger.debug('[WatermarkQueue] Job added to in-memory queue', {
@@ -218,7 +220,7 @@ async function processInMemoryQueue(): Promise<void> {
   
   for (const job of pendingJobs) {
     job.status = 'processing'
-    job.startedAt = new Date()
+    ;(job as any).startedAt = new Date()
 
     try {
       // Создаём mock Job объект
@@ -233,7 +235,7 @@ async function processInMemoryQueue(): Promise<void> {
 
       await processor(mockJob)
       job.status = 'completed'
-      job.completedAt = new Date()
+      ;(job as any).completedAt = new Date()
     } catch (error) {
       job.attempts++
       job.error = error instanceof Error ? error.message : String(error)

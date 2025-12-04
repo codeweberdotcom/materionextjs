@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const { user } = verificationCheck
 
     const clientIp = getRequestIp(request)
-    const environment = getEnvironmentFromRequest(request)
+    const environment = getEnvironmentFromRequest(request) as 'production' | 'test' | undefined
     const rateLimitResult = await rateLimitContainer.getRateLimitEngine().checkLimit(user.id, 'ads', {
       userId: user.id,
       email: user.email ?? null,

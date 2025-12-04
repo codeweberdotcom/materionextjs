@@ -233,7 +233,6 @@ const horizontalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>
         href: '/admin/monitoring/dashboard'
       },
       {
-      {
         label: dictionary['navigation'].monitoringMetrics,
         icon: 'ri-bar-chart-2-line',
         href: '/admin/monitoring/metrics'

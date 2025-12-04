@@ -254,7 +254,7 @@ export class S3Connector extends BaseConnector {
         return {
           success: false,
           latency: Date.now() - startTime,
-          error: testBucketError
+          error: testBucketError || undefined
         }
       }
 

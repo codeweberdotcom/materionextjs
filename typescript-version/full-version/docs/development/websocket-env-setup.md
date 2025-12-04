@@ -75,3 +75,5 @@ curl http://localhost:3001/health
 - [План рефакторинга](../plans/active/plan-websocket-standalone-refactor-2025-12-02.md)
 - [Анализ архитектуры](../analysis/architecture/analysis-websocket-standalone-refactor-2025-12-02.md)
 
+
+

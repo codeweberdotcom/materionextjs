@@ -1,0 +1,88 @@
+
+> materio-mui-nextjs-admin-template@5.0.0 build C:\laragon\www\materionextjs\typescript-version\full-version
+> next build
+
+   ▲ Next.js 15.1.2
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings
+
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+node@8.55.0/node_modules/@sentry/node/build/cjs/integrations/node-fetch.js
+./node_modules/.pnpm/@sentry+node@8.55.0/node_modules/@sentry/node/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/services/media/queue/MediaSyncQueue.ts
+./src/services/media/MediaService.ts
+./src/services/media/index.ts
+./src/app/api/admin/users/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/require-in-the-middle@7.5.2/node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/.pnpm/require-in-the-middle@7.5.2/node_modules/require-in-the-middle/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+node@8.55.0/node_modules/@sentry/node/build/cjs/integrations/node-fetch.js
+./node_modules/.pnpm/@sentry+node@8.55.0/node_modules/@sentry/node/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/services/media/queue/MediaSyncQueue.ts
+./src/services/media/MediaService.ts
+./src/services/media/index.ts
+./src/app/api/admin/users/route.ts
+
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./src/lib/rate-limit/services/RateLimitEngine.ts:901:9
+Type error: Property 'listBlocks' in type 'RateLimitEngine' is not assignable to the same property in base type 'RateLimitEngine'.
+  Type '(params?: ListBlocksParams) => Promise<{ items: { id: string; module: string; userId: string | null; email: string | null; mailDomain: string | null; ipAddress: string | null; ... 6 more ...; user: { ...; } | null; }[]; total: number; nextCursor: string | undefined; }>' is not assignable to type '(params?: ListBlocksParams | undefined) => Promise<{ items: { id: string; module: string; userId: string | null; email: string | null; mailDomain: string | null; ipAddress: string | null; ... 7 more ...; blockedByUser: { ...; } | null; }[]; total: number; nextCursor?: string | undefined; }>'.
+    Type 'Promise<{ items: { id: string; module: string; userId: string | null; email: string | null; mailDomain: string | null; ipAddress: string | null; reason: string; blockedBy: string; blockedAt: Date; unblockedAt: Date | null; isActive: boolean; notes: string | null; user: { ...; } | null; }[]; total: number; nextCursor...' is not assignable to type 'Promise<{ items: { id: string; module: string; userId: string | null; email: string | null; mailDomain: string | null; ipAddress: string | null; reason: string; blockedBy: string; blockedAt: Date; ... 4 more ...; blockedByUser: { ...; } | null; }[]; total: number; nextCursor?: string | undefined; }>'.
+      Type '{ items: { id: string; module: string; userId: string | null; email: string | null; mailDomain: string | null; ipAddress: string | null; reason: string; blockedBy: string; blockedAt: Date; unblockedAt: Date | null; isActive: boolean; notes: string | null; user: { ...; } | null; }[]; total: number; nextCursor: string...' is not assignable to type '{ items: { id: string; module: string; userId: string | null; email: string | null; mailDomain: string | null; ipAddress: string | null; reason: string; blockedBy: string; blockedAt: Date; ... 4 more ...; blockedByUser: { ...; } | null; }[]; total: number; nextCursor?: string | undefined; }'.
+        Types of property 'items' are incompatible.
+          Type '{ id: string; module: string; userId: string | null; email: string | null; mailDomain: string | null; ipAddress: string | null; reason: string; blockedBy: string; blockedAt: Date; unblockedAt: Date | null; isActive: boolean; notes: string | null; user: { ...; } | null; }[]' is not assignable to type '{ id: string; module: string; userId: string | null; email: string | null; mailDomain: string | null; ipAddress: string | null; reason: string; blockedBy: string; blockedAt: Date; ... 4 more ...; blockedByUser: { ...; } | null; }[]'.
+            Property 'blockedByUser' is missing in type '{ id: string; module: string; userId: string | null; email: string | null; mailDomain: string | null; ipAddress: string | null; reason: string; blockedBy: string; blockedAt: Date; unblockedAt: Date | null; isActive: boolean; notes: string | null; user: { ...; } | null; }' but required in type '{ id: string; module: string; userId: string | null; email: string | null; mailDomain: string | null; ipAddress: string | null; reason: string; blockedBy: string; blockedAt: Date; ... 4 more ...; blockedByUser: { ...; } | null; }'.
+
+[0m [90m 899 |[39m [90m   * List blocks with flexible filtering[39m[0m
+[0m [90m 900 |[39m [90m   */[39m[0m
+[0m[31m[1m>[22m[39m[90m 901 |[39m   [36masync[39m listBlocks(params[33m:[39m [33mListBlocksParams[39m [33m=[39m {}) {[0m
+[0m [90m     |[39m         [31m[1m^[22m[39m[0m
+[0m [90m 902 |[39m     [36mconst[39m andConditions[33m:[39m [33mPrisma[39m[33m.[39m[33mUserBlockWhereInput[39m[] [33m=[39m [][0m
+[0m [90m 903 |[39m[0m
+[0m [90m 904 |[39m     [36mif[39m (params[33m.[39mmodule) {[0m
+ ELIFECYCLE  Command failed with exit code 1.

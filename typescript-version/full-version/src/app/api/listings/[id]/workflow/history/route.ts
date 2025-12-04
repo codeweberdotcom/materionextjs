@@ -46,8 +46,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Проверка прав: владелец или модератор
-    const userRole = (session.user as { role?: { code?: string } }).role?.code
-    const isOwner = listing.ownerId === session.user.id
+    const userRole = user.role?.code
+    const isOwner = listing.ownerId === user.id
     const isModerator = ['SUPERADMIN', 'ADMIN', 'MODERATOR'].includes(userRole || '')
 
     if (!isOwner && !isModerator) {

@@ -41,7 +41,7 @@ export class SMSRuProvider extends SMSService {
       })
 
       // Проверяем результат отправки
-      if (result.status === 'OK' && result.sms) {
+      if ((result as any).status === 'OK' && result.sms) {
         const smsResult = result.sms[phone]
         if (smsResult && smsResult.status === 'OK') {
           logger.info('📱 SMS sent successfully:', {
@@ -58,7 +58,7 @@ export class SMSRuProvider extends SMSService {
           }
         } else {
           const errorCode = smsResult?.status_code || 'UNKNOWN'
-          const errorText = smsResult?.status_text || 'Unknown error'
+          const errorText = (smsResult as any)?.status_text || 'Unknown error'
           logger.error('📱 SMS sending failed:', {
             phone,
             errorCode,
@@ -73,13 +73,13 @@ export class SMSRuProvider extends SMSService {
       } else {
         logger.error('📱 SMS.ru API error:', {
           phone,
-          status: result.status,
-          statusText: result.status_text
+          status: (result as any).status,
+          statusText: (result as any).status_text
         })
 
         return {
           success: false,
-          error: `SMS.ru API error: ${result.status_text || 'Unknown error'}`
+          error: `SMS.ru API error: ${(result as any).status_text || 'Unknown error'}`
         }
       }
     } catch (error) {
@@ -106,11 +106,11 @@ export class SMSRuProvider extends SMSService {
 
       const result = await this.smsRu.getBalance()
 
-      if (result.status === 'OK' && result.balance) {
-        return parseFloat(result.balance)
+      if ((result as any).status === 'OK' && (result as any).balance) {
+        return parseFloat((result as any).balance)
       }
 
-      throw new Error(result.status_text || 'Failed to get balance')
+      throw new Error((result as any).status_text || 'Failed to get balance')
     } catch (error) {
       logger.error('📱 Failed to get SMS.ru balance:', {
         error: error instanceof Error ? error.message : 'Unknown error'
@@ -153,7 +153,7 @@ export class SMSRuProvider extends SMSService {
         from: this.config.sender
       })
 
-      if (result.status === 'OK' && result.sms) {
+      if ((result as any).status === 'OK' && result.sms) {
         const smsResult = result.sms[phone]
         if (smsResult && smsResult.status === 'OK') {
           return {
@@ -165,13 +165,13 @@ export class SMSRuProvider extends SMSService {
         } else {
           return {
             success: false,
-            error: smsResult?.status_text || 'Failed to send test SMS'
+            error: (smsResult as any)?.status_text || 'Failed to send test SMS'
           }
         }
       } else {
         return {
           success: false,
-          error: result.status_text || 'SMS.ru API error'
+          error: (result as any).status_text || 'SMS.ru API error'
         }
       }
     } catch (error) {

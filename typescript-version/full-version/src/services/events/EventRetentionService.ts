@@ -104,8 +104,7 @@ export class EventRetentionService {
       while (hasMore) {
         // Delete in batches to avoid locking the table
         const result = await prisma.event.deleteMany({
-          where,
-          take: batchSize
+          where
         })
 
         deleted += result.count
@@ -174,6 +173,10 @@ export class EventRetentionService {
       'import',
       'export'
     ]
+    
+    const results: RetentionResult[] = []
+    const errors: Array<{ source: string; error: string }> = []
+    
     // Добавляем тестовые события как отдельный источник
     try {
       const testResult = await this.cleanTestEvents(dryRun)
@@ -184,9 +187,6 @@ export class EventRetentionService {
       metrics?.markRetentionError(TEST_EVENTS_SOURCE)
       errors.push({ source: TEST_EVENTS_SOURCE, error: errorMessage })
     }
-
-    const results: RetentionResult[] = []
-    const errors: Array<{ source: string; error: string }> = []
 
     for (const source of sources) {
       try {
@@ -336,8 +336,7 @@ export class EventRetentionService {
 
       while (hasMore) {
         const result = await prisma.event.deleteMany({
-          where,
-          take: batchSize
+          where
         })
 
         deleted += result.count

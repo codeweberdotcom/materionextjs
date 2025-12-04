@@ -98,3 +98,5 @@
 - [План реализации](../../plans/completed/plan-media-s3-direct-access-2025-12-01.md)
 - [Отчёт](../../reports/deployment/report-media-s3-direct-access-2025-12-01.md)
 
+
+

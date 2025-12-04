@@ -19,8 +19,9 @@ export async function setupTestUsers() {
       adminRole = await prisma.role.create({
         data: {
           name: 'admin',
+          code: 'ADMIN',
           description: 'Administrator role for testing',
-          permissions: {}
+          permissions: JSON.stringify({})
         }
       })
     }
@@ -34,8 +35,9 @@ export async function setupTestUsers() {
       userRole = await prisma.role.create({
         data: {
           name: 'user',
+          code: 'USER',
           description: 'Regular user role for testing',
-          permissions: {}
+          permissions: JSON.stringify({})
         }
       })
     }

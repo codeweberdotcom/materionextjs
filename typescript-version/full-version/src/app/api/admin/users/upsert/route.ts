@@ -186,7 +186,7 @@ export async function POST(request: NextRequest) {
         email,
         password: hashedPassword,
         roleId: dbRole.id,
-        country: validatedData.country || null,
+        country: validatedData.country || undefined,
         status: validatedData.status || 'active'
       },
       include: { role: true }

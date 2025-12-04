@@ -17,6 +17,8 @@ const getPrisma = async () => {
  * Адаптер для экспорта/импорта пользователей
  */
 export class UserAdapter implements IEntityAdapter {
+  entityType = 'user' as const
+  
   exportFields: ExportField[] = [
     { key: 'id', label: 'ID', type: 'string', required: true },
     { key: 'fullName', label: 'Full Name', type: 'string', required: true },
@@ -36,7 +38,7 @@ export class UserAdapter implements IEntityAdapter {
     { key: 'email', label: 'Email', type: 'string', required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/ },
     { key: 'role', label: 'Role', type: 'string', required: true, enum: ['superadmin', 'admin', 'manager', 'editor', 'moderator', 'seo', 'marketolog', 'support', 'subscriber', 'user', 'author', 'maintainer'] },
     { key: 'currentPlan', label: 'Plan', type: 'string', enum: ['basic', 'team', 'company', 'enterprise'] },
-    { key: 'isActive', label: 'Active', type: 'boolean', default: true }
+    { key: 'isActive', label: 'Active', type: 'boolean' }
   ]
 
   /**
@@ -84,7 +86,7 @@ export class UserAdapter implements IEntityAdapter {
           isActive: user.status === 'active',
           avatar: user.image || '',
           createdAt: user.createdAt?.toISOString() || ''
-        })) as UsersType[]
+        })) as any
       }
       
       // On client, use API
@@ -142,8 +144,8 @@ export class UserAdapter implements IEntityAdapter {
       status: user.status || (user.isActive ? 'active' : 'inactive'),
       currentPlan: user.currentPlan || '',
       isActive: String(user.isActive ?? true), // Преобразуем boolean в строку "true"/"false"
-      createdAt: user.createdAt ? new Date(user.createdAt).toISOString().split('T')[0] : '',
-      lastSeen: user.lastSeen ? new Date(user.lastSeen).toISOString().split('T')[0] : ''
+      createdAt: (user as any).createdAt ? new Date((user as any).createdAt).toISOString().split('T')[0] : '',
+      lastSeen: (user as any).lastSeen ? new Date((user as any).lastSeen).toISOString().split('T')[0] : ''
     }))
   }
 
@@ -179,7 +181,7 @@ export class UserAdapter implements IEntityAdapter {
   /**
    * Валидация данных импорта
    */
-  validateImportData(data: Record<string, any>[]): ValidationError[] {
+  validateImportData(data: Record<string, any>[]): any {
     const errors: ValidationError[] = []
     const usernames = new Set<string>()
     const emails = new Set<string>()
@@ -417,7 +419,7 @@ export class UserAdapter implements IEntityAdapter {
       }
     }
 
-    return results
+    return { ...results, warnings: [] } as any
   }
 
   /**

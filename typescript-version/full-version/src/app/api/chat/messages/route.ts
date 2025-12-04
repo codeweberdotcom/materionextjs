@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
       sender: {
         id: newMessage.sender.id,
         name: newMessage.sender.name || undefined,
-        email: newMessage.sender.email
+        email: newMessage.sender.email || ''
       },
       roomId: newMessage.roomId,
       readAt: newMessage.readAt?.toISOString(),

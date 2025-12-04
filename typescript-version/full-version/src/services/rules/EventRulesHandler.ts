@@ -431,12 +431,11 @@ class EventRulesHandler {
         // Отложенная отправка через Bull Queue
         for (const options of notificationOptions) {
           await notificationQueue.add(
-            'send-notification',
             {
               ...options,
-              eventId: originalEvent.id
-            },
-            { delay }
+              eventId: originalEvent.id,
+              delay
+            } as any
           )
         }
 

@@ -1,0 +1,83 @@
+
+> materio-mui-nextjs-admin-template@5.0.0 build C:\laragon\www\materionextjs\typescript-version\full-version
+> next build
+
+   ▲ Next.js 15.1.2
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings
+
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+node@8.55.0/node_modules/@sentry/node/build/cjs/integrations/node-fetch.js
+./node_modules/.pnpm/@sentry+node@8.55.0/node_modules/@sentry/node/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/services/media/queue/MediaSyncQueue.ts
+./src/services/media/MediaService.ts
+./src/services/media/index.ts
+./src/app/api/admin/media/[id]/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+require.extensions is not supported by webpack. Use a loader instead.
+
+Import trace for requested module:
+./node_modules/.pnpm/handlebars@4.7.8/node_modules/handlebars/lib/index.js
+./src/utils/email.ts
+./src/app/api/email/send/route.ts
+
+./node_modules/.pnpm/require-in-the-middle@7.5.2/node_modules/require-in-the-middle/index.js
+Critical dependency: require function is used in a way in which dependencies cannot be statically extracted
+
+Import trace for requested module:
+./node_modules/.pnpm/require-in-the-middle@7.5.2/node_modules/require-in-the-middle/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/.pnpm/@opentelemetry+instrumentat_04f370d515cee0be955272f826166073/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/.pnpm/@sentry+node@8.55.0/node_modules/@sentry/node/build/cjs/integrations/node-fetch.js
+./node_modules/.pnpm/@sentry+node@8.55.0/node_modules/@sentry/node/build/cjs/index.js
+./node_modules/.pnpm/@sentry+nextjs@8.55.0_@open_a4b6d351c8817302ef21538c369c886d/node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/services/media/queue/MediaSyncQueue.ts
+./src/services/media/MediaService.ts
+./src/services/media/index.ts
+./src/app/api/admin/media/[id]/route.ts
+
+   Skipping linting
+   Checking validity of types ...
+Failed to compile.
+
+./tests/helpers/mute-logger.ts:8:24
+Type error: Argument of type 'string | number | symbol' is not assignable to parameter of type 'string | number'.
+  Type 'symbol' is not assignable to type 'string | number'.
+
+[0m [90m  6 |[39m   [36mfor[39m ([36mconst[39m level [36mof[39m [[32m'info'[39m[33m,[39m [32m'warn'[39m[33m,[39m [32m'error'[39m[33m,[39m [32m'debug'[39m]) {[0m
+[0m [90m  7 |[39m     [36mif[39m ([36mtypeof[39m logger[level] [33m===[39m [32m'function'[39m) {[0m
+[0m[31m[1m>[22m[39m[90m  8 |[39m       vi[33m.[39mspyOn(logger[33m,[39m level [36mas[39m keyof [36mtypeof[39m logger)[33m.[39mmockImplementation(() [33m=>[39m {})[0m
+[0m [90m    |[39m                        [31m[1m^[22m[39m[0m
+[0m [90m  9 |[39m     }[0m
+[0m [90m 10 |[39m   }[0m
+[0m [90m 11 |[39m } [36mcatch[39m (error) {[0m
+ ELIFECYCLE  Command failed with exit code 1.

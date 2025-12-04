@@ -182,7 +182,7 @@ const NotificationDashboard = () => {
       const dateStr = item.date.toString().split('T')[0]
       if (dataByDate[dateStr]) {
         const count = Number(item.count)
-        dataByDate[dateStr][item.status as keyof ChartDataPoint] = count as any
+        ;(dataByDate[dateStr] as any)[item.status as keyof ChartDataPoint] = count
         dataByDate[dateStr].total += count
       }
     }

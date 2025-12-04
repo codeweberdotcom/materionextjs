@@ -54,7 +54,7 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
     email: '',
     password: '',
     confirmPassword: '',
-    accountType: 'LISTING' as AccountType
+    accountType: 'LISTING' as any as AccountType
   })
 
   const [errors, setErrors] = useState<string[]>([])
@@ -356,7 +356,7 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
                     'border-primary': formData.accountType === 'LISTING',
                     'border-default': formData.accountType !== 'LISTING'
                   })}
-                  onClick={() => setFormData(prev => ({ ...prev, accountType: 'LISTING' }))}
+                  onClick={() => setFormData(prev => ({ ...prev, accountType: 'LISTING' as any }))}
                 >
                   <CardContent className='flex items-center gap-3 p-4'>
                     <Radio value='LISTING' checked={formData.accountType === 'LISTING'} />
@@ -378,7 +378,7 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
                     'border-primary': formData.accountType === 'COMPANY',
                     'border-default': formData.accountType !== 'COMPANY'
                   })}
-                  onClick={() => setFormData(prev => ({ ...prev, accountType: 'COMPANY' }))}
+                  onClick={() => setFormData(prev => ({ ...prev, accountType: 'COMPANY' as any }))}
                 >
                   <CardContent className='flex items-center gap-3 p-4'>
                     <Radio value='COMPANY' checked={formData.accountType === 'COMPANY'} />
@@ -400,7 +400,7 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
                     'border-primary': formData.accountType === 'NETWORK',
                     'border-default': formData.accountType !== 'NETWORK'
                   })}
-                  onClick={() => setFormData(prev => ({ ...prev, accountType: 'NETWORK' }))}
+                  onClick={() => setFormData(prev => ({ ...prev, accountType: 'NETWORK' as any }))}
                 >
                   <CardContent className='flex items-center gap-3 p-4'>
                     <Radio value='NETWORK' checked={formData.accountType === 'NETWORK'} />

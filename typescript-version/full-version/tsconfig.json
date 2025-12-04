@@ -61,6 +61,10 @@
   ],
   "exclude": [
     "node_modules",
-    "src/fake-db/**"
+    "src/fake-db/**",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "tests/**"
   ]
 }

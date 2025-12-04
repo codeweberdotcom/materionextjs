@@ -16,7 +16,7 @@ import { normalizePhone } from '@/lib/utils/phone-utils'
 import { smsRuSettingsService } from '@/services/settings/SMSRuSettingsService'
 import { SMSRuProvider } from '@/services/sms'
 import { accountService } from '@/services/accounts'
-import type { AccountType } from '@/types/accounts/types'
+import type { AccountType, TariffPlanCode } from '@/types/accounts/types'
 import { slugService } from '@/services/slug'
 
 export async function POST(request: NextRequest) {
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         status: 400,
         code: 'REG_VALIDATION_ERROR',
         message: 'Validation failed',
-        details: validationResult.error.errors,
+        details: validationResult.error.errors.map(e => e.message),
         logLevel: 'warn',
         route: 'register',
         context: { route: 'register', errors: validationResult.error.errors }
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
 
     // Rate limit check - skip for test requests
     const isTestRequest = request.headers.get('x-test-request') === 'true'
-    const environment = getEnvironmentFromRequest(request)
+    const environment = getEnvironmentFromRequest(request) as 'production' | 'test' | undefined
 
     const clientIp = request.headers.get('x-forwarded-for') ||
                      request.headers.get('x-real-ip') ||
@@ -486,7 +486,7 @@ export async function POST(request: NextRequest) {
       createdAccount = await accountService.createAccount(
         newUser.id,
         accountType,
-        'FREE' // Всегда создаем с тарифом FREE при регистрации
+        'FREE' as TariffPlanCode // Всегда создаем с тарифом FREE при регистрации
       )
 
       // Устанавливаем созданный аккаунт как текущий

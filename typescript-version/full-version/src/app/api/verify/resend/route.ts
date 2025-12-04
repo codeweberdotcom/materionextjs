@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     const clientIp = request.headers.get('x-forwarded-for') ||
                      request.headers.get('x-real-ip') ||
                      'unknown'
-    const environment = getEnvironmentFromRequest(request)
+    const environment = getEnvironmentFromRequest(request) as 'production' | 'test' | undefined
 
     const rateLimitModule = type === 'email' ? 'registration-email' : 'registration-phone'
     const rateLimitResult = await rateLimitService.checkLimit(identifier, rateLimitModule, {

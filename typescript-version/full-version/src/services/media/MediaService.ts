@@ -195,8 +195,7 @@ export class MediaService {
       const processingResult = await this.imageProcessingService.processImage(buffer, variants, {
         convertToWebP: outputFormat === 'webp',
         stripMetadata: settings?.stripMetadata ?? preset.stripMetadata,
-        quality: effectiveQuality,
-        outputFormat, // Pass format for future use (e.g., AVIF support)
+        quality: effectiveQuality
       })
 
       if (!processingResult.success) {
@@ -553,20 +552,22 @@ export class MediaService {
     logger.info('[MediaService] Media deleted', { mediaId: id, hard })
 
     // Записываем событие
+    const deleteMessage = hard
+      ? `Медиа файл "${media.filename}" безвозвратно удалён`
+      : `Медиа файл "${media.filename}" перемещён в корзину`
+    
     await eventService.record({
       source: 'media',
       type: hard ? 'media.hard_deleted' : 'media.soft_deleted',
       severity: hard ? 'warning' : 'info',
-      entityType: 'media',
-      entityId: id,
-      message: hard
-        ? `Медиа файл "${media.filename}" безвозвратно удалён`
-        : `Медиа файл "${media.filename}" перемещён в корзину`,
-      details: {
+      module: 'media',
+      message: deleteMessage,
+      payload: {
         filename: media.filename,
         entityType: media.entityType,
         storageStatus: media.storageStatus,
       },
+      subject: { type: 'media', id },
     })
   }
 
@@ -597,14 +598,14 @@ export class MediaService {
       source: 'media',
       type: 'media.restored',
       severity: 'info',
-      entityType: 'media',
-      entityId: id,
+      module: 'media',
       message: `Медиа файл "${media.filename}" восстановлен из корзины`,
-      details: {
+      payload: {
         filename: media.filename,
         entityType: media.entityType,
         restoredPath: restoredMedia.localPath,
       },
+      subject: { type: 'media', id },
     })
 
     return restoredMedia

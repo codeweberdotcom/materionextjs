@@ -32,7 +32,7 @@ export class AccountRulesService {
     tariffPlanCode?: string
   ): Promise<{ allowed: boolean; reason?: string }> {
     // Получаем тарифный план
-    const planCode = tariffPlanCode || 'FREE'
+    const planCode = (tariffPlanCode || 'FREE') as any
     const tariffPlan = await tariffPlanService.getPlanByCode(planCode)
     
     if (!tariffPlan) {
@@ -64,7 +64,7 @@ export class AccountRulesService {
 
     // Выполняем проверку
     const result = await rulesService.evaluate(facts, {
-      category: ['tariff', 'limit']
+      category: 'limit' as any
     })
 
     // Проверяем, есть ли ошибки (события типа limit_exceeded)
@@ -138,7 +138,7 @@ export class AccountRulesService {
 
     // Выполняем проверку
     const result = await rulesService.evaluate(facts, {
-      category: ['tariff', 'limit']
+      category: 'limit' as any
     })
 
     // Проверяем ошибки
@@ -201,7 +201,7 @@ export class AccountRulesService {
 
     // Выполняем проверку
     const result = await rulesService.evaluate(facts, {
-      category: ['limit']
+      category: 'limit' as any
     })
 
     // Проверяем, есть ли событие access_granted

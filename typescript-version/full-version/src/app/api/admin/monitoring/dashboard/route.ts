@@ -85,7 +85,18 @@ async function checkRedisConnection(): Promise<{ status: 'up' | 'down'; latency?
 // Функция проверки Socket.IO
 async function checkSocketIOStatus(): Promise<boolean> {
   try {
-    return process.env.NODE_ENV === 'development' || process.env.SOCKET_ENABLED === 'true'
+    const wsPort = process.env.WEBSOCKET_PORT || '3001'
+    const healthUrl = `http://localhost:${wsPort}/health`
+    
+    const response = await fetch(healthUrl, {
+      method: 'GET',
+      signal: AbortSignal.timeout(5000) // 5 sec timeout
+    })
+    
+    if (!response.ok) return false
+    
+    const data = await response.json()
+    return data.status === 'ok'
   } catch (error) {
     return false
   }

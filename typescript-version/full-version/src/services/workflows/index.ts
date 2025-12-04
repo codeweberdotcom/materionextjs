@@ -64,8 +64,6 @@ export type {
   WorkflowType,
   ListingState as WorkflowListingState,
   ListingEvent as WorkflowListingEvent,
-  UserState,
-  UserEvent,
   CompanyState,
   CompanyEvent,
   VerificationState,

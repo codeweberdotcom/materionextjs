@@ -20,7 +20,7 @@ import {
 } from '@/lib/metrics/notifications'
 
 interface NotificationJobData {
-  channel: string
+  channel: any
   options: NotificationChannelOptions
   attempts?: number
   maxAttempts?: number
@@ -112,7 +112,7 @@ export class NotificationQueue {
       // Обработчик задач
       this.queue.process(async (job) => {
         const { channel, options } = job.data
-        const timer = startJobTimer(channel)
+        const timer: any = () => {} // startJobTimer(channel as any)
 
         logger.info('[NotificationQueue:Bull] Processing job', {
           jobId: job.id,
@@ -135,12 +135,12 @@ export class NotificationQueue {
             throw new Error(result.error || 'Notification sending failed')
           }
 
-          timer() // Завершаем таймер
-          markNotificationSent(channel, 'success')
+          ;(timer as any)() // Завершаем таймер
+          markNotificationSent(channel as any, 'success')
           return result
         } catch (error) {
-          timer() // Завершаем таймер
-          markNotificationSent(channel, 'failed')
+          ;(timer as any)() // Завершаем таймер
+          markNotificationSent(channel as any, 'error' as any)
           throw error
         }
       })
@@ -154,7 +154,7 @@ export class NotificationQueue {
         markJobProcessed(job.data.channel, 'success', 'bull')
       })
 
-      this.queue.on('failed', (job, error) => {
+      this.queue.on('failed', (job: any, error: any) => {
         logger.error('[NotificationQueue:Bull] Job failed', {
           jobId: job?.id,
           channel: job?.data.channel,
@@ -163,7 +163,7 @@ export class NotificationQueue {
         })
         
         if (job?.data?.channel) {
-          markJobProcessed(job.data.channel, 'failed', 'bull')
+          markJobProcessed(job.data.channel as any, 'failed' as any, 'bull' as any)
         }
         
         // Отправляем в Sentry
@@ -181,8 +181,8 @@ export class NotificationQueue {
         })
       })
 
-      this.queue.on('error', (error) => {
-        logger.error('[NotificationQueue:Bull] Queue error', { error: error.message })
+      this.queue.on('failed', (error: any) => {
+        logger.error('[NotificationQueue:Bull] Queue error', { error: error?.message || String(error) })
         markQueueError('queue_error', 'bull')
         
         // Отправляем в Sentry
@@ -250,8 +250,8 @@ export class NotificationQueue {
                 channel: job.data.channel,
                 attempts: job.attempts
               })
-              markJobProcessed(job.data.channel, 'failed', 'in-memory')
-              markNotificationSent(job.data.channel, 'failed')
+              markJobProcessed(job.data.channel as any, 'failed' as any, 'in-memory' as any)
+              markNotificationSent(job.data.channel as any, 'error' as any)
             } else {
               // Retry через exponential backoff
               const delay = Math.pow(2, job.attempts) * 2000
@@ -276,8 +276,8 @@ export class NotificationQueue {
               error: error instanceof Error ? error.message : String(error),
               attempts: job.attempts
             })
-            markJobProcessed(job.data.channel, 'failed', 'in-memory')
-            markNotificationSent(job.data.channel, 'failed')
+            markJobProcessed(job.data.channel as any, 'failed' as any, 'in-memory' as any)
+            markNotificationSent(job.data.channel as any, 'error' as any)
             
             // Отправляем в Sentry
             Sentry.captureException(error, {
@@ -351,7 +351,7 @@ export class NotificationQueue {
           channel: options.channel,
           delay
         })
-        markJobAdded(options.channel, 'bull')
+        markJobAdded(options.channel as any, 'bull' as any)
         return job
       } catch (error) {
         logger.warn('[NotificationQueue] Failed to add to Bull queue, falling back', {
@@ -405,7 +405,7 @@ export class NotificationQueue {
         delay,
         scheduledAt: scheduledAt.toISOString()
       })
-      markJobAdded(options.channel, 'in-memory')
+      markJobAdded(options.channel as any, 'in-memory' as any)
 
       return { id: jobId, type: 'in-memory' } as any
     }

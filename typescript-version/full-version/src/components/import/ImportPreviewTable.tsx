@@ -403,10 +403,7 @@ function TableContent({
                 onClick={() => onRowClick(row.rowIndex)}
                 style={{
                   cursor: 'pointer',
-                  backgroundColor: hasErrors ? 'rgba(211, 47, 47, 0.08)' : 'transparent',
-                  '&:hover': {
-                    backgroundColor: hasErrors ? 'rgba(211, 47, 47, 0.12)' : 'rgba(0, 0, 0, 0.04)'
-                  }
+                  backgroundColor: hasErrors ? 'rgba(211, 47, 47, 0.08)' : 'transparent'
                 }}
               >
                 <td>

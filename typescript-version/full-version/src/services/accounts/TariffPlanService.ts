@@ -52,7 +52,7 @@ export class TariffPlanService {
    * Получить тарифный план FREE (по умолчанию)
    */
   async getFreePlan(): Promise<TariffPlan> {
-    const plan = await this.getPlanByCode('FREE')
+    const plan = await this.getPlanByCode('FREE' as any)
     if (!plan) {
       throw new Error('FREE tariff plan not found. Please run database seed.')
     }

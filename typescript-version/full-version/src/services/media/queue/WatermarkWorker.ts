@@ -181,7 +181,7 @@ export async function processWatermark(
         if (variant.s3Key && media.s3Bucket) {
           // Загружаем в S3
           const mimeType = media.mimeType || 'image/webp'
-          await storageService.uploadBuffer(resultBuffer, variant.s3Key, mimeType)
+          await (storageService as any).uploadBuffer(resultBuffer, variant.s3Key, mimeType)
           logger.debug('[WatermarkWorker] Uploaded watermarked variant to S3', {
             mediaId,
             variantKey,
@@ -192,7 +192,7 @@ export async function processWatermark(
         processedCount++
         
         // Обновляем прогресс
-        await job.updateProgress(Math.round((processedCount / variantsToProcess.length) * 100))
+        await (job as any).updateProgress(Math.round((processedCount / variantsToProcess.length) * 100))
 
       } catch (variantError) {
         logger.error('[WatermarkWorker] Failed to process variant', {
@@ -223,14 +223,14 @@ export async function processWatermark(
         source: 'media',
         type: 'media.watermark_applied',
         severity: 'info',
-        entityType: 'media',
-        entityId: mediaId,
+        module: 'media',
         message: `Водяной знак применён к медиа файлу`,
-        details: {
+        payload: {
           entityType,
           processedVariants: processedCount,
           variants: variantsToProcess,
         },
+        subject: { type: 'media', id: mediaId },
       })
     }
 

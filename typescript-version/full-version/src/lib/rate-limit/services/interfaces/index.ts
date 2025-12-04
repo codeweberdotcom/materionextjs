@@ -59,7 +59,6 @@ export interface RateLimitEngine {
       isActive: boolean
       notes: string | null
       user: { id: string; name: string | null; email: string | null } | null
-      blockedByUser: { id: string; email: string | null } | null
     }>
     total: number
     nextCursor?: string
@@ -108,7 +107,7 @@ export interface RateLimitEventRecorder {
 }
 
 export interface StoreManager {
-  getStore(): import('../../stores').RateLimitStore
+  getStore(): Promise<import('../../stores').RateLimitStore>
   switchToFallback(): void
   healthCheck(): Promise<{ healthy: boolean; services: Record<string, { healthy: boolean; latency?: number; error?: string }> }>
   shutdown(): Promise<void>

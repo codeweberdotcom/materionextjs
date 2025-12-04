@@ -590,7 +590,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   // Bulk operations
   const getSelectedUsers = () => {
-    const selectedIds = Object.keys(rowSelection).filter(id => rowSelection[id])
+    const selectedIds = Object.keys(rowSelection).filter(id => (rowSelection as any)[id])
     // Since getRowId returns String(row.id), we need to find users by ID
     return selectedIds
       .map(id => filteredData.find(user => String(user.id) === id))
@@ -1199,8 +1199,8 @@ return (
                  entityType="users"
                  availableFormats={['xlsx', 'csv']}
                  filters={{}}
-                 selectedIds={Object.keys(rowSelection).filter(id => rowSelection[id])}
-                 onError={(error) => toast.error(`Export failed: ${error.message}`)}
+                 selectedIds={Object.keys(rowSelection).filter(id => (rowSelection as any)[id])}
+                 onError={(error) => toast.error(`Export failed: ${(error as any).message || error}`)}
                />
                <Button
                  color='primary'
@@ -1403,7 +1403,7 @@ return (
             setFilteredData([...updatedUsers])
           }
         }}
-        onError={(error) => toast.error(`Import failed: ${error.message}`)}
+        onError={(error) => toast.error(`Import failed: ${(error as any).message || error}`)}
       />
     </>
   )

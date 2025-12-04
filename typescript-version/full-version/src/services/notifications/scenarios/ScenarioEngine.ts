@@ -85,7 +85,7 @@ export class ScenarioEngine {
               id: user.id,
               email: user.email || undefined,
               phone: user.phone || undefined,
-              role: user.role || undefined,
+              role: typeof user.role === 'string' ? user.role : (user.role as any)?.name || undefined,
               status: user.emailVerified && user.phoneVerified ? 'verified' : 'unverified'
             }
           }

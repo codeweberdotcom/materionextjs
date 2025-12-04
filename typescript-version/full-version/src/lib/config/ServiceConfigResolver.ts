@@ -193,7 +193,8 @@ class ServiceConfigResolver {
       sentry: 'https://',
       smtp: 'smtp://',
       s3: 'http://',
-      elasticsearch: 'http://'
+      elasticsearch: 'http://',
+      firecrawl: 'https://'
     }
     return protocols[serviceName] || 'http://'
   }

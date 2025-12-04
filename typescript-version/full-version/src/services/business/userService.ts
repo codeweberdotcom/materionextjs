@@ -36,7 +36,7 @@ export class UserService {
       // Send welcome email
       try {
         await emailService.sendEmail({
-          to: user.email,
+          to: user.email || '',
           subject: 'Welcome to our platform',
           html: `<h1>Welcome ${user.name || 'User'}!</h1><p>Your account has been created successfully.</p>`
         })

@@ -25,14 +25,14 @@ export const fetchUsers = createAsyncThunk('chat/fetchUsers', async () => {
 
     return users.map<ContactType>((user: User & { role?: { name?: string } | string | null }) => ({
       id: user.id,
-      fullName: user.name || user.email,
+      fullName: user.name || user.email || '',
       role:
         typeof user.role === 'string'
           ? user.role
           : (user.role && typeof user.role === 'object' ? user.role?.name : undefined) ??
             (user as { roleId?: string }).roleId ??
             'User',
-      about: user.email,
+      about: user.email || '',
       avatar: user.image || undefined,
       avatarColor: 'primary',
       status: 'offline'

@@ -139,7 +139,7 @@ export class MediaProcessingWorker {
                 await mediaSyncQueue.add({
                   operation: 'upload_to_s3',
                   mediaId: media.id,
-                  localPath: media.localPath,
+                  localPath: media.localPath || undefined,
                   deleteSource: deleteSourceAfterSync,
                 })
                 logger.info('[MediaProcessingWorker] S3 sync job queued (background)', {
@@ -154,7 +154,7 @@ export class MediaProcessingWorker {
                 await mediaSyncQueue.add({
                   operation: 'upload_to_s3',
                   mediaId: media.id,
-                  localPath: media.localPath,
+                  localPath: media.localPath || undefined,
                   deleteSource: deleteSourceAfterSync,
                 }, { delay: delayMs })
                 logger.info('[MediaProcessingWorker] S3 sync job queued (delayed)', {

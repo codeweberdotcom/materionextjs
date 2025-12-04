@@ -134,7 +134,7 @@ export class ImportService implements IImportService {
       }
 
       // Валидируем данные через адаптер
-      let validationErrors: ValidationError[] = []
+      let validationErrors: any = []
       if (!options.skipValidation) {
         validationErrors = adapter.validateImportData(dataToProcess)
       }
@@ -144,7 +144,7 @@ export class ImportService implements IImportService {
         return {
           successCount: 0,
           errorCount: validationErrors.length,
-          errors: validationErrors.map(error => ({
+          errors: validationErrors.map((error: any) => ({
             row: error.row || 0,
             field: error.field,
             message: error.message,
@@ -159,7 +159,7 @@ export class ImportService implements IImportService {
       // Если importOnlyValid === true, пропускаем невалидные строки
       const validData = dataToProcess.filter((_, index) => {
         const rowIndex = index + 1
-        const error = validationErrors.find(e => e.row === rowIndex)
+        const error = validationErrors.find((e: any) => e.row === rowIndex)
         // Если importOnlyValid === true, пропускаем строки с ошибками
         if (options.importOnlyValid && error) {
           return false
@@ -215,7 +215,7 @@ export class ImportService implements IImportService {
       // Добавляем ошибки валидации к результату
       const allErrors = [
         ...result.errors,
-        ...validationErrors.map(error => ({
+        ...validationErrors.map((error: any) => ({
           row: error.row || 0,
           field: error.field,
           message: error.message,

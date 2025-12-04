@@ -192,9 +192,9 @@ const AccountCard = ({
           <Typography variant='caption' color='text.secondary'>
             Создан: {new Date(account.createdAt).toLocaleDateString('ru-RU')}
           </Typography>
-          {account.tariffPlan.priceMonthly > 0 && (
+          {account.tariffPlan.price > 0 && (
             <Typography variant='caption' color='text.secondary'>
-              {account.tariffPlan.priceMonthly} ₽/мес
+              {account.tariffPlan.price} ₽/мес
             </Typography>
           )}
         </Box>

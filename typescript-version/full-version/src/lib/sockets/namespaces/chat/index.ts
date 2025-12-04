@@ -232,8 +232,8 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
         senderId: newMessage.senderId,
         sender: {
           id: newMessage.sender.id,
-          name: newMessage.sender.name || undefined,
-          email: newMessage.sender.email
+          name: newMessage.sender.name || '',
+          email: newMessage.sender.email || ''
         },
         roomId: newMessage.roomId,
         readAt: newMessage.readAt?.toISOString(),
@@ -334,8 +334,8 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
           senderId: msg.senderId,
           sender: {
             id: msg.sender.id,
-            name: msg.sender.name || undefined,
-            email: msg.sender.email
+            name: msg.sender.name || '',
+            email: msg.sender.email || ''
           },
           roomId: msg.roomId,
           readAt: msg.readAt ? msg.readAt.toISOString() : undefined,
