@@ -212,6 +212,16 @@
     "patchedDependencies": {
       "tsx": "patches/tsx.patch",
       "next": "patches/next.patch"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "prisma",
+      "@prisma/client",
+      "@prisma/engines",
+      "@sentry/cli",
+      "protobufjs",
+      "msgpackr-extract"
+    ]
   }
 }
