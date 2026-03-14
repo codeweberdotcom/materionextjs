@@ -271,19 +271,31 @@ const AccountDetails = () => {
 return
         }
 
-        // Fetch available languages from JSON
+        // Fetch available languages from API
         try {
-          const languagesData = await import('@/data/languages.json')
+          const langRes = await fetch('/api/languages')
 
-          setLanguages(languagesData.default)
+          if (langRes.ok) {
+            setLanguages(await langRes.json())
+          } else {
+            throw new Error('API error')
+          }
         } catch (error) {
           console.error('Error loading languages:', error)
-          setLanguages([
-            { code: 'en', name: 'English' },
-            { code: 'fr', name: 'French' },
-            { code: 'ar', name: 'Arabic' },
-            { code: 'ru', name: 'Russian' }
-          ])
+
+          // Fallback to static file
+          try {
+            const languagesData = await import('@/data/languages.json')
+
+            setLanguages(languagesData.default)
+          } catch {
+            setLanguages([
+              { code: 'en', name: 'English' },
+              { code: 'fr', name: 'French' },
+              { code: 'ar', name: 'Arabic' },
+              { code: 'ru', name: 'Russian' }
+            ])
+          }
         }
 
         // Fetch available currencies

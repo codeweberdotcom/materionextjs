@@ -132,7 +132,7 @@ const LanguagesListTable = () => {
   useEffect(() => {
     const fetchLanguages = async () => {
       try {
-        const response = await fetch('/api/languages')
+        const response = await fetch('/api/admin/references/languages')
 
         if (response.ok) {
           const languages = await response.json()
@@ -210,9 +210,6 @@ const LanguagesListTable = () => {
               onChange={() => handleToggleLanguageStatus(row.original.id)}
               size='small'
             />
-            <IconButton onClick={() => handleDeleteLanguage(row.original.id, row.original.name)} title={dictionary.navigation.deleteTranslation}>
-              <i className='ri-delete-bin-7-line text-textSecondary' />
-            </IconButton>
           </div>
         ),
         enableSorting: false
@@ -247,34 +244,7 @@ const LanguagesListTable = () => {
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
 
-  const handleDeleteLanguage = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete language "${name}"?`)) {
-      return
-    }
-
-    try {
-      const response = await fetch(`/api/admin/references/languages/${id}`, {
-        method: 'DELETE'
-      })
-
-      if (response.ok) {
-        const updatedData = data.filter(lang => lang.id !== id)
-
-        setData(updatedData)
-        setFilteredData(updatedData)
-        toast.success('Language deleted successfully!')
-      } else {
-        const error = await response.json()
-
-        toast.error(error.message || 'Failed to delete language')
-      }
-    } catch (error) {
-      console.error('Error deleting language:', error)
-      toast.error('Failed to delete language')
-    }
-  }
-
-  const handleAddLanguage = async (languageData: { name: string; code: string; isActive: boolean }) => {
+  const handleAddLanguage = async (languageData: { name: string; code: string; direction: string; isActive: boolean }) => {
     try {
       const response = await fetch('/api/admin/references/languages', {
         method: 'POST',
@@ -492,6 +462,7 @@ const LanguagesListTable = () => {
         open={addLanguageOpen}
         handleClose={() => setAddLanguageOpen(false)}
         onSubmit={handleAddLanguage}
+        existingCodes={data.map(lang => lang.code)}
       />
       {editingLanguage && (
         <EditLanguageDialog

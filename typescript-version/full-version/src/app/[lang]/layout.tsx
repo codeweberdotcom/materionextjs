@@ -48,7 +48,7 @@ const RootLayout = async (props: ChildrenType & { params: Promise<{ lang: Locale
   // Vars
   const headersList = await headers()
   const systemMode = await getSystemMode()
-  const direction = i18n.langDirection[params.lang]
+  const direction = i18n.langDirection[params.lang] || 'ltr'
 
   return (
     <NextAuthProvider>

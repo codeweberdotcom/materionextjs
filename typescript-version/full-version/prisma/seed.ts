@@ -396,26 +396,26 @@ async function main() {
     }
   })
 
-  // Create some sample languages if they don't exist
-  await prisma.language.upsert({
-    where: { code: 'ru' },
-    update: {},
-    create: {
-      name: 'Russian',
-      code: 'ru',
-      isActive: true
-    }
-  })
+  // Create languages with direction
+  const languagesData = [
+    { name: 'English', code: 'en', direction: 'ltr' },
+    { name: 'Russian', code: 'ru', direction: 'ltr' },
+    { name: 'French', code: 'fr', direction: 'ltr' },
+    { name: 'Arabic', code: 'ar', direction: 'rtl' }
+  ]
 
-  await prisma.language.upsert({
-    where: { code: 'en' },
-    update: {},
-    create: {
-      name: 'English',
-      code: 'en',
-      isActive: true
-    }
-  })
+  for (const lang of languagesData) {
+    await prisma.language.upsert({
+      where: { code: lang.code },
+      update: { direction: lang.direction },
+      create: {
+        name: lang.name,
+        code: lang.code,
+        direction: lang.direction,
+        isActive: true
+      }
+    })
+  }
 
   // Add countries
   for (const country of countriesData) {

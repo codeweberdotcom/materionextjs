@@ -17,7 +17,9 @@ const invalidLangs = ['_next']
 const TranslationWrapper = (
   props: { headersList: Awaited<ReturnType<typeof headers>>; lang: Locale } & ChildrenType
 ) => {
-  const doesLangExist = i18n.locales.includes(props.lang)
+  // Accept languages from static list OR any valid-looking locale code (2-3 lowercase chars)
+  // getDictionary handles fallback to English for unknown locales
+  const doesLangExist = i18n.locales.includes(props.lang) || /^[a-z]{2,3}$/.test(props.lang)
 
   // ℹ️ This doesn't mean MISSING, it means INVALID
   const isInvalidLang = invalidLangs.includes(props.lang)

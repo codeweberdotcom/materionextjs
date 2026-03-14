@@ -80,7 +80,12 @@ const AddTranslationDialog = ({ open, handleClose, onSubmit, editTranslation, on
   const [languages, setLanguages] = useState<{code: string, name: string}[]>([])
 
   useEffect(() => {
-    import('@/data/languages.json').then(data => setLanguages(data.default))
+    fetch('/api/languages')
+      .then(res => res.json())
+      .then(data => setLanguages(data))
+      .catch(() => {
+        import('@/data/languages.json').then(data => setLanguages(data.default))
+      })
   }, [])
 
   const namespaces = [

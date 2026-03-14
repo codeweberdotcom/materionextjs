@@ -16,9 +16,6 @@ import ClickAwayListener from '@mui/material/ClickAwayListener'
 import MenuList from '@mui/material/MenuList'
 import MenuItem from '@mui/material/MenuItem'
 
-// Type Imports
-import type { Locale } from '@configs/i18n'
-
 // Hook Imports
 import { useSettings } from '@core/hooks/useSettings'
 
@@ -50,7 +47,13 @@ const LanguageDropdown = () => {
   const { lang } = useParams()
 
   useEffect(() => {
-    import('@/data/languages.json').then(data => setLanguageData(data.default))
+    fetch('/api/languages')
+      .then(res => res.json())
+      .then(data => setLanguageData(data))
+      .catch(() => {
+        // Fallback to static file
+        import('@/data/languages.json').then(data => setLanguageData(data.default))
+      })
   }, [])
 
   const handleClose = () => {
@@ -60,6 +63,8 @@ const LanguageDropdown = () => {
   const handleToggle = () => {
     setOpen(prevOpen => !prevOpen)
   }
+
+  if (languageData.length <= 1) return null
 
   return (
     <>

@@ -1,10 +1,29 @@
 
+import fs from 'fs'
+import path from 'path'
+
 import { NextRequest, NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-
 import { prisma } from '@/libs/prisma'
+
+/** Update languages.json from current DB state */
+async function updateLanguagesJson() {
+  const languages = await prisma.language.findMany({
+    where: { isActive: true },
+    orderBy: { code: 'asc' }
+  })
+
+  const data = languages.map(lang => ({
+    code: lang.code,
+    name: lang.code.charAt(0).toUpperCase() + lang.code.slice(1),
+    direction: lang.direction || 'ltr'
+  }))
+
+  const outputPath = path.join(process.cwd(), 'src/data/languages.json')
+
+  fs.writeFileSync(outputPath, JSON.stringify(data, null, 2) + '\n')
+}
 
 // PATCH - Toggle language status (admin only)
 export async function PATCH(
@@ -48,6 +67,18 @@ export async function PATCH(
       )
     }
 
+    // Protection: prevent deactivating the last active language
+    if (currentLanguage.isActive) {
+      const activeCount = await prisma.language.count({ where: { isActive: true } })
+
+      if (activeCount <= 1) {
+        return NextResponse.json(
+          { message: 'Cannot deactivate the last active language' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Toggle the status
     const updatedLanguage = await prisma.language.update({
       where: { id: languageId },
@@ -55,6 +86,9 @@ export async function PATCH(
         isActive: !currentLanguage.isActive
       }
     })
+
+    // Update languages.json
+    await updateLanguagesJson()
 
     return NextResponse.json(updatedLanguage)
   } catch (error) {
@@ -84,11 +118,18 @@ export async function PUT(
 
     const { id: languageId } = await params
     const body = await request.json()
-    const { name, code, isActive } = body
+    const { name, code, direction, isActive } = body
 
     if (!name || !code) {
       return NextResponse.json(
         { message: 'Name and code are required' },
+        { status: 400 }
+      )
+    }
+
+    if (direction && !['ltr', 'rtl'].includes(direction)) {
+      return NextResponse.json(
+        { message: 'Direction must be "ltr" or "rtl"' },
         { status: 400 }
       )
     }
@@ -100,9 +141,13 @@ export async function PUT(
         data: {
           name,
           code,
+          ...(direction && { direction }),
           isActive
         }
       })
+
+      // Update languages.json
+      await updateLanguagesJson()
 
       return NextResponse.json(updatedLanguage)
     } catch (error: any) {
@@ -125,49 +170,11 @@ return NextResponse.json(
   }
 }
 
-// DELETE - Delete language (admin only)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const { id: languageId } = await params
-
-    // Find and delete the language from database
-    try {
-      const deletedLanguage = await prisma.language.delete({
-        where: { id: languageId }
-      })
-
-      return NextResponse.json({
-        message: 'Language deleted successfully',
-        deletedLanguage
-      })
-    } catch (error: any) {
-      if (error.code === 'P2025') {
-        return NextResponse.json(
-          { message: 'Language not found' },
-          { status: 404 }
-        )
-      }
-
-      throw error
-    }
-  } catch (error) {
-    console.error('Error deleting language:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
-  }
+// DELETE - Disabled. Use PATCH to deactivate instead.
+// Deleting a language would orphan translation files and DB records.
+export async function DELETE() {
+  return NextResponse.json(
+    { message: 'Deleting languages is not allowed. Use deactivation instead.' },
+    { status: 403 }
+  )
 }
