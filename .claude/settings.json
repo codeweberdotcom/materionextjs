@@ -1,3 +1,21 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(*)"
+    ],
+    "deny": [
+      "Bash(rm *)",
+      "Bash(rm -rf *)",
+      "Bash(rmdir *)",
+      "Bash(del *)",
+      "Bash(git push --force*)",
+      "Bash(git reset --hard*)",
+      "Bash(git clean -f*)",
+      "Bash(docker rm *)",
+      "Bash(docker rmi *)",
+      "Bash(DROP *)",
+      "Bash(DELETE *)"
+    ]
+  },
   "disabledMcpServers": ["mysql"]
 }

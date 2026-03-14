@@ -141,7 +141,7 @@ const DistrictsListTable = () => {
   useEffect(() => {
     const fetchDistricts = async () => {
       try {
-        const response = await fetch('/api/districts')
+        const response = await fetch(`/api/districts?locale=${locale}`)
 
         if (response.ok) {
           const districts = await response.json()

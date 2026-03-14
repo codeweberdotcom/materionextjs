@@ -148,7 +148,7 @@ const StatesListTable = () => {
   useEffect(() => {
     const fetchStates = async () => {
       try {
-        const response = await fetch('/api/admin/references/states')
+        const response = await fetch(`/api/admin/references/states?locale=${locale}`)
 
         if (response.ok) {
           const states = await response.json()
@@ -305,7 +305,7 @@ const StatesListTable = () => {
 
       if (response.ok) {
         // Refetch the data
-        const refetchResponse = await fetch('/api/admin/references/states')
+        const refetchResponse = await fetch(`/api/admin/references/states?locale=${locale}`)
 
         if (refetchResponse.ok) {
           const states = await refetchResponse.json()
@@ -342,7 +342,7 @@ const StatesListTable = () => {
 
       if (response.ok) {
         // Refetch the data to ensure consistency
-        const refetchResponse = await fetch('/api/admin/references/states')
+        const refetchResponse = await fetch(`/api/admin/references/states?locale=${locale}`)
 
         if (refetchResponse.ok) {
           const states = await refetchResponse.json()
@@ -372,7 +372,7 @@ const StatesListTable = () => {
 
       if (response.ok) {
         // Refetch the data
-        const refetchResponse = await fetch('/api/admin/references/states')
+        const refetchResponse = await fetch(`/api/admin/references/states?locale=${locale}`)
 
         if (refetchResponse.ok) {
           const states = await refetchResponse.json()
@@ -405,7 +405,7 @@ const StatesListTable = () => {
 
       if (response.ok) {
         // Refetch the data
-        const refetchResponse = await fetch('/api/admin/references/states')
+        const refetchResponse = await fetch(`/api/admin/references/states?locale=${locale}`)
 
         if (refetchResponse.ok) {
           const states = await refetchResponse.json()

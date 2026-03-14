@@ -1,16 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/libs/prisma'
+import { getDictionary } from '@/utils/formatting/getDictionary'
+import type { Locale } from '@configs/i18n'
 
 // GET - Get all active countries (public access)
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const locale = (request.nextUrl.searchParams.get('locale') || 'en') as Locale
+    const dictionary = await getDictionary(locale)
+    const countryNames = dictionary?.references?.countries || {}
+
     const countries = await prisma.country.findMany({
       where: { isActive: true },
       include: { states: true },
       orderBy: { name: 'asc' }
     })
 
-    return NextResponse.json(countries)
+    const translated = countries.map(c => ({
+      ...c,
+      name: countryNames[c.code] || c.name
+    }))
+
+    return NextResponse.json(translated)
   } catch (error) {
     console.error('Error fetching countries:', error instanceof Error ? error.message : String(error))
     

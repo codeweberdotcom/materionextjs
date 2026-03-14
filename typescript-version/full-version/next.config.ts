@@ -58,6 +58,16 @@ const nextConfig: NextConfig = {
 
     return config
   },
+  rewrites: async () => ({
+    beforeFiles: [],
+    afterFiles: [
+      {
+        source: '/uploads/:path*',
+        destination: '/api/uploads/:path*'
+      }
+    ],
+    fallback: []
+  }),
   redirects: async () => {
     return [
       {
@@ -73,8 +83,8 @@ const nextConfig: NextConfig = {
         locale: false
       },
       {
-        source: '/((?!(?:en|fr|ar|front-pages|favicon.ico)\\b)):path',
-        destination: '/en/:path',
+        source: '/((?!(?:en|fr|ar|front-pages|favicon.ico|uploads|api|_next)\\b)):path*',
+        destination: '/en/:path*',
         permanent: true,
         locale: false
       }

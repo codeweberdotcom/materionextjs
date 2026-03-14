@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/libs/prisma'
+import { getDictionary } from '@/utils/formatting/getDictionary'
+import type { Locale } from '@configs/i18n'
 
 // GET - Get all active cities (public access)
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const locale = (request.nextUrl.searchParams.get('locale') || 'en') as Locale
+    const dictionary = await getDictionary(locale)
+    const cityNames = dictionary?.references?.cities || {}
+
     const cities = await prisma.city.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' },
@@ -14,7 +20,12 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json(cities)
+    const translated = cities.map(c => ({
+      ...c,
+      name: cityNames[c.code] || c.name
+    }))
+
+    return NextResponse.json(translated)
   } catch (error) {
     console.error('Error fetching cities:', error)
     

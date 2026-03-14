@@ -9,6 +9,8 @@ allowed-tools: Read, Write, Edit, Glob, Grep, Bash
 
 Generate a new page in the admin panel with i18n support, menu registration, and role-based access control.
 
+> **Полный процесс работы с документацией:** см. [docs/AI_WORKFLOW_GUIDE.md](../../../docs/AI_WORKFLOW_GUIDE.md)
+
 ## Usage
 
 `/page <page-name>` — e.g., `/page tariffs`, `/page invoices`

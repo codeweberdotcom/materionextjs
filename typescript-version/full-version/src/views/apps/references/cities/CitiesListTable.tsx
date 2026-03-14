@@ -135,7 +135,7 @@ const CitiesListTable = () => {
   useEffect(() => {
     const fetchCities = async () => {
       try {
-        const response = await fetch('/api/cities')
+        const response = await fetch(`/api/cities?locale=${locale}`)
 
         if (response.ok) {
           const cities = await response.json()

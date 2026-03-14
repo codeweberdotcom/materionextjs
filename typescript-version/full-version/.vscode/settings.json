@@ -49,5 +49,6 @@
     "customizer",
     "iconify",
     "tanstack"
-  ]
+  ],
+  "WillLuke.nextjs.hasPrompted": true
 }
