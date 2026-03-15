@@ -4,8 +4,11 @@ import type {
   PreviewOptions,
   ValidationError,
   ImportWarning,
-  ValidationResult
-, IEntityAdapter , MAX_IMPORT_FILE_SIZE, ALLOWED_FILE_EXTENSIONS } from '@/types/export-import'
+  ValidationResult,
+  IEntityAdapter
+} from '@/types/export-import'
+
+import { MAX_IMPORT_FILE_SIZE, ALLOWED_FILE_EXTENSIONS } from '@/types/export-import'
 import { importAdapterFactory } from './ImportAdapterFactory'
 
 /**

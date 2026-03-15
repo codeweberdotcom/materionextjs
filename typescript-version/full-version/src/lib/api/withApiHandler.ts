@@ -56,7 +56,7 @@ type ApiHandlerOptions<TBody = unknown, TParams = Record<string, string>> = {
 export function withApiHandler<TBody = unknown, TParams = Record<string, string>>(
   options: ApiHandlerOptions<TBody, TParams>
 ) {
-  return async (request: NextRequest, context?: { params?: Promise<TParams> }) => {
+  return async (request: NextRequest, context: { params: Promise<TParams> }) => {
     try {
       // 1. Аутентификация
       const { user } = await requireAuth(request)
@@ -92,7 +92,7 @@ export function withApiHandler<TBody = unknown, TParams = Record<string, string>
       }
 
       // 4. Resolve params
-      const params = (context?.params ? await context.params : {}) as TParams
+      const params = (context.params ? await context.params : {}) as TParams
 
       // 5. Бизнес-логика
       return await options.handler({ user, request, body, params })

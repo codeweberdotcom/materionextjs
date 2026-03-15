@@ -6,11 +6,8 @@ import TablePagination from '@mui/material/TablePagination'
 // Third-party Imports
 import type { Table } from '@tanstack/react-table'
 
-// Hook Imports
-import type { useTranslation } from '@/hooks/useTranslate'
-
 type LocalizedTablePaginationProps = {
-  dictionary: ReturnType<typeof useTranslation>
+  dictionary: { navigation: Record<string, string> }
   table: Table<any>
   rowsPerPageOptions?: number[]
 }

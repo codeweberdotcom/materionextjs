@@ -288,7 +288,6 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
                     districts: newValue.map(district => typeof district === 'string' ? district : district.id)
                   })
                 }}
-                loadingText={dictionary.navigation.loading}
                 renderInput={(params) => (
                   <TextField
                     {...params}

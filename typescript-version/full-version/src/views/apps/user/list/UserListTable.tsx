@@ -37,7 +37,8 @@ import CircularProgress from '@mui/material/CircularProgress'
 import classnames from 'classnames'
 import { rankItem } from '@tanstack/match-sorter-utils'
 import Skeleton from '@mui/material/Skeleton'
-import type { ColumnDef, FilterFn ,
+import type { ColumnDef, FilterFn, ColumnFiltersState, Column } from '@tanstack/react-table'
+import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -47,10 +48,8 @@ import type { ColumnDef, FilterFn ,
   getFacetedUniqueValues,
   getFacetedMinMaxValues,
   getPaginationRowModel,
-  getSortedRowModel,
-  type ColumnFiltersState,
-  type Column
- } from '@tanstack/react-table';
+  getSortedRowModel
+} from '@tanstack/react-table'
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
 import { toast } from 'react-toastify'
 

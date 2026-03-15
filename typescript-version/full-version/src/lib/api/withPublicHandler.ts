@@ -39,7 +39,7 @@ type PublicHandlerOptions<TBody = unknown, TParams = Record<string, string>> = {
 export function withPublicHandler<TBody = unknown, TParams = Record<string, string>>(
   options: PublicHandlerOptions<TBody, TParams>
 ) {
-  return async (request: NextRequest, context?: { params?: Promise<TParams> }) => {
+  return async (request: NextRequest, context: { params: Promise<TParams> }) => {
     try {
       // 1. Парсинг и валидация тела запроса (если есть schema)
       let body = undefined as unknown as TBody
@@ -63,7 +63,7 @@ export function withPublicHandler<TBody = unknown, TParams = Record<string, stri
       }
 
       // 2. Resolve params
-      const params = (context?.params ? await context.params : {}) as TParams
+      const params = (context.params ? await context.params : {}) as TParams
 
       // 3. Бизнес-логика
       return await options.handler({ request, body, params })
