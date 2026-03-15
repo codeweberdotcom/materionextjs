@@ -8,7 +8,8 @@
  * @module app/api/media/[id]
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
 import { getPublicMediaUrl, getPublicVariantUrl } from '@/utils/media'
@@ -88,6 +89,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (media.variants) {
       try {
         const variants = JSON.parse(media.variants)
+
         for (const name of Object.keys(variants)) {
           urls[name] = getPublicVariantUrl(media, name, s3PublicUrlPrefix)
         }

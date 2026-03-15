@@ -124,6 +124,7 @@ export class UserWorkflowService {
       }
 
       const permissionAction = permissionMap[event]
+
       if (!permissionAction) {
         return {
           success: false,
@@ -135,6 +136,7 @@ export class UserWorkflowService {
       }
 
       const hasPermission = checkPermission(actor as UserWithRoleLike, 'userManagement', permissionAction)
+
       if (!hasPermission) {
         return {
           success: false,
@@ -305,6 +307,7 @@ export class UserWorkflowService {
 
     // Определяем доступные события
     const availableEvents: string[] = []
+
     if (canSuspend && currentState === 'active') availableEvents.push('SUSPEND')
     if (canBlock && ['active', 'suspended'].includes(currentState)) availableEvents.push('BLOCK')
     if (canRestore && currentState === 'suspended') availableEvents.push('RESTORE')
@@ -383,11 +386,13 @@ export class UserWorkflowService {
       case 'suspended':
         return {
           status: 'suspended',
+
           // Можно добавить поля suspendedBy, suspendedAt если нужно
         }
       case 'blocked':
         return {
           status: 'blocked',
+
           // Можно добавить поля blockedBy, blockedAt если нужно
         }
       case 'active':

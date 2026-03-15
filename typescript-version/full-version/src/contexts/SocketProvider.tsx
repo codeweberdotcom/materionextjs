@@ -2,7 +2,9 @@
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
+
 import { io, type Socket } from 'socket.io-client'
+
 import { useAuth } from '@/contexts/AuthProvider'
 
 type SocketStatus = 'idle' | 'disabled' | 'connecting' | 'connected' | 'disconnected'
@@ -16,14 +18,18 @@ type SocketContextValue = {
 }
 
 const SOCKETS_ENABLED = (process.env.NEXT_PUBLIC_ENABLE_SOCKET_IO ?? 'true') !== 'false'
+
+
 // Приоритет: NEXT_PUBLIC_WS_URL > NEXT_PUBLIC_SOCKET_URL > текущий хост на порту 3001
 const SOCKET_BASE_URL = (
   process.env.NEXT_PUBLIC_WS_URL?.replace(/\/$/, '') ||
   process.env.NEXT_PUBLIC_SOCKET_URL?.replace(/\/$/, '') ||
   (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://localhost:3001')
 )
+
 const SOCKET_PATH = process.env.NEXT_PUBLIC_SOCKET_PATH || '/socket.io'
 const API_BASE_URL = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '')
+
 const SESSION_TOKEN_ENDPOINT = API_BASE_URL
   ? `${API_BASE_URL}/auth/session-token`
   : '/api/auth/session-token'
@@ -60,13 +66,15 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     setChatSocket(prev => {
       prev?.off()
       prev?.close()
-      return null
+      
+return null
     })
 
     setNotificationSocket(prev => {
       prev?.off()
       prev?.close()
-      return null
+      
+return null
     })
   }
 
@@ -74,16 +82,19 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
     if (!SOCKETS_ENABLED) {
       cleanupSockets()
       setStatus('disabled')
-      return
+      
+return
     }
 
     if (!user?.id) {
       cleanupSockets()
       setStatus('idle')
-      return
+      
+return
     }
 
     let disposed = false
+
     setStatus('connecting')
 
     const getToken = async () => {
@@ -94,22 +105,28 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
         if (!response.ok) {
           setLastError(`Failed to fetch session token (status ${response.status}).`)
-          return ''
+          
+return ''
         }
 
         const data = await response.json()
-        return data.token as string
+
+        
+return data.token as string
       } catch (error) {
         setLastError(error instanceof Error ? error.message : 'Unable to fetch session token.')
-        return ''
+        
+return ''
       }
     }
 
     const initializeSockets = async () => {
       const token = await getToken()
+
       if (!token || disposed) {
         setStatus('disconnected')
-        return
+        
+return
       }
 
       const sharedOptions = {
@@ -128,6 +145,7 @@ export const SocketProvider = ({ children }: { children: ReactNode }) => {
 
       const updateStatus = () => {
         const anyConnected = nextChatSocket.connected || nextNotificationSocket.connected
+
         setStatus(anyConnected ? 'connected' : 'disconnected')
       }
 

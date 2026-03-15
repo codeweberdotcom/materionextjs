@@ -38,23 +38,27 @@ const AssignManagerDialog = ({
   accountName
 }: Props) => {
   const [email, setEmail] = useState('')
+
   const [permissions, setPermissions] = useState<ManagerPermissions>({
     canEdit: false,
     canManage: false,
     canDelete: false
   })
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
     if (!email.trim()) {
       setError('Email пользователя обязателен')
-      return
+      
+return
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
       setError('Введите корректный email')
-      return
+      
+return
     }
 
     setLoading(true)

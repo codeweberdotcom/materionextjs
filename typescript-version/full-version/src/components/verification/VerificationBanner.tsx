@@ -4,11 +4,12 @@
 import { useState, useEffect } from 'react'
 
 // MUI Imports
+import Link from 'next/link'
+
 import Alert from '@mui/material/Alert'
 import AlertTitle from '@mui/material/AlertTitle'
 import Button from '@mui/material/Button'
 import Box from '@mui/material/Box'
-import Link from 'next/link'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
@@ -38,12 +39,14 @@ export function VerificationBanner({
     // Проверяем, было ли предупреждение скрыто ранее
     const dismissedKey = `verification-banner-dismissed-${email || phone || 'default'}`
     const wasDismissed = localStorage.getItem(dismissedKey) === 'true'
+
     setDismissed(wasDismissed)
   }, [email, phone])
 
   const handleDismiss = () => {
     setDismissed(true)
     const dismissedKey = `verification-banner-dismissed-${email || phone || 'default'}`
+
     localStorage.setItem(dismissedKey, 'true')
     onClose?.()
   }

@@ -31,7 +31,9 @@ export class RateLimitContainer {
     if (!RateLimitContainer.instance) {
       RateLimitContainer.instance = new RateLimitContainer(prismaClient)
     }
-    return RateLimitContainer.instance
+
+    
+return RateLimitContainer.instance
   }
 
   getConfigService(): ConfigService {

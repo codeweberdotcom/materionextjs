@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import CardHeader from '@mui/material/CardHeader'
@@ -11,6 +12,7 @@ import Alert from '@mui/material/Alert'
 import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid2'
 import Skeleton from '@mui/material/Skeleton'
+
 import CustomAvatar from '@core/components/mui/Avatar'
 import { Variant1 } from './system-metrics-variants'
 
@@ -39,6 +41,7 @@ const MonitoringMetricsPage = () => {
     databaseQueries: [],
     systemMetrics: []
   })
+
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [rawMetrics, setRawMetrics] = useState<string>('')
@@ -51,11 +54,13 @@ const MonitoringMetricsPage = () => {
 
         // Запрашиваем метрики из API
         const response = await fetch('/api/metrics')
+
         if (!response.ok) {
           throw new Error(`Failed to fetch metrics: ${response.statusText}`)
         }
 
         const metricsText = await response.text()
+
         setRawMetrics(metricsText)
 
         // Парсим метрики
@@ -68,16 +73,20 @@ const MonitoringMetricsPage = () => {
             .filter(line => !line.startsWith('#') && line.trim())
             .map(line => {
               const match = line.match(/^([a-zA-Z_:][a-zA-Z0-9_:]*)/)
-              return match ? match[1] : null
+
+              
+return match ? match[1] : null
             })
             .filter((name): name is string => name !== null)
           
           const httpMetrics = allMetricNames.filter(name => 
             name.toLowerCase().includes('http') || name.toLowerCase().includes('request')
           )
+
           const wsMetrics = allMetricNames.filter(name => 
             name.toLowerCase().includes('websocket') || name.toLowerCase().includes('socket')
           )
+
           const dbMetrics = allMetricNames.filter(name => 
             name.toLowerCase().includes('database') || name.toLowerCase().includes('query')
           )
@@ -98,21 +107,27 @@ const MonitoringMetricsPage = () => {
           if (httpMetrics.length > 0) {
             console.log('Example HTTP metric names:', httpMetrics)
           }
+
           if (wsMetrics.length > 0) {
             console.log('Example WebSocket metric names:', wsMetrics)
           }
+
           if (dbMetrics.length > 0) {
             console.log('Example Database metric names:', dbMetrics)
           }
+
           if (parsed.httpRequests.length > 0) {
             console.log('HTTP Requests:', parsed.httpRequests.map(m => ({ name: m.name, count: m.count, sum: m.sum, value: m.value })))
           }
+
           if (parsed.websocketConnections.length > 0) {
             console.log('WebSocket Connections:', parsed.websocketConnections.map(m => ({ name: m.name, value: m.value })))
           }
+
           if (parsed.databaseQueries.length > 0) {
             console.log('Database Queries:', parsed.databaseQueries.map(m => ({ name: m.name, count: m.count, sum: m.sum })))
           }
+
           console.groupEnd()
         }
         
@@ -129,11 +144,14 @@ const MonitoringMetricsPage = () => {
 
     // Автообновление каждые 60 секунд
     const interval = setInterval(fetchMetrics, 60000)
-    return () => clearInterval(interval)
+
+    
+return () => clearInterval(interval)
   }, [])
 
   const parsePrometheusMetrics = (text: string): ParsedMetrics => {
     const lines = text.split('\n').filter(line => line.trim())
+
     const metrics: ParsedMetrics = {
       httpRequests: [],
       websocketConnections: [],
@@ -150,17 +168,21 @@ const MonitoringMetricsPage = () => {
         const parts = line.substring(7).split(' ')
         const name = parts[0]
         const help = parts.slice(1).join(' ')
+
         if (!metricMetadata[name]) {
           metricMetadata[name] = { help: '', type: 'unknown' }
         }
+
         metricMetadata[name].help = help
       } else if (line.startsWith('# TYPE ')) {
         const parts = line.substring(7).split(' ')
         const name = parts[0]
         const type = parts[1]
+
         if (!metricMetadata[name]) {
           metricMetadata[name] = { help: '', type: 'unknown' }
         }
+
         metricMetadata[name].type = type
       }
     }
@@ -172,20 +194,25 @@ const MonitoringMetricsPage = () => {
       // Парсим строки вида: metric_name{labels} value или metric_name value
       // Пример: http_request_duration_seconds_count{method="GET",route="/api",status_code="200"} 42
       const match = line.match(/^([a-zA-Z_:][a-zA-Z0-9_:]*)(?:\{([^}]+)\})?\s+(.+)$/)
+
       if (match) {
         const [, metricName, labelsStr, valueStr] = match
         const value = parseFloat(valueStr.trim())
+
         if (isNaN(value)) continue
 
         // Парсим labels
         const labels: Record<string, string> = {}
+
         if (labelsStr) {
           // Улучшенный парсинг labels с учетом кавычек и запятых внутри значений
           const labelRegex = /([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*"([^"]*)"|([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*'([^']*)'|([a-zA-Z_][a-zA-Z0-9_]*)\s*=\s*([^,}]+)/g
           let match
+
           while ((match = labelRegex.exec(labelsStr)) !== null) {
             const key = match[1] || match[3] || match[5]
             const val = match[2] || match[4] || match[6]
+
             if (key && val) {
               labels[key.trim()] = val.trim().replace(/^["']|["']$/g, '')
             }
@@ -214,6 +241,7 @@ const MonitoringMetricsPage = () => {
             normalizedMetricName.includes('process')) {
           metricCategory = 'system'
         }
+
         // HTTP метрики: http_request_duration_seconds (НЕ просто "request"!)
         else if (normalizedBase.includes('http_request_duration') || 
                  normalizedBase.includes('http_request') ||
@@ -221,6 +249,7 @@ const MonitoringMetricsPage = () => {
                  normalizedMetricName.includes('http_request')) {
           metricCategory = 'http'
         } 
+
         // WebSocket метрики: websocket_active_connections
         else if (normalizedBase.includes('websocket_active_connections') || 
                  normalizedBase.includes('websocket_active') ||
@@ -230,6 +259,7 @@ const MonitoringMetricsPage = () => {
                  normalizedMetricName.includes('websocket')) {
           metricCategory = 'websocket'
         } 
+
         // Database метрики: database_query_duration_seconds
         else if (normalizedBase.includes('database_query_duration') || 
                  normalizedBase.includes('database_query') ||
@@ -273,21 +303,27 @@ const MonitoringMetricsPage = () => {
           // Для HTTP метрик группируем по route и method
           // Используем baseName для группировки _count и _sum
           const groupKey = `${baseName}-${metric.labels?.route || ''}-${metric.labels?.method || ''}`
+
           const existing = metrics.httpRequests.find(
             m => {
               const mBaseName = (m as any).originalName || m.name.split(' (')[0]
               const mGroupKey = `${mBaseName}-${m.labels?.route || ''}-${m.labels?.method || ''}`
-              return mGroupKey === groupKey
+
+              
+return mGroupKey === groupKey
             }
           )
+
           if (existing) {
             // Объединяем _count и _sum для Histogram
             if (metric.count !== undefined) {
               existing.count = (existing.count || 0) + metric.count
             }
+
             if (metric.sum !== undefined) {
               existing.sum = (existing.sum || 0) + metric.sum
             }
+
             if (metric.value !== undefined && !metric.count && !metric.sum) {
               existing.value = (existing.value || 0) + metric.value
             }
@@ -297,6 +333,7 @@ const MonitoringMetricsPage = () => {
               name: baseName, // Используем baseName для единообразия
               originalName: baseName
             }
+
             metrics.httpRequests.push(httpMetric)
           }
         } else if (metricCategory === 'websocket') {
@@ -304,15 +341,19 @@ const MonitoringMetricsPage = () => {
           const existing = metrics.websocketConnections.find(
             m => {
               const mBaseName = (m as any).originalName || m.name.split(' (')[0]
-              return mBaseName === baseName
+
+              
+return mBaseName === baseName
             }
           )
+
           if (!existing) {
             const wsMetric: MetricData & { originalName?: string } = {
               ...metric,
               name: baseName,
               originalName: baseName
             }
+
             metrics.websocketConnections.push(wsMetric)
           } else {
             // Обновляем значение, если метрика уже существует
@@ -323,21 +364,27 @@ const MonitoringMetricsPage = () => {
         } else if (metricCategory === 'database') {
           // Для Database метрик группируем по operation и table
           const groupKey = `${baseName}-${metric.labels?.operation || ''}-${metric.labels?.table || ''}`
+
           const existing = metrics.databaseQueries.find(
             m => {
               const mBaseName = (m as any).originalName || m.name.split(' (')[0]
               const mGroupKey = `${mBaseName}-${m.labels?.operation || ''}-${m.labels?.table || ''}`
-              return mGroupKey === groupKey
+
+              
+return mGroupKey === groupKey
             }
           )
+
           if (existing) {
             // Объединяем _count и _sum для Histogram
             if (metric.count !== undefined) {
               existing.count = (existing.count || 0) + metric.count
             }
+
             if (metric.sum !== undefined) {
               existing.sum = (existing.sum || 0) + metric.sum
             }
+
             if (metric.value !== undefined && !metric.count && !metric.sum) {
               existing.value = (existing.value || 0) + metric.value
             }
@@ -347,6 +394,7 @@ const MonitoringMetricsPage = () => {
               name: baseName,
               originalName: baseName
             }
+
             metrics.databaseQueries.push(dbMetric)
           }
         } else if (metricCategory === 'system') {
@@ -363,7 +411,9 @@ const MonitoringMetricsPage = () => {
             // Для heap space метрик суммируем значения по всем space_type
             const existing = metrics.systemMetrics.find(m => {
               const existingBaseName = (m as any).originalName || m.name.split(' (')[0]
-              return existingBaseName === baseMetricName
+
+              
+return existingBaseName === baseMetricName
             })
             
             if (existing) {
@@ -379,6 +429,7 @@ const MonitoringMetricsPage = () => {
                 labels: undefined, // Убираем labels, так как мы агрегируем
                 originalName: baseMetricName
               }
+
               metrics.systemMetrics.push(aggregatedMetric)
             }
           } else {
@@ -390,7 +441,9 @@ const MonitoringMetricsPage = () => {
               const existingBaseName = (m as any).originalName || m.name.split(' (')[0]
               const existingLabels = (m as any).originalLabels || m.labels
               const existingKey = existingBaseName + (existingLabels ? JSON.stringify(existingLabels) : '')
-              return existingKey === uniqueKey
+
+              
+return existingKey === uniqueKey
             })
             
             if (!existing) {
@@ -402,6 +455,7 @@ const MonitoringMetricsPage = () => {
                 originalName: baseMetricName,
                 originalLabels: metric.labels ? { ...metric.labels } : undefined
               }
+
               metrics.systemMetrics.push(displayMetric)
             }
           }
@@ -672,7 +726,9 @@ const MonitoringMetricsPage = () => {
                     ? formatDuration(
                         metrics.httpRequests.reduce((sum, m) => {
                           const avg = m.type === 'histogram' && m.count && m.sum ? m.sum / m.count : (m.value || 0)
-                          return sum + avg
+
+                          
+return sum + avg
                         }, 0) / metrics.httpRequests.length
                       )
                     : '0ms'}
@@ -711,7 +767,9 @@ const MonitoringMetricsPage = () => {
                     ? Math.round(
                         (metrics.httpRequests.filter(m => {
                           const statusCode = m.labels?.status_code || ''
-                          return statusCode.startsWith('2')
+
+                          
+return statusCode.startsWith('2')
                         }).reduce((sum, m) => sum + (m.count || 0), 0) /
                           metrics.httpRequests.reduce((sum, m) => sum + (m.count || 0), 0)) *
                           100
@@ -830,7 +888,9 @@ const MonitoringMetricsPage = () => {
                     ? formatDuration(
                         metrics.databaseQueries.reduce((sum, m) => {
                           const avg = m.type === 'histogram' && m.count && m.sum ? m.sum / m.count : (m.value || 0)
-                          return sum + avg
+
+                          
+return sum + avg
                         }, 0) / metrics.databaseQueries.length
                       )
                     : '0ms'}

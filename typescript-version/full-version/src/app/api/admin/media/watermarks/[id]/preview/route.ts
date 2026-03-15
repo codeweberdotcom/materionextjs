@@ -5,11 +5,13 @@
  * @module app/api/admin/media/watermarks/[id]/preview
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
-import { getWatermarkService, WatermarkPosition } from '@/services/media'
+import type { WatermarkPosition } from '@/services/media';
+import { getWatermarkService } from '@/services/media'
 import logger from '@/lib/logger'
 
 /**
@@ -40,6 +42,7 @@ export async function GET(
     const { searchParams } = new URL(request.url)
 
     const mediaId = searchParams.get('mediaId')
+
     if (!mediaId) {
       return NextResponse.json(
         { error: 'mediaId is required' },
@@ -52,11 +55,13 @@ export async function GET(
     const scale = searchParams.get('scale')
 
     const options: any = {}
+
     if (position) options.position = position
     if (opacity) options.opacity = parseFloat(opacity)
     if (scale) options.scale = parseFloat(scale)
 
     const watermarkService = getWatermarkService()
+
     const previewBuffer = await watermarkService.generatePreview(
       mediaId,
       watermarkId,

@@ -1,7 +1,9 @@
 'use client'
 
+import type { ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react'
+
 import logger from '@/lib/logger'
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { lucia } from '@/libs/lucia'
 
 interface UserRole {
@@ -60,6 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const data = await response.json()
+
+
         // Логируем только в режиме отладки
         logger.debug('✅ [AUTH] User authenticated', { email: data.user?.email })
         setUser(data.user)
@@ -76,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         : error 
           ? String(error) 
           : 'Unknown error'
+
       const errorDetails = error instanceof Error && error.stack
         ? { message: errorMessage, stack: error.stack }
         : { message: errorMessage }
@@ -102,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!response.ok) {
       let errorData
+
       try {
         errorData = await response.json()
       } catch (e) {
@@ -111,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Извлекаем сообщение об ошибке из структуры ответа
       // createErrorResponse возвращает { error: { code, message, details } }
       let errorMessage = 'Login failed'
+
       if (errorData?.error?.message) {
         errorMessage = errorData.error.message
       } else if (errorData?.error && typeof errorData.error === 'string') {
@@ -129,29 +136,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const logClientError = response.status >= 400 && response.status < 500
         ? logger.warn.bind(logger)
         : logger.error.bind(logger)
+
       logClientError('❌ [AUTH] Login failed:', { error: errorMessage, status: response.status, file: 'src/contexts/AuthProvider.tsx' })
 
       // Если rate limit, передаем retryAfter
       if (response.status === 429) {
         const retryAfter = errorData?.retryAfter || errorData?.error?.details?.retryAfter
+
         logger.info('🚫 [AUTH] Rate limit triggered, retryAfter:', retryAfter)
         const rateLimitError: RateLimitError = new Error(errorMessage)
+
         if (retryAfter) {
           rateLimitError.retryAfter = retryAfter
         }
+
         throw rateLimitError
       }
 
       // Передаем warning вместе с ошибкой
       const loginError: LoginError = new Error(errorMessage)
       const warning = errorData?.warning || errorData?.error?.details?.warning
+
       if (warning) {
         loginError.warning = typeof warning === 'string' ? warning : String(warning)
       }
+
       throw loginError
     }
 
     const data = await response.json()
+
     logger.info('✅ [AUTH] Login successful for:', { email: data.user?.email })
 
     setUser(data.user)
@@ -160,11 +174,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     logger.info('🚪 [AUTH] Starting logout...')
+
     try {
       const response = await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include' // Важно для отправки cookies
       })
+
       logger.info('🚪 [AUTH] Logout response status:', response.status)
 
       if (response.ok) {
@@ -202,8 +218,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext)
+
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context
+
+  
+return context
 }

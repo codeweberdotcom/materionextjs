@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { scenarioService } from '@/services/notifications/scenarios'
@@ -17,6 +19,7 @@ export async function GET(
   
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -27,6 +30,7 @@ export async function GET(
     }
 
     const scenario = await scenarioService.getById(id)
+
     if (!scenario) {
       return NextResponse.json({ error: 'Scenario not found' }, { status: 404 })
     }
@@ -37,7 +41,8 @@ export async function GET(
       error: error instanceof Error ? error.message : String(error),
       scenarioId: id
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Failed to get scenario' },
       { status: 500 }
     )
@@ -56,6 +61,7 @@ export async function PUT(
   
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -74,7 +80,8 @@ export async function PUT(
       error: error instanceof Error ? error.message : String(error),
       scenarioId: id
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Failed to update scenario' },
       { status: 500 }
     )
@@ -93,6 +100,7 @@ export async function DELETE(
   
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -110,7 +118,8 @@ export async function DELETE(
       error: error instanceof Error ? error.message : String(error),
       scenarioId: id
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Failed to delete scenario' },
       { status: 500 }
     )

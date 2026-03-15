@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { exportService } from '@/services/export/ExportService'
 import { ExportFormat } from '@/types/export-import'
 import { rateLimitService } from '@/lib/rate-limit'
@@ -17,15 +19,18 @@ export async function POST(
   { params }: { params: Promise<{ entity: string }> }
 ) {
   const resolvedParams = await params
+
   try {
     // Валидация параметров пути
     const paramsValidation = exportParamsSchema.safeParse(resolvedParams)
+
     if (!paramsValidation.success) {
       logger.warn('[export] Invalid path parameters', {
         params,
         errors: paramsValidation.error.errors
       })
-      return NextResponse.json(
+      
+return NextResponse.json(
         createValidationErrorResponse(paramsValidation.error),
         { status: 400 }
       )
@@ -39,6 +44,7 @@ export async function POST(
 
     // Проверка rate limit через централизованную систему
     const environment = getEnvironmentFromRequest(request) as 'production' | 'test' | undefined
+
     const rateLimitResult = await rateLimitService.checkLimit(rateLimitKey, 'export', {
       increment: true,
       userId: user?.id ?? null,
@@ -50,6 +56,7 @@ export async function POST(
 
     if (!rateLimitResult.allowed) {
       const blockedUntilMs = rateLimitResult.blockedUntil ?? rateLimitResult.resetTime
+
       const retryAfterSec = Math.max(
         1,
         Math.ceil((blockedUntilMs - Date.now()) / 1000)
@@ -81,13 +88,15 @@ export async function POST(
 
     // Получаем и валидируем тело запроса
     let requestBody
+
     try {
       requestBody = await request.json()
     } catch (error) {
       logger.warn('[export] Invalid JSON in request body', {
         error: error instanceof Error ? error.message : error
       })
-      return NextResponse.json(
+      
+return NextResponse.json(
         { error: 'Invalid JSON in request body' },
         { status: 400 }
       )
@@ -95,12 +104,14 @@ export async function POST(
 
     // Валидация тела запроса через Zod
     const validation = exportRequestSchema.safeParse(requestBody)
+
     if (!validation.success) {
       logger.warn('[export] Validation failed', {
         entity: resolvedParams.entity,
         errors: validation.error.errors
       })
-      return NextResponse.json(
+      
+return NextResponse.json(
         createValidationErrorResponse(validation.error),
         { status: 400 }
       )
@@ -145,7 +156,8 @@ export async function POST(
       entity: resolvedParams.entity,
       file: 'src/app/api/export/[entity]/route.ts'
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )

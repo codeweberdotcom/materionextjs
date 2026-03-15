@@ -6,7 +6,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 
-import { useTranslationSafe } from '@/contexts/TranslationContext'
 
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -39,6 +38,8 @@ import Skeleton from '@mui/material/Skeleton'
 import Divider from '@mui/material/Divider'
 
 import { toast } from 'react-toastify'
+
+import { useTranslationSafe } from '@/contexts/TranslationContext'
 
 interface SyncResult {
   mediaId: string
@@ -73,6 +74,7 @@ interface SyncJob {
     email: string
     name?: string | null
   } | null
+
   // Batch processing fields
   isParent?: boolean
   parentJobId?: string | null
@@ -125,7 +127,8 @@ const getStatusColor = (status: string): 'default' | 'warning' | 'success' | 'er
 const formatBytes = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  
+return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 const formatDuration = (startedAt?: string, completedAt?: string): string => {
@@ -136,7 +139,8 @@ const formatDuration = (startedAt?: string, completedAt?: string): string => {
   
   if (duration < 1000) return `${duration}ms`
   if (duration < 60000) return `${(duration / 1000).toFixed(1)}s`
-  return `${Math.floor(duration / 60000)}m ${Math.floor((duration % 60000) / 1000)}s`
+  
+return `${Math.floor(duration / 60000)}m ${Math.floor((duration % 60000) / 1000)}s`
 }
 
 export default function MediaSync() {
@@ -160,6 +164,7 @@ export default function MediaSync() {
   
   // Verification results dialog
   const [verifyDialogOpen, setVerifyDialogOpen] = useState(false)
+
   const [verifyResult, setVerifyResult] = useState<{
     total: number
     verified: number
@@ -180,6 +185,7 @@ export default function MediaSync() {
 
   // Purge results dialog
   const [purgeDialogOpen, setPurgeDialogOpen] = useState(false)
+
   const [purgeResult, setPurgeResult] = useState<{
     deletedFiles: number
     deletedBytes: number
@@ -208,12 +214,15 @@ export default function MediaSync() {
   const handleSelectJob = (jobId: string, checked: boolean) => {
     setSelectedJobs(prev => {
       const newSet = new Set(prev)
+
       if (checked) {
         newSet.add(jobId)
       } else {
         newSet.delete(jobId)
       }
-      return newSet
+
+      
+return newSet
     })
   }
 
@@ -229,6 +238,7 @@ export default function MediaSync() {
     }
 
     setDeleteLoading(true)
+
     try {
       const response = await fetch('/api/admin/media/sync/bulk', {
         method: 'DELETE',
@@ -238,10 +248,12 @@ export default function MediaSync() {
 
       if (!response.ok) {
         const error = await response.json()
+
         throw new Error(error.error || 'Failed to delete jobs')
       }
 
       const result = await response.json()
+
       toast.success(t?.bulkDeleteSuccess?.replace('{count}', String(result.deleted)) || `Deleted ${result.deleted} tasks`)
       setSelectedJobs(new Set())
       fetchJobs()
@@ -255,25 +267,33 @@ export default function MediaSync() {
   // Get translated operation label
   const getOperationLabel = useCallback((operation: string): string => {
     const operations = t?.operations as Record<string, string> | undefined
-    return operations?.[operation] || operation
+
+    
+return operations?.[operation] || operation
   }, [t])
 
   // Get translated scope label
   const getScopeLabel = useCallback((scope: string): string => {
     const scopes = t?.scopes as Record<string, string> | undefined
-    return scopes?.[scope] || scope
+
+    
+return scopes?.[scope] || scope
   }, [t])
 
   // Get translated entity type label
   const getEntityTypeLabel = useCallback((entityType: string): string => {
     const entityTypes = t?.entityTypes as Record<string, string> | undefined
-    return entityTypes?.[entityType] || entityType
+
+    
+return entityTypes?.[entityType] || entityType
   }, [t])
 
   // Get translated status label
   const getStatusLabel = useCallback((status: string): string => {
     const statuses = t?.statuses as Record<string, string> | undefined
-    return statuses?.[status] || status
+
+    
+return statuses?.[status] || status
   }, [t])
   
   const fetchJobs = useCallback(async () => {
@@ -283,12 +303,14 @@ export default function MediaSync() {
       if (response.status === 403) {
         setAccessDenied(true)
         setJobs([])
-        return
+        
+return
       }
       
       if (!response.ok) throw new Error('Failed to fetch jobs')
       
       const data = await response.json()
+
       setJobs(data.jobs)
       setTotal(data.total)
       setAccessDenied(false)
@@ -307,7 +329,9 @@ export default function MediaSync() {
     
     // Auto-refresh every 5 seconds
     const interval = setInterval(fetchJobs, 5000)
-    return () => clearInterval(interval)
+
+    
+return () => clearInterval(interval)
   }, [fetchJobs])
 
   // Abort controller for cancelling create request
@@ -316,19 +340,22 @@ export default function MediaSync() {
   const createJob = async () => {
     if (!newAction) {
       toast.error(t?.selectAction || 'Select an action')
-      return
+      
+return
     }
     
     if (newScope === 'entity_type' && !newEntityType) {
       toast.error(t?.selectEntityTypeRequired || 'Select entity type')
-      return
+      
+return
     }
 
     // Additional confirmation for dangerous operations
     if (newAction === 'purge_s3') {
       setPendingDangerAction(newAction)
       setConfirmDangerOpen(true)
-      return
+      
+return
     }
     
     executeCreateJob(newAction)
@@ -349,7 +376,9 @@ export default function MediaSync() {
     
     // Create abort controller for this request
     const controller = new AbortController()
+
     setCreateAbortController(controller)
+
     try {
       const response = await fetch('/api/admin/media/sync', {
         method: 'POST',
@@ -364,6 +393,7 @@ export default function MediaSync() {
       
       if (!response.ok) {
         const error = await response.json()
+
         throw new Error(error.error || 'Failed to create job')
       }
       
@@ -384,15 +414,19 @@ export default function MediaSync() {
       if (actionWas === 'verify_status' && data.verification) {
         setVerifyResult(data.verification)
         setVerifyDialogOpen(true)
+
         const msg = (t?.verifiedCount || 'Verified: {total}, updated: {updated}')
           .replace('{total}', data.verification.total)
           .replace('{updated}', data.verification.updated)
+
         toast.success(msg)
       } else if (actionWas === 'purge_s3' && data.purge) {
         setPurgeResult(data.purge)
         setPurgeDialogOpen(true)
+
         const msg = (t?.deletedFromS3 || 'Deleted {count} files from S3')
           .replace('{count}', data.purge.deletedFiles)
+
         toast.success(msg)
       } else {
         toast.success(t?.taskCreated || 'Task created and started')
@@ -405,6 +439,7 @@ export default function MediaSync() {
       if (error.name === 'AbortError') {
         return
       }
+
       toast.error(error.message || t?.createError || 'Error creating task')
     } finally {
       setCreating(false)
@@ -417,6 +452,7 @@ export default function MediaSync() {
     
     try {
       const response = await fetch(`/api/admin/media/sync/${jobId}`, { method: 'DELETE' })
+
       if (!response.ok) throw new Error('Failed to cancel job')
       
       toast.success(t?.taskCancelled || 'Task cancelled')
@@ -426,8 +462,10 @@ export default function MediaSync() {
     } finally {
       setCancellingJobs(prev => {
         const newSet = new Set(prev)
+
         newSet.delete(jobId)
-        return newSet
+        
+return newSet
       })
     }
   }
@@ -681,6 +719,7 @@ export default function MediaSync() {
                           const processedFiles = job.isParent && job.childJobs
                             ? job.childJobs.reduce((sum, c) => sum + c.processedFiles, 0)
                             : job.processedFiles
+
                           const failedFiles = job.isParent && job.childJobs
                             ? job.childJobs.reduce((sum, c) => sum + c.failedFiles, 0)
                             : job.failedFiles
@@ -1031,6 +1070,7 @@ export default function MediaSync() {
                 try {
                   const results: SyncResult[] = JSON.parse(selectedJob.results)
                   const failedResults = results.filter(r => !r.success)
+
                   if (failedResults.length > 0) {
                     return (
                       <Box sx={{ mt: 2 }}>
@@ -1066,7 +1106,9 @@ export default function MediaSync() {
                       </Box>
                     )
                   }
-                  return null
+
+                  
+return null
                 } catch {
                   return null
                 }

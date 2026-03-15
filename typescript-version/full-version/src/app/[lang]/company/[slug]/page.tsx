@@ -3,8 +3,9 @@
  * URL: /company/[slug]
  */
 
-import { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
+
+import type { Metadata } from 'next'
 
 import { prisma } from '@/libs/prisma'
 import { slugService } from '@/services/slug'

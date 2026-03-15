@@ -4,7 +4,8 @@
  * GET /api/listings/[id]/workflow/history - Получить историю переходов
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { listingWorkflowService } from '@/services/workflows/ListingWorkflowService'

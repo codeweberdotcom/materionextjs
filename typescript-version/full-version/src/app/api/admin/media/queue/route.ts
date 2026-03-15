@@ -6,7 +6,8 @@
  * @module app/api/admin/media/queue
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
@@ -88,17 +89,20 @@ export async function POST(request: NextRequest) {
       case 'pause':
         await (targetQueue as any).pause?.()
         logger.info(`[API] Queue ${queueName} paused`, { by: user.id })
-        return NextResponse.json({ success: true, message: `Queue ${queueName} paused` })
+        
+return NextResponse.json({ success: true, message: `Queue ${queueName} paused` })
 
       case 'resume':
         await (targetQueue as any).resume?.()
         logger.info(`[API] Queue ${queueName} resumed`, { by: user.id })
-        return NextResponse.json({ success: true, message: `Queue ${queueName} resumed` })
+        
+return NextResponse.json({ success: true, message: `Queue ${queueName} resumed` })
 
       case 'clean':
         await (targetQueue as any).clean?.()
         logger.info(`[API] Queue ${queueName} cleaned`, { by: user.id })
-        return NextResponse.json({ success: true, message: `Queue ${queueName} cleaned` })
+        
+return NextResponse.json({ success: true, message: `Queue ${queueName} cleaned` })
 
       default:
         return NextResponse.json(

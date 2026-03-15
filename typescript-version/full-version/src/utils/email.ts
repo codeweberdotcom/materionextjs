@@ -1,7 +1,10 @@
+import * as fs from 'fs'
+
+import * as path from 'path'
+
 import nodemailer from 'nodemailer'
 import * as cron from 'node-cron'
-import * as fs from 'fs'
-import * as path from 'path'
+
 import Handlebars from 'handlebars'
 
 // SMTP configuration interface
@@ -16,18 +19,21 @@ export interface SmtpConfig {
   encryption: string
   fromEmail: string
   fromName: string
+
   // DKIM settings
   dkim?: {
     domainName: string
     keySelector: string
     privateKey: string
   }
+
   // S/MIME settings
   smime?: {
     cert: string
     key: string
     passphrase?: string
   }
+
   // Webhook settings
   webhook?: {
     url: string
@@ -44,6 +50,7 @@ export interface ExtendedEmailOptions {
   from?: string
   templateId?: string
   variables?: Record<string, string>
+
   // Attachments
   attachments?: Array<{
     filename: string
@@ -52,12 +59,14 @@ export interface ExtendedEmailOptions {
     contentType?: string
     cid?: string // Content-ID for embedded images
   }>
+
   // Embedded images
   embeddedImages?: Array<{
     filename: string
     path: string
     cid: string
   }>
+
   // Security options
   dkim?: boolean
   smime?: {
@@ -65,17 +74,20 @@ export interface ExtendedEmailOptions {
     encrypt?: boolean
     cert?: string
   }
+
   // Scheduling
   schedule?: {
     cron: string // cron expression
     timezone?: string
   }
+
   // Webhook notifications
   webhook?: {
     delivery?: boolean
     bounce?: boolean
     complaint?: boolean
   }
+
   // Metadata
   metadata?: Record<string, any>
 }
@@ -89,6 +101,7 @@ export const getSmtpConfig = async (): Promise<SmtpConfig> => {
     if (typeof window === 'undefined') {
       try {
         const baseUrl = authBaseUrl || 'http://localhost:3000'
+
         logger.info('🔍 [SMTP CONFIG] Fetching from API:', `${baseUrl}/api/settings/smtp`)
 
         // Try direct file read first (bypass API to avoid auth issues)
@@ -111,7 +124,8 @@ export const getSmtpConfig = async (): Promise<SmtpConfig> => {
 
             if (hasValidSettings) {
               logger.info('✅ [SMTP CONFIG] Using direct file settings')
-              return {
+              
+return {
                 host: settings.host,
                 port: settings.port,
                 username: settings.username,
@@ -134,6 +148,7 @@ export const getSmtpConfig = async (): Promise<SmtpConfig> => {
 
         if (response.ok) {
           const settings = await response.json()
+
           logger.info('🔍 [SMTP CONFIG] API response data:', {
             ...settings,
             password: settings.password ? '***provided***' : 'missing'
@@ -141,11 +156,13 @@ export const getSmtpConfig = async (): Promise<SmtpConfig> => {
 
           // Check if settings have actual values (not just defaults)
           const hasValidSettings = settings.username && settings.password && settings.host
+
           logger.info('🔍 [SMTP CONFIG] Has valid settings:', hasValidSettings)
 
           if (hasValidSettings) {
             logger.info('✅ [SMTP CONFIG] Using API settings')
-            return {
+            
+return {
               host: settings.host,
               port: settings.port,
               username: settings.username,
@@ -170,6 +187,7 @@ export const getSmtpConfig = async (): Promise<SmtpConfig> => {
 
   // Fallback to environment variables
   logger.info('🔄 [SMTP CONFIG] Using fallback environment variables')
+
   const fallbackConfig = {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: process.env.SMTP_PORT || '587',
@@ -264,6 +282,7 @@ export const startEmailScheduler = () => {
   // Check every minute for emails to send
   cron.schedule('* * * * *', async () => {
     const now = new Date()
+
     const emailsToSend = emailQueue.filter(
       email => email.status === 'pending' && email.scheduledTime <= now
     )
@@ -280,8 +299,10 @@ export const startEmailScheduler = () => {
     // Clean up old emails (keep last 24 hours)
     const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
     const oldEmails = emailQueue.filter(email => email.scheduledTime < oneDayAgo)
+
     oldEmails.forEach(email => {
       const index = emailQueue.indexOf(email)
+
       if (index > -1) emailQueue.splice(index, 1)
     })
   })
@@ -419,10 +440,13 @@ const templateCache = new Map<string, HandlebarsTemplateDelegate>()
 // Register Handlebars helpers
 Handlebars.registerHelper('formatDate', (date: Date | string, format?: string) => {
   const d = new Date(date)
+
   if (format === 'short') {
     return d.toLocaleDateString()
   }
-  return d.toLocaleString()
+
+  
+return d.toLocaleString()
 })
 
 Handlebars.registerHelper('uppercase', (str: string) => {
@@ -480,6 +504,7 @@ const renderTemplate = (template: string, variables: Record<string, any>): strin
     return compiledTemplate(variables)
   } catch (error) {
     logger.error('Error rendering Handlebars template:', { error: error, file: 'src/utils/email.ts' })
+
     // Fallback to simple variable replacement
     return replaceVariables(template, variables)
   }
@@ -491,6 +516,7 @@ const replaceVariables = (text: string, variables: Record<string, any>): string 
 
   Object.entries(variables).forEach(([key, value]) => {
     const regex = new RegExp(`\\{${key}\\}`, 'g')
+
     result = result.replace(regex, String(value))
   })
 
@@ -554,11 +580,15 @@ export const getEmailQueue = () => {
 
 export const cancelScheduledEmail = (emailId: string): boolean => {
   const index = emailQueue.findIndex(email => email.id === emailId)
+
   if (index > -1) {
     emailQueue.splice(index, 1)
-    return true
+    
+return true
   }
-  return false
+
+  
+return false
 }
 
 // Test SMTP connection
@@ -576,7 +606,8 @@ export const testSmtpConnection = async (): Promise<{ success: boolean; message:
 
     if (!config.username || !config.password) {
       logger.info('❌ [SMTP TEST] Missing credentials detected')
-      return {
+      
+return {
         success: false,
         message: 'Missing credentials. Please enter your email and password.'
       }

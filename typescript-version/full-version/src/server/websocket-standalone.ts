@@ -4,6 +4,7 @@
  */
 
 import { createServer } from 'http'
+
 import { initializeSocketServer } from '../lib/sockets'
 import logger from '../lib/logger'
 import { env } from '../shared/config/env'
@@ -25,7 +26,8 @@ async function startWebSocketServer() {
           port: PORT,
           environment: env.NODE_ENV || 'development',
         }))
-        return
+        
+return
       }
 
       // Metrics endpoint (опционально)
@@ -35,7 +37,8 @@ async function startWebSocketServer() {
           connections: (globalThis.io?.engine?.clientsCount || 0),
           uptime: process.uptime(),
         }))
-        return
+        
+return
       }
 
       // 404 для всех остальных запросов

@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+
 import fs from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
+
+import { NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
 
 const RUNS_DIR = path.join(process.cwd(), 'artifacts', 'playwright', 'runs')
 
@@ -16,9 +19,11 @@ export async function GET(request: NextRequest) {
       reportPath = path.join(RUNS_DIR, runId, 'index.html')
     } else if (existsSync(RUNS_DIR)) {
       const entries = await fs.readdir(RUNS_DIR, { withFileTypes: true })
+
       const latest = entries
         .filter(entry => entry.isDirectory())
         .sort((a, b) => b.name.localeCompare(a.name))[0]
+
       if (latest) {
         reportPath = path.join(RUNS_DIR, latest.name, 'index.html')
       }
@@ -27,12 +32,14 @@ export async function GET(request: NextRequest) {
     if (!reportPath || !existsSync(reportPath)) {
       // fallback to default latest report
       const defaultReport = path.join(process.cwd(), 'playwright-report', 'index.html')
+
       if (!existsSync(defaultReport)) {
         return NextResponse.json(
           { error: 'HTML report not found. Run tests first.' },
           { status: 404 }
         )
       }
+
       reportPath = defaultReport
     }
 

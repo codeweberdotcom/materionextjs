@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+
 import {
   Dialog,
   DialogTitle,
@@ -20,6 +21,7 @@ import {
   Alert,
   Chip
 } from '@mui/material'
+
 import type { RowWithValidation, ImportField } from '@/types/export-import'
 
 interface ImportRowEditorProps {
@@ -47,6 +49,7 @@ export default function ImportRowEditor({
   useEffect(() => {
     if (row && open) {
       const initialData: Record<string, any> = {}
+
       importFields.forEach(field => {
         // Пробуем разные варианты ключей
         initialData[field.key] = row.data[field.label] || 
@@ -71,8 +74,10 @@ export default function ImportRowEditor({
     if (errors[fieldKey]) {
       setErrors(prev => {
         const newErrors = { ...prev }
+
         delete newErrors[fieldKey]
-        return newErrors
+        
+return newErrors
       })
     }
   }
@@ -98,6 +103,7 @@ export default function ImportRowEditor({
                              value === 'true' || value === 'false' || 
                              value === 1 || value === 0 || 
                              value === '1' || value === '0'
+
       if (!isValidBoolean && value !== undefined && value !== null && value !== '') {
         return `${field.label} должно быть true или false`
       }
@@ -117,6 +123,7 @@ export default function ImportRowEditor({
     if (field.pattern && typeof value === 'string') {
       // Pattern может быть RegExp или строкой (из JSON API)
       let regex: RegExp
+
       if (field.pattern instanceof RegExp) {
         regex = field.pattern
       } else if (typeof field.pattern === 'string') {
@@ -129,6 +136,7 @@ export default function ImportRowEditor({
       } else {
         regex = /.*/
       }
+
       if (!regex.test(value)) {
         return `Неверный формат ${field.label.toLowerCase()}`
       }
@@ -142,6 +150,7 @@ export default function ImportRowEditor({
     // Кастомная валидация
     if (field.validate) {
       const validationError = field.validate(value)
+
       if (validationError) {
         return validationError.message
       }
@@ -156,6 +165,7 @@ export default function ImportRowEditor({
     importFields.forEach(field => {
       const value = formData[field.key]
       const error = validateField(field, value)
+
       if (error) {
         newErrors[field.key] = error
         console.log(`[ImportRowEditor] Validation error for field "${field.key}" (${field.label}):`, error, 'Value:', value)
@@ -164,13 +174,15 @@ export default function ImportRowEditor({
 
     console.log('[ImportRowEditor] Validation result:', Object.keys(newErrors).length === 0 ? 'PASSED' : 'FAILED', 'Errors:', newErrors)
     setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    
+return Object.keys(newErrors).length === 0
   }
 
   const handleSave = () => {
     if (!row) {
       console.warn('[ImportRowEditor] handleSave: row is null')
-      return
+      
+return
     }
 
     console.log('[ImportRowEditor] handleSave called for row:', row.rowIndex)
@@ -180,7 +192,8 @@ export default function ImportRowEditor({
 
     if (!validateForm()) {
       console.warn('[ImportRowEditor] Validation failed')
-      return
+      
+return
     }
 
     // Просто обновляем все существующие ключи в row.data значениями из formData

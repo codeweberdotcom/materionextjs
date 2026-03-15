@@ -35,9 +35,11 @@ class ServiceConfigurationService {
     if (filters?.type) {
       where.type = filters.type
     }
+
     if (filters?.enabled !== undefined) {
       where.enabled = filters.enabled
     }
+
     if (filters?.status) {
       where.status = filters.status
     }
@@ -173,9 +175,11 @@ class ServiceConfigurationService {
     if (data.password !== undefined) {
       updateData.password = data.password ? encrypt(data.password) : null
     }
+
     if (data.token !== undefined) {
       updateData.token = data.token ? encrypt(data.token) : null
     }
+
     if (data.tlsCert !== undefined) {
       updateData.tlsCert = data.tlsCert ? encrypt(data.tlsCert) : null
     }

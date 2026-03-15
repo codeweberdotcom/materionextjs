@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import type { UserWithRole } from '@/utils/permissions/permissions'
 
@@ -43,7 +45,8 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     logger.error('Error marking messages as read:', { error: error, file: 'src/app/api/chat/messages/read/route.ts' })
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 

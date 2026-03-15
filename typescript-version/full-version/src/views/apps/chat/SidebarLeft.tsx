@@ -15,8 +15,10 @@ import IconButton from '@mui/material/IconButton'
 // Third-party Imports
 import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
-import { useAuth } from '@/contexts/AuthProvider'
+
 import Skeleton from '@mui/material/Skeleton'
+
+import { useAuth } from '@/contexts/AuthProvider'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
@@ -103,6 +105,7 @@ const renderContacts = (props: RenderChatType & { session: any; unreadByContact:
       statusColor = statusObj.online
     } else if (lastSeen) {
       statusText = navigation.offline
+
       // Format last seen time
       const lastSeenDate = new Date(lastSeen)
       const now = new Date()
@@ -122,6 +125,7 @@ const renderContacts = (props: RenderChatType & { session: any; unreadByContact:
       } else {
         lastSeenText = lastSeenDate.toLocaleDateString('ru-RU')
       }
+
       statusColor = statusObj.offline
     } else {
       // User is offline and has no last seen time (null in database)
@@ -240,10 +244,12 @@ const SidebarLeft = (props: Props) => {
   const handleChange = (event: any, newValue: string | null) => {
     setSearchValue(newValue)
     const contact = chatStore.contacts.find(contact => contact.fullName === newValue)
+
     if (contact) {
       dispatch(addNewChat({ id: contact.id }))
       getActiveUserData(contact.id)
     }
+
     isBelowMdScreen && setSidebarOpen(false)
     setBackdropOpen(false)
     setSearchValue(null)
@@ -352,6 +358,7 @@ const SidebarLeft = (props: Props) => {
         <ScrollWrapper isBelowLgScreen={isBelowLgScreen}>
           <ul className='p-3 pbs-4'>
             {chatStore.contacts.length === 0 ? (
+
               // Show skeleton loading for contacts
               Array.from({ length: 8 }).map((_, index) => (
                 <li key={`skeleton-${index}`} className='flex items-start gap-4 pli-3 plb-2 mbe-1'>

@@ -79,13 +79,16 @@ const UserDropdown = () => {
 
   const handleUserLogout = async () => {
     setLogoutLoading(true)
+
     try {
       // Sign out from the app
       await logout()
+
       // Immediate redirect to login page
       window.location.href = '/en/login'
     } catch (error) {
       console.error(error)
+
       // Even if logout fails, redirect to login
       window.location.href = '/en/login'
     }

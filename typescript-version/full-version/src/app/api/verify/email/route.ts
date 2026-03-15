@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { prisma } from '@/libs/prisma'
 import { verificationService } from '@/services/verification/VerificationService'
 import { verifyEmailSchema } from '@/lib/validations/verification-schemas'
@@ -30,7 +31,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/email',
         context: { route: 'verify/email', errors: validationResult.error.errors }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     const { token, email } = validationResult.data
@@ -59,7 +62,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/email',
         context: { route: 'verify/email' }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Проверяем срок действия токена
@@ -72,11 +77,14 @@ export async function POST(request: NextRequest) {
         route: 'verify/email',
         context: { route: 'verify/email' }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Находим пользователя по email из кода верификации
     const userEmail = verificationCode.identifier
+
     const user = await prisma.user.findUnique({
       where: { email: userEmail },
       include: { role: true }
@@ -91,7 +99,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/email',
         context: { route: 'verify/email', email: userEmail }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Обновляем пользователя: верифицируем email и активируем
@@ -142,6 +152,7 @@ export async function POST(request: NextRequest) {
 
         // Отправляем SMS через SMS.ru
         const smsSettings = await smsRuSettingsService.getSettings()
+
         if (smsSettings.apiKey) {
           const smsProvider = new SMSRuProvider({
             apiKey: smsSettings.apiKey,
@@ -150,6 +161,7 @@ export async function POST(request: NextRequest) {
           })
 
           const smsResult = await smsProvider.sendCode(user.phone, phoneCode)
+
           phoneCodeSent = smsResult.success
 
           if (smsResult.success) {
@@ -175,6 +187,7 @@ export async function POST(request: NextRequest) {
           userId: user.id,
           phone: user.phone
         })
+
         // Не прерываем процесс верификации email, если не удалось отправить SMS
       }
     }
@@ -204,7 +217,9 @@ export async function POST(request: NextRequest) {
       route: 'verify/email',
       context: { route: 'verify/email' }
     })
-    return new NextResponse(JSON.stringify(payload), init)
+
+    
+return new NextResponse(JSON.stringify(payload), init)
   }
 }
 

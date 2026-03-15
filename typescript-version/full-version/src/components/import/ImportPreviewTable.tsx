@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+
 import {
   Card,
   CardContent,
@@ -24,6 +25,7 @@ import {
   Tabs,
   Tab
 } from '@mui/material'
+
 import type { RowWithValidation, ValidationError } from '@/types/export-import'
 import tableStyles from '@core/styles/table.module.css'
 
@@ -88,10 +90,12 @@ export default function ImportPreviewTable({
   // Получаем все уникальные ключи из данных
   const allKeys = useMemo(() => {
     const keys = new Set<string>()
+
     previewData.forEach(row => {
       Object.keys(row.data).forEach(key => keys.add(key))
     })
-    return Array.from(keys)
+    
+return Array.from(keys)
   }, [previewData])
 
   // Получаем заголовки колонок (используем importFields или ключи из данных)
@@ -104,6 +108,8 @@ export default function ImportPreviewTable({
         enum: field.enum
       }))
     }
+
+
     // Если нет importFields, используем ключи из данных
     return allKeys.map(key => ({
       key,
@@ -115,19 +121,24 @@ export default function ImportPreviewTable({
   // Создаем маппинг label -> key для быстрого поиска
   const labelToKeyMap = useMemo(() => {
     const map = new Map<string, string>()
+
     if (importFields.length > 0) {
       importFields.forEach(field => {
         map.set(field.label.toLowerCase(), field.key)
         map.set(field.key.toLowerCase(), field.key)
       })
     }
-    return map
+
+    
+return map
   }, [importFields])
 
   // Пагинация
   const paginatedData = useMemo(() => {
     const start = page * rowsPerPage
-    return filteredData.slice(start, start + rowsPerPage)
+
+    
+return filteredData.slice(start, start + rowsPerPage)
   }, [filteredData, page, rowsPerPage])
 
   const handleChangePage = (_: unknown, newPage: number) => {
@@ -156,6 +167,7 @@ export default function ImportPreviewTable({
     // 1. Пробуем найти по точному ключу (даже если значение пустое, но не undefined/null)
     if (columnKey in data) {
       const value = data[columnKey]
+
       if (value !== undefined && value !== null) {
         return value
       }
@@ -166,6 +178,7 @@ export default function ImportPreviewTable({
       // Точное совпадение
       if (columnLabel in data) {
         const value = data[columnLabel]
+
         if (value !== undefined && value !== null) {
           return value
         }
@@ -178,18 +191,23 @@ export default function ImportPreviewTable({
 
       if (labelLower in data) {
         const value = data[labelLower]
+
         if (value !== undefined && value !== null) {
           return value
         }
       }
+
       if (labelUpper in data) {
         const value = data[labelUpper]
+
         if (value !== undefined && value !== null) {
           return value
         }
       }
+
       if (labelTitle in data) {
         const value = data[labelTitle]
+
         if (value !== undefined && value !== null) {
           return value
         }
@@ -203,18 +221,23 @@ export default function ImportPreviewTable({
 
     if (keyLower in data) {
       const value = data[keyLower]
+
       if (value !== undefined && value !== null) {
         return value
       }
     }
+
     if (keyUpper in data) {
       const value = data[keyUpper]
+
       if (value !== undefined && value !== null) {
         return value
       }
     }
+
     if (keyTitle in data) {
       const value = data[keyTitle]
+
       if (value !== undefined && value !== null) {
         return value
       }
@@ -223,8 +246,10 @@ export default function ImportPreviewTable({
     // 4. Пробуем найти через маппинг label -> key
     if (columnLabel && labelToKeyMap.has(columnLabel.toLowerCase())) {
       const mappedKey = labelToKeyMap.get(columnLabel.toLowerCase())!
+
       if (mappedKey in data) {
         const value = data[mappedKey]
+
         if (value !== undefined && value !== null) {
           return value
         }
@@ -237,8 +262,10 @@ export default function ImportPreviewTable({
 
     for (const dataKey in data) {
       const normalizedDataKey = dataKey.toLowerCase().replace(/\s+/g, '')
+
       if (normalizedDataKey === searchKey || (searchLabel && normalizedDataKey === searchLabel)) {
         const value = data[dataKey]
+
         if (value !== undefined && value !== null) {
           return value
         }
@@ -251,6 +278,7 @@ export default function ImportPreviewTable({
         if (dataKey.toLowerCase().includes(columnLabel.toLowerCase()) ||
             columnLabel.toLowerCase().includes(dataKey.toLowerCase())) {
           const value = data[dataKey]
+
           if (value !== undefined && value !== null) {
             return value
           }

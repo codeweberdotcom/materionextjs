@@ -50,6 +50,7 @@ export interface EmailContact {
  * Данные извлечённой компании
  */
 export interface ScrapedCompanyData {
+
   // Основная информация
   name: string | null
   description: string | null
@@ -111,18 +112,25 @@ export interface ScrapedCompanyData {
  * Опции парсинга
  */
 export interface ScrapeOptions {
+
   /** Извлекать изображения */
   extractImages?: boolean
+
   /** Глубина обхода для crawl (1-5) */
   maxDepth?: number
+
   /** Таймаут в миллисекундах */
   timeout?: number
+
   /** CSS селектор для ожидания */
   waitForSelector?: string
+
   /** Включить crawl (обход нескольких страниц) */
   enableCrawl?: boolean
+
   /** Максимум страниц при crawl */
   maxPages?: number
+
   /** Дополнительные страницы для проверки */
   additionalPaths?: string[]
 }
@@ -317,6 +325,7 @@ VK, Telegram, WhatsApp, Instagram, Facebook, YouTube, TikTok, Twitter, LinkedIn,
  * Результат анализа текста
  */
 export interface TextAnalysis {
+
   // Топ ключевых слов по TF-IDF
   keywords: Array<{
     word: string

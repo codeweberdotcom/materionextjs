@@ -19,6 +19,7 @@ import Button from '@mui/material/Button'
 import Divider from '@mui/material/Divider'
 import Stack from '@mui/material/Stack'
 import Skeleton from '@mui/material/Skeleton'
+
 import CustomAvatar from '@core/components/mui/Avatar'
 
 // Icons - используем Remix Icons через классы
@@ -121,10 +122,13 @@ const MonitoringDashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       const response = await fetch('/api/admin/monitoring/dashboard')
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
+
       const data = await response.json()
+
       setDashboardData(data)
       setError(null)
     } catch (err) {
@@ -181,7 +185,9 @@ const MonitoringDashboardPage = () => {
     const k = 1024
     const sizes = ['B', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
+
+    
+return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
   }
 
   const formatUptime = (seconds: number) => {
@@ -191,13 +197,15 @@ const MonitoringDashboardPage = () => {
 
     if (days > 0) return `${days}d ${hours}h ${minutes}m`
     if (hours > 0) return `${hours}h ${minutes}m`
-    return `${minutes}m`
+    
+return `${minutes}m`
   }
 
   const formatDuration = (ms: number) => {
     if (ms < 1) return `${(ms * 1000).toFixed(0)}μs`
     if (ms < 1000) return `${ms.toFixed(2)}ms`
-    return `${(ms / 1000).toFixed(2)}s`
+    
+return `${(ms / 1000).toFixed(2)}s`
   }
 
   if (loading) {

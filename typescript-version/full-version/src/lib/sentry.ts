@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
+
 import logger from './logger'
 import { serviceConfigResolver } from './config'
 
@@ -14,9 +15,11 @@ const toPrimitive = (value: unknown): SentryExtraValue => {
   if (value === null || value === undefined) {
     return value as null | undefined
   }
+
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
     return value
   }
+
   if (value instanceof Date) {
     return value.toISOString()
   }
@@ -31,10 +34,13 @@ const sanitizeContext = (context?: SentryContext): SentryExtras | undefined => {
 
   return Object.entries(context).reduce<SentryExtras>((acc, [key, value]) => {
     const primitive = toPrimitive(value)
+
     if (primitive !== undefined) {
       acc[key] = primitive
     }
-    return acc
+
+    
+return acc
   }, {})
 }
 
@@ -58,7 +64,8 @@ async function initializeSentry(): Promise<void> {
 
     if (!dsn) {
       logger.info('[Sentry] DSN not configured, Sentry disabled')
-      return
+      
+return
     }
 
     Sentry.init({
@@ -71,12 +78,15 @@ async function initializeSentry(): Promise<void> {
           // Удаляем пароли и другие чувствительные данные
           if (typeof event.request.data === 'object') {
             const data = event.request.data as Record<string, unknown>
+
             if ('password' in data) data.password = '[FILTERED]'
             if ('confirmPassword' in data) data.confirmPassword = '[FILTERED]'
             if ('token' in data) data.token = '[FILTERED]'
           }
         }
-        return event
+
+        
+return event
       }
     })
 
@@ -92,6 +102,7 @@ async function initializeSentry(): Promise<void> {
 
     // Fallback на прямое использование ENV
     const fallbackDsn = process.env.SENTRY_DSN || process.env.GLITCHTIP_DSN
+
     if (fallbackDsn) {
       Sentry.init({
         dsn: fallbackDsn,
@@ -100,11 +111,14 @@ async function initializeSentry(): Promise<void> {
         beforeSend(event) {
           if (event.request?.data && typeof event.request.data === 'object') {
             const data = event.request.data as Record<string, unknown>
+
             if ('password' in data) data.password = '[FILTERED]'
             if ('confirmPassword' in data) data.confirmPassword = '[FILTERED]'
             if ('token' in data) data.token = '[FILTERED]'
           }
-          return event
+
+          
+return event
         }
       })
       sentryInitialized = true

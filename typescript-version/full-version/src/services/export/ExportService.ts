@@ -1,8 +1,9 @@
-import {
+import type {
   IExportService,
   ExportOptions,
   ExportResult,
-  ExportFormat,
+  ExportFormat} from '@/types/export-import';
+import {
   generateFileName,
   IEntityAdapter
 } from '@/types/export-import'
@@ -56,12 +57,14 @@ export class ExportService implements IExportService {
 
       // Получаем адаптер для сущности
       const adapter = this.adapterFactory.getAdapter(entityType)
+
       if (!adapter) {
         throw new Error(`Adapter for entity type '${entityType}' not found`)
       }
 
       // Получаем данные через адаптер
       const data = await adapter.getDataForExport(options.filters)
+
       logger.info('ExportService: Received data from adapter', {
         entityType,
         correlationId,
@@ -71,6 +74,7 @@ export class ExportService implements IExportService {
       // Фильтруем по selectedIds если указаны
       // selectedIds всегда содержат реальные ID (не индексы), так как UI использует getRowId: (row) => String(row.id)
       let filteredData = data
+
       if (options.selectedIds && options.selectedIds.length > 0) {
         logger.debug('ExportService: Filtering by selectedIds', {
           entityType,
@@ -81,7 +85,9 @@ export class ExportService implements IExportService {
         
         filteredData = data.filter(item => {
           const itemIdString = String(item.id)
-          return options.selectedIds!.includes(itemIdString)
+
+          
+return options.selectedIds!.includes(itemIdString)
         })
         
         logger.debug('ExportService: Filtered data', {
@@ -94,6 +100,7 @@ export class ExportService implements IExportService {
 
       // Трансформируем данные для экспорта
       const exportData = adapter.transformForExport(filteredData)
+
       logger.info('ExportService: Transformed data', {
         entityType,
         correlationId,
@@ -106,10 +113,12 @@ export class ExportService implements IExportService {
 
       // В браузере создаем Blob URL, на сервере возвращаем buffer
       let result: ExportResult
+
       if (typeof window !== 'undefined') {
         const blob = new Blob([fileBuffer], {
           type: this.getMimeType(options.format)
         })
+
         const fileUrl = URL.createObjectURL(blob)
 
         result = {
@@ -210,12 +219,14 @@ export class ExportService implements IExportService {
     try {
       // Получаем адаптер для сущности
       const adapter = this.adapterFactory.getAdapter(entityType)
+
       if (!adapter) {
         throw new Error(`Adapter for entity type '${entityType}' not found`)
       }
 
       // Получаем данные через адаптер
       const data = await adapter.getDataForExport(options.filters)
+
       logger.info('ExportService: Raw data from adapter', {
         entityType,
         correlationId,
@@ -225,15 +236,19 @@ export class ExportService implements IExportService {
 
       // Фильтруем по selectedIds если указаны
       let filteredData = data
+
       if (options.selectedIds && options.selectedIds.length > 0) {
         filteredData = data.filter(item => {
           const itemIdString = String(item.id)
-          return options.selectedIds!.includes(itemIdString)
+
+          
+return options.selectedIds!.includes(itemIdString)
         })
       }
 
       // Трансформируем данные для экспорта
       const exportData = adapter.transformForExport(filteredData)
+
       logger.info('ExportService: Transformed data', {
         entityType,
         correlationId,
@@ -258,7 +273,8 @@ export class ExportService implements IExportService {
       }
     } catch (error) {
       logger.error('Export error', { entityType, format: options.format, error })
-      return {
+      
+return {
         success: false,
         recordCount: 0,
         error: error instanceof Error ? error.message : 'Export failed'
@@ -274,14 +290,18 @@ export class ExportService implements IExportService {
       if (error.message.includes('Adapter for entity type')) {
         return 'adapter_not_found'
       }
+
       if (error.message.includes('data') || error.message.includes('fetch')) {
         return 'data_fetch_error'
       }
+
       if (error.message.includes('file') || error.message.includes('generate')) {
         return 'file_generation_error'
       }
     }
-    return 'unknown'
+
+    
+return 'unknown'
   }
 
   /**
@@ -295,6 +315,7 @@ export class ExportService implements IExportService {
     const headers = options.includeHeaders
       ? fields.map(field => field.label)
       : []
+
     const fieldKeys = fields.map(field => field.key)
 
     switch (options.format) {
@@ -327,17 +348,23 @@ export class ExportService implements IExportService {
 
     // Преобразуем данные в массив массивов
     const wsData: any[][] = []
+
     if (headers.length > 0) {
       wsData.push(headers)
     }
+
     data.forEach(row => {
       wsData.push(fieldKeys.map(key => {
         const value = row[key]
+
+
         // Преобразуем boolean в строку "true"/"false" для Excel
         if (typeof value === 'boolean') {
           return value ? 'true' : 'false'
         }
-        return value ?? ''
+
+        
+return value ?? ''
       }))
     })
     
@@ -350,6 +377,7 @@ export class ExportService implements IExportService {
         ...data.map(row => String(Object.values(row)[index] || '').length)
       )
     }))
+
     ws['!cols'] = colWidths
 
     // Добавляем worksheet в workbook
@@ -383,11 +411,14 @@ export class ExportService implements IExportService {
     // Добавляем данные
     data.forEach(row => {
       const values = fieldKeys.map(key => row[key] ?? '')
+
       csvRows.push(values.map(cell => this.escapeCsvField(String(cell))).join(','))
     })
 
     const csv = csvRows.join('\n')
-    return Buffer.from(csv, 'utf-8')
+
+    
+return Buffer.from(csv, 'utf-8')
   }
 
   /**
@@ -397,7 +428,9 @@ export class ExportService implements IExportService {
     if (field.includes(',') || field.includes('"') || field.includes('\n')) {
       return `"${field.replace(/"/g, '""')}"`
     }
-    return field
+
+    
+return field
   }
 
   /**
@@ -423,6 +456,7 @@ export class ExportService implements IExportService {
     if (typeof window === 'undefined') return
 
     const link = document.createElement('a')
+
     link.href = fileUrl
     link.download = filename
     document.body.appendChild(link)

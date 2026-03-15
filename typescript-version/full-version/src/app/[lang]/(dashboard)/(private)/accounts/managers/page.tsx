@@ -70,6 +70,7 @@ const AllManagersPage = () => {
 
           if (response.ok) {
             const result = await response.json()
+
             const accountManagers = (result.data || []).map((m: any) => ({
               id: m.id,
               accountId: account.id,
@@ -83,6 +84,7 @@ const AllManagersPage = () => {
               canDelete: m.canDelete,
               createdAt: m.createdAt
             }))
+
             allManagers.push(...accountManagers)
           }
         }

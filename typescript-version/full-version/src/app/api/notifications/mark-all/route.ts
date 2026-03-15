@@ -1,13 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
 import { getSocketServer } from '@/lib/sockets'
 
 const emitNotificationsRead = (userId: string, notificationIds: string[]) => {
   const io = getSocketServer()
+
   if (!io) return
 
   const namespace = io.of('/notifications')
+
   const payload = {
     userId,
     count: notificationIds.length,
@@ -36,7 +40,8 @@ export async function PATCH(request: NextRequest) {
 
     if (unreadNotifications.length === 0) {
       emitNotificationsRead(user.id, [])
-      return NextResponse.json({ success: true })
+      
+return NextResponse.json({ success: true })
     }
 
     await prisma.notification.updateMany({
@@ -59,7 +64,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error updating all notifications:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 

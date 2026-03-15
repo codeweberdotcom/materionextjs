@@ -8,7 +8,9 @@
  * @module app/api/admin/settings/services/[id]
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { serviceConfigurationService } from '@/modules/settings/services'
 import { updateServiceConfigurationSchema } from '@/lib/config/validators'
@@ -34,6 +36,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Проверяем права доступа
     const userRole = user.role?.code?.toUpperCase()
+
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -60,6 +63,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     const { id } = await params
+
     logger.error('[API:Services] Failed to get service', {
       id,
       error: error instanceof Error ? error.message : String(error)
@@ -87,6 +91,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Проверяем права доступа
     const userRole = user.role?.code?.toUpperCase()
+
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -152,6 +157,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const { id } = await params
+
     logger.error('[API:Services] Failed to update service', {
       id,
       error: error instanceof Error ? error.message : String(error)
@@ -183,6 +189,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     // Проверяем права доступа
     const userRole = user.role?.code?.toUpperCase()
+
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -239,6 +246,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     const { id } = await params
+
     logger.error('[API:Services] Failed to delete service', {
       id,
       error: error instanceof Error ? error.message : String(error)

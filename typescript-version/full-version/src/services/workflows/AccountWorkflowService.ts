@@ -91,6 +91,7 @@ export class AccountWorkflowService {
 
       // Проверка прав доступа
       const hasAccess = await accountAccessService.canManageAccount(actorId, accountId)
+
       if (!hasAccess) {
         return {
           success: false,
@@ -127,6 +128,7 @@ export class AccountWorkflowService {
 
       // Проверяем можно ли выполнить переход
       const snapshot = actorMachine.getSnapshot()
+
       if (!snapshot.can(eventPayload as any)) {
         actorMachine.stop()
 
@@ -239,6 +241,7 @@ export class AccountWorkflowService {
 
     // Определяем доступные события
     const availableEvents: string[] = []
+
     if (canSuspend) availableEvents.push('SUSPEND')
     if (canRestore) availableEvents.push('RESTORE')
     if (canArchive) availableEvents.push('ARCHIVE')

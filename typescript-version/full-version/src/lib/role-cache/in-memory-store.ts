@@ -18,7 +18,8 @@ export class InMemoryRoleCacheStore implements RoleCacheStore {
     // Проверяем, не истек ли срок действия
     if (Date.now() > cached.expiresAt) {
       this.cache.delete(key)
-      return null
+      
+return null
     }
 
     return cached.value
@@ -26,6 +27,7 @@ export class InMemoryRoleCacheStore implements RoleCacheStore {
 
   async set(key: string, value: Role[], ttl: number): Promise<void> {
     const expiresAt = Date.now() + ttl
+
     this.cache.set(key, { value, expiresAt })
   }
 
@@ -39,6 +41,7 @@ export class InMemoryRoleCacheStore implements RoleCacheStore {
 
   async healthCheck(): Promise<{ healthy: boolean; latency?: number; error?: string }> {
     const start = Date.now()
+
     try {
       // Простая проверка - попытка чтения/записи
       await this.set('__health_check__', [], 1000)

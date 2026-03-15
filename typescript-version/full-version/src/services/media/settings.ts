@@ -48,7 +48,7 @@ export interface MediaGlobalSettingsData {
 }
 
 // Кэш настроек (обновляется каждые 5 минут)
-let settingsCache: Map<string, ImageSettingsData> = new Map()
+const settingsCache: Map<string, ImageSettingsData> = new Map()
 let globalSettingsCache: MediaGlobalSettingsData | null = null
 let lastCacheUpdate = 0
 const CACHE_TTL = 5 * 60 * 1000 // 5 минут
@@ -89,7 +89,8 @@ export async function getImageSettings(entityType: string): Promise<ImageSetting
 
       settingsCache.set(entityType, settings)
       lastCacheUpdate = Date.now()
-      return settings
+      
+return settings
     }
   } catch (error) {
     logger.warn('[Settings] Failed to get settings from DB, using defaults', {
@@ -100,6 +101,7 @@ export async function getImageSettings(entityType: string): Promise<ImageSetting
 
   // Fallback на дефолтные пресеты
   const preset = IMAGE_PRESETS[entityType as keyof typeof IMAGE_PRESETS]
+
   if (preset) {
     return {
       entityType,
@@ -151,7 +153,8 @@ export async function getGlobalSettings(): Promise<MediaGlobalSettingsData> {
         s3PublicUrl: (settings as any).s3PublicUrl || null,
       }
       lastCacheUpdate = Date.now()
-      return globalSettingsCache
+      
+return globalSettingsCache
     }
   } catch (error) {
     logger.warn('[Settings] Failed to get global settings from DB', {

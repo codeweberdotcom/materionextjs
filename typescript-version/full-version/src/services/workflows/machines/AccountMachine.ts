@@ -72,6 +72,7 @@ export const accountGuards = {
     if (event.type !== 'RESTORE') return false
 
     const hasPermission = event.hasPermission
+
     const isOwner = context.ownerId === ('actorId' in event ? event.actorId : '') ||
                     context.userId === ('actorId' in event ? event.actorId : '')
 
@@ -85,6 +86,7 @@ export const accountGuards = {
     if (event.type !== 'ARCHIVE') return false
 
     const hasPermission = event.hasPermission
+
     const isOwner = context.ownerId === ('actorId' in event ? event.actorId : '') ||
                     context.userId === ('actorId' in event ? event.actorId : '')
 
@@ -98,6 +100,7 @@ export const accountGuards = {
     if (event.type !== 'ACTIVATE') return false
 
     const hasPermission = event.hasPermission
+
     const isOwner = context.ownerId === ('actorId' in event ? event.actorId : '') ||
                     context.userId === ('actorId' in event ? event.actorId : '')
 
@@ -171,11 +174,13 @@ export const accountMachine = setup({
     events: {} as AccountEvent
   },
   guards: accountGuards,
+
   // @ts-expect-error - XState type mismatch
   actions: accountActions
 }).createMachine({
   id: 'account',
   initial: 'active',
+
   // @ts-expect-error - XState type mismatch
   context: ({ input }: { input?: Partial<AccountContext> }) => ({
     accountId: input?.accountId || '',

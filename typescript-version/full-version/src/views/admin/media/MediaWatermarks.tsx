@@ -94,9 +94,11 @@ export default function MediaWatermarks() {
   const fetchWatermarks = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/media/watermarks')
+
       if (!response.ok) throw new Error('Failed to fetch watermarks')
       
       const data = await response.json()
+
       setWatermarks(data.watermarks)
     } catch (error) {
       toast.error('Ошибка загрузки водяных знаков')
@@ -144,10 +146,12 @@ export default function MediaWatermarks() {
   const handleSave = async () => {
     if (!name || !displayName) {
       toast.error('Заполните обязательные поля')
-      return
+      
+return
     }
     
     setSaving(true)
+
     try {
       const body = {
         name,
@@ -173,6 +177,7 @@ export default function MediaWatermarks() {
       
       if (!response.ok) {
         const error = await response.json()
+
         throw new Error(error.error || 'Failed to save')
       }
       
@@ -192,6 +197,7 @@ export default function MediaWatermarks() {
     
     try {
       const response = await fetch(`/api/admin/media/watermarks/${id}`, { method: 'DELETE' })
+
       if (!response.ok) throw new Error('Failed to delete')
       
       toast.success('Водяной знак удалён')

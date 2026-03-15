@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { scenarioService } from '@/services/notifications/scenarios'
@@ -12,6 +14,7 @@ import logger from '@/lib/logger'
 export async function GET(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -22,6 +25,7 @@ export async function GET(request: NextRequest) {
     }
 
     const enabled = request.nextUrl.searchParams.get('enabled')
+
     const scenarios = await scenarioService.getAll(
       enabled !== null ? enabled === 'true' : undefined
     )
@@ -31,7 +35,8 @@ export async function GET(request: NextRequest) {
     logger.error('[API:NotificationScenarios] Failed to get scenarios', {
       error: error instanceof Error ? error.message : String(error)
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Failed to get scenarios' },
       { status: 500 }
     )
@@ -45,6 +50,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -62,7 +68,8 @@ export async function POST(request: NextRequest) {
     logger.error('[API:NotificationScenarios] Failed to create scenario', {
       error: error instanceof Error ? error.message : String(error)
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Failed to create scenario' },
       { status: 500 }
     )

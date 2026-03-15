@@ -1,4 +1,5 @@
 import { Counter, Histogram, Gauge } from 'prom-client'
+
 import { metricsRegistry } from './registry'
 
 /**
@@ -207,9 +208,12 @@ export const markQueueError = (
  */
 export const startJobTimer = () => {
   const startTime = Date.now()
-  return {
+
+  
+return {
     end: (channel: 'email' | 'sms' | 'browser' | 'telegram') => {
       const duration = (Date.now() - startTime) / 1000
+
       notificationSendDuration.observe({ channel, environment: process.env.NODE_ENV || 'development' }, duration)
     }
   }

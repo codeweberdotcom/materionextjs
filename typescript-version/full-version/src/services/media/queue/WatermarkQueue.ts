@@ -21,8 +21,10 @@ const QUEUE_NAME = 'watermark'
 const QUEUE_CONFIG = {
   /** Параллельных задач в одном worker */
   concurrency: 3,
+
   /** Лимит попыток */
   maxAttempts: 3,
+
   /** Задержка между попытками (exponential backoff) */
   backoffDelay: 2000,
   defaultJobOptions: {
@@ -63,7 +65,8 @@ export async function initializeWatermarkQueue(): Promise<boolean> {
 
     if (!redisConfig?.url) {
       logger.warn('[WatermarkQueue] Redis not configured, using in-memory fallback')
-      return false
+      
+return false
     }
 
     watermarkQueue = new Queue<WatermarkJobData>(QUEUE_NAME, redisConfig.url, {
@@ -95,12 +98,14 @@ export async function initializeWatermarkQueue(): Promise<boolean> {
     logger.info('[WatermarkQueue] Queue initialized successfully', {
       redis: redisConfig.url,
     })
-    return true
+    
+return true
   } catch (error) {
     logger.error('[WatermarkQueue] Failed to initialize queue', {
       error: error instanceof Error ? error.message : String(error),
     })
-    return false
+    
+return false
   }
 }
 
@@ -114,7 +119,8 @@ export async function registerProcessor(
 
   if (!watermarkQueue) {
     logger.warn('[WatermarkQueue] Queue not initialized, processor stored for later')
-    return
+    
+return
   }
 
   watermarkQueue.process(QUEUE_CONFIG.concurrency, processFn)
@@ -199,6 +205,7 @@ export async function addBulkWatermarkJobs(
 
   for (const jobData of jobs) {
     const result = await addWatermarkJob(jobData)
+
     if (result) {
       added++
     } else {
@@ -207,7 +214,8 @@ export async function addBulkWatermarkJobs(
   }
 
   logger.info('[WatermarkQueue] Bulk jobs added', { added, failed })
-  return { added, failed }
+  
+return { added, failed }
 }
 
 /**
@@ -341,6 +349,7 @@ export async function closeWatermarkQueue(): Promise<void> {
       await watermarkQueue.close()
       watermarkQueue = null
     }
+
     processor = null
     inMemoryQueue.length = 0
     logger.info('[WatermarkQueue] Queue closed')

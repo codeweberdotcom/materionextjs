@@ -12,7 +12,9 @@ export class AccountService {
     if (!AccountService.instance) {
       AccountService.instance = new AccountService()
     }
-    return AccountService.instance
+
+    
+return AccountService.instance
   }
 
   /**
@@ -25,6 +27,7 @@ export class AccountService {
   ): Promise<UserAccountWithRelations> {
     // Проверяем бизнес-правила (лимиты тарифного плана)
     const canCreate = await accountRulesService.canCreateAccount(userId, type, tariffPlanCode)
+
     if (!canCreate.allowed) {
       throw new Error(canCreate.reason || 'Нельзя создать аккаунт')
     }
@@ -181,6 +184,7 @@ export class AccountService {
   ): Promise<UserAccountWithRelations> {
     // Проверяем доступ
     const account = await this.getAccountById(accountId, userId)
+
     if (!account) {
       throw new Error('Account not found or access denied')
     }
@@ -221,6 +225,7 @@ export class AccountService {
    */
   async deleteAccount(accountId: string, userId: string): Promise<void> {
     const account = await this.getAccountById(accountId, userId)
+
     if (!account) {
       throw new Error('Account not found or access denied')
     }
@@ -242,12 +247,15 @@ export class AccountService {
    */
   private generateAccountName(type: AccountType): string {
     const timestamp = new Date().toLocaleDateString('ru-RU')
+
     const typeNames = {
       LISTING: 'Аккаунт для объявлений',
       COMPANY: 'Аккаунт компании',
       NETWORK: 'Сеть компаний'
     }
-    return `${typeNames[type]} - ${timestamp}`
+
+    
+return `${typeNames[type]} - ${timestamp}`
   }
 }
 

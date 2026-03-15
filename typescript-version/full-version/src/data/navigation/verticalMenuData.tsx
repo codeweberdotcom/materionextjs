@@ -90,6 +90,7 @@ const verticalMenuData = (dictionary: Awaited<ReturnType<typeof getDictionary>>)
       }
     ]
   },
+
   // Accounts Section
   {
     label: dictionary['navigation'].accounts || 'Аккаунты',

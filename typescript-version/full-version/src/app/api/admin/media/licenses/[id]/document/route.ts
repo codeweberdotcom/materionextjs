@@ -7,10 +7,13 @@
  * @module app/api/admin/media/licenses/[id]/document
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+
 import { writeFile, unlink, mkdir, readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
+
+import { NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isAdminOrHigher } from '@/utils/permissions/permissions'
@@ -89,6 +92,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Сохраняем файл
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
+
     await writeFile(filePath, buffer)
 
     // Удаляем старый документ если был

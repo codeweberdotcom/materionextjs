@@ -6,7 +6,8 @@
  * @module app/api/admin/media/sync/[jobId]
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
@@ -39,16 +40,20 @@ export async function GET(
 
     if (detailed) {
       const result = await syncService.getJobResults(jobId)
+
       if (!result) {
         return NextResponse.json(
           { error: 'Job not found' },
           { status: 404 }
         )
       }
-      return NextResponse.json(result)
+
+      
+return NextResponse.json(result)
     }
 
     const progress = await syncService.getJobStatus(jobId)
+
     if (!progress) {
       return NextResponse.json(
         { error: 'Job not found' },

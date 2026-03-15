@@ -208,6 +208,7 @@ export const startUpload = (environment: string = getEnvironment()) => {
     success: (bucket: string, sizeBytes: number) => {
       s3ActiveUploads.dec({ environment })
       const durationSeconds = (Date.now() - startTime) / 1000
+
       trackUpload(bucket, sizeBytes, durationSeconds, environment)
     },
     error: (bucket: string, errorType: string) => {
@@ -229,6 +230,7 @@ export const startDownload = (environment: string = getEnvironment()) => {
     success: (bucket: string, sizeBytes: number) => {
       s3ActiveDownloads.dec({ environment })
       const durationSeconds = (Date.now() - startTime) / 1000
+
       trackDownload(bucket, sizeBytes, durationSeconds, environment)
     },
     error: (bucket: string, errorType: string) => {

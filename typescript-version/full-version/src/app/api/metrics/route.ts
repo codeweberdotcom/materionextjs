@@ -1,4 +1,5 @@
 import { metricsRegistry } from '@/lib/metrics/registry'
+
 // Явно импортируем метрики для их регистрации в registry
 import { httpRequestDuration, websocketConnections, databaseQueryDuration } from '@/lib/metrics'
 import * as mediaMetrics from '@/lib/metrics/media'
@@ -46,6 +47,7 @@ export async function GET() {
     
     // Записываем метрику для этого запроса
     const duration = (Date.now() - startTime) / 1000
+
     httpRequestDuration
       .labels('GET', '/api/metrics', '200', process.env.NODE_ENV || 'development')
       .observe(duration)
@@ -61,6 +63,7 @@ export async function GET() {
     
     // Записываем метрику ошибки
     const duration = (Date.now() - startTime) / 1000
+
     httpRequestDuration
       .labels('GET', '/api/metrics', '500', process.env.NODE_ENV || 'development')
       .observe(duration)

@@ -36,6 +36,7 @@ export class SentryConnector extends BaseConnector {
         // Строим DSN из компонентов
         const protocol = this.config.tlsEnabled ? 'https' : 'http'
         const password = this.config.password ? safeDecrypt(this.config.password) : ''
+
         const auth = this.config.username
           ? `${this.config.username}${password ? `:${password}` : ''}`
           : ''
@@ -151,6 +152,8 @@ export class SentryConnector extends BaseConnector {
   private buildApiUrl(dsn: string): string | null {
     try {
       const url = new URL(dsn)
+
+
       // Формируем URL для API проверки (доступно только для self-hosted)
       return `${url.protocol}//${url.host}/api/0/`
     } catch {

@@ -2,6 +2,7 @@
 
 // React Imports
 import { useState, useEffect } from 'react'
+
 import { useSearchParams, useRouter, useParams } from 'next/navigation'
 
 // Next Imports
@@ -76,9 +77,11 @@ const VerifyEmail = ({ mode }: { mode: Mode }) => {
 
   const handleVerify = async (verifyToken?: string) => {
     const tokenToVerify = verifyToken || token
+
     if (!tokenToVerify) {
       setError('Токен верификации не указан')
-      return
+      
+return
     }
 
     setIsVerifying(true)
@@ -123,7 +126,8 @@ const VerifyEmail = ({ mode }: { mode: Mode }) => {
   const handleResend = async () => {
     if (!email) {
       setError('Введите email адрес')
-      return
+      
+return
     }
 
     setIsResending(true)
@@ -290,6 +294,7 @@ const VerifyEmail = ({ mode }: { mode: Mode }) => {
                   href='#'
                   onClick={e => {
                     e.preventDefault()
+
                     if (email) {
                       handleResend()
                     }

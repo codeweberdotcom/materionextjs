@@ -4,6 +4,7 @@
  */
 
 export interface PaginationOptions {
+
   /**
    * Максимальный размер батча
    */
@@ -26,10 +27,13 @@ export interface BatchResult<T> {
  */
 export function chunkIds(ids: string[], batchSize: number): string[][] {
   const batches: string[][] = []
+
   for (let i = 0; i < ids.length; i += batchSize) {
     batches.push(ids.slice(i, i + batchSize))
   }
-  return batches
+
+  
+return batches
 }
 
 /**
@@ -58,7 +62,9 @@ export async function executeBulkWithPagination<T>(
       concurrentBatches.map(async (batch, index) => {
         try {
           const result = await operation(batch)
-          return {
+
+          
+return {
             batchIndex: i + index,
             result,
             success: true

@@ -6,7 +6,9 @@
  * @module app/api/admin/settings/services/[id]/test
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { serviceConfigurationService } from '@/modules/settings/services'
 import { eventService } from '@/services/events/EventService'
@@ -31,6 +33,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Проверяем права доступа
     const userRole = user.role?.code?.toUpperCase()
+
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -99,6 +102,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     const { id } = await params
+
     logger.error('[API:Services] Failed to test connection', {
       id,
       error: error instanceof Error ? error.message : String(error)

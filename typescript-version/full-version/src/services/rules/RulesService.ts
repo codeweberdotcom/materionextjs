@@ -118,6 +118,7 @@ class RulesService {
    */
   private async ensureRulesLoaded(): Promise<void> {
     const now = Date.now()
+
     const cacheExpired =
       !this.cache.loadedAt || now - this.cache.loadedAt.getTime() > this.cache.ttl
 
@@ -401,6 +402,7 @@ class RulesService {
     avgDuration: number
   }> {
     const since = new Date()
+
     since.setDate(since.getDate() - days)
 
     const executions = await prisma.ruleExecution.findMany({

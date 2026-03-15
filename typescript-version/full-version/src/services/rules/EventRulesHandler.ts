@@ -41,7 +41,8 @@ class EventRulesHandler {
   start(): void {
     if (this.isListening) {
       logger.warn('[EventRulesHandler] Already listening to events')
-      return
+      
+return
     }
 
     // Подписываемся на события
@@ -120,16 +121,19 @@ class EventRulesHandler {
     // Добавляем факты в зависимости от типа субъекта
     if (event.subjectType === 'user' && event.subjectId) {
       facts.userId = event.subjectId
+
       // Факты user и userStats будут загружены автоматически через async facts
     }
 
     if (event.subjectType === 'listing' && event.subjectId) {
       facts.listingId = event.subjectId
+
       // Факты listing и listingStats будут загружены автоматически через async facts
     }
 
     if (event.subjectType === 'account' && event.subjectId) {
       facts.accountId = event.subjectId
+
       // Факт account будет загружен автоматически через async facts
     }
 
@@ -334,6 +338,7 @@ class EventRulesHandler {
 
     // Получаем каналы (может быть строка или массив)
     const channelsParam = params?.channels || params?.channel
+
     const channels: NotificationChannel[] = Array.isArray(channelsParam)
       ? channelsParam
       : channelsParam
@@ -342,13 +347,15 @@ class EventRulesHandler {
 
     // Получаем получателя
     const userId = await this.resolveNotificationRecipient(originalEvent, params)
+
     if (!userId) {
       logger.warn('[EventRulesHandler] Cannot resolve notification recipient', {
         eventId: originalEvent.id,
         subjectType: originalEvent.subjectType,
         subjectId: originalEvent.subjectId
       })
-      return
+      
+return
     }
 
     // Загружаем пользователя для получения контактов
@@ -364,7 +371,8 @@ class EventRulesHandler {
 
     if (!user) {
       logger.warn('[EventRulesHandler] User not found for notification', { userId })
-      return
+      
+return
     }
 
     const templateId = params?.templateId as string | undefined
@@ -399,7 +407,8 @@ class EventRulesHandler {
             channel,
             userId: user.id
           })
-          return null
+          
+return null
         }
 
         return {
@@ -423,7 +432,8 @@ class EventRulesHandler {
         userId: user.id,
         requestedChannels: channels
       })
-      return
+      
+return
     }
 
     try {
@@ -499,7 +509,9 @@ class EventRulesHandler {
         where: { id: event.subjectId },
         select: { ownerId: true }
       })
-      return listing?.ownerId || null
+
+      
+return listing?.ownerId || null
     }
 
     // Если subjectType === 'account', получаем userId (владельца аккаунта)
@@ -508,7 +520,9 @@ class EventRulesHandler {
         where: { id: event.subjectId },
         select: { userId: true }
       })
-      return account?.userId || null
+
+      
+return account?.userId || null
     }
 
     // Если subjectType === 'company', получаем ownerId компании

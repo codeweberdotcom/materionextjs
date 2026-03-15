@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import type { UserWithRoleRecord } from '@/types/prisma'
@@ -22,6 +23,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     const hasPermission = isSuperadmin(user) || isAdminByCode(user)
+
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -31,6 +33,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     const success = await rateLimitService.deactivateManualBlock(id)
+
     if (!success) {
       return NextResponse.json({ error: 'Failed to deactivate block' }, { status: 404 })
     }
@@ -40,6 +43,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     logger.error('Error deactivating manual block', {
       error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
     })
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -1,5 +1,7 @@
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import logger from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
 import { checkPermission } from '@/utils/permissions/permissions'

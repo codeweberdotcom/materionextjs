@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { exportService } from '@/services/export/ExportService'
-import { ExportFormat, generateFileName } from '@/types/export-import'
+import type { ExportFormat} from '@/types/export-import';
+import { generateFileName } from '@/types/export-import'
 import logger from '@/lib/logger'
 
 /**
@@ -11,11 +14,13 @@ import logger from '@/lib/logger'
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await request.json()
+
     const { 
       entityType, 
       format = 'xlsx', 

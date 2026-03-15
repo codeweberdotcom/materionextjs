@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
 import { rateLimitService } from '@/lib/rate-limit'
@@ -6,6 +8,7 @@ import { rateLimitService } from '@/lib/rate-limit'
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -100,6 +103,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(roomData)
   } catch (error) {
     console.error('Failed to create/get room:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

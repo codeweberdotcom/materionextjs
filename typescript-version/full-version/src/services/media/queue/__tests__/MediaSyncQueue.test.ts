@@ -63,6 +63,7 @@ describe('MediaSyncQueue', () => {
 
   afterEach(async () => {
     const { MediaSyncQueue } = await import('../MediaSyncQueue')
+
     await MediaSyncQueue.getInstance().close()
   })
 

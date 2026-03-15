@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
+
 import {
   Card,
   CardContent,
@@ -9,6 +10,7 @@ import {
   LinearProgress,
   Chip
 } from '@mui/material'
+
 import type { ValidationPreview } from '@/types/export-import'
 
 interface ImportStatisticsProps {
@@ -35,13 +37,15 @@ export default function ImportStatistics({ preview, fileSize }: ImportStatistics
   const getStatusColor = (percentage: number): 'success' | 'warning' | 'error' => {
     if (percentage >= 90) return 'success'
     if (percentage >= 50) return 'warning'
-    return 'error'
+    
+return 'error'
   }
 
   const getStatusLabel = (percentage: number): string => {
     if (percentage >= 90) return 'Отлично'
     if (percentage >= 50) return 'Требует внимания'
-    return 'Много ошибок'
+    
+return 'Много ошибок'
   }
 
   return (

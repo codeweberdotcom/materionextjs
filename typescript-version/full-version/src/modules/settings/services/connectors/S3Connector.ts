@@ -32,6 +32,7 @@ export interface S3Metadata {
   forcePathStyle?: boolean
   storageType?: S3StorageType
   signatureVersion?: 'v4' | 'v2'
+
   // Дополнительные настройки для кастомных S3
   customEndpointUrl?: string
   virtualHostedStyle?: boolean
@@ -118,15 +119,19 @@ export class S3Connector extends BaseConnector {
     if (host.includes('amazonaws.com') || host.includes('aws')) {
       return 'aws'
     }
+
     if (host.includes('digitaloceanspaces.com')) {
       return 'digitalocean'
     }
+
     if (host.includes('storage.yandexcloud.net') || host.includes('yandex')) {
       return 'yandex'
     }
+
     if (host.includes('selcdn.ru') || host.includes('selectel')) {
       return 'selectel'
     }
+
     if (host.includes('minio') || host === 'localhost' || host === '127.0.0.1') {
       return 'minio'
     }
@@ -196,6 +201,7 @@ export class S3Connector extends BaseConnector {
 
       // Bucket обязателен для проверки
       const testBucket = metadata.bucket
+
       if (!testBucket) {
         return {
           success: false,
@@ -206,13 +212,16 @@ export class S3Connector extends BaseConnector {
 
       // Пробуем получить список бакетов (опционально, некоторые провайдеры не поддерживают)
       const stopListTimer = startS3OperationTimer('list')
+
       try {
         const listResult = await client.send(new ListBucketsCommand({}))
+
         buckets = listResult.Buckets || []
         stopListTimer()
         trackS3OperationSuccess('list', 'default')
       } catch (listError) {
         stopListTimer()
+
         // Некоторые S3-совместимые хранилища не поддерживают ListBuckets
         logger.warn('[S3Connector] ListBuckets not supported', {
           storageType: metadata.storageType,
@@ -222,6 +231,7 @@ export class S3Connector extends BaseConnector {
 
       // Проверяем существование и доступность bucket
       const stopHeadTimer = startS3OperationTimer('head')
+
       try {
         await client.send(new HeadBucketCommand({ Bucket: testBucket }))
         bucketExists = true
@@ -231,6 +241,7 @@ export class S3Connector extends BaseConnector {
         // Пробуем получить локацию bucket
         try {
           const locationResult = await client.send(new GetBucketLocationCommand({ Bucket: testBucket }))
+
           bucketLocation = locationResult.LocationConstraint || region
         } catch {
           // Некоторые провайдеры не поддерживают GetBucketLocation
@@ -238,8 +249,10 @@ export class S3Connector extends BaseConnector {
       } catch (headError: any) {
         stopHeadTimer()
         bucketExists = false
+
         const errorType = headError.name === 'NotFound' ? 'not_found' : 
                          headError.name === 'Forbidden' ? 'forbidden' : 'unknown'
+
         trackS3OperationError('head', testBucket, errorType)
         
         if (headError.name === 'NotFound' || headError.$metadata?.httpStatusCode === 404) {

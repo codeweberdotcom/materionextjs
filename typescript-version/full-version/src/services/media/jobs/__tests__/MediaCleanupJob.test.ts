@@ -59,6 +59,7 @@ describe('MediaCleanupJob', () => {
 
     it('should handle dry run mode', async () => {
       const prisma = await import('@/libs/prisma')
+
       vi.mocked(prisma.default.media.findMany).mockResolvedValue([
         { id: '1', filename: 'test1.jpg', deletedAt: new Date(), storageStatus: 'local_only' },
         { id: '2', filename: 'test2.jpg', deletedAt: new Date(), storageStatus: 'local_only' },
@@ -74,6 +75,7 @@ describe('MediaCleanupJob', () => {
 
     it('should skip when auto cleanup is disabled', async () => {
       const settings = await import('../../settings')
+
       vi.mocked(settings.getGlobalSettings).mockResolvedValue({
         autoCleanupEnabled: false,
         softDeleteRetentionDays: 30,
@@ -99,6 +101,7 @@ describe('MediaCleanupJob', () => {
 
     it('should find and soft delete orphan files', async () => {
       const prisma = await import('@/libs/prisma')
+
       vi.mocked(prisma.default.media.findMany).mockResolvedValue([
         { id: '1', filename: 'orphan1.jpg', createdAt: new Date('2020-01-01') },
       ] as any)

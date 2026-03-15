@@ -2,6 +2,8 @@
 
 import { forwardRef, useCallback, useEffect, useMemo, useState, type SyntheticEvent } from 'react'
 
+import { useParams } from 'next/navigation'
+
 import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -35,7 +37,6 @@ import DialogActions from '@mui/material/DialogActions'
 
 import { formatDistanceToNow } from 'date-fns'
 import { enUS, fr, ru, ar as arLocale } from 'date-fns/locale'
-import { useParams } from 'next/navigation'
 import { toast } from 'react-toastify'
 
 import { usePermissions } from '@/hooks/usePermissions'
@@ -105,6 +106,7 @@ const DateFilterInput = forwardRef<HTMLInputElement, TextFieldProps>(({ label, .
     {...props}
   />
 ))
+
 DateFilterInput.displayName = 'DateFilterInput'
 
 const formatDateParam = (date: Date | null) => (date ? date.toISOString() : undefined)
@@ -187,12 +189,14 @@ const RateLimitEvents = () => {
   const dictionary = useTranslation()
   const params = useParams()
   const langParam = typeof params?.lang === 'string' ? params.lang : Array.isArray(params?.lang) ? params.lang[0] : undefined
+
   const localeMap = {
     en: enUS,
     fr,
     ru,
     ar: arLocale
   }
+
   const dateFnsLocale = localeMap[(langParam as keyof typeof localeMap) ?? 'en'] ?? enUS
 
   const [events, setEvents] = useState<EventEntry[]>([])
@@ -207,6 +211,7 @@ const RateLimitEvents = () => {
   const [deleteEventId, setDeleteEventId] = useState<string | null>(null)
   const [manualBlockDialogOpen, setManualBlockDialogOpen] = useState(false)
   const [creatingBlock, setCreatingBlock] = useState(false)
+
   const [manualBlockForm, setManualBlockForm] = useState<ManualBlockForm>({
     module: 'all',
     targetUser: true,
@@ -221,6 +226,7 @@ const RateLimitEvents = () => {
     durationMinutes: '60',
     notes: ''
   })
+
   const [filters, setFilters] = useState<FilterState>({
     eventType: 'all',
     mode: 'all',
@@ -229,9 +235,11 @@ const RateLimitEvents = () => {
   })
 
   const t = dictionary.rateLimitEvents ?? {}
+
   const formatRelativeTime = useCallback(
     (value?: string | null) => {
       if (!value) return null
+
       try {
         return formatDistanceToNow(new Date(value), { addSuffix: true, locale: dateFnsLocale })
       } catch {
@@ -240,6 +248,7 @@ const RateLimitEvents = () => {
     },
     [dateFnsLocale]
   )
+
   const renderEventSkeletonRows = () => (
     <>
       {[0, 1, 2].map(index => (
@@ -298,9 +307,11 @@ const RateLimitEvents = () => {
       </Card>
     </Grid>
   )
+
   const navigationLabels = dictionary.navigation ?? {}
 
   const hasAccess = isSuperadmin || checkPermission('rateLimitManagement', 'read')
+
   const canModify =
     isSuperadmin ||
     checkPermission('rateLimitManagement', 'update') ||
@@ -308,7 +319,9 @@ const RateLimitEvents = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 400)
-    return () => clearTimeout(timer)
+
+    
+return () => clearTimeout(timer)
   }, [search])
 
   const fetchModules = useCallback(async () => {
@@ -318,20 +331,27 @@ const RateLimitEvents = () => {
 
     try {
       const response = await fetch('/api/admin/rate-limits')
+
       if (!response.ok) {
         throw new Error('Failed to load configs')
       }
 
       const data = await response.json().catch(() => null)
+
       if (Array.isArray(data?.configs) && data.configs.length) {
         const configs = data.configs as RateLimitConfigEntry[]
+
         const moduleNames = configs.reduce<string[]>((acc, config) => {
           if (typeof config.module === 'string' && config.module.length > 0) {
             acc.push(config.module)
           }
-          return acc
+
+          
+return acc
         }, [])
+
         const uniqueModules = Array.from(new Set<string>(moduleNames))
+
         if (uniqueModules.length) {
           setModules(uniqueModules)
           setManualBlockForm(prev => ({
@@ -360,34 +380,44 @@ const RateLimitEvents = () => {
       try {
         const params = new URLSearchParams()
         const moduleFilter = activeModuleTab
+
         if (moduleFilter !== 'all') {
           params.set('module', moduleFilter)
         }
+
         if (filters.eventType !== 'all') {
           params.set('eventType', filters.eventType)
         }
+
         if (filters.mode !== 'all') {
           params.set('mode', filters.mode)
         }
+
         const fromParam = formatDateParam(filters.from)
         const toParam = formatDateParam(filters.to)
+
         if (fromParam) {
           params.set('from', fromParam)
         }
+
         if (toParam) {
           params.set('to', toParam)
         }
+
         if (debouncedSearch) {
           params.set('search', debouncedSearch)
         }
+
         if (cursor) {
           params.set('cursor', cursor)
         }
+
         params.set('limit', '25')
 
         const response = await fetch(`/api/admin/rate-limits/events?${params.toString()}`, {
           credentials: 'include'
         })
+
         if (!response.ok) {
           throw new Error('Failed to load events')
         }
@@ -468,6 +498,7 @@ const RateLimitEvents = () => {
     }
 
     setDeleteEventId(eventId)
+
     try {
       const response = await fetch(`/api/admin/rate-limits/events/${eventId}`, {
         method: 'DELETE',
@@ -476,6 +507,7 @@ const RateLimitEvents = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+
         throw new Error(errorData.error || 'Failed to delete event')
       }
 
@@ -527,43 +559,52 @@ const RateLimitEvents = () => {
 
     if (!module) {
       toast.error(t.manualBlockValidationModule || 'Module is required')
-      return
+      
+return
     }
 
     if (!reason.trim()) {
       toast.error(t.manualBlockValidationReason || 'Reason is required')
-      return
+      
+return
     }
 
     if (!targetUser && !targetEmail && !targetDomain && !targetIp) {
       toast.error(t.manualBlockValidationTarget || 'Select at least one target (user, email, domain, IP)')
-      return
+      
+return
     }
 
     if (targetUser && !userId.trim()) {
       toast.error(t.manualBlockValidationUser || 'User ID is required')
-      return
+      
+return
     }
 
     if (targetEmail && !email.trim()) {
       toast.error(t.manualBlockValidationEmail || 'Email is required')
-      return
+      
+return
     }
 
     if (targetDomain && !mailDomain.trim()) {
       toast.error(t.manualBlockValidationDomain || 'Domain is required')
-      return
+      
+return
     }
 
     if (targetIp && !ipAddress.trim()) {
       toast.error(t.manualBlockValidationIp || 'IP address is required')
-      return
+      
+return
     }
 
     const duration = Number(durationMinutes)
+
     if (durationMinutes && (Number.isNaN(duration) || duration < 0)) {
       toast.error(t.manualBlockValidationDuration || 'Duration must be a positive number')
-      return
+      
+return
     }
 
     setCreatingBlock(true)
@@ -590,6 +631,7 @@ const RateLimitEvents = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+
         throw new Error(errorData.error || 'Failed to create block')
       }
 
@@ -607,6 +649,7 @@ const RateLimitEvents = () => {
   const eventRows = useMemo(() => events, [events])
 
   const moduleOptions = useMemo(() => ['all', ...modules], [modules])
+
   const handleModuleTabChange = (_event: SyntheticEvent, value: string) => {
     setActiveModuleTab(value)
     setEvents([])
@@ -783,12 +826,15 @@ const RateLimitEvents = () => {
                               event.user?.name ||
                               event.user?.email ||
                               (event.userId ? `${t.userIdLabel || 'User'}: ${event.userId}` : '')
+
                         const displayKey = event.key || event.userId || event.email || event.ipAddress || '—'
                         const debugInfo = isSuperadmin && (event as any).debugEmail ? `Debug: ${(event as any).debugEmail}` : null
                     const isBlock = event.eventType === 'block'
+
                     const blockedUntilLabel = event.blockedUntil
                       ? formatRelativeTime(event.blockedUntil) || '—'
                       : '—'
+
                     const usageLabel = `${event.count.toLocaleString()} / ${event.maxRequests.toLocaleString()}`
 
                     return (

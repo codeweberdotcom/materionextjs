@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+
 import {
   Card,
   CardContent,
@@ -21,6 +22,7 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material'
+
 import type { ValidationError, ImportWarning } from '@/types/export-import'
 
 interface ImportErrorsListProps {
@@ -62,27 +64,35 @@ export default function ImportErrorsList({ errors, warnings, onRowClick }: Impor
   // Группируем ошибки по строкам
   const errorsByRow = useMemo(() => {
     const grouped: Record<number, ValidationError[]> = {}
+
     errors.forEach(error => {
       const row = error.row || 0
+
       if (!grouped[row]) {
         grouped[row] = []
       }
+
       grouped[row].push(error)
     })
-    return grouped
+    
+return grouped
   }, [errors])
 
   // Группируем предупреждения по строкам
   const warningsByRow = useMemo(() => {
     const grouped: Record<number, ImportWarning[]> = {}
+
     warnings.forEach(warning => {
       const row = warning.row || 0
+
       if (!grouped[row]) {
         grouped[row] = []
       }
+
       grouped[row].push(warning)
     })
-    return grouped
+    
+return grouped
   }, [warnings])
 
   // Фильтруем ошибки по поисковому запросу
@@ -90,17 +100,20 @@ export default function ImportErrorsList({ errors, warnings, onRowClick }: Impor
     if (!searchQuery) return errorsByRow
 
     const filtered: Record<number, ValidationError[]> = {}
+
     Object.entries(errorsByRow).forEach(([row, rowErrors]) => {
       const matchingErrors = rowErrors.filter(error =>
         error.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
         error.field?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         String(error.value || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
+
       if (matchingErrors.length > 0) {
         filtered[Number(row)] = matchingErrors
       }
     })
-    return filtered
+    
+return filtered
   }, [errorsByRow, searchQuery])
 
   // Фильтруем предупреждения по поисковому запросу
@@ -108,26 +121,31 @@ export default function ImportErrorsList({ errors, warnings, onRowClick }: Impor
     if (!searchQuery) return warningsByRow
 
     const filtered: Record<number, ImportWarning[]> = {}
+
     Object.entries(warningsByRow).forEach(([row, rowWarnings]) => {
       const matchingWarnings = rowWarnings.filter(warning =>
         warning.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
         warning.field?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         String(warning.value || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
+
       if (matchingWarnings.length > 0) {
         filtered[Number(row)] = matchingWarnings
       }
     })
-    return filtered
+    
+return filtered
   }, [warningsByRow, searchQuery])
 
   const handleToggleRow = (row: number) => {
     const newExpanded = new Set(expandedRows)
+
     if (newExpanded.has(row)) {
       newExpanded.delete(row)
     } else {
       newExpanded.add(row)
     }
+
     setExpandedRows(newExpanded)
   }
 

@@ -1,6 +1,7 @@
 // User repository for database operations
-import { prisma } from '@/libs/prisma'
 import type { Prisma, User } from '@prisma/client'
+
+import { prisma } from '@/libs/prisma'
 
 export class UserRepository {
   async findById(id: string): Promise<User | null> {

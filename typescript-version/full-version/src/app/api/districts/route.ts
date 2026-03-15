@@ -1,5 +1,7 @@
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { prisma } from '@/libs/prisma'
 import { getDictionary } from '@/utils/formatting/getDictionary'
 import type { Locale } from '@configs/i18n'

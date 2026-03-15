@@ -23,14 +23,16 @@ import Divider from '@mui/material/Divider'
 import Box from '@mui/material/Box'
 
 // Context Imports
+import { toast } from 'react-toastify'
+
+import Skeleton from '@mui/material/Skeleton'
+
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Hook Imports
 import { usePermissions } from '@/hooks/usePermissions'
-import { toast } from 'react-toastify'
 
 // Third-party Imports
-import Skeleton from '@mui/material/Skeleton'
 
 type RegistrationMode = 'email_or_phone' | 'email_and_phone'
 
@@ -70,6 +72,7 @@ const RegistrationSettings = () => {
 
         if (response.ok) {
           const settings = await response.json()
+
           setFormData({
             registrationMode: settings.registrationMode,
             requirePhoneVerification: settings.requirePhoneVerification,

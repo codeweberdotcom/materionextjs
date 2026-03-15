@@ -82,6 +82,7 @@ export class ElasticsearchConnector extends BaseConnector {
       if (metadata.apiKeyId && metadata.apiKey) {
         // API Key аутентификация
         const apiKey = safeDecrypt(metadata.apiKey)
+
         clientConfig.auth = {
           apiKey: {
             id: metadata.apiKeyId,
@@ -91,6 +92,7 @@ export class ElasticsearchConnector extends BaseConnector {
       } else if (this.config.username && this.config.password) {
         // Basic аутентификация
         const password = safeDecrypt(this.config.password)
+
         clientConfig.auth = {
           username: this.config.username,
           password
@@ -98,6 +100,7 @@ export class ElasticsearchConnector extends BaseConnector {
       } else if (this.config.token) {
         // Bearer token
         const token = safeDecrypt(this.config.token)
+
         clientConfig.auth = {
           bearer: token
         }
@@ -115,6 +118,7 @@ export class ElasticsearchConnector extends BaseConnector {
 
         if (this.config.tlsCert) {
           const cert = safeDecrypt(this.config.tlsCert)
+
           clientConfig.tls.ca = cert
         }
       }
@@ -146,9 +150,11 @@ export class ElasticsearchConnector extends BaseConnector {
 
       try {
         const statsResult = await client.cluster.stats()
+
         indicesCount = statsResult.indices?.count || 0
         documentsCount = statsResult.indices?.docs?.count || 0
         const storageBytesRaw = statsResult.indices?.store?.size_in_bytes
+
         if (typeof storageBytesRaw === 'number') {
           storageSize = formatBytes(storageBytesRaw)
         }
@@ -159,9 +165,11 @@ export class ElasticsearchConnector extends BaseConnector {
       // Проверяем тестовый индекс если указан
       let testIndexExists = null
       let testIndexError = null
+
       if (metadata.index) {
         try {
           const indexExists = await client.indices.exists({ index: metadata.index })
+
           testIndexExists = indexExists
         } catch (indexError: any) {
           testIndexError = indexError.message || 'Index check failed'
@@ -239,19 +247,23 @@ export class ElasticsearchConnector extends BaseConnector {
     // Аутентификация
     if (metadata.apiKeyId && metadata.apiKey) {
       const apiKey = safeDecrypt(metadata.apiKey)
+
       clientConfig.auth = {
         apiKey: { id: metadata.apiKeyId, api_key: apiKey }
       }
     } else if (this.config.username && this.config.password) {
       const password = safeDecrypt(this.config.password)
+
       clientConfig.auth = { username: this.config.username, password }
     } else if (this.config.token) {
       const token = safeDecrypt(this.config.token)
+
       clientConfig.auth = { bearer: token }
     }
 
     if (this.config.tlsEnabled) {
       clientConfig.tls = { rejectUnauthorized: true }
+
       if (this.config.tlsCert) {
         clientConfig.tls.ca = safeDecrypt(this.config.tlsCert)
       }

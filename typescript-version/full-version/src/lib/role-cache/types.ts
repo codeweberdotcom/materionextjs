@@ -18,6 +18,7 @@ export interface Role {
  * Интерфейс хранилища кэша ролей
  */
 export interface RoleCacheStore {
+
   /**
    * Получить роли из кэша
    * @param key - Ключ кэша (обычно 'all-roles')

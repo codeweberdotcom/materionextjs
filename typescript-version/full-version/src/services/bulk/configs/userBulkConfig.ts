@@ -2,9 +2,10 @@
  * Конфигурация bulk операций для пользователей
  */
 
+import type { Prisma } from '@prisma/client'
+
 import { prisma } from '@/libs/prisma'
 import type { BulkOperationConfig, BulkOperationContext } from '../types'
-import type { Prisma } from '@prisma/client'
 
 /**
  * Конфигурация для bulk активации пользователей
@@ -88,7 +89,8 @@ export const userBulkDeactivateConfig: BulkOperationConfig = {
         .filter(u => {
           if ((u.role as any)?.code === 'SUPERADMIN') return false
           if (u.id === context.currentUser.id) return false
-          return true
+          
+return true
         })
         .map(u => u.id)
     },
@@ -155,7 +157,8 @@ export const userBulkDeleteConfig: BulkOperationConfig = {
         .filter(u => {
           if ((u.role as any)?.code === 'SUPERADMIN') return false
           if (u.id === context.currentUser.id) return false
-          return true
+          
+return true
         })
         .map(u => u.id)
     },

@@ -4,8 +4,9 @@
  * @module services/media/queue/MediaProcessingWorker
  */
 
-import Queue from 'bull'
 import fs from 'fs/promises'
+
+import type Queue from 'bull'
 
 import type { MediaProcessingJobData, MediaProcessingResult } from './types'
 import { getMediaService } from '../index'
@@ -51,6 +52,7 @@ export class MediaProcessingWorker {
 
       // 2. Читаем временный файл
       let buffer: Buffer
+
       try {
         buffer = await fs.readFile(tempPath)
       } catch (error) {
@@ -58,7 +60,8 @@ export class MediaProcessingWorker {
           tempPath,
           error: error instanceof Error ? error.message : String(error),
         })
-        return {
+        
+return {
           success: false,
           error: 'Temporary file not found or not readable',
         }
@@ -105,6 +108,7 @@ export class MediaProcessingWorker {
       
       // Определяем нужна ли синхронизация
       const needsS3Sync = s3Enabled && storageLocation !== 'local' && media.localPath
+
       // Удалять локальные файлы только если storageLocation === 's3'
       const deleteSourceAfterSync = storageLocation === 's3'
       
@@ -120,6 +124,7 @@ export class MediaProcessingWorker {
                 // Immediate — синхронизируем сразу в этом же запросе
                 try {
                   const storageService = await getStorageService()
+
                   await storageService.syncToS3(media, deleteSourceAfterSync)
                   logger.info('[MediaProcessingWorker] S3 sync completed (immediate)', {
                     mediaId: media.id,
@@ -130,8 +135,10 @@ export class MediaProcessingWorker {
                     mediaId: media.id,
                     error: immediateSyncError instanceof Error ? immediateSyncError.message : String(immediateSyncError),
                   })
+
                   // Не прерываем — файл всё равно сохранён локально
                 }
+
                 break
                 
               case 'background':
@@ -151,6 +158,7 @@ export class MediaProcessingWorker {
               case 'delayed':
                 // Добавляем в очередь с задержкой
                 const delayMs = syncDelayMinutes * 60 * 1000
+
                 await mediaSyncQueue.add({
                   operation: 'upload_to_s3',
                   mediaId: media.id,
@@ -205,12 +213,15 @@ export class MediaProcessingWorker {
       if (entityType !== 'other') {
         try {
           const needsWatermark = await shouldApplyWatermark(entityType)
+
           if (needsWatermark) {
             await initializeWatermarkQueue()
+
             const wmJob = await addWatermarkJob({
               mediaId: media.id,
               entityType,
             })
+
             if (wmJob) {
               logger.info('[MediaProcessingWorker] Watermark job queued', {
                 mediaId: media.id,
@@ -245,6 +256,7 @@ export class MediaProcessingWorker {
 
       // 6. Формируем URL для ответа
       const urls: Record<string, string> = {}
+
       if (media.localPath) {
         urls.original = `/uploads/${media.localPath.replace(/^public\/uploads\//, '').replace(/^uploads\//, '')}`
       }
@@ -253,6 +265,7 @@ export class MediaProcessingWorker {
       if (media.variants) {
         try {
           const variants = JSON.parse(media.variants as string)
+
           for (const [name, variant] of Object.entries(variants) as [string, any][]) {
             if (variant.localPath) {
               urls[name] = `/uploads/${variant.localPath.replace(/^public\/uploads\//, '').replace(/^uploads\//, '')}`

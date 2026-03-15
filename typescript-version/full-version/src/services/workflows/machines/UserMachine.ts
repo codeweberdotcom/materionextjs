@@ -177,6 +177,7 @@ export const userActions = {
       blockedBy: event.actorId,
       blockedAt: new Date().toISOString(),
       reason: event.reason,
+
       // Очищаем данные приостановки при блокировке
       suspendedBy: undefined,
       suspendedAt: undefined
@@ -212,11 +213,13 @@ export const userMachine = setup({
     events: {} as UserEvent
   },
   guards: userGuards,
+
   // @ts-expect-error - XState type mismatch
   actions: userActions
 }).createMachine({
   id: 'user',
   initial: 'active',
+
   // @ts-expect-error - XState type mismatch
   context: ({ input }: { input?: Partial<UserContext> }) => ({
     userId: input?.userId || '',

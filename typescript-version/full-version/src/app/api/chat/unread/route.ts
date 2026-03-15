@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { lucia } from '@/libs/lucia'
 import { prisma } from '@/libs/prisma'
 
@@ -34,7 +36,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ count: unreadCount })
   } catch (error) {
     console.error('Error fetching unread messages count:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 

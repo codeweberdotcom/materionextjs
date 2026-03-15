@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isAdminByCode, isSuperadmin } from '@/utils/permissions/permissions'
@@ -14,6 +15,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     const hasPermission = isSuperadmin(user) || isAdminByCode(user)
+
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -23,6 +25,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     const success = await rateLimitService.clearState(id)
+
     if (!success) {
       return NextResponse.json({ error: 'Rate limit state not found' }, { status: 404 })
     }
@@ -30,6 +33,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error clearing rate limit state:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

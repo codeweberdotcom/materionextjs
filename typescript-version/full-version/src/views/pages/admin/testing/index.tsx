@@ -2,6 +2,7 @@
 
 // React Imports
 import { useEffect, useMemo, useState } from 'react'
+
 import { useParams } from 'next/navigation'
 
 // MUI Imports
@@ -73,24 +74,31 @@ const TestingPage = () => {
   const [timeoutModalOpen, setTimeoutModalOpen] = useState(false)
   const [selectedScript, setSelectedScript] = useState<PlaywrightTestScript | null>(null)
   const [timeoutValue, setTimeoutValue] = useState<string>('')
+
+
   // Only show E2E tests in admin panel (Unit and Integration tests run in CI/CD)
   const [scriptsWithTimeouts, setScriptsWithTimeouts] = useState<PlaywrightTestScript[]>(
     playwrightTestScripts.filter(script => script.type === 'E2E')
   )
+
   const [testConfigs, setTestConfigs] = useState<Record<string, number>>({})
 
   const latestByScript = useMemo<Map<string, ScriptRunSummary & { runId: string }>>(() => {
     const map = new Map<string, ScriptRunSummary & { runId: string }>()
+
     runs.forEach(run => {
       run.scripts?.forEach(script => {
         const key = script.scriptId || script.file
+
         if (!key) return
+
         if (!map.has(key)) {
           map.set(key, { ...script, runId: run.runId })
         }
       })
     })
-    return map
+    
+return map
   }, [runs])
 
   const recentEntries = useMemo<(ScriptRunSummary & { runId: string; runLabel: string })[]>(() => {
@@ -116,14 +124,18 @@ const TestingPage = () => {
     runs.forEach(run => {
       run.scripts?.forEach(script => {
         const key = script.scriptId || script.file || script.title
+
         if (!key) return
         const entry = map.get(key) || { total: 0, passed: 0, failed: 0 }
+
         entry.total += 1
+
         if (script.status === 'passed') {
           entry.passed += 1
         } else {
           entry.failed += 1
         }
+
         map.set(key, entry)
       })
     })
@@ -134,12 +146,16 @@ const TestingPage = () => {
 
   const fetchRuns = async () => {
     setError(null)
+
     try {
       const response = await fetch('/api/admin/test-runs?limit=50')
+
       if (!response.ok) {
         throw new Error(t.errorLoad || 'Failed to load test runs')
       }
+
       const data = await response.json()
+
       setRuns(Array.isArray(data.runs) ? data.runs : [])
     } catch (err) {
       setError(err instanceof Error ? err.message : (t.errorLoad || 'Failed to load test runs'))
@@ -152,9 +168,11 @@ const TestingPage = () => {
   const fetchTestConfigs = async () => {
     try {
       const response = await fetch('/api/admin/test-configs')
+
       if (response.ok) {
         const data = await response.json()
         const configMap: Record<string, number> = {}
+
         data.configs.forEach((config: any) => {
           configMap[config.testId] = config.timeout
         })
@@ -182,6 +200,7 @@ const TestingPage = () => {
     const runSingleTest = async (id: string) => {
       const script = scriptsWithTimeouts.find(s => s.id === id)
       const timeout = script?.timeout || 30000
+
       const response = await fetch('/api/admin/run-tests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -247,6 +266,7 @@ const TestingPage = () => {
   const saveTimeout = async () => {
     if (selectedScript) {
       const timeout = parseInt(timeoutValue, 10)
+
       if (!isNaN(timeout) && timeout > 0) {
         try {
           const response = await fetch('/api/admin/test-configs', {
@@ -272,6 +292,7 @@ const TestingPage = () => {
         }
       }
     }
+
     closeTimeoutModal()
   }
 
@@ -370,20 +391,28 @@ const TestingPage = () => {
                {scriptsWithTimeouts.map(script => {
                 // Используем script.id как основной ключ, но также пробуем script.file для совместимости
                 const scriptKey = script.id
+
                 const scriptResult = scriptKey 
                   ? (latestByScript.get(scriptKey) || latestByScript.get(script.file))
                   : undefined
+
+
                 // Для stats используем scriptId из runs, если есть, иначе пробуем по file
                 const statsKey = script.id
+
                 const stats = statsKey 
                   ? (scriptStats.get(statsKey) || scriptStats.get(script.file))
                   : undefined
+
                 const chipLabel = scriptResult
                   ? (scriptResult.status === 'passed' ? (t.statusPassed || 'Passed') : (t.statusFailed || 'Failed'))
                   : (t.statusNotRun || 'Not run')
+
                 const chipColor: 'default' | 'success' | 'error' =
                   scriptResult ? (scriptResult.status === 'passed' ? 'success' : 'error') : 'default'
-                return (
+
+                
+return (
                   <TableRow key={script.id}>
                     <TableCell>
                       <Chip

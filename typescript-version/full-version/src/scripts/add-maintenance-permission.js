@@ -16,6 +16,7 @@ async function addMaintenancePermission() {
       if (role.permissions) {
         try {
           const parsed = JSON.parse(role.permissions)
+
           if (typeof parsed === 'object' && parsed !== null) {
             currentPermissions = parsed
           }

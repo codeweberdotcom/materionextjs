@@ -5,7 +5,8 @@
  * PUT /api/user/username - Изменить username
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
 import { requireAuth } from '@/utils/auth/auth'
@@ -53,7 +54,8 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error getting username info:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
@@ -131,7 +133,8 @@ export async function PUT(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error changing username:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )

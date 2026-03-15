@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { importService } from '@/services/import/ImportService'
 import logger from '@/lib/logger'
@@ -10,6 +12,7 @@ import logger from '@/lib/logger'
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

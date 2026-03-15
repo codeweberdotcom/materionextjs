@@ -133,6 +133,7 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
 
   // Use dynamic notifications if available, fallback to static
   const isUsingStoreNotifications = visibleNotifications.length > 0
+
   const notificationsState: Array<Notification | NotificationsType> = isUsingStoreNotifications
     ? visibleNotifications
     : staticNotifications
@@ -298,6 +299,7 @@ const NotificationDropdown = ({ notifications: staticNotifications }: { notifica
                       const avatarText = notification.avatarText
                       const avatarColor = normalizeThemeColor(notification.avatarColor)
                       const avatarSkin = normalizeAvatarSkin(notification.avatarSkin)
+
                       const isVirtualNotification =
                         isStoreItem && isVirtualStoreNotification({ id: notification.id })
 

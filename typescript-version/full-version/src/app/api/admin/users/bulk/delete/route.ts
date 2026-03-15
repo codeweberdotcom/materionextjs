@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'

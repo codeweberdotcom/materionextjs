@@ -1,7 +1,11 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+
+import { useRouter, useSearchParams , useParams } from 'next/navigation'
+
+import Link from 'next/link'
+
 import { differenceInSeconds, formatDuration, intervalToDuration } from 'date-fns'
 
 import Box from '@mui/material/Box'
@@ -29,8 +33,6 @@ import Stack from '@mui/material/Stack'
 import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import { toast } from 'react-toastify'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Checkbox from '@mui/material/Checkbox'
 
@@ -317,6 +319,7 @@ const uiText: Record<string, UITextEntry> = {
 
 const formatDate = (value?: string | null) => {
   if (!value) return '—'
+
   try {
     return new Intl.DateTimeFormat(undefined, {
       dateStyle: 'medium',
@@ -352,12 +355,15 @@ const BlocksPage = () => {
   const [eventsLoading, setEventsLoading] = useState(false)
   const [countdown, setCountdown] = useState<string | null>(null)
   const [sourceFilter, setSourceFilter] = useState<'all' | 'state' | 'manual'>('all')
+
   const [columnFilters, setColumnFilters] = useState({
     target: '',
     reason: '',
     author: ''
   })
+
   const [manualBlockDialogOpen, setManualBlockDialogOpen] = useState(false)
+
   const [manualBlockForm, setManualBlockForm] = useState<ManualBlockForm>({
     module: 'all',
     target: 'user',
@@ -371,6 +377,7 @@ const BlocksPage = () => {
     durationMinutes: '60',
     notes: ''
   })
+
   const [creatingBlock, setCreatingBlock] = useState(false)
   const [overwriteDialogOpen, setOverwriteDialogOpen] = useState(false)
   const [conflictPayloads, setConflictPayloads] = useState<Record<string, unknown>[]>([])
@@ -415,13 +422,20 @@ const BlocksPage = () => {
   const humanizeWindow = (windowMs: number) => {
     if (windowMs % (60 * 60 * 1000) === 0) {
       const hours = Math.round(windowMs / (60 * 60 * 1000))
-      return hours === 1 ? '1 ч' : `${hours} ч`
+
+      
+return hours === 1 ? '1 ч' : `${hours} ч`
     }
+
     if (windowMs % (60 * 1000) === 0) {
       const minutes = Math.round(windowMs / (60 * 1000))
-      return minutes === 1 ? '1 мин' : `${minutes} мин`
+
+      
+return minutes === 1 ? '1 мин' : `${minutes} мин`
     }
-    return `${Math.round(windowMs / 1000)} сек`
+
+    
+return `${Math.round(windowMs / 1000)} сек`
   }
 
   const sourceLabel = (source: 'state' | 'manual') => {
@@ -431,28 +445,37 @@ const BlocksPage = () => {
       fr: { auto: 'Auto', manual: 'Manuel' },
       ar: { auto: 'تلقائي', manual: 'يدوي' }
     }
+
     const dict = labels[currentLang] || labels.ru
-    return source === 'manual' ? dict.manual : dict.auto
+
+    
+return source === 'manual' ? dict.manual : dict.auto
   }
 
   const filteredStates = useMemo(() => {
     const targetMatch = (entry: StateEntry) =>
       targetLabel(entry).toLowerCase().includes(columnFilters.target.toLowerCase())
+
     const reasonMatch = (entry: StateEntry) => {
       const text =
         entry.reason ||
         entry.activeBlock?.reason ||
         entry.notes ||
         (entry.source === 'manual' ? sourceLabel('manual') : sourceLabel('state'))
-      return text.toLowerCase().includes(columnFilters.reason.toLowerCase())
+
+      
+return text.toLowerCase().includes(columnFilters.reason.toLowerCase())
     }
+
     const authorMatch = (entry: StateEntry) => {
       const author =
         entry.blockedByUser?.email ||
         entry.blockedBy ||
         entry.activeBlock?.blockedBy ||
         ''
-      return author.toLowerCase().includes(columnFilters.author.toLowerCase())
+
+      
+return author.toLowerCase().includes(columnFilters.author.toLowerCase())
     }
 
     return states.filter(item => {
@@ -461,7 +484,8 @@ const BlocksPage = () => {
       if (columnFilters.target && !targetMatch(item)) return false
       if (columnFilters.reason && !reasonMatch(item)) return false
       if (columnFilters.author && !authorMatch(item)) return false
-      return true
+      
+return true
     })
   }, [states, sourceFilter, columnFilters, currentLang, moduleFilter])
 
@@ -469,14 +493,17 @@ const BlocksPage = () => {
     try {
       setEventsLoading(true)
       const params = new URLSearchParams()
+
       params.set('view', 'events')
       params.set('module', moduleName)
       params.set('key', key)
       params.set('eventType', 'block')
       params.set('limit', '10')
       const res = await fetch(`/api/admin/rate-limits?${params.toString()}`, { credentials: 'include' })
+
       if (!res.ok) throw new Error('Failed to load history')
       const data = (await res.json()) as EventsResponse
+
       setEvents(data.items || [])
     } catch (error) {
       console.error(error)
@@ -507,9 +534,11 @@ const BlocksPage = () => {
       setCreatingBlock(true)
       const target = manualBlockForm.target
       const reason = manualBlockForm.reason.trim()
+
       if (!reason) {
         toast.error('Reason is required')
-        return
+        
+return
       }
 
       const splitValues = (text: string) =>
@@ -519,6 +548,7 @@ const BlocksPage = () => {
           .filter(Boolean)
 
       let values: string[] = []
+
       if (target === 'user') values = splitValues(manualBlockForm.userId)
       if (target === 'email') values = splitValues(manualBlockForm.email)
       if (target === 'domain') values = splitValues(manualBlockForm.mailDomain)
@@ -528,7 +558,8 @@ const BlocksPage = () => {
 
       if (!values.length) {
         toast.error('Введите хотя бы одно значение (по одному в строке)')
-        return
+        
+return
       }
 
       const localConflicts: Record<string, unknown>[] = []
@@ -558,10 +589,12 @@ const BlocksPage = () => {
 
         if (!res.ok) {
           const err = await res.json().catch(() => ({}))
+
           if (res.status === 409 && err?.code === 'block_exists') {
             localConflicts.push(payload)
             continue
           }
+
           throw new Error(err?.error || 'Failed to create block')
         } else {
           successCount += 1
@@ -575,7 +608,8 @@ const BlocksPage = () => {
       if (localConflicts.length) {
         setConflictPayloads(localConflicts)
         setOverwriteDialogOpen(true)
-        return
+        
+return
       }
 
       setManualBlockDialogOpen(false)
@@ -591,11 +625,14 @@ const BlocksPage = () => {
   const confirmOverwrite = async () => {
     if (!conflictPayloads.length) {
       setOverwriteDialogOpen(false)
-      return
+      
+return
     }
+
     try {
       setCreatingBlock(true)
       let overwritten = 0
+
       for (const payload of conflictPayloads) {
         const res = await fetch('/api/admin/rate-limits/blocks', {
           method: 'POST',
@@ -603,11 +640,14 @@ const BlocksPage = () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...payload, overwrite: true })
         })
+
         if (res.ok) overwritten++
       }
+
       if (overwritten > 0) {
         toast.success(overwritten > 1 ? `Перезаписано блокировок: ${overwritten}` : 'Блокировка обновлена')
       }
+
       setOverwriteDialogOpen(false)
       setManualBlockDialogOpen(false)
       setConflictPayloads([])
@@ -623,34 +663,43 @@ const BlocksPage = () => {
   useEffect(() => {
     if (!viewOpen || !viewEntry?.blockedUntil) {
       setCountdown(null)
-      return
+      
+return
     }
 
     const updateCountdown = () => {
       const end = new Date(viewEntry.blockedUntil!)
       const now = new Date()
       const diffSec = differenceInSeconds(end, now)
+
       if (diffSec <= 0) {
         setCountdown('—')
-        return
+        
+return
       }
+
       const duration = intervalToDuration({ start: now, end })
+
       const formatted = formatDuration(duration, {
         format: ['days', 'hours', 'minutes', 'seconds'],
         zero: false,
         delimiter: ' '
       })
+
       setCountdown(formatted || '—')
     }
 
     updateCountdown()
     const timer = setInterval(updateCountdown, 1000)
-    return () => clearInterval(timer)
+
+    
+return () => clearInterval(timer)
   }, [viewOpen, viewEntry?.blockedUntil])
 
   // синхронизация модуля из URL
   useEffect(() => {
     const moduleParam = searchParams.get('module')
+
     if (moduleParam && moduleParam !== moduleFilter) {
       setModuleFilter(moduleParam)
       setNextCursor(undefined)
@@ -660,15 +709,19 @@ const BlocksPage = () => {
 
   useEffect(() => {
     const handler = setTimeout(() => setDebouncedSearch(search), 300)
-    return () => clearTimeout(handler)
+
+    
+return () => clearTimeout(handler)
   }, [search])
 
   const fetchStates = async (opts?: { append?: boolean; cursor?: string }) => {
     if (permissionsLoading) return
     setLoading(true)
+
     try {
       setFetchError(null)
       const params = new URLSearchParams()
+
       params.set('view', 'states')
       if (moduleFilter !== 'all') params.set('module', moduleFilter)
       if (debouncedSearch) params.set('search', debouncedSearch)
@@ -678,13 +731,17 @@ const BlocksPage = () => {
       const res = await fetch(`/api/admin/rate-limits?${params.toString()}`, {
         credentials: 'include'
       })
+
       if (res.status === 401 || res.status === 403) {
         setFetchError('Нет доступа')
         setStates([])
-        return
+        
+return
       }
+
       if (!res.ok) throw new Error('Failed to load blocks')
       const data = (await res.json()) as unknown as StateListResponse
+
       setStates(prev => (opts?.append ? [...prev, ...data.items] : data.items))
       setNextCursor(data.nextCursor)
       setTotal(data.total)
@@ -712,11 +769,13 @@ const BlocksPage = () => {
             setModuleFilter(mod)
             setNextCursor(undefined)
             const newParams = new URLSearchParams(searchParams.toString())
+
             if (mod === 'all') {
               newParams.delete('module')
             } else {
               newParams.set('module', mod)
             }
+
             router.push(`?${newParams.toString()}`)
           }}
         >
@@ -730,13 +789,16 @@ const BlocksPage = () => {
     try {
       setDeletingId(id)
       const endpoint = source === 'manual' ? `/api/admin/rate-limits/blocks/${id}` : `/api/admin/rate-limits/${id}?view=states`
+
       const res = await fetch(endpoint, {
         method: 'DELETE',
         credentials: 'include'
       })
+
       if (!res.ok) {
         throw new Error('Failed to delete block')
       }
+
       setStates(prev => prev.filter(item => item.id !== id))
       toast.success('Блокировка удалена')
     } catch (error) {
@@ -846,7 +908,9 @@ const BlocksPage = () => {
               {filteredStates.length ? (
                 filteredStates.map(state => {
                   const totalCount = state.count + state.remaining
-                  return (
+
+                  
+return (
                     <TableRow key={`${state.id}-${state.source}`}>
                       <TableCell>
                         <Typography variant='body2'>{targetLabel(state)}</Typography>
@@ -1073,11 +1137,14 @@ const BlocksPage = () => {
             <Stack spacing={2} className='mt-2'>
               {events.map(ev => {
                 const windowMs = new Date(ev.windowEnd).getTime() - new Date(ev.windowStart).getTime()
+
                 const overText =
                   ev.module === 'chat'
                     ? `Превышен лимит сообщений. Из разрешенных ${ev.maxRequests} за ${humanizeWindow(windowMs)}, отправлено ${ev.count}.`
                     : `Превышен лимит: ${ev.count}/${ev.maxRequests} за ${humanizeWindow(windowMs)}.`
-                return (
+
+                
+return (
                   <Box key={ev.id} className='border border-solid border-divider rounded-md p-2'>
                     <Typography variant='body2' fontWeight={600}>
                       {formatDate(ev.createdAt)}

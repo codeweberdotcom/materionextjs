@@ -7,6 +7,7 @@
  */
 
 import { useState, useCallback } from 'react'
+
 import {
   Card,
   CardContent,
@@ -173,8 +174,10 @@ export default function WebScraperPage() {
     try {
       const response = await fetch('/api/admin/tools/web-scraper')
       const data = await response.json()
+
       setServiceAvailable(data.data?.available ?? false)
       setServiceMode(data.data?.mode || 'native')
+
       if (!data.data?.available) {
         setError(data.data?.error || 'Сервис недоступен')
       }
@@ -188,11 +191,13 @@ export default function WebScraperPage() {
   const handleScrape = async () => {
     if (!url.trim()) {
       setError('Введите URL сайта')
-      return
+      
+return
     }
 
     // Добавляем протокол если его нет
     let normalizedUrl = url.trim()
+
     if (!normalizedUrl.startsWith('http://') && !normalizedUrl.startsWith('https://')) {
       normalizedUrl = 'https://' + normalizedUrl
     }
@@ -218,7 +223,8 @@ export default function WebScraperPage() {
       if (!data.success) {
         setError(data.error || 'Ошибка парсинга')
         setDuration(data.duration)
-        return
+        
+return
       }
 
       // Нормализуем данные (для совместимости со старым форматом)
@@ -301,7 +307,8 @@ export default function WebScraperPage() {
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: 0.5 }}>
         {Object.entries(hours).map(([day, time]) => {
           if (day === 'note') return null
-          return (
+          
+return (
             <Box key={day} sx={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
               <Typography variant='body2' color='textSecondary'>{DAYS_RU[day] || day}:</Typography>
               <Typography variant='body2'>{time}</Typography>

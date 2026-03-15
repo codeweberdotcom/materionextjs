@@ -126,16 +126,21 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false 
       const method = roleId ? 'PUT' : 'POST'
 
       const isAllSelected = selectedCheckbox.length === defaultData.length * 4
+
       const permissionsToSend = isAllSelected ? ['all'] : selectedCheckbox.reduce((acc, perm) => {
         // Find the module by matching the prefix
         const moduleEntry = Object.entries(permissionIds).find(([key, id]) => perm.startsWith(`${id}-`))
+
         if (moduleEntry) {
           const [moduleKey, moduleId] = moduleEntry
           const action = perm.replace(`${moduleId}-`, '')
+
           if (!acc[moduleKey]) acc[moduleKey] = []
           acc[moduleKey].push(action)
         }
-        return acc
+
+        
+return acc
       }, {} as Record<string, string[]>)
 
       const response = await fetch(url, {
@@ -205,6 +210,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false 
   useEffect(() => {
     if (open && roleId) {
       setIsRoleLoading(true)
+
       const fetchRole = async () => {
         try {
           const response = await fetch(`/api/admin/roles/${roleId}`)
@@ -228,6 +234,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false 
             } else {
               try {
                 const parsedPermissions = JSON.parse(roleData.permissions)
+
                 if (parsedPermissions === 'all' || (Array.isArray(parsedPermissions) && parsedPermissions.includes('all'))) {
                   setSelectedCheckbox(allPermissions)
                 } else if (typeof parsedPermissions === 'object' && parsedPermissions !== null) {
@@ -235,6 +242,7 @@ const RoleDialog = ({ open, setOpen, title, roleId, onSuccess, readOnly = false 
                   const permissionsArray = Object.entries(parsedPermissions).flatMap(([module, actions]) =>
                     (actions as string[]).map(action => `${permissionIds[module as keyof typeof permissionIds] ?? module}-${action}`)
                   )
+
                   setSelectedCheckbox(permissionsArray)
                 } else {
                   setSelectedCheckbox([])

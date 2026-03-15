@@ -18,9 +18,11 @@ type ChatState = Omit<ChatDataType, 'contacts'> & {
 export const fetchUsers = createAsyncThunk('chat/fetchUsers', async () => {
   try {
     const response = await fetch('/api/users')
+
     if (!response.ok) {
       throw new Error('Failed to fetch users')
     }
+
     const users = (await response.json()) as User[]
 
     return users.map<ContactType>((user: User & { role?: { name?: string } | string | null }) => ({

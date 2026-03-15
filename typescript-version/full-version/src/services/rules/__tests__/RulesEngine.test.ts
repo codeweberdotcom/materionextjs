@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+
 import { getRulesEngine, RulesEngine } from '../RulesEngine'
 import type { RuleDefinition, RuleFacts } from '../types'
 
@@ -78,6 +79,7 @@ describe('RulesEngine', () => {
       expect(engine.hasRule('test-rule')).toBe(true)
 
       const removed = engine.removeRule('test-rule')
+
       expect(removed).toBe(true)
       expect(engine.hasRule('test-rule')).toBe(false)
       expect(engine.getRulesCount()).toBe(0)
@@ -85,6 +87,7 @@ describe('RulesEngine', () => {
 
     it('должен возвращать false при удалении несуществующего правила', () => {
       const removed = engine.removeRule('non-existent')
+
       expect(removed).toBe(false)
     })
   })
@@ -199,21 +202,27 @@ describe('RulesEngine', () => {
       const facts1: RuleFacts = {
         event: { source: 'auth', type: 'test' }
       }
+
       const result1 = await engine.evaluate(facts1)
+
       expect(result1.events).toHaveLength(1)
 
       // Второе условие истинно
       const facts2: RuleFacts = {
         event: { source: 'chat', type: 'test' }
       }
+
       const result2 = await engine.evaluate(facts2)
+
       expect(result2.events).toHaveLength(1)
 
       // Ни одно условие не истинно
       const facts3: RuleFacts = {
         event: { source: 'other', type: 'test' }
       }
+
       const result3 = await engine.evaluate(facts3)
+
       expect(result3.events).toHaveLength(0)
     })
   })
@@ -248,6 +257,7 @@ describe('RulesEngine', () => {
       }
 
       const result = await engine.evaluate(facts)
+
       expect(result.events).toHaveLength(1)
     })
   })

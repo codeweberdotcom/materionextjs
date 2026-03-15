@@ -19,6 +19,7 @@ interface MediaData {
 }
 
 interface MediaUrlConfig {
+
   /** Публичный URL prefix для S3/CDN (загружается автоматически если не указан) */
   s3PublicUrlPrefix?: string | null
 }
@@ -43,11 +44,13 @@ async function loadPublicUrlPrefix(): Promise<string | null> {
     .then(res => res.ok ? res.json() : null)
     .then(data => {
       cachedPublicUrlPrefix = data?.global?.s3PublicUrlPrefix || null
-      return cachedPublicUrlPrefix
+      
+return cachedPublicUrlPrefix
     })
     .catch(() => {
       cachedPublicUrlPrefix = null
-      return null
+      
+return null
     })
 
   return prefixLoadPromise
@@ -72,7 +75,8 @@ export function useMediaUrl(
     if (!media) {
       setUrl('')
       setLoading(false)
-      return
+      
+return
     }
 
     const resolveUrl = async () => {
@@ -81,6 +85,7 @@ export function useMediaUrl(
       const prefix = config?.s3PublicUrlPrefix ?? await loadPublicUrlPrefix()
       
       const resolvedUrl = getOptimalImageUrl(media, variant, prefix)
+
       setUrl(resolvedUrl)
       setLoading(false)
     }
@@ -110,7 +115,8 @@ export function useMediaUrls(
     if (!media) {
       setUrls({})
       setLoading(false)
-      return
+      
+return
     }
 
     const resolveUrls = async () => {
@@ -131,6 +137,7 @@ export function useMediaUrls(
       if (media.variants) {
         try {
           const variants = JSON.parse(media.variants)
+
           for (const [name, variant] of Object.entries(variants) as [string, any][]) {
             result[name] = getPublicMediaUrl({
               id: media.id,

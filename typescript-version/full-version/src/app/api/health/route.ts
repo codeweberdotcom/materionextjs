@@ -1,5 +1,7 @@
-import Redis from 'ioredis'
 import { NextResponse } from 'next/server'
+
+import Redis from 'ioredis'
+
 import { prisma } from '@/libs/prisma'
 import { httpRequestDuration } from '@/lib/metrics'
 import { serviceConfigResolver } from '@/lib/config'
@@ -32,12 +34,14 @@ const getRedisClient = async () => {
     lazyConnect: true,
     maxRetriesPerRequest: 1
   })
-  return cachedRedisClient
+  
+return cachedRedisClient
 }
 
 // Функция проверки Redis (если настроен)
 async function checkRedisConnection(): Promise<{ status: boolean; source?: string }> {
   const redis = await getRedisClient()
+
   if (!redis) {
     return { status: false }
   }
@@ -46,9 +50,12 @@ async function checkRedisConnection(): Promise<{ status: boolean; source?: strin
     if (!redis.status || redis.status === 'end') {
       await redis.connect()
     }
+
     const reply = await redis.ping()
     const redisConfig = await serviceConfigResolver.getConfig('redis')
-    return { 
+
+    
+return { 
       status: reply === 'PONG',
       source: redisConfig.source
     }
@@ -71,7 +78,9 @@ async function checkSocketIOStatus(): Promise<boolean> {
     if (!response.ok) return false
     
     const data = await response.json()
-    return data.status === 'ok'
+
+    
+return data.status === 'ok'
   } catch (error) {
     return false
   }

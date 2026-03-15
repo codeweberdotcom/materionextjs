@@ -1,5 +1,6 @@
 import Queue from 'bull'
 import * as Sentry from '@sentry/nextjs'
+
 import type {
   NotificationChannelOptions,
   NotificationChannelResult,
@@ -61,7 +62,9 @@ export class NotificationQueue {
     if (!NotificationQueue.instance) {
       NotificationQueue.instance = new NotificationQueue()
     }
-    return NotificationQueue.instance
+
+    
+return NotificationQueue.instance
   }
 
   private initializeQueue(): void {
@@ -82,7 +85,8 @@ export class NotificationQueue {
       if (!redisConfig.url) {
         logger.warn('[NotificationQueue] Redis not configured, using in-memory fallback')
         this.queueAvailable = false
-        return
+        
+return
       }
 
       logger.info('[NotificationQueue] Initializing with Redis', {
@@ -137,7 +141,8 @@ export class NotificationQueue {
 
           ;(timer as any)() // Завершаем таймер
           markNotificationSent(channel as any, 'success')
-          return result
+          
+return result
         } catch (error) {
           ;(timer as any)() // Завершаем таймер
           markNotificationSent(channel as any, 'error' as any)
@@ -221,12 +226,14 @@ export class NotificationQueue {
       }
 
       const now = new Date()
+
       const jobsToProcess = this.inMemoryQueue.filter(
         job => job.status === 'pending' && job.scheduledAt <= now
       )
 
       for (const job of jobsToProcess) {
         job.status = 'processing'
+
         try {
           const result = await notificationService.send({
             ...job.data.options,
@@ -243,6 +250,7 @@ export class NotificationQueue {
             markNotificationSent(job.data.channel, 'success')
           } else {
             job.attempts++
+
             if (job.attempts >= job.maxAttempts) {
               job.status = 'failed'
               logger.error('[NotificationQueue:InMemory] Job failed after max attempts', {
@@ -255,6 +263,7 @@ export class NotificationQueue {
             } else {
               // Retry через exponential backoff
               const delay = Math.pow(2, job.attempts) * 2000
+
               job.scheduledAt = new Date(now.getTime() + delay)
               job.status = 'pending'
               markRetryAttempt(job.data.channel, job.attempts)
@@ -268,6 +277,7 @@ export class NotificationQueue {
           }
         } catch (error) {
           job.attempts++
+
           if (job.attempts >= job.maxAttempts) {
             job.status = 'failed'
             logger.error('[NotificationQueue:InMemory] Job failed', {
@@ -294,6 +304,7 @@ export class NotificationQueue {
             })
           } else {
             const delay = Math.pow(2, job.attempts) * 2000
+
             job.scheduledAt = new Date(now.getTime() + delay)
             job.status = 'pending'
             markRetryAttempt(job.data.channel, job.attempts)
@@ -303,6 +314,7 @@ export class NotificationQueue {
 
       // Очистка старых завершенных задач (старше 24 часов)
       const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+
       this.inMemoryQueue = this.inMemoryQueue.filter(
         job => job.status === 'pending' || job.status === 'processing' || 
                (job.status === 'completed' && job.scheduledAt > oneDayAgo) ||
@@ -346,18 +358,21 @@ export class NotificationQueue {
         }
 
         const job = await this.queue.add(jobData, bullJobOptions)
+
         logger.info('[NotificationQueue:Bull] Job added', {
           jobId: job.id,
           channel: options.channel,
           delay
         })
         markJobAdded(options.channel as any, 'bull' as any)
-        return job
+        
+return job
       } catch (error) {
         logger.warn('[NotificationQueue] Failed to add to Bull queue, falling back', {
           error: error instanceof Error ? error.message : String(error),
           channel: options.channel
         })
+
         // Fallback на in-memory или immediate
         this.queueAvailable = false
       }
@@ -369,9 +384,11 @@ export class NotificationQueue {
       logger.info('[NotificationQueue] Sending immediately (no queue available)', {
         channel: options.channel
       })
+
       try {
         await notificationService.send(options)
-        return null
+        
+return null
       } catch (error) {
         logger.error('[NotificationQueue] Immediate send failed', {
           error: error instanceof Error ? error.message : String(error),
@@ -475,6 +492,7 @@ export class NotificationQueue {
 
     // Очистка in-memory очереди (старые задачи уже удаляются автоматически)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+
     this.inMemoryQueue = this.inMemoryQueue.filter(
       job => job.status === 'pending' || job.status === 'processing' || job.scheduledAt > oneDayAgo
     )

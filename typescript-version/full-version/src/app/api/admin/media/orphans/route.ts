@@ -5,10 +5,15 @@
  * @module api/admin/media/orphans
  */
 
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
 import fs from 'fs/promises'
+
 import path from 'path'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+import { z } from 'zod'
+
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
@@ -30,7 +35,9 @@ function formatBytes(bytes: number): string {
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+
+  
+return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 /**
@@ -42,8 +49,10 @@ async function getAllFiles(dirPath: string, arrayOfFiles: string[] = []): Promis
     
     for (const file of files) {
       const fullPath = path.join(dirPath, file)
+
       try {
         const stat = await fs.stat(fullPath)
+
         if (stat.isDirectory()) {
           await getAllFiles(fullPath, arrayOfFiles)
         } else {
@@ -78,6 +87,7 @@ export async function GET(request: NextRequest) {
 
     // Parse query params
     const { searchParams } = new URL(request.url)
+
     const queryResult = querySchema.safeParse({
       includeList: searchParams.get('includeList') || 'false',
       limit: searchParams.get('limit') || '100',
@@ -127,6 +137,7 @@ export async function GET(request: NextRequest) {
 
     // 2. Disk Orphans: Файлы на диске без записи в БД
     const globalSettings = await prisma.mediaGlobalSettings.findFirst()
+
     const uploadsPath = path.join(
       process.cwd(), 
       'public', 
@@ -149,17 +160,22 @@ export async function GET(request: NextRequest) {
       
       // Build set of known paths
       const knownPaths = new Set<string>()
+
       for (const media of allMedia) {
         if (media.localPath) {
           const fullPath = path.join(process.cwd(), 'public', media.localPath)
+
           knownPaths.add(fullPath)
         }
+
         if (media.variants) {
           try {
             const variants = JSON.parse(media.variants)
+
             for (const variant of Object.values(variants) as any[]) {
               if (variant.localPath) {
                 const fullPath = path.join(process.cwd(), 'public', variant.localPath)
+
                 knownPaths.add(fullPath)
               }
             }
@@ -172,6 +188,7 @@ export async function GET(request: NextRequest) {
         if (!knownPaths.has(filePath)) {
           try {
             const stat = await fs.stat(filePath)
+
             diskOrphanCount++
             diskOrphanSize += stat.size
             

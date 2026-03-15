@@ -4,8 +4,9 @@ import { useEffect } from 'react'
 
 import { useRouter } from 'next/navigation'
 
-import { useAuth } from '@/contexts/AuthProvider'
 import { Box, CircularProgress } from '@mui/material'
+
+import { useAuth } from '@/contexts/AuthProvider'
 
 interface ProtectedRouteProps {
   children: React.ReactNode

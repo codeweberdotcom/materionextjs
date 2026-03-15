@@ -1,4 +1,5 @@
 import promClient from 'prom-client'
+
 import { metricsRegistry } from '@/lib/metrics/registry'
 
 // Используем общий registry для всех метрик
@@ -53,12 +54,14 @@ export const getMetrics = async () => {
 // Middleware для сбора метрик HTTP запросов
 export const metricsMiddleware = (req: any, res: any, next: Function) => {
   const start = Date.now()
+
   next()
   const duration = (Date.now() - start) / 1000
 
   // Определяем environment из заголовков запроса
   const isTestRequest = req.headers?.['x-test-request'] === 'true' || 
                         req.headers?.get?.('x-test-request') === 'true'
+
   const environment = isTestRequest ? 'test' : 'production'
 
   httpRequestDuration

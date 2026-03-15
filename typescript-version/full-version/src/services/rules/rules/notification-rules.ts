@@ -479,6 +479,7 @@ export const notificationRules: CreateRuleInput[] = [
   verificationCompletedRule,
   accountBlockedRule,
   newNotificationRule,
+
   // Tariff expiration reminders
   tariffExpiringIn7DaysRule,
   tariffExpiringIn3DaysRule,

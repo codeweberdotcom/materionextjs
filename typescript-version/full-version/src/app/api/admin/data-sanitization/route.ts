@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { DataSanitizationService, SanitizationMode, DataType } from '@/services/data-sanitization.service'
 
 // POST /api/admin/data-sanitization - выполнить очистку данных
@@ -42,6 +44,7 @@ export async function POST(request: NextRequest) {
 
       const validTypes = Object.values(DataType)
       const invalidTypes = target.dataTypes.filter((type: any) => !validTypes.includes(type))
+
       if (invalidTypes.length > 0) {
         return NextResponse.json(
           { success: false, error: `Неверные типы данных: ${invalidTypes.join(', ')}. Допустимые: ${validTypes.join(', ')}` },
@@ -53,6 +56,7 @@ export async function POST(request: NextRequest) {
     // Выполнение очистки
     const service = new DataSanitizationService()
     const result = await service.sanitize(target, options)
+
     await service.disconnect()
 
     return NextResponse.json({
@@ -121,6 +125,7 @@ export async function GET(request: NextRequest) {
     // Выполнение предварительного просмотра
     const service = new DataSanitizationService()
     const result = await service.previewSanitization(target, options)
+
     await service.disconnect()
 
     return NextResponse.json({

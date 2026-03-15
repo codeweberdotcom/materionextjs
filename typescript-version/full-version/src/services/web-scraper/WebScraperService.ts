@@ -53,8 +53,10 @@ class WebScraperService {
     }
 
     const config = await getFirecrawlConfig()
+
     this.firecrawlAvailable = !!config
-    return this.firecrawlAvailable
+    
+return this.firecrawlAvailable
   }
 
   /**
@@ -72,7 +74,8 @@ class WebScraperService {
     }
 
     this.connector = new FirecrawlConnector(config)
-    return this.connector
+    
+return this.connector
   }
 
   /**
@@ -99,7 +102,9 @@ class WebScraperService {
       }
 
       const html = await response.text()
-      return { html }
+
+      
+return { html }
     } catch (error) {
       return { 
         html: '', 
@@ -116,20 +121,25 @@ class WebScraperService {
     
     // Title
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
+
     if (titleMatch) metadata.title = titleMatch[1].trim()
     
     // Meta description
     const descMatch = html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i)
+
     if (descMatch) metadata.description = descMatch[1]
     
     // OG tags
     const ogTitleMatch = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)
+
     if (ogTitleMatch) metadata.ogTitle = ogTitleMatch[1]
     
     const ogDescMatch = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
+
     if (ogDescMatch) metadata.ogDescription = ogDescMatch[1]
     
     const ogImageMatch = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
+
     if (ogImageMatch) metadata.ogImage = ogImageMatch[1]
     
     return metadata
@@ -143,6 +153,7 @@ class WebScraperService {
     const linkPattern = /<a[^>]+href=["']([^"']+)["'][^>]*>/gi
     
     let match
+
     while ((match = linkPattern.exec(html)) !== null) {
       let href = match[1]
       
@@ -182,6 +193,7 @@ class WebScraperService {
     try {
       // Валидация URL
       const parsedUrl = new URL(url)
+
       if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
         throw new Error('URL должен начинаться с http:// или https://')
       }
@@ -194,7 +206,8 @@ class WebScraperService {
       if (!connector) {
         // Режим без Firecrawl - используем native fetch
         console.log(`[WebScraper] Firecrawl не настроен, используем native fetch`)
-        return await this.scrapeWithNativeFetch(url, baseUrl, startTime, options)
+        
+return await this.scrapeWithNativeFetch(url, baseUrl, startTime, options)
       }
       
       console.log(`[WebScraper] Используем Firecrawl API`)
@@ -210,7 +223,8 @@ class WebScraperService {
 
       if (!mainPageResult.success || !mainPageResult.data) {
         console.log(`[WebScraper] Не удалось получить главную страницу, используем fallback`)
-        return await this.scrapeWithFallback(url, connector, startTime, options)
+        
+return await this.scrapeWithFallback(url, connector, startTime, options)
       }
 
       // Собираем URL для парсинга
@@ -222,9 +236,12 @@ class WebScraperService {
         
         // Если есть HTML, извлекаем ссылки из навигационных элементов
         const rawHtml = mainPageResult.data.rawHtml || ''
+
         if (rawHtml) {
           const navLinks = this.extractNavigationLinks(rawHtml, baseUrl)
+
           console.log(`[WebScraper] Извлечено ${navLinks.length} ссылок из навигации`)
+
           // Приоритет ссылкам из навигации
           links = Array.from(new Set([...navLinks, ...links]))
         }
@@ -235,13 +252,17 @@ class WebScraperService {
         const keywords = [
           // Контакты
           'contact', 'kontakt', 'контакт', 'связь', 'svyaz', 'обратн',
+
           // О компании  
           'about', 'o-nas', 'о-нас', 'компани', 'company', 'who-we',
+
           // Услуги
           'service', 'uslug', 'услуг', 'catalog', 'katalog', 'каталог',
           'product', 'tovar', 'товар', 'price', 'прайс', 'цен',
+
           // Доставка
           'deliver', 'dostav', 'доставк', 'shipping',
+
           // Оплата
           'payment', 'oplat', 'оплат', 'pay'
         ]
@@ -268,6 +289,7 @@ class WebScraperService {
         // Нормализуем и добавляем ссылки
         for (const link of relevantLinks) {
           const fullUrl = link.startsWith('/') ? `${baseUrl}${link}` : link
+
           if (!urlsToScrape.includes(fullUrl)) {
             urlsToScrape.push(fullUrl)
           }
@@ -277,6 +299,7 @@ class WebScraperService {
         if (urlsToScrape.length === 1) {
           console.log(`[WebScraper] Релевантные ссылки не найдены, добавляем стандартные пути`)
           const fallbackPaths = ['/contacts', '/contact', '/kontakty', '/about', '/o-nas', '/services', '/uslugi']
+
           for (const path of fallbackPaths) {
             urlsToScrape.push(`${baseUrl}${path}`)
           }
@@ -288,6 +311,7 @@ class WebScraperService {
 
       // ЭТАП 3: Извлекаем данные со всех страниц
       const pagesToParse = urlsToScrape.slice(0, options?.maxPages || 5)
+
       console.log(`[WebScraper] Этап 3: Извлекаем данные с ${pagesToParse.length} страниц...`)
       
       const extractResult = await connector.extract(pagesToParse, {
@@ -299,7 +323,8 @@ class WebScraperService {
       if (!extractResult.success || !extractResult.data) {
         // Fallback: используем обычный scrape + парсинг ВСЕХ найденных страниц
         console.log(`[WebScraper] Extract API не удался (${extractResult.error}), используем fallback парсинг`)
-        return await this.scrapeWithFallbackMultiPage(pagesToParse, connector, startTime, options)
+        
+return await this.scrapeWithFallbackMultiPage(pagesToParse, connector, startTime, options)
       }
 
       // Преобразуем результат в ScrapedCompanyData
@@ -310,8 +335,10 @@ class WebScraperService {
       
       // Анализ текста (TF-IDF, леммы)
       let textAnalysis: TextAnalysis | undefined
+
       try {
         const analysisService = getTextAnalysisService()
+
         textAnalysis = await analysisService.analyzeText(mainPageResult.data?.rawHtml || '')
         
         // Если категория не определена Extract API, берём из анализа
@@ -331,7 +358,8 @@ class WebScraperService {
       }
     } catch (error) {
       console.error(`[WebScraper] Ошибка:`, error)
-      return {
+      
+return {
         success: false,
         data: null,
         error: error instanceof Error ? error.message : 'Неизвестная ошибка',
@@ -385,11 +413,14 @@ class WebScraperService {
       
       const relevantLinks = links.filter(link => {
         const lowerLink = link.toLowerCase()
+
         if (lowerLink.includes('login') || lowerLink.includes('cart') || 
             lowerLink.includes('admin') || lowerLink.match(/\.(jpg|png|pdf)$/i)) {
           return false
         }
-        return keywords.some(kw => lowerLink.includes(kw))
+
+        
+return keywords.some(kw => lowerLink.includes(kw))
       })
       
       for (const link of relevantLinks) {
@@ -401,6 +432,7 @@ class WebScraperService {
       // Если ничего не нашли - добавляем стандартные пути
       if (urlsToScrape.length === 1) {
         const fallbackPaths = ['/contacts', '/kontakty', '/about', '/o-nas', '/service', '/services', '/uslugi']
+
         for (const path of fallbackPaths) {
           urlsToScrape.push(`${baseUrl}${path}`)
         }
@@ -416,9 +448,11 @@ class WebScraperService {
     
     for (let i = 1; i < pagesToParse.length; i++) {
       const pageUrl = pagesToParse[i]
+
       console.log(`[WebScraper] Native: парсим ${pageUrl.replace(baseUrl, '')}`)
       
       const page = await this.fetchPageNative(pageUrl)
+
       if (page.html) {
         allHtml += '\n\n' + page.html
         successCount++
@@ -435,8 +469,10 @@ class WebScraperService {
 
     // Анализ текста (TF-IDF, леммы)
     let textAnalysis: TextAnalysis | undefined
+
     try {
       const analysisService = getTextAnalysisService()
+
       textAnalysis = await analysisService.analyzeText(allHtml)
       
       // Улучшаем категорию из анализа
@@ -448,6 +484,7 @@ class WebScraperService {
           // Проверяем, соответствует ли текущая категория контенту
           // Игнорируем общие слова типа "магазин", "салон", "центр"
           const genericWords = ['магазин', 'салон', 'центр', 'компания', 'фирма', 'услуги', 'сервис']
+
           const currentCategoryKeywords = companyData.category.toLowerCase().split(/\s+/)
             .filter(kw => kw.length > 3 && !genericWords.includes(kw))
           
@@ -514,6 +551,7 @@ class WebScraperService {
     for (const url of urls) {
       try {
         console.log(`[WebScraper] Fallback: парсим ${url}`)
+
         const scrapeResult = await connector.scrape(url, {
           formats: ['markdown', 'html'],
           onlyMainContent: false, // Берём весь контент включая контакты в футере
@@ -528,6 +566,7 @@ class WebScraperService {
           if (!metadata.title && scrapeResult.data.metadata) {
             metadata = scrapeResult.data.metadata
           }
+
           successCount++
         }
       } catch (error) {
@@ -553,8 +592,10 @@ class WebScraperService {
 
     // Анализ текста (TF-IDF, леммы)
     let textAnalysis: TextAnalysis | undefined
+
     try {
       const analysisService = getTextAnalysisService()
+
       textAnalysis = await analysisService.analyzeText(allMarkdown + ' ' + allHtml)
       
       // Улучшаем категорию из анализа
@@ -565,6 +606,7 @@ class WebScraperService {
           // Проверяем, соответствует ли текущая категория контенту
           // Игнорируем общие слова типа "магазин", "салон", "центр"
           const genericWords = ['магазин', 'салон', 'центр', 'компания', 'фирма', 'услуги', 'сервис']
+
           const currentCategoryKeywords = companyData.category.toLowerCase().split(/\s+/)
             .filter(kw => kw.length > 3 && !genericWords.includes(kw))
           
@@ -617,8 +659,10 @@ class WebScraperService {
     
     // Собираем контент из навигационных блоков
     let navContent = ''
+
     for (const pattern of navPatterns) {
       let match
+
       while ((match = pattern.exec(html)) !== null) {
         navContent += match[1] + ' '
       }
@@ -627,7 +671,9 @@ class WebScraperService {
     // Если навигационные блоки не найдены, берём первые 20% HTML (обычно там header)
     if (!navContent) {
       const htmlLength = html.length
+
       navContent = html.substring(0, Math.floor(htmlLength * 0.2))
+
       // И последние 10% (footer)
       navContent += html.substring(Math.floor(htmlLength * 0.9))
     }
@@ -635,6 +681,7 @@ class WebScraperService {
     // Извлекаем все ссылки из навигационного контента
     const linkPattern = /<a[^>]+href=["']([^"']+)["'][^>]*>/gi
     let linkMatch
+
     while ((linkMatch = linkPattern.exec(navContent)) !== null) {
       let href = linkMatch[1]
       
@@ -675,19 +722,24 @@ class WebScraperService {
     
     // Собираем телефоны филиалов для исключения из общего списка
     const branchPhoneNumbers = new Set<string>()
+
     branches.forEach(b => {
       b.phones.forEach(p => {
         // Нормализуем телефон для сравнения (только цифры)
         const normalized = p.replace(/\D/g, '')
+
         branchPhoneNumbers.add(normalized)
       })
     })
     
     // Извлекаем все телефоны и фильтруем телефоны филиалов
     const allPhones = this.extractPhones(content)
+
     const generalPhones = allPhones.filter(phone => {
       const normalized = phone.number.replace(/\D/g, '')
-      return !branchPhoneNumbers.has(normalized)
+
+      
+return !branchPhoneNumbers.has(normalized)
     })
 
     return {
@@ -729,6 +781,7 @@ class WebScraperService {
     const branchPattern = /г\.\s*([А-ЯЁа-яё\-]+(?:\s*\([^)]+\))?)[^г]*?((?:ул\.|улица|пр\.|проспект|бул\.|бульвар|пер\.|переулок)[^\d]*\d+[А-Яа-яёЁ]?(?:\s*\([^)]+\))?)[^+]*?(?:час[ыа]\s*работы|работ|график)?[:\s]*(\d{1,2}[:.]\d{2}\s*[-–]\s*\d{1,2}[:.]\d{2})?[^+]*?(\+7\s*[\d\s\-\(\)]{10,20})/gi
     
     let match
+
     while ((match = branchPattern.exec(textContent)) !== null) {
       const cityFull = match[1]?.trim()
       const city = cityFull?.replace(/\s*\([^)]+\)/, '').trim()
@@ -801,6 +854,7 @@ class WebScraperService {
         const addressWords = branch.address.slice(0, 20).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
         const hoursPattern = new RegExp(addressWords + '[^]*?(\\d{1,2}[:.:]\\d{2}\\s*[-–]\\s*\\d{1,2}[:.:]\\d{2})', 'i')
         const hoursMatch = textContent.match(hoursPattern)
+
         if (hoursMatch) {
           branch.workingHours = { note: hoursMatch[1].replace(/\./g, ':') }
         }
@@ -808,7 +862,8 @@ class WebScraperService {
     }
     
     console.log(`[WebScraper] Извлечено ${branches.length} филиалов`)
-    return branches
+    
+return branches
   }
   
   /**
@@ -816,11 +871,16 @@ class WebScraperService {
    */
   private formatPhone(phone: string): string {
     const digits = phone.replace(/\D/g, '')
+
     if (digits.length === 11 && (digits.startsWith('7') || digits.startsWith('8'))) {
       const d = digits.slice(1)
-      return `+7 (${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 8)}-${d.slice(8, 10)}`
+
+      
+return `+7 (${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6, 8)}-${d.slice(8, 10)}`
     }
-    return phone.trim()
+
+    
+return phone.trim()
   }
 
   /**
@@ -831,6 +891,7 @@ class WebScraperService {
     
     // Нормализуем филиалы
     let branches: ScrapedCompanyData['branches'] = []
+
     if (Array.isArray(data.branches)) {
       branches = data.branches.map((b: Record<string, unknown>) => ({
         name: (b.name as string) || null,
@@ -846,35 +907,45 @@ class WebScraperService {
     
     // Нормализуем телефоны в PhoneContact[]
     let phones: PhoneContact[] = []
+
     if (Array.isArray(data.phones)) {
       phones = data.phones.map((p: unknown) => {
         if (typeof p === 'string') {
           return { number: p }
         } else if (typeof p === 'object' && p !== null) {
           const obj = p as Record<string, unknown>
-          return {
+
+          
+return {
             number: String(obj.number || obj.phone || ''),
             label: obj.label ? String(obj.label) : undefined
           }
         }
-        return { number: String(p) }
+
+        
+return { number: String(p) }
       }).filter(p => p.number)
     }
     
     // Нормализуем emails в EmailContact[]
     let emails: EmailContact[] = []
+
     if (Array.isArray(data.emails)) {
       emails = data.emails.map((e: unknown) => {
         if (typeof e === 'string') {
           return { email: e }
         } else if (typeof e === 'object' && e !== null) {
           const obj = e as Record<string, unknown>
-          return {
+
+          
+return {
             email: String(obj.email || obj.address || ''),
             label: obj.label ? String(obj.label) : undefined
           }
         }
-        return { email: String(e) }
+
+        
+return { email: String(e) }
       }).filter(e => e.email && !e.email.startsWith('u0022'))
     }
     
@@ -962,6 +1033,7 @@ class WebScraperService {
     if (metadata.title) return String(metadata.title).split('|')[0].split('-')[0].trim()
     
     const h1Match = content.match(/<h1[^>]*>([^<]+)<\/h1>/i)
+
     if (h1Match) return h1Match[1].trim()
     
     return null
@@ -973,7 +1045,9 @@ class WebScraperService {
     
     // Берём первые 300 символов текста
     const textOnly = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-    return textOnly.substring(0, 300) || null
+
+    
+return textOnly.substring(0, 300) || null
   }
 
   private extractPhones(content: string): PhoneContact[] {
@@ -1003,18 +1077,22 @@ class WebScraperService {
     // Функция определения label по контексту
     const detectLabel = (context: string): string | undefined => {
       const contextLower = context.toLowerCase()
+
       for (const { keywords, label } of labelKeywords) {
         if (keywords.some(kw => contextLower.includes(kw))) {
           return label
         }
       }
-      return undefined
+
+      
+return undefined
     }
     
     // Функция проверки валидности номера
     const isValidPhone = (normalized: string): boolean => {
       if (normalized.length < 10 || normalized.length > 15) return false
       const digits = normalized.replace(/^\+?[78]?/, '')
+
       if (
         digits.match(/^(\d)\1{9}$/) ||    // Все одинаковые цифры
         digits.match(/^9{10}$/) ||         // 9999999999
@@ -1024,7 +1102,9 @@ class WebScraperService {
       ) {
         return false
       }
-      return true
+
+      
+return true
     }
     
     // Ищем все телефоны и их позиции
@@ -1049,6 +1129,7 @@ class WebScraperService {
       // Форматируем номер
       const digits = normalized.replace(/^\+?[78]?/, '')
       let formattedPhone = phone.trim()
+
       if (digits.length === 10) {
         formattedPhone = `+7 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 8)}-${digits.slice(8, 10)}`
       }
@@ -1091,12 +1172,15 @@ class WebScraperService {
     // Функция определения label по контексту
     const detectLabel = (context: string): string | undefined => {
       const contextLower = context.toLowerCase()
+
       for (const { keywords, label } of labelKeywords) {
         if (keywords.some(kw => contextLower.includes(kw))) {
           return label
         }
       }
-      return undefined
+
+      
+return undefined
     }
     
     // Функция определения label по префиксу email
@@ -1162,6 +1246,7 @@ class WebScraperService {
 
     for (const pattern of addressPatterns) {
       const match = content.match(pattern)
+
       if (match) return match[0].trim()
     }
 
@@ -1177,9 +1262,11 @@ class WebScraperService {
 
     for (const pattern of patterns) {
       const match = content.match(pattern)
+
       if (match) {
         const lat = parseFloat(match[1])
         const lng = parseFloat(match[2])
+
         if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
           return { lat, lng }
         }
@@ -1207,6 +1294,7 @@ class WebScraperService {
 
     for (const [key, pattern] of patterns) {
       const match = content.match(pattern)
+
       if (match) {
         links[key] = match[0]
       }
@@ -1247,6 +1335,7 @@ class WebScraperService {
 
     for (const pattern of patterns) {
       const match = html.match(pattern)
+
       if (match) {
         return this.resolveUrl(match[1], sourceUrl)
       }
@@ -1264,6 +1353,8 @@ class WebScraperService {
 
     while ((match = imgPattern.exec(html)) !== null) {
       const src = match[1]
+
+
       // Фильтруем мелкие иконки и служебные изображения
       if (
         !src.includes('icon') &&
@@ -1275,6 +1366,7 @@ class WebScraperService {
         !src.endsWith('.gif')
       ) {
         const resolved = this.resolveUrl(src, sourceUrl)
+
         if (resolved && !photos.includes(resolved)) {
           photos.push(resolved)
         }
@@ -1323,7 +1415,9 @@ class WebScraperService {
     
     const isJunk = (text: string): boolean => {
       const cleaned = cleanServiceText(text)
-      return junkPatterns.some(p => p.test(cleaned)) || cleaned.length < 5 || cleaned.length > 80
+
+      
+return junkPatterns.some(p => p.test(cleaned)) || cleaned.length < 5 || cleaned.length > 80
     }
     
     let match
@@ -1338,6 +1432,7 @@ class WebScraperService {
       
       while ((liMatch = liPattern.exec(listContent)) !== null) {
         const service = cleanServiceText(liMatch[1])
+
         if (!isJunk(service) && !services.includes(service)) {
           services.push(service)
         }
@@ -1349,6 +1444,7 @@ class WebScraperService {
     
     while ((match = cardPattern.exec(html)) !== null) {
       const title = cleanServiceText(match[1])
+
       if (!isJunk(title) && !title.match(/корзин|cart|login|вход|регистр/i) && !services.includes(title)) {
         services.push(title)
       }
@@ -1386,26 +1482,37 @@ class WebScraperService {
     // Убираем дубликаты с учётом подстрок
     const uniqueServices = services.filter((s, i, arr) => {
       const lower = s.toLowerCase()
-      return !arr.some((other, j) => j !== i && other.toLowerCase().includes(lower) && other.length > s.length)
+
+      
+return !arr.some((other, j) => j !== i && other.toLowerCase().includes(lower) && other.length > s.length)
     })
     
     console.log(`[WebScraper] Извлечено ${uniqueServices.length} услуг`)
-    return uniqueServices.slice(0, 15) // Лимит
+    
+return uniqueServices.slice(0, 15) // Лимит
   }
 
   private resolveUrl(url: string, base: string): string | null {
     try {
       if (url.startsWith('data:')) return null
       if (url.startsWith('//')) return 'https:' + url
+
       if (url.startsWith('/')) {
         const baseUrl = new URL(base)
-        return `${baseUrl.protocol}//${baseUrl.host}${url}`
+
+        
+return `${baseUrl.protocol}//${baseUrl.host}${url}`
       }
+
       if (!url.startsWith('http')) {
         const baseUrl = new URL(base)
-        return `${baseUrl.protocol}//${baseUrl.host}/${url}`
+
+        
+return `${baseUrl.protocol}//${baseUrl.host}/${url}`
       }
-      return url
+
+      
+return url
     } catch {
       return null
     }
@@ -1456,7 +1563,9 @@ export function getWebScraperService(): WebScraperService {
   if (!webScraperService) {
     webScraperService = new WebScraperService()
   }
-  return webScraperService
+
+  
+return webScraperService
 }
 
 export { WebScraperService }

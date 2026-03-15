@@ -47,16 +47,21 @@ export function VerificationStatus({
     if (documentsVerified && emailVerified && phoneVerified) {
       return { level: 'DOCUMENTS_VERIFIED', label: 'Полная верификация', color: 'success' as const, progress: 100 }
     }
+
     if (emailVerified && phoneVerified) {
       return { level: 'FULL', label: 'Полный доступ', color: 'success' as const, progress: 75 }
     }
+
     if (emailVerified) {
       return { level: 'EMAIL_ONLY', label: 'Просмотр админки', color: 'warning' as const, progress: 50 }
     }
+
     if (phoneVerified) {
       return { level: 'PHONE_ONLY', label: 'Частичный доступ', color: 'warning' as const, progress: 50 }
     }
-    return { level: 'NONE', label: 'Не верифицирован', color: 'error' as const, progress: 0 }
+
+    
+return { level: 'NONE', label: 'Не верифицирован', color: 'error' as const, progress: 0 }
   }
 
   const verificationLevel = getVerificationLevel()

@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
+
 import type { UserAccountWithRelations } from '@/types/accounts/interfaces'
 
 type AccountContextState = {
@@ -27,7 +28,9 @@ const fetchAccounts = async (): Promise<UserAccountWithRelations[]> => {
   }
 
   const result = await response.json()
-  return result.data || []
+
+  
+return result.data || []
 }
 
 /**
@@ -40,11 +43,14 @@ const fetchCurrentAccount = async (): Promise<UserAccountWithRelations | null> =
     if (response.status === 404) {
       return null // Нет текущего аккаунта
     }
+
     throw new Error('Failed to load current account')
   }
 
   const result = await response.json()
-  return result.data || null
+
+  
+return result.data || null
 }
 
 /**
@@ -77,6 +83,7 @@ export const AccountProvider = ({ children }: { children: React.ReactNode }) => 
   const loadAccounts = useCallback(async () => {
     try {
       const accounts = await fetchAccounts()
+
       setUserAccounts(accounts)
       setError(undefined)
     } catch (err) {
@@ -95,11 +102,15 @@ export const AccountProvider = ({ children }: { children: React.ReactNode }) => 
       
       if (account) {
         setCurrentAccount(account)
+
+
         // Сохраняем в localStorage
         if (typeof window !== 'undefined') {
           localStorage.setItem(STORAGE_KEY, account.id)
         }
-        return
+
+        
+return
       }
 
       // Если нет текущего аккаунта в API, проверяем localStorage
@@ -115,7 +126,8 @@ export const AccountProvider = ({ children }: { children: React.ReactNode }) => 
             // Переключаемся на сохраненный аккаунт
             await switchToAccount(savedAccountId)
             setCurrentAccount(savedAccount)
-            return
+            
+return
           } else {
             // Аккаунт не найден, очищаем localStorage
             localStorage.removeItem(STORAGE_KEY)
@@ -124,6 +136,7 @@ export const AccountProvider = ({ children }: { children: React.ReactNode }) => 
 
         // Если нет сохраненного аккаунта, загружаем список и выбираем первый доступный
         const accounts = await fetchAccounts()
+
         if (accounts.length > 0) {
           await switchToAccount(accounts[0].id)
           setCurrentAccount(accounts[0])
@@ -145,6 +158,7 @@ export const AccountProvider = ({ children }: { children: React.ReactNode }) => 
       
       // Обновляем текущий аккаунт из списка
       const account = userAccounts.find(a => a.id === accountId)
+
       if (account) {
         setCurrentAccount(account)
       } else {
@@ -169,10 +183,12 @@ export const AccountProvider = ({ children }: { children: React.ReactNode }) => 
       // Если текущий аккаунт был удален, переключаемся на первый доступный
       if (currentAccount && !userAccounts.find(a => a.id === currentAccount.id)) {
         const accounts = await fetchAccounts()
+
         if (accounts.length > 0) {
           await handleSwitchAccount(accounts[0].id)
         } else {
           setCurrentAccount(null)
+
           if (typeof window !== 'undefined') {
             localStorage.removeItem(STORAGE_KEY)
           }
@@ -189,6 +205,7 @@ export const AccountProvider = ({ children }: { children: React.ReactNode }) => 
   useEffect(() => {
     const initialize = async () => {
       setLoading(true)
+
       try {
         // Загружаем список аккаунтов
         await loadAccounts()

@@ -17,6 +17,7 @@ export async function initializeNotificationScenarios(): Promise<void> {
     logger.error('[NotificationScenarios] Failed to initialize module', {
       error: error instanceof Error ? error.message : String(error)
     })
+
     // Не прерываем запуск приложения, но логируем ошибку
   }
 }

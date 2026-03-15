@@ -1,14 +1,12 @@
-import {
+import type {
   ValidationPreview,
   RowWithValidation,
   PreviewOptions,
   ValidationError,
   ImportWarning,
   ValidationResult
-} from '@/types/export-import'
-import { IEntityAdapter } from '@/types/export-import'
+, IEntityAdapter , MAX_IMPORT_FILE_SIZE, ALLOWED_FILE_EXTENSIONS } from '@/types/export-import'
 import { importAdapterFactory } from './ImportAdapterFactory'
-import { MAX_IMPORT_FILE_SIZE, ALLOWED_FILE_EXTENSIONS } from '@/types/export-import'
 
 /**
  * Сервис предварительной валидации и предпросмотра импорта
@@ -28,12 +26,14 @@ export class ImportPreviewService {
 
     // Валидируем файл
     const fileValidation = this.validateFile(file)
+
     if (!fileValidation.isValid) {
       throw new Error(fileValidation.errors[0]?.message || 'Invalid file')
     }
 
     // Получаем адаптер для сущности
     const adapter = this.adapterFactory.getAdapter(entityType)
+
     if (!adapter) {
       throw new Error(`Adapter for entity type '${entityType}' not found`)
     }
@@ -78,6 +78,7 @@ export class ImportPreviewService {
     const validRows = rowsWithValidation.filter(row => row.isValid).length
     const invalidRows = rowsWithValidation.filter(row => !row.isValid).length
     const warningRows = rowsWithValidation.filter(row => row.warnings.length > 0).length
+
     const validityPercentage = parsedData.length > 0 
       ? Math.round((validRows / parsedData.length) * 100) 
       : 0
@@ -179,12 +180,16 @@ export class ImportPreviewService {
 
         const result = rows.map(row => {
           const obj: Record<string, any> = {}
+
           headers.forEach((header, index) => {
             obj[header] = row[index] || ''
           })
-          return obj
+          
+return obj
         })
-        return result
+
+        
+return result
       } else {
         return []
       }
@@ -232,6 +237,7 @@ export class ImportPreviewService {
     }
 
     const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
+
     if (!ALLOWED_FILE_EXTENSIONS.includes(extension)) {
       errors.push({
         field: 'file',

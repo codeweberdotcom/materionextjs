@@ -1,7 +1,6 @@
 'use client'
 
 // Winston logger import
-import logger from '@/lib/logger'
 
 // React Imports
 import { useState, useEffect } from 'react'
@@ -27,6 +26,8 @@ import type { CardProps } from '@mui/material/Card'
 // Type Imports
 import { toast } from 'react-toastify'
 
+import Skeleton from '@mui/material/Skeleton'
+
 import type { Locale } from '@configs/i18n'
 
 // Context Imports
@@ -36,7 +37,7 @@ import { useTranslate } from '@/hooks/useTranslate'
 import { usePermissions } from '@/hooks/usePermissions'
 
 // Third-party Imports
-import Skeleton from '@mui/material/Skeleton'
+import logger from '@/lib/logger'
 
 // Util Imports
 import { getLocalizedUrl } from '@/utils/formatting/i18n'
@@ -157,6 +158,7 @@ const RoleCards = () => {
      logger.info('isAdmin:', isAdminByCode(user || null))
      logger.info('Current page permissions - module: roleManagement, action: read')
      logger.info('Has permission for current page:', checkPermission('roleManagement', 'read'))
+
      // Debug logging removed
   }, [])
 
@@ -166,6 +168,7 @@ const RoleCards = () => {
     // Refetch roles and users only (remove profile fetch to reduce API calls)
     const fetchData = async () => {
       logger.info('🔄 [ROLE SUCCESS] Starting background fetch')
+
       try {
         const [rolesResponse, usersResponse] = await Promise.all([
           fetch('/api/admin/roles'),
@@ -176,6 +179,7 @@ const RoleCards = () => {
 
         if (rolesResponse.ok) {
           const rolesData = await rolesResponse.json()
+
           logger.info('🔄 [ROLE SUCCESS] Roles data fetched:', rolesData.length, 'roles')
           setRoles(rolesData)
           logger.info('🔄 [ROLE SUCCESS] Roles state updated')
@@ -185,6 +189,7 @@ const RoleCards = () => {
 
         if (usersResponse.ok) {
           const usersData = await usersResponse.json()
+
           logger.info('🔄 [ROLE SUCCESS] Users data fetched:', usersData.length, 'users')
           setUsers(usersData)
           logger.info('🔄 [ROLE SUCCESS] Users state updated')
@@ -194,6 +199,7 @@ const RoleCards = () => {
       } catch (error) {
         logger.error('🔄 [ROLE SUCCESS] Error fetching data:', error)
       }
+
       logger.info('🔄 [ROLE SUCCESS] Background fetch completed')
     }
 
@@ -206,7 +212,8 @@ const RoleCards = () => {
 
     if (isDeleting) {
       logger.info('🗑️ [DELETE SKIP] Delete already in progress, skipping')
-      return
+      
+return
     }
 
     setIsDeleting(true)
@@ -214,6 +221,7 @@ const RoleCards = () => {
 
     try {
       logger.info('🗑️ [DELETE API] Making DELETE request to:', `/api/admin/roles/${role.id}`)
+
       const response = await fetch(`/api/admin/roles/${role.id}`, {
         method: 'DELETE'
       })
@@ -226,11 +234,14 @@ const RoleCards = () => {
         // Immediately update local state for better UX (like in UserListTable)
         logger.info('🗑️ [DELETE LOCAL] Updating local state - filtering out role:', role.id)
         const previousRoles = roles
+
         setRoles(prevRoles => {
           const filteredRoles = prevRoles.filter(r => r.id !== role.id)
+
           logger.info('🗑️ [DELETE LOCAL] Local state updated. Previous count:', previousRoles.length, 'New count:', filteredRoles.length)
           logger.info('🗑️ [DELETE LOCAL] Removed role:', role.name, 'Remaining roles:', filteredRoles.map(r => r.name))
-          return filteredRoles
+          
+return filteredRoles
         })
 
         // Close dialog immediately
@@ -243,6 +254,7 @@ const RoleCards = () => {
         logger.info('🗑️ [DELETE TOAST] Success toast shown')
       } else if (response.status === 400) {
         const data = await response.json()
+
         logger.info('🗑️ [DELETE ERROR 400] Delete failed with 400, data:', data)
 
         if (data.users) {

@@ -20,6 +20,7 @@ export class SMSChannel extends BaseNotificationChannel {
 
   async send(options: NotificationChannelOptions): Promise<NotificationChannelResult> {
     const validation = this.validate(options)
+
     if (!validation.valid) {
       return {
         success: false,
@@ -84,7 +85,8 @@ export class SMSChannel extends BaseNotificationChannel {
       }
     } catch (error) {
       this.logError('Failed to send SMS', error, { to: options.to })
-      return {
+      
+return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       }

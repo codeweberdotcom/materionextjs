@@ -8,7 +8,9 @@ export class AccountAccessService {
     if (!AccountAccessService.instance) {
       AccountAccessService.instance = new AccountAccessService()
     }
-    return AccountAccessService.instance
+
+    
+return AccountAccessService.instance
   }
 
   /**
@@ -171,6 +173,7 @@ export class AccountAccessService {
   async setCurrentAccount(userId: string, accountId: string): Promise<void> {
     // Проверяем доступ
     const hasAccess = await this.canAccessAccount(userId, accountId)
+
     if (!hasAccess) {
       throw new Error('You do not have access to this account')
     }

@@ -5,6 +5,8 @@
  * @module services/media/storage/S3Adapter
  */
 
+import type { Readable } from 'stream'
+
 import {
   S3Client,
   PutObjectCommand,
@@ -17,7 +19,6 @@ import {
   CreateBucketCommand,
   HeadBucketCommand,
 } from '@aws-sdk/client-s3'
-import { Readable } from 'stream'
 
 import type { StorageAdapter, StorageFileInfo, StorageFileMetadata, S3AdapterConfig } from './types'
 import logger from '@/lib/logger'
@@ -78,6 +79,7 @@ export class S3Adapter implements StorageAdapter {
         Key: key,
         Body: buffer,
         ContentType: mimeType,
+
         // ACL: 'public-read', // Если нужен публичный доступ
       }))
       
@@ -166,11 +168,13 @@ export class S3Adapter implements StorageAdapter {
         Bucket: this.bucket,
         Key: key,
       }))
-      return true
+      
+return true
     } catch (error: any) {
       if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
         return false
       }
+
       throw error
     }
   }
@@ -194,7 +198,9 @@ export class S3Adapter implements StorageAdapter {
       } else {
         // Virtual-hosted style: http://bucket.endpoint/key
         const endpointUrl = new URL(this.endpoint)
-        return `${endpointUrl.protocol}//${this.bucket}.${endpointUrl.host}/${key}`
+
+        
+return `${endpointUrl.protocol}//${this.bucket}.${endpointUrl.host}/${key}`
       }
     }
     
@@ -267,6 +273,7 @@ export class S3Adapter implements StorageAdapter {
       if (error.name === 'NotFound' || error.$metadata?.httpStatusCode === 404) {
         return null
       }
+
       throw error
     }
   }
@@ -346,12 +353,14 @@ export class S3Adapter implements StorageAdapter {
       }))
       
       logger.info('[S3Adapter] Bucket created', { bucket: bucketName })
-      return true
+      
+return true
     } catch (error: any) {
       // Bucket уже существует - это не ошибка
       if (error.name === 'BucketAlreadyOwnedByYou' || error.name === 'BucketAlreadyExists') {
         logger.debug('[S3Adapter] Bucket already exists', { bucket: bucketName })
-        return true
+        
+return true
       }
       
       logger.error('[S3Adapter] CreateBucket failed', {
@@ -437,7 +446,8 @@ export class S3Adapter implements StorageAdapter {
       }))
       
       logger.info('[S3Adapter] Bucket created (static)', { bucket: bucketName })
-      return true
+      
+return true
     } catch (error: any) {
       if (error.name === 'BucketAlreadyOwnedByYou' || error.name === 'BucketAlreadyExists') {
         return true

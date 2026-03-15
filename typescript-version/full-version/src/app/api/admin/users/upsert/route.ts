@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import bcrypt from 'bcryptjs'
 
@@ -200,7 +201,8 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error upserting user via import endpoint:', error)
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
   }
 }
 

@@ -314,6 +314,7 @@
     "bulkDeactivateConfirmMessage": "Выбранные пользователи будут деактивированы и не смогут получить доступ к системе.",
     "bulkDelete": "Удалить",
     "bulkDeleteConfirmMessage": "Это действие нельзя отменить. Все данные выбранных пользователей будут безвозвратно удалены.",
+    "bulkDeleteConfirm": "Вы уверены, что хотите удалить ${count} выбранных записей? Это действие нельзя отменить.",
     "bulkOperationFailed": "Операция не удалась",
     "bulkOperationPartialSuccess": {
       "one": "Операция выполнена для ${successCount} из ${totalCount} пользователя",

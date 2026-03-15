@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { accountTransferService } from '@/services/accounts'
@@ -26,7 +27,8 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('[GET /api/accounts/transfers] Error:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       {
         success: false,
         message: error instanceof Error ? error.message : 'Internal server error'

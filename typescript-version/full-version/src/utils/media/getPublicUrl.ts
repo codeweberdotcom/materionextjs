@@ -6,14 +6,19 @@
  */
 
 export interface MediaUrlOptions {
+
   /** ID медиа файла */
   id: string
+
   /** Название варианта (thumb, medium, large) */
   variant?: string
+
   /** Локальный путь (если есть) */
   localPath?: string | null
+
   /** S3 ключ (если есть) */
   s3Key?: string | null
+
   /** Публичный URL prefix для S3/CDN */
   s3PublicUrlPrefix?: string | null
 }
@@ -51,8 +56,11 @@ export function getPublicMediaUrl(options: MediaUrlOptions): string {
     const prefix = s3PublicUrlPrefix.endsWith('/') 
       ? s3PublicUrlPrefix.slice(0, -1) 
       : s3PublicUrlPrefix
+
     const key = s3Key.startsWith('/') ? s3Key.slice(1) : s3Key
-    return `${prefix}/${key}`
+
+    
+return `${prefix}/${key}`
   }
 
   // 2. Локальный файл
@@ -71,7 +79,9 @@ export function getPublicMediaUrl(options: MediaUrlOptions): string {
 
   // 3. Fallback на API (с проксированием)
   const baseUrl = `/api/media/${id}`
-  return variant ? `${baseUrl}?variant=${variant}` : baseUrl
+
+  
+return variant ? `${baseUrl}?variant=${variant}` : baseUrl
 }
 
 /**

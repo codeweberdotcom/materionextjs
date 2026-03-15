@@ -1,10 +1,14 @@
+import type { IncomingMessage } from 'http';
+
+import type { ParsedUrlQuery } from 'querystring';
+
 import jwt from 'jsonwebtoken';
 import type { SignOptions } from 'jsonwebtoken';
-import type { IncomingMessage } from 'http';
 import type { Socket } from 'socket.io';
-import type { ParsedUrlQuery } from 'querystring';
+
+
 import { env, authJwtSecret } from '@/shared/config/env';
-import { User } from '../types/common';
+import type { User } from '../types/common';
 
 const JWT_SECRET = authJwtSecret || env.NEXTAUTH_SECRET || 'your-secret-key';
 
@@ -98,10 +102,13 @@ export const createToken = (user: User, expiresIn: string = '24h'): string => {
 export const isTokenExpired = (token: string): boolean => {
   try {
     const decoded = jwt.decode(token) as JwtPayload | null;
+
     if (!decoded || !decoded.exp) return true;
 
     const currentTime = Math.floor(Date.now() / 1000);
-    return decoded.exp < currentTime;
+
+    
+return decoded.exp < currentTime;
   } catch {
     return true;
   }
@@ -110,10 +117,13 @@ export const isTokenExpired = (token: string): boolean => {
 export const getTokenTimeToLive = (token: string): number | null => {
   try {
     const decoded = jwt.decode(token) as JwtPayload | null;
+
     if (!decoded || !decoded.exp) return null;
 
     const currentTime = Math.floor(Date.now() / 1000);
-    return Math.max(0, decoded.exp - currentTime);
+
+    
+return Math.max(0, decoded.exp - currentTime);
   } catch {
     return null;
   }

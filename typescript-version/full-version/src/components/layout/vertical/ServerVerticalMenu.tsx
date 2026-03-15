@@ -24,13 +24,16 @@ const ServerVerticalMenu = ({ dictionary, scrollMenu, locale }: Props) => {
     const fetchMenu = async () => {
       try {
         const response = await fetch(`/api/menu?locale=${locale}`)
+
         if (response.ok) {
            const data = await response.json()
+
            console.log('SERVER MENU: Received menu data:', data.menu)
            console.log('SERVER MENU: Menu data length:', data.menu?.length)
            setMenuData(data.menu)
         } else {
           console.error('Failed to fetch menu')
+
           // Fallback to empty menu or handle error
           setMenuData([])
         }

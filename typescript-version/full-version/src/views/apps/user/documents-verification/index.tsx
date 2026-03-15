@@ -55,7 +55,9 @@ interface TabPanelProps {
 
 function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props
-  return (
+
+  
+return (
     <div
       role='tabpanel'
       hidden={value !== index}
@@ -98,6 +100,7 @@ const DocumentsVerification = () => {
 
     try {
       const status = statusMap[tabValue]
+
       const response = await fetch(
         `/api/admin/users/pending-verification?status=${status}&page=${page + 1}&limit=${rowsPerPage}`
       )
@@ -107,6 +110,7 @@ const DocumentsVerification = () => {
       }
 
       const data = await response.json()
+
       setUsers(data.users || [])
       setTotalUsers(data.pagination?.total || 0)
     } catch (err) {
@@ -146,6 +150,7 @@ const DocumentsVerification = () => {
 
       if (!response.ok) {
         const data = await response.json()
+
         throw new Error(data.message || 'Failed to verify documents')
       }
 
@@ -167,7 +172,8 @@ const DocumentsVerification = () => {
   const handleRejectConfirm = async () => {
     if (!selectedUser || !rejectReason.trim()) {
       toast.error('Укажите причину отклонения')
-      return
+      
+return
     }
 
     setProcessing(true)
@@ -183,6 +189,7 @@ const DocumentsVerification = () => {
 
       if (!response.ok) {
         const data = await response.json()
+
         throw new Error(data.message || 'Failed to reject documents')
       }
 

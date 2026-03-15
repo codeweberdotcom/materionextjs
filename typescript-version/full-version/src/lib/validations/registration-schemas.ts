@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import { normalizePhone, validatePhoneFormat } from '@/lib/utils/phone-utils'
 import { registrationSettingsService } from '@/services/settings/RegistrationSettingsService'
 
@@ -12,7 +13,9 @@ export const phoneSchema = z
   .refine(
     (phone) => {
       const normalized = normalizePhone(phone)
-      return validatePhoneFormat(normalized)
+
+      
+return validatePhoneFormat(normalized)
     },
     {
       message: 'Invalid phone number format. Expected format: +79991234567 or 89991234567'
@@ -138,7 +141,9 @@ export const registrationSchema = z
         (phone) => {
           if (!phone) return true
           const normalized = normalizePhone(phone)
-          return validatePhoneFormat(normalized)
+
+          
+return validatePhoneFormat(normalized)
         },
         {
           message: 'Invalid phone number format'
@@ -169,7 +174,9 @@ export function formatZodError(error: z.ZodError): string {
   return error.errors
     .map((err) => {
       const path = err.path.join('.')
-      return path ? `${path}: ${err.message}` : err.message
+
+      
+return path ? `${path}: ${err.message}` : err.message
     })
     .join(', ')
 }

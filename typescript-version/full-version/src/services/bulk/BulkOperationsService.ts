@@ -3,8 +3,11 @@
  * Поддерживает любые сущности через конфигурацию
  */
 
-import { prisma } from '@/libs/prisma'
+import crypto from 'crypto'
+
 import type { Prisma } from '@prisma/client'
+
+import { prisma } from '@/libs/prisma'
 import type {
   BulkOperationResult,
   BulkOperationOptions,
@@ -23,7 +26,7 @@ import {
 } from '@/lib/metrics/bulk-operations'
 import { getEnvironmentFromRequest } from '@/lib/metrics/helpers'
 import { authBaseUrl } from '@/shared/config/env'
-import crypto from 'crypto'
+
 
 export class BulkOperationsService {
   /**
@@ -60,6 +63,7 @@ export class BulkOperationsService {
 
       // Фильтруем ID, если есть фильтр
       let validIds = ids
+
       if (config.options.filterIds) {
         validIds = await config.options.filterIds(ids, context)
       }
@@ -88,6 +92,7 @@ export class BulkOperationsService {
 
         // Для больших объемов (>500) используем batch processing
         let updateResult
+
         if (validIds.length > 500) {
           // Разбиваем на батчи по 500 записей
           const batchSize = 500
@@ -96,6 +101,7 @@ export class BulkOperationsService {
           for (let i = 0; i < validIds.length; i += batchSize) {
             const batch = validIds.slice(i, i + batchSize)
             const batchResult = await config.updateOperation(batch, data, tx)
+
             totalCount += batchResult.count
           }
           
@@ -181,6 +187,7 @@ export class BulkOperationsService {
 
       // Фильтруем ID, если есть фильтр
       let validIds = ids
+
       if (config.options.filterIds) {
         validIds = await config.options.filterIds(ids, context)
       }
@@ -209,6 +216,7 @@ export class BulkOperationsService {
 
         // Для больших объемов (>500) используем batch processing
         let deleteResult
+
         if (validIds.length > 500) {
           // Разбиваем на батчи по 500 записей
           const batchSize = 500
@@ -217,6 +225,7 @@ export class BulkOperationsService {
           for (let i = 0; i < validIds.length; i += batchSize) {
             const batch = validIds.slice(i, i + batchSize)
             const batchResult = await config.deleteOperation(batch, tx)
+
             totalCount += batchResult.count
           }
           

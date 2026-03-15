@@ -8,7 +8,8 @@
  * - Добавление кастомных операторов и фактов
  */
 
-import { Engine, Rule, Almanac, RuleResult as JREResult } from 'json-rules-engine'
+import type { Almanac, RuleResult as JREResult } from 'json-rules-engine';
+import { Engine, Rule } from 'json-rules-engine'
 
 import type {
   RuleDefinition,

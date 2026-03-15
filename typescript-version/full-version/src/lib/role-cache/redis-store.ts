@@ -19,17 +19,21 @@ let RedisConstructorRef: RedisConstructor | null = null
 
 const ensureRedisDependency = (): RedisConstructor => {
   if (RedisConstructorRef) return RedisConstructorRef
+
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const RedisLib = require('ioredis') as RedisConstructor
+
     RedisConstructorRef = RedisLib
-    return RedisLib
+    
+return RedisLib
   } catch (error) {
     const message =
       error instanceof Error && error.message.includes("Cannot find module 'ioredis'")
         ? 'Optional dependency `ioredis` is missing. Install it or remove REDIS_URL to disable Redis mode.'
         : 'Failed to load `ioredis` package.'
+
     throw new Error(message, { cause: error })
   }
 }
@@ -44,6 +48,7 @@ export class RedisRoleCacheStore implements RoleCacheStore {
 
   constructor(url: string, tls?: boolean) {
     const RedisLib = ensureRedisDependency()
+
     this.redis = new RedisLib(url, {
       lazyConnect: true,
       ...(tls ? { tls: { rejectUnauthorized: false } } : {})
@@ -55,7 +60,8 @@ export class RedisRoleCacheStore implements RoleCacheStore {
 
     if (this.connecting) {
       await this.connecting
-      return
+      
+return
     }
 
     this.connecting = (async () => {
@@ -112,6 +118,7 @@ export class RedisRoleCacheStore implements RoleCacheStore {
     try {
       await this.ensureConnected()
       const redisKey = this.getKey(key)
+
       await this.redis.del(redisKey)
     } catch (error) {
       logger.error('[role-cache] Error deleting from Redis', { key, error })
@@ -122,8 +129,11 @@ export class RedisRoleCacheStore implements RoleCacheStore {
   async clear(): Promise<void> {
     try {
       await this.ensureConnected()
+
       // Удаляем все ключи с префиксом
       const pattern = `${KEY_PREFIX}:*`
+
+
       // В ioredis нет прямого метода для удаления по паттерну, используем scan
       // Для простоты удаляем только основной ключ 'all-roles'
       await this.delete('all-roles')
@@ -137,6 +147,7 @@ export class RedisRoleCacheStore implements RoleCacheStore {
     try {
       await this.ensureConnected()
       const start = Date.now()
+
       await this.redis.ping()
       const latency = Date.now() - start
 

@@ -18,12 +18,14 @@ const TRANSLIT_MAP: Record<string, string> = {
   'н': 'n', 'о': 'o', 'п': 'p', 'р': 'r', 'с': 's', 'т': 't', 'у': 'u',
   'ф': 'f', 'х': 'kh', 'ц': 'ts', 'ч': 'ch', 'ш': 'sh', 'щ': 'sch',
   'ъ': '', 'ы': 'y', 'ь': '', 'э': 'e', 'ю': 'yu', 'я': 'ya',
+
   // Uppercase
   'А': 'A', 'Б': 'B', 'В': 'V', 'Г': 'G', 'Д': 'D', 'Е': 'E', 'Ё': 'Yo',
   'Ж': 'Zh', 'З': 'Z', 'И': 'I', 'Й': 'Y', 'К': 'K', 'Л': 'L', 'М': 'M',
   'Н': 'N', 'О': 'O', 'П': 'P', 'Р': 'R', 'С': 'S', 'Т': 'T', 'У': 'U',
   'Ф': 'F', 'Х': 'Kh', 'Ц': 'Ts', 'Ч': 'Ch', 'Ш': 'Sh', 'Щ': 'Sch',
   'Ъ': '', 'Ы': 'Y', 'Ь': '', 'Э': 'E', 'Ю': 'Yu', 'Я': 'Ya',
+
   // Украинские буквы
   'і': 'i', 'І': 'I', 'ї': 'yi', 'Ї': 'Yi', 'є': 'ye', 'Є': 'Ye',
   'ґ': 'g', 'Ґ': 'G'
@@ -102,12 +104,16 @@ class SlugService {
     let slug = this.transliterate(source)
       .toLowerCase()
       .trim()
+
       // Заменяем пробелы и дефисы на underscore
       .replace(/[\s\-]+/g, '_')
+
       // Удаляем все символы кроме a-z, 0-9, _
       .replace(/[^a-z0-9_]/g, '')
+
       // Убираем множественные underscore
       .replace(/_+/g, '_')
+
       // Убираем underscore в начале и конце
       .replace(/^_+|_+$/g, '')
 
@@ -172,6 +178,7 @@ class SlugService {
           ...(excludeId ? { NOT: { id: excludeId } } : {})
         }
       })
+
       if (existing) return false
     } else {
       const existing = await prisma.userAccount.findFirst({
@@ -180,6 +187,7 @@ class SlugService {
           ...(excludeId ? { NOT: { id: excludeId } } : {})
         }
       })
+
       if (existing) return false
     }
 
@@ -237,7 +245,9 @@ class SlugService {
    */
   async getSettings() {
     const settings = await prisma.slugSettings.findFirst()
-    return settings || DEFAULT_SETTINGS
+
+    
+return settings || DEFAULT_SETTINGS
   }
 
   /**
@@ -263,12 +273,14 @@ class SlugService {
         where: { id: entityId },
         select: { usernameChangedAt: true }
       })
+
       lastChangedAt = user?.usernameChangedAt || null
     } else {
       const account = await prisma.userAccount.findUnique({
         where: { id: entityId },
         select: { slugChangedAt: true }
       })
+
       lastChangedAt = account?.slugChangedAt || null
     }
 
@@ -284,7 +296,9 @@ class SlugService {
 
     if (now < nextChangeDate) {
       const daysLeft = Math.ceil((nextChangeDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000))
-      return {
+
+      
+return {
         canChange: false,
         nextChangeDate,
         error: `Можно изменить через ${daysLeft} дн.`
@@ -306,12 +320,14 @@ class SlugService {
   ): Promise<ChangeSlugResult> {
     // Валидация нового slug
     const validation = this.validateSlug(newSlug)
+
     if (!validation.valid) {
       return { success: false, error: validation.error }
     }
 
     // Проверка возможности смены
     const canChange = await this.canChangeSlug(entityType, entityId, isAdmin)
+
     if (!canChange.canChange) {
       return { success: false, error: canChange.error }
     }
@@ -329,12 +345,14 @@ class SlugService {
         where: { id: entityId },
         select: { username: true }
       })
+
       oldSlug = user?.username || null
     } else {
       const account = await prisma.userAccount.findUnique({
         where: { id: entityId },
         select: { slug: true }
       })
+
       oldSlug = account?.slug || null
     }
 
@@ -410,12 +428,14 @@ class SlugService {
         where: { id: history.entityId },
         select: { username: true }
       })
+
       currentSlug = user?.username || null
     } else {
       const account = await prisma.userAccount.findUnique({
         where: { id: history.entityId },
         select: { slug: true }
       })
+
       currentSlug = account?.slug || null
     }
 

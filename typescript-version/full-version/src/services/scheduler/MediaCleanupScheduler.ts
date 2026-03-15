@@ -20,7 +20,9 @@ export class MediaCleanupScheduler {
     if (!MediaCleanupScheduler.instance) {
       MediaCleanupScheduler.instance = new MediaCleanupScheduler()
     }
-    return MediaCleanupScheduler.instance
+
+    
+return MediaCleanupScheduler.instance
   }
 
   /**
@@ -30,7 +32,8 @@ export class MediaCleanupScheduler {
   start(intervalMs = 24 * 60 * 60 * 1000): void {
     if (this.intervalId) {
       logger.info('[MediaCleanupScheduler] Already running')
-      return
+      
+return
     }
 
     logger.info('[MediaCleanupScheduler] Starting with interval:', { intervalMs })
@@ -64,7 +67,8 @@ export class MediaCleanupScheduler {
   async runCleanup(dryRun: boolean = false): Promise<void> {
     if (this.isRunning) {
       logger.info('[MediaCleanupScheduler] Already running, skipping...')
-      return
+      
+return
     }
 
     this.isRunning = true

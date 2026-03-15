@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { prisma } from '@/libs/prisma'
 import { verificationService } from '@/services/verification/VerificationService'
 import { resendVerificationSchema, resendEmailVerificationSchema, resendPhoneCodeSchema } from '@/lib/validations/verification-schemas'
@@ -27,6 +29,7 @@ export async function POST(request: NextRequest) {
     if (body.email) {
       // Повторная отправка email верификации
       const validationResult = resendEmailVerificationSchema.safeParse(body)
+
       if (!validationResult.success) {
         const { payload, init } = createErrorResponse({
           status: 400,
@@ -37,13 +40,17 @@ export async function POST(request: NextRequest) {
           route: 'verify/resend',
           context: { route: 'verify/resend', errors: validationResult.error.errors }
         })
-        return new NextResponse(JSON.stringify(payload), init)
+
+        
+return new NextResponse(JSON.stringify(payload), init)
       }
+
       type = 'email'
       identifier = validationResult.data.email
     } else if (body.phone) {
       // Повторная отправка SMS кода
       const validationResult = resendPhoneCodeSchema.safeParse(body)
+
       if (!validationResult.success) {
         const { payload, init } = createErrorResponse({
           status: 400,
@@ -54,13 +61,17 @@ export async function POST(request: NextRequest) {
           route: 'verify/resend',
           context: { route: 'verify/resend', errors: validationResult.error.errors }
         })
-        return new NextResponse(JSON.stringify(payload), init)
+
+        
+return new NextResponse(JSON.stringify(payload), init)
       }
+
       type = 'phone'
       identifier = validationResult.data.phone
     } else {
       // Универсальная схема с type и identifier
       const validationResult = resendVerificationSchema.safeParse(body)
+
       if (!validationResult.success) {
         const { payload, init } = createErrorResponse({
           status: 400,
@@ -71,8 +82,11 @@ export async function POST(request: NextRequest) {
           route: 'verify/resend',
           context: { route: 'verify/resend', errors: validationResult.error.errors }
         })
-        return new NextResponse(JSON.stringify(payload), init)
+
+        
+return new NextResponse(JSON.stringify(payload), init)
       }
+
       type = validationResult.data.type
       identifier = validationResult.data.identifier
     }
@@ -92,7 +106,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/resend',
         context: { route: 'verify/resend', type, identifier }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Проверяем, не верифицирован ли уже
@@ -105,7 +121,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/resend',
         context: { route: 'verify/resend', type, identifier }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     if (type === 'phone' && user.phoneVerified) {
@@ -117,16 +135,20 @@ export async function POST(request: NextRequest) {
         route: 'verify/resend',
         context: { route: 'verify/resend', type, identifier }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Rate limiting
     const clientIp = request.headers.get('x-forwarded-for') ||
                      request.headers.get('x-real-ip') ||
                      'unknown'
+
     const environment = getEnvironmentFromRequest(request) as 'production' | 'test' | undefined
 
     const rateLimitModule = type === 'email' ? 'registration-email' : 'registration-phone'
+
     const rateLimitResult = await rateLimitService.checkLimit(identifier, rateLimitModule, {
       increment: true,
       userId: user.id,
@@ -149,7 +171,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/resend',
         context: { route: 'verify/resend', type, identifier }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Генерируем новый код
@@ -162,6 +186,7 @@ export async function POST(request: NextRequest) {
       // Отправляем email с токеном
       try {
         const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/verify/email?token=${newCode}`
+
         await emailService.sendEmail({
           to: identifier,
           subject: 'Подтвердите ваш email',
@@ -200,6 +225,7 @@ export async function POST(request: NextRequest) {
     } else {
       // Отправляем SMS код
       const smsSettings = await smsRuSettingsService.getSettings()
+
       if (smsSettings.apiKey) {
         try {
           const smsProvider = new SMSRuProvider({
@@ -209,6 +235,7 @@ export async function POST(request: NextRequest) {
           })
 
           const smsResult = await smsProvider.sendCode(identifier, newCode)
+
           sent = smsResult.success
           error = smsResult.error || null
 
@@ -267,7 +294,9 @@ export async function POST(request: NextRequest) {
       route: 'verify/resend',
       context: { route: 'verify/resend' }
     })
-    return new NextResponse(JSON.stringify(payload), init)
+
+    
+return new NextResponse(JSON.stringify(payload), init)
   }
 }
 

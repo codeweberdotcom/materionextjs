@@ -1,4 +1,5 @@
 import * as crypto from 'crypto'
+
 import type { PrismaClient } from '@prisma/client'
 import { Prisma } from '@prisma/client'
 
@@ -15,14 +16,18 @@ let rateLimitSecretWarningShown = false
 
 const getRateLimitSecret = (): string => {
   const secret = process.env.RATE_LIMIT_SECRET
+
   if (secret) return secret
+
   if (!rateLimitSecretWarningShown) {
     logger.warn(
       '[rate-limit] RATE_LIMIT_SECRET is not set; using a development fallback secret. Configure a strong secret in production.'
     )
     rateLimitSecretWarningShown = true
   }
-  return DEV_RATE_LIMIT_SECRET
+
+  
+return DEV_RATE_LIMIT_SECRET
 }
 
 const getIpHashSecret = (): string => getRateLimitSecret()
@@ -32,36 +37,47 @@ const getEmailHashSecret = (): string => getRateLimitSecret()
 const hashIpAddress = (ip: string | null | undefined): string | null => {
   if (!ip) return null
   const hmac = crypto.createHmac('sha256', getIpHashSecret())
+
   hmac.update(`${IP_HASH_VERSION}:${ip}`)
-  return hmac.digest('hex')
+  
+return hmac.digest('hex')
 }
 
 const hashEmail = (email: string | null | undefined): string | null => {
   if (!email) return null
   const hmac = crypto.createHmac('sha256', getEmailHashSecret())
+
   hmac.update(`${EMAIL_HASH_VERSION}:${email.toLowerCase()}`)
-  return hmac.digest('hex')
+  
+return hmac.digest('hex')
 }
 
 const extractIpPrefix = (ip: string | null | undefined): string | null => {
   if (!ip) return null
+
   if (ip.includes(':')) {
     // IPv6: use /48 prefix (first 4 hextets)
     const segments = ip.split(':').filter(Boolean)
     const prefix = segments.slice(0, 4).join(':')
-    return `${prefix || ip}::/48`
+
+    
+return `${prefix || ip}::/48`
   }
 
   const octets = ip.split('.')
+
   if (octets.length >= 3) {
     return `${octets.slice(0, 3).join('.')}.0/24`
   }
-  return `${ip}/32`
+
+  
+return `${ip}/32`
 }
 
 const maskEmail = (email: string | null | undefined): string | null => {
   if (!email) return null
   const [local, domain] = email.split('@')
+
   if (!local || !domain) return email
 
   const maskedLocal = local.length > 2
@@ -69,6 +85,7 @@ const maskEmail = (email: string | null | undefined): string | null => {
     : `${local[0]}***`
 
   const domainParts = domain.split('.')
+
   const maskedDomain = domainParts.length > 1
     ? `${domainParts[0][0]}******.${domainParts.slice(1).join('.')}`
     : domain
@@ -78,16 +95,22 @@ const maskEmail = (email: string | null | undefined): string | null => {
 
 const maskIpAddress = (ip: string | null | undefined): string | null => {
   if (!ip) return null
+
   if (ip.includes(':')) {
     // IPv6: mask most of the address
     return ip.replace(/:[0-9a-f]+/gi, ':****')
   }
+
+
   // IPv4: mask last octet
   const parts = ip.split('.')
+
   if (parts.length === 4) {
     return `${parts[0]}.${parts[1]}.***.***`
   }
-  return ip
+
+  
+return ip
 }
 
 export class RateLimitEventRecorder implements IRateLimitEventRecorder {
@@ -100,6 +123,7 @@ export class RateLimitEventRecorder implements IRateLimitEventRecorder {
     // Clean up expired cache entries every 5 minutes
     setInterval(() => {
       const now = Date.now()
+
       for (const [key, timestamp] of this.warningEventCache.entries()) {
         if (now - timestamp > this.WARNING_DEDUP_INTERVAL_MS) {
           this.warningEventCache.delete(key)
@@ -123,7 +147,8 @@ export class RateLimitEventRecorder implements IRateLimitEventRecorder {
 
     // Update cache with current timestamp
     this.warningEventCache.set(cacheKey, now)
-    return true
+    
+return true
   }
 
   async recordEvent(params: {
@@ -155,6 +180,7 @@ export class RateLimitEventRecorder implements IRateLimitEventRecorder {
 
     // Record metric for the event (only for events that are actually logged)
     const environment = params.environment || 'production'
+
     recordEventMetric(params.module, params.eventType, params.mode, environment)
 
     // Block events are always logged (no deduplication)
@@ -204,7 +230,8 @@ export class RateLimitEventRecorder implements IRateLimitEventRecorder {
 
     if (!this.prisma) {
       logger.warn('[rate-limit] Prisma client not provided to RateLimitEventRecorder, skipping DB persistence.')
-      return
+      
+return
     }
 
     try {
@@ -213,6 +240,7 @@ export class RateLimitEventRecorder implements IRateLimitEventRecorder {
           module: params.module,
           key: params.key,
           userId: params.userId ?? null,
+
           // PII Protection: Store only hashes, not raw IP/email (GDPR compliance)
           ipAddress: null, // Removed for GDPR compliance - use ipHash instead
           ipHash,
@@ -238,6 +266,7 @@ export class RateLimitEventRecorder implements IRateLimitEventRecorder {
             data: {
               module: params.module,
               userId: params.userId ?? null,
+
               // PII Protection: Store only hashes for automated blocks (GDPR compliance)
               // Note: Manual blocks may still store raw values for admin purposes, but automated blocks use hashes
               email: null, // Removed for GDPR compliance - use emailHash instead
@@ -256,7 +285,9 @@ export class RateLimitEventRecorder implements IRateLimitEventRecorder {
 
           // Record metrics for automatic blocks by type
           const environment = params.environment || 'production'
+
           recordBlock(params.module, 'automatic', environment)
+
           if (params.userId) {
             recordBlock(params.module, 'user', environment)
           } else if (params.ipAddress) {
@@ -285,6 +316,7 @@ export class RateLimitEventRecorder implements IRateLimitEventRecorder {
               module: params.module,
               key: params.key,
               userId: params.userId ?? null,
+
               // PII Protection: Store only hashes, not raw IP/email (GDPR compliance)
               ipAddress: null, // Removed for GDPR compliance - use ipHash instead
               ipHash,
@@ -303,7 +335,8 @@ export class RateLimitEventRecorder implements IRateLimitEventRecorder {
           logger.warn(
             'RateLimitEvent table missing `email` column. Recorded event without email. Run the latest Prisma migrations to add it.'
           )
-          return
+          
+return
         } catch (retryError) {
           logger.error('Error recording rate limit event (retry without email)', {
             error:
@@ -311,7 +344,8 @@ export class RateLimitEventRecorder implements IRateLimitEventRecorder {
                 ? { name: retryError.name, message: retryError.message, stack: retryError.stack }
                 : retryError
           })
-          return
+          
+return
         }
       }
 

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { eventRetentionService } from '@/services/events/EventRetentionService'
 import { requireAuth } from '@/utils/auth/auth'

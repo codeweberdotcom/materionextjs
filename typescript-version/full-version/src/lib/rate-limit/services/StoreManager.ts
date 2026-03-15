@@ -30,8 +30,10 @@ export class StoreManager implements IStoreManager {
       logger.error('[StoreManager] Failed to initialize rate limit store', {
         error: error instanceof Error ? error.message : error
       })
+
       // Fallback: используем PrismaStore напрямую
       const { PrismaRateLimitStore } = await import('../stores/prisma-store')
+
       this.currentStore = new PrismaRateLimitStore(this.prisma)
     }
   }
@@ -41,25 +43,31 @@ export class StoreManager implements IStoreManager {
       await this.initializationPromise
       this.initializationPromise = null
     }
+
     if (!this.currentStore) {
       // Если инициализация не завершилась, создаём fallback
       const { PrismaRateLimitStore } = await import('../stores/prisma-store')
+
       this.currentStore = new PrismaRateLimitStore(this.prisma)
     }
   }
 
   async getStore(): Promise<RateLimitStore> {
     await this.ensureInitialized()
+
     if (!this.currentStore) {
       throw new Error('Rate limit store not initialized')
     }
-    return this.currentStore
+
+    
+return this.currentStore
   }
 
   switchToFallback(): void {
     if (this.fallbackStore) {
       this.currentStore = this.fallbackStore
     }
+
     // TODO: Implement fallback logic
   }
 
@@ -70,6 +78,7 @@ export class StoreManager implements IStoreManager {
     try {
       const store = await this.getStore()
       const storeHealth = await store.healthCheck()
+
       services.store = storeHealth
     } catch (error) {
       services.store = {
@@ -82,6 +91,7 @@ export class StoreManager implements IStoreManager {
     try {
       const store = await this.getStore()
       const dbHealth = await store.healthCheck()
+
       services.database = dbHealth
     } catch (error) {
       services.database = {
@@ -103,10 +113,13 @@ export class StoreManager implements IStoreManager {
       clearInterval(this.cleanupInterval)
       this.cleanupInterval = null
     }
+
     await this.ensureInitialized()
+
     if (this.currentStore) {
       await this.currentStore.shutdown()
     }
+
     if (this.fallbackStore) {
       await this.fallbackStore.shutdown()
     }
@@ -116,7 +129,8 @@ export class StoreManager implements IStoreManager {
     try {
       if (!this.prisma?.userBlock?.findMany) {
         logger.warn('Prisma client not available for block synchronization')
-        return
+        
+return
       }
 
       const activeBlocks = await this.prisma.userBlock.findMany({
@@ -132,12 +146,14 @@ export class StoreManager implements IStoreManager {
       await Promise.all(
         activeBlocks.map(async (block) => {
           const keys = []
+
           if (block.userId) keys.push(block.userId)
           if (block.ipAddress) keys.push(block.ipAddress)
           if (block.email) keys.push(block.email)
           if (block.mailDomain) keys.push(block.mailDomain)
 
           const store = await this.getStore()
+
           await Promise.all(
             keys.map(key => store.setBlock(key, block.module, block.unblockedAt || undefined))
           )

@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { prisma } from '@/libs/prisma'
 
 // GET - Get all test configurations
@@ -13,7 +15,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ configs })
   } catch (error) {
     console.error('Error fetching test configs:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -50,7 +53,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ config })
   } catch (error) {
     console.error('Error saving test config:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

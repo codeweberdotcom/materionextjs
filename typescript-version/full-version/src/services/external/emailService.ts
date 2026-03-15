@@ -1,10 +1,14 @@
 // Email service for external API integrations
+import * as fs from 'fs'
+
+import * as path from 'path'
+
 import nodemailer from 'nodemailer'
 import type SMTPTransport from 'nodemailer/lib/smtp-transport'
 import * as cron from 'node-cron'
-import * as fs from 'fs'
-import * as path from 'path'
+
 import Handlebars from 'handlebars'
+
 import logger from '@/lib/logger'
 
 export interface SmtpConfig {
@@ -102,7 +106,8 @@ export class EmailService {
     try {
       if (!this.transporter) await this.initialize()
       await this.transporter!.verify()
-      return { success: true, message: 'SMTP connection successful' }
+      
+return { success: true, message: 'SMTP connection successful' }
     } catch (error) {
       return {
         success: false,

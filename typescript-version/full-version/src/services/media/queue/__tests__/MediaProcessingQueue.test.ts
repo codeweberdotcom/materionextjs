@@ -68,6 +68,7 @@ describe('MediaProcessingQueue', () => {
   afterEach(async () => {
     // Reset singleton
     const { MediaProcessingQueue } = await import('../MediaProcessingQueue')
+
     await MediaProcessingQueue.getInstance().close()
   })
 
@@ -117,6 +118,7 @@ describe('MediaProcessingQueue', () => {
       const result = await mediaProcessingQueue.add(jobData)
 
       expect(result).toBeDefined()
+
       if (result && 'type' in result) {
         expect(result.type).toBe('in-memory')
       }

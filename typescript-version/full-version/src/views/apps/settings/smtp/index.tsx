@@ -15,14 +15,16 @@ import Alert from '@mui/material/Alert'
 import Divider from '@mui/material/Divider'
 
 // Context Imports
+import { toast } from 'react-toastify'
+
+import Skeleton from '@mui/material/Skeleton'
+
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Hook Imports
 import { usePermissions } from '@/hooks/usePermissions'
-import { toast } from 'react-toastify'
 
 // Third-party Imports
-import Skeleton from '@mui/material/Skeleton'
 
 type SmtpPreset = {
   host: string
@@ -180,6 +182,7 @@ const SmtpSettings = () => {
         toast.error('У вас нет прав для изменения настроек SMTP')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Ошибка при сохранении настроек.')
       }
     } catch (error) {
@@ -220,7 +223,8 @@ const SmtpSettings = () => {
   const handleSendTestEmail = async () => {
     if (!testRecipientEmail) {
       toast.error('Пожалуйста, введите email получателя')
-      return
+      
+return
     }
 
     setSendTestLoading(true)

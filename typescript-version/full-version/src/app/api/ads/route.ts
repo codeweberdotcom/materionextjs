@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { rateLimitContainer } from '@/lib/rate-limit/di/container'
 import { requireAuth } from '@/utils/auth/auth'
@@ -10,6 +11,7 @@ export async function POST(request: NextRequest) {
   try {
     // Проверяем полную верификацию (email + phone) для создания объявлений
     const verificationCheck = await requireFullVerification(request)
+
     if (!verificationCheck.allowed) {
       return verificationCheck.response || NextResponse.json(
         { error: 'Full verification required (email and phone)' },
@@ -21,6 +23,7 @@ export async function POST(request: NextRequest) {
 
     const clientIp = getRequestIp(request)
     const environment = getEnvironmentFromRequest(request) as 'production' | 'test' | undefined
+
     const rateLimitResult = await rateLimitContainer.getRateLimitEngine().checkLimit(user.id, 'ads', {
       userId: user.id,
       email: user.email ?? null,
@@ -55,6 +58,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error creating ad:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

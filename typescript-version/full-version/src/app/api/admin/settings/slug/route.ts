@@ -5,7 +5,8 @@
  * PUT /api/admin/settings/slug - Обновить настройки
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
 import { requireAuth } from '@/utils/auth/auth'
@@ -31,6 +32,7 @@ export async function GET(request: NextRequest) {
 
     // Проверяем права администратора
     const hasPermission = await checkPermission(user, 'settings', 'read')
+
     if (!hasPermission) {
       return NextResponse.json(
         { error: 'Access denied' },
@@ -54,7 +56,8 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error getting slug settings:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
@@ -70,6 +73,7 @@ export async function PUT(request: NextRequest) {
 
     // Проверяем права администратора
     const hasPermission = await checkPermission(user, 'settings', 'edit')
+
     if (!hasPermission) {
       return NextResponse.json(
         { error: 'Access denied' },
@@ -78,6 +82,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json()
+
     const {
       changeIntervalDays,
       minLength,
@@ -119,6 +124,7 @@ export async function PUT(request: NextRequest) {
     if (reservedSlugs !== undefined) {
       try {
         const parsed = JSON.parse(reservedSlugs)
+
         if (!Array.isArray(parsed)) {
           return NextResponse.json(
             { error: 'reservedSlugs must be a JSON array' },
@@ -137,6 +143,7 @@ export async function PUT(request: NextRequest) {
     const existingSettings = await prisma.slugSettings.findFirst()
 
     let settings
+
     if (existingSettings) {
       settings = await prisma.slugSettings.update({
         where: { id: existingSettings.id },
@@ -196,7 +203,8 @@ export async function PUT(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error updating slug settings:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )

@@ -20,7 +20,9 @@ export class TariffExpirationScheduler {
     if (!TariffExpirationScheduler.instance) {
       TariffExpirationScheduler.instance = new TariffExpirationScheduler()
     }
-    return TariffExpirationScheduler.instance
+
+    
+return TariffExpirationScheduler.instance
   }
 
   /**
@@ -30,7 +32,8 @@ export class TariffExpirationScheduler {
   start(intervalMs = 60 * 60 * 1000): void {
     if (this.intervalId) {
       console.log('[TariffScheduler] Already running')
-      return
+      
+return
     }
 
     console.log('[TariffScheduler] Starting with interval:', intervalMs, 'ms')
@@ -61,7 +64,8 @@ export class TariffExpirationScheduler {
   async checkExpiringTariffs(): Promise<void> {
     if (this.isRunning) {
       console.log('[TariffScheduler] Already checking, skipping...')
-      return
+      
+return
     }
 
     this.isRunning = true
@@ -144,7 +148,8 @@ export class TariffExpirationScheduler {
 
     if (now - lastReminder < minInterval) {
       console.log(`[TariffScheduler] Skipping ${account.id} - reminder already sent recently`)
-      return
+      
+return
     }
 
     // Отправляем событие для Rules Engine
@@ -232,7 +237,8 @@ export class TariffExpirationScheduler {
 
     if (!freePlan) {
       console.error('[TariffScheduler] FREE tariff plan not found!')
-      return
+      
+return
     }
 
     console.log(`[TariffScheduler] Processing ${expiredAccounts.length} expired accounts for downgrade`)
@@ -296,7 +302,8 @@ export class TariffExpirationScheduler {
 
     if (!account) {
       console.log(`[TariffScheduler] Account ${accountId} not found`)
-      return
+      
+return
     }
 
     await this.processAccount(account as any)

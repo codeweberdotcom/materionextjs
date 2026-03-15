@@ -27,6 +27,7 @@ import Tooltip from '@mui/material/Tooltip'
 import TablePagination from '@mui/material/TablePagination'
 
 import { toast } from 'react-toastify'
+
 import { usePermissions } from '@/hooks/usePermissions'
 
 interface Execution {
@@ -68,6 +69,7 @@ interface ExecutionDetail {
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return '–'
+
   try {
     return new Intl.DateTimeFormat('ru-RU', {
       dateStyle: 'short',
@@ -136,7 +138,8 @@ const NotificationExecutions = () => {
   const fetchExecutions = useCallback(async () => {
     if (!canRead) {
       setLoading(false)
-      return
+      
+return
     }
 
     setLoading(true)
@@ -146,12 +149,15 @@ const NotificationExecutions = () => {
         page: String(page + 1),
         limit: String(rowsPerPage)
       })
+
       if (statusFilter) params.set('status', statusFilter)
       if (scenarioFilter) params.set('scenarioId', scenarioFilter)
 
       const response = await fetch(`/api/admin/notifications/executions?${params}`)
+
       if (!response.ok) throw new Error('Failed to load')
       const data = await response.json()
+
       setExecutions(data.items)
       setTotal(data.pagination.total)
     } catch (err) {
@@ -174,8 +180,10 @@ const NotificationExecutions = () => {
 
     try {
       const response = await fetch(`/api/admin/notifications/executions/${id}`)
+
       if (!response.ok) throw new Error('Failed to load')
       const data = await response.json()
+
       setSelectedExecution(data.execution)
     } catch (err) {
       toast.error('Ошибка загрузки деталей')
@@ -192,10 +200,13 @@ const NotificationExecutions = () => {
       const response = await fetch(`/api/admin/notifications/executions/${id}/retry`, {
         method: 'POST'
       })
+
       if (!response.ok) {
         const err = await response.json()
+
         throw new Error(err.error || 'Failed')
       }
+
       toast.success('Повторная отправка запущена')
       fetchExecutions()
     } catch (err) {

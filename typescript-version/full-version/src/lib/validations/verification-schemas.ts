@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import { normalizePhone, validatePhoneFormat } from '@/lib/utils/phone-utils'
 
 /**
@@ -21,7 +22,9 @@ export const sendPhoneCodeSchema = z.object({
     .refine(
       (phone) => {
         const normalized = normalizePhone(phone)
-        return validatePhoneFormat(normalized)
+
+        
+return validatePhoneFormat(normalized)
       },
       {
         message: 'Invalid phone number format'
@@ -42,7 +45,9 @@ export const verifyPhoneCodeSchema = z.object({
     .refine(
       (phone) => {
         const normalized = normalizePhone(phone)
-        return validatePhoneFormat(normalized)
+
+        
+return validatePhoneFormat(normalized)
       },
       {
         message: 'Invalid phone number format'
@@ -88,7 +93,9 @@ export const resendPhoneCodeSchema = z.object({
     .refine(
       (phone) => {
         const normalized = normalizePhone(phone)
-        return validatePhoneFormat(normalized)
+
+        
+return validatePhoneFormat(normalized)
       },
       {
         message: 'Invalid phone number format'
@@ -106,7 +113,9 @@ export function formatZodError(error: z.ZodError): string {
   return error.errors
     .map((err) => {
       const path = err.path.join('.')
-      return path ? `${path}: ${err.message}` : err.message
+
+      
+return path ? `${path}: ${err.message}` : err.message
     })
     .join(', ')
 }

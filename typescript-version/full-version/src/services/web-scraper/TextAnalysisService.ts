@@ -35,8 +35,10 @@ async function initAzMorph(): Promise<boolean> {
           setTimeout(() => {
             try {
               const test = Az.Morph('планшеты')
+
               if (test && test.length > 0) {
                 const norm = test[0].normalize()
+
                 console.log('[Az.Morph] Тест: планшеты →', norm?.word || 'FAIL')
                 globalAzInitialized = true
                 console.log('[Az.Morph] Инициализирован успешно!')
@@ -74,10 +76,13 @@ function lemmatizeWithAz(word: string): string {
   
   try {
     const parsed = Az.Morph(word)
+
     if (parsed && parsed.length > 0) {
       const firstParse = parsed[0]
+
       if (typeof firstParse.normalize === 'function') {
         const normalized = firstParse.normalize()
+
         if (normalized?.word) {
           return normalized.word.toLowerCase()
         }
@@ -94,6 +99,7 @@ function lemmatizeWithAz(word: string): string {
  * Результат анализа текста
  */
 export interface TextAnalysisResult {
+
   // Топ ключевых слов по TF-IDF
   keywords: Array<{
     word: string
@@ -183,6 +189,7 @@ function stringSimilarity(str1: string, str2: string): number {
   for (let i = 0; i <= s1.length; i++) {
     matrix[i] = [i]
   }
+
   for (let j = 0; j <= s2.length; j++) {
     matrix[0][j] = j
   }
@@ -190,6 +197,7 @@ function stringSimilarity(str1: string, str2: string): number {
   for (let i = 1; i <= s1.length; i++) {
     for (let j = 1; j <= s2.length; j++) {
       const cost = s1[i - 1] === s2[j - 1] ? 0 : 1
+
       matrix[i][j] = Math.min(
         matrix[i - 1][j] + 1,      // удаление
         matrix[i][j - 1] + 1,      // вставка
@@ -239,9 +247,11 @@ class SimpleTfIdf {
       
       // IDF: log(N / df), где df - количество документов с термином
       let df = 0
+
       for (const d of this.documents) {
         if (d.has(term)) df++
       }
+
       const idf = Math.log((this.documents.length + 1) / (df + 1)) + 1
       
       results.push({
@@ -283,18 +293,20 @@ class TextAnalysisService {
     
     // 1. Title страницы
     const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
+
     if (titleMatch) {
       parts.push(titleMatch[1].trim())
     }
     
     // 2. Meta description
     const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i)
+
     if (descMatch) {
       parts.push(descMatch[1].trim())
     }
     
     // 3. Удаляем script, style, noscript, svg, path
-    let cleanHtml = html
+    const cleanHtml = html
       .replace(/<script[\s\S]*?<\/script>/gi, ' ')
       .replace(/<style[\s\S]*?<\/style>/gi, ' ')
       .replace(/<noscript[\s\S]*?<\/noscript>/gi, ' ')
@@ -304,34 +316,43 @@ class TextAnalysisService {
     // 4. Заголовки h1-h6
     const headingRegex = /<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/gi
     let match
+
     while ((match = headingRegex.exec(cleanHtml)) !== null) {
       const text = match[1].replace(/<[^>]+>/g, ' ').trim()
+
       if (text) parts.push(text)
     }
     
     // 5. Параграфы
     const pRegex = /<p[^>]*>([\s\S]*?)<\/p>/gi
+
     while ((match = pRegex.exec(cleanHtml)) !== null) {
       const text = match[1].replace(/<[^>]+>/g, ' ').trim()
+
       if (text && text.length > 10) parts.push(text)
     }
     
     // 6. Списки (li)
     const liRegex = /<li[^>]*>([\s\S]*?)<\/li>/gi
+
     while ((match = liRegex.exec(cleanHtml)) !== null) {
       const text = match[1].replace(/<[^>]+>/g, ' ').trim()
+
       if (text && text.length > 3) parts.push(text)
     }
     
     // 7. Div и span с текстом (только короткие, вероятно заголовки/лейблы)
     const divRegex = /<(?:div|span)[^>]*>([^<]{10,200})<\/(?:div|span)>/gi
+
     while ((match = divRegex.exec(cleanHtml)) !== null) {
       const text = match[1].trim()
+
       if (text && !/^[\s\d.,]+$/.test(text)) parts.push(text)
     }
     
     // 8. Alt атрибуты изображений
     const altRegex = /alt=["']([^"']+)["']/gi
+
     while ((match = altRegex.exec(html)) !== null) {
       if (match[1].length > 3) parts.push(match[1])
     }
@@ -387,7 +408,9 @@ class TextAnalysisService {
   private lemmatizePhrase(phrase: string): string {
     const words = phrase.split(' ')
     const lemmatizedWords = words.map(word => this.lemmatize(word))
-    return lemmatizedWords.join(' ')
+
+    
+return lemmatizedWords.join(' ')
   }
 
   /**
@@ -403,6 +426,7 @@ class TextAnalysisService {
     
     // Подсчитываем частоту каждой фразы
     const phraseCounts = new Map<string, number>()
+
     for (const phrase of phrases) {
       phraseCounts.set(phrase, (phraseCounts.get(phrase) || 0) + 1)
     }
@@ -455,9 +479,11 @@ class TextAnalysisService {
     
     // Извлекаем только видимый текст из HTML
     const visibleText = this.extractVisibleText(html)
+
     console.log(`[TextAnalysis] Извлечено ${visibleText.length} символов видимого текста`)
     
     const tokens = this.tokenize(visibleText)
+
     console.log(`[TextAnalysis] Токенизировано ${tokens.length} слов`)
     
     // Лемматизация
@@ -487,12 +513,14 @@ class TextAnalysisService {
     
     // TF-IDF анализ
     const tfidf = new SimpleTfIdf()
+
     tfidf.addDocument(tokens.join(' '))
     
     const keywords: Array<{ word: string; lemma: string; score: number }> = []
     
     tfidf.listTerms(0).slice(0, 30).forEach((item: { term: string; tfidf: number }) => {
       const lemma = this.lemmatize(item.term)
+
       if (!STOP_WORDS_RU.has(lemma) && lemma.length >= 3) {
         keywords.push({
           word: item.term,
@@ -510,9 +538,11 @@ class TextAnalysisService {
     
     // Анализ повторяющихся фраз (биграммы)
     const bigrams = this.extractBigrams(tokens)
+
     console.log(`[TextAnalysis] Извлечено ${bigrams.length} биграмм`)
     
     const phraseGroups = this.groupSimilarPhrases(bigrams, 0.9)
+
     const frequentPhrases = Array.from(phraseGroups.entries())
       .map(([phrase, data]) => ({
         phrase,
@@ -584,6 +614,7 @@ class TextAnalysisService {
     
     for (const pattern of orgPatterns) {
       let match
+
       while ((match = pattern.exec(text)) !== null) {
         if (match[1] && match[1].length > 2) {
           organizations.push(match[1].trim())
@@ -600,6 +631,7 @@ class TextAnalysisService {
     
     for (const pattern of locationPatterns) {
       let match
+
       while ((match = pattern.exec(text)) !== null) {
         if (match[1] && match[1].length > 2) {
           locations.push(match[1].trim())
@@ -612,6 +644,7 @@ class TextAnalysisService {
     
     for (const word of frequentWords.slice(0, 10)) {
       const isService = serviceKeywords.some(kw => word.lemma.includes(kw))
+
       if (isService || word.count >= 3) {
         products.push(word.word)
       }
@@ -632,7 +665,9 @@ export function getTextAnalysisService(): TextAnalysisService {
   if (!textAnalysisService) {
     textAnalysisService = new TextAnalysisService()
   }
-  return textAnalysisService
+
+  
+return textAnalysisService
 }
 
 // Запускаем инициализацию Az.Morph при загрузке модуля

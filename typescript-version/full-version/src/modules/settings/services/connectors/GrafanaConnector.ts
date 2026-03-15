@@ -31,10 +31,12 @@ export class GrafanaConnector extends BaseConnector {
       // Grafana поддерживает API key или Basic auth
       if (this.config.token) {
         const token = safeDecrypt(this.config.token)
+
         headers['Authorization'] = `Bearer ${token}`
       } else if (this.config.username && this.config.password) {
         const password = safeDecrypt(this.config.password)
         const auth = Buffer.from(`${this.config.username}:${password}`).toString('base64')
+
         headers['Authorization'] = `Basic ${auth}`
       }
 

@@ -5,7 +5,9 @@
  * @module app/api/admin/media/settings/test-s3
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { S3Client, ListBucketsCommand, HeadBucketCommand } from '@aws-sdk/client-s3'
 
 import { requireAuth } from '@/utils/auth/auth'
@@ -28,6 +30,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+
     const {
       bucket,
       region,
@@ -83,6 +86,7 @@ export async function POST(request: NextRequest) {
           details: 'Check if the bucket exists and you have access to it',
         })
       }
+
       if (bucketError.name === 'Forbidden' || bucketError.$metadata?.httpStatusCode === 403) {
         return NextResponse.json({
           success: false,
@@ -90,6 +94,7 @@ export async function POST(request: NextRequest) {
           details: 'Check your IAM permissions for the bucket',
         })
       }
+
       throw bucketError
     }
 

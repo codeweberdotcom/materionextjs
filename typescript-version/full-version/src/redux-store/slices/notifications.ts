@@ -11,9 +11,12 @@ const applyFilters = (notifications: Notification[], filters: NotificationFilter
   return notifications.filter(notification => {
     const matchesStatus =
       !filters.status || filters.status === 'all' ? true : notification.status === filters.status
+
     const matchesType =
       !filters.type || filters.type === 'all' ? true : notification.type === filters.type
-    return matchesStatus && matchesType
+
+    
+return matchesStatus && matchesType
   })
 }
 
@@ -61,6 +64,7 @@ export const notificationsSlice = createSlice({
     },
     updateNotification: (state, action) => {
       const { notificationId, updates } = action.payload
+
       state.notifications = state.notifications.map(notification =>
         notification.id === notificationId ? { ...notification, ...updates } : notification
       )
@@ -68,6 +72,7 @@ export const notificationsSlice = createSlice({
     },
     deleteNotification: (state, action) => {
       const { notificationId } = action.payload
+
       state.notifications = state.notifications.filter(notification => notification.id !== notificationId)
       state.filteredNotifications = applyFilters(state.notifications, state.filters)
     },
@@ -84,6 +89,7 @@ export const notificationsSlice = createSlice({
     },
     navigateNotifications: (state, action) => {
       const { type } = action.payload
+
       if (!state.currentNotificationId) return
 
       const currentIndex = state.notifications.findIndex(
@@ -92,7 +98,8 @@ export const notificationsSlice = createSlice({
 
       if (currentIndex === -1) {
         state.currentNotificationId = undefined
-        return
+        
+return
       }
 
       if (type === 'next' && currentIndex < state.notifications.length - 1) {

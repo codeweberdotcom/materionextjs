@@ -1,11 +1,12 @@
-import {
+import type {
   IImportService,
   ImportOptions,
   ImportResult,
   ValidationResult,
-  ValidationError,
   ValidationPreview,
-  ImportWarning,
+  ImportWarning} from '@/types/export-import';
+import {
+  ValidationError,
   MAX_IMPORT_FILE_SIZE,
   ALLOWED_FILE_EXTENSIONS,
   DEFAULT_BATCH_SIZE
@@ -43,6 +44,7 @@ export class ImportService implements IImportService {
       if (metrics) {
         const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
         const format = fileExtension === '.csv' ? 'csv' : fileExtension === '.xls' ? 'xls' : 'xlsx'
+
         metrics.observeImportFileSize(entityType, format, file.size)
       }
 
@@ -69,6 +71,7 @@ export class ImportService implements IImportService {
 
       // Валидируем файл
       const fileValidation = this.validateFile(file)
+
       if (!fileValidation.isValid) {
         // Событие: ошибка валидации файла
         await eventService.record({
@@ -102,6 +105,7 @@ export class ImportService implements IImportService {
 
       // Получаем адаптер для сущности
       const adapter = this.adapterFactory.getAdapter(entityType)
+
       if (!adapter) {
         throw new Error(`Adapter for entity type '${entityType}' not found`)
       }
@@ -111,6 +115,7 @@ export class ImportService implements IImportService {
 
       // Используем предварительно отредактированные данные, если они есть
       let dataToProcess = parsedData
+
       if (options.editedData && options.editedData.length > 0) {
         // Используем отредактированные данные
         dataToProcess = options.editedData.map(row => row.data)
@@ -126,15 +131,19 @@ export class ImportService implements IImportService {
         dataToProcess = dataToProcess.map((row, index) => {
           const rowIndex = index + 1 // rowIndex is 1-based
           const updates = options.rowUpdates?.[rowIndex]
+
           if (updates) {
             return { ...row, ...updates }
           }
-          return row
+
+          
+return row
         })
       }
 
       // Валидируем данные через адаптер
       let validationErrors: any = []
+
       if (!options.skipValidation) {
         validationErrors = adapter.validateImportData(dataToProcess)
       }
@@ -160,23 +169,31 @@ export class ImportService implements IImportService {
       const validData = dataToProcess.filter((_, index) => {
         const rowIndex = index + 1
         const error = validationErrors.find((e: any) => e.row === rowIndex)
+
+
         // Если importOnlyValid === true, пропускаем строки с ошибками
         if (options.importOnlyValid && error) {
           return false
         }
+
+
         // Если importOnlyValid === false и mode === 'create', не пропускаем строки с ошибками
         if (!options.importOnlyValid && options.mode === 'create' && error) {
           return false
         }
+
+
         // Для update и upsert пропускаем строки с ошибками
         return !error
       })
 
       // Проверяем дубликаты с существующими записями в БД
       let duplicateWarnings: ImportWarning[] = []
+
       if (adapter.checkDuplicates) {
         try {
           const duplicates = await adapter.checkDuplicates(validData, options.mode)
+
           duplicateWarnings = duplicates.map(dup => ({
             row: dup.row,
             field: dup.field,
@@ -191,6 +208,8 @@ export class ImportService implements IImportService {
               duplicatesCount: duplicates.length,
               mode: options.mode
             })
+
+
             // Метрики: дубликаты
             if (metrics) {
               metrics.markImportDuplicates(entityType, duplicates.length)
@@ -202,6 +221,7 @@ export class ImportService implements IImportService {
             correlationId,
             error: error instanceof Error ? error.message : error
           })
+
           // Не блокируем импорт, если проверка дубликатов не удалась
         }
       }
@@ -320,17 +340,22 @@ export class ImportService implements IImportService {
       if (error.message.includes('Adapter for entity type')) {
         return 'adapter_not_found'
       }
+
       if (error.message.includes('parse') || error.message.includes('file')) {
         return 'file_parsing_error'
       }
+
       if (error.message.includes('validation')) {
         return 'validation_error'
       }
+
       if (error.message.includes('save') || error.message.includes('database')) {
         return 'save_error'
       }
     }
-    return 'unknown'
+
+    
+return 'unknown'
   }
 
   /**
@@ -349,6 +374,7 @@ export class ImportService implements IImportService {
 
     // Проверяем расширение файла
     const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
+
     if (!ALLOWED_FILE_EXTENSIONS.includes(extension)) {
       errors.push({
         field: 'file',
@@ -419,13 +445,17 @@ export class ImportService implements IImportService {
 
         return rows.map(row => {
           const obj: Record<string, any> = {}
+
           headers.forEach((header, index) => {
             obj[header] = row[index] || ''
           })
-          return obj
+          
+return obj
         })
       }
-      return []
+
+      
+return []
     } catch (error) {
       throw new Error(`Failed to parse Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
@@ -506,6 +536,7 @@ export class ImportService implements IImportService {
         // Вызываем callback прогресса
         if (options.onProgress) {
           const progress = ((i + 1) / batches.length) * 100
+
           options.onProgress(progress)
         }
 
@@ -520,6 +551,7 @@ export class ImportService implements IImportService {
         // При ошибке транзакция автоматически откатывается
         const errorMessage = error instanceof Error ? error.message : String(error)
         const errorStack = error instanceof Error ? error.stack : undefined
+
         const errorDetails = error instanceof Error ? {
           name: error.name,
           message: error.message,

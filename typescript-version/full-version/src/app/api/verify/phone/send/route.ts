@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { prisma } from '@/libs/prisma'
 import { verificationService } from '@/services/verification/VerificationService'
 import { sendPhoneCodeSchema } from '@/lib/validations/verification-schemas'
@@ -30,7 +32,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/phone/send',
         context: { route: 'verify/phone/send', errors: validationResult.error.errors }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     const { phone } = validationResult.data
@@ -50,7 +54,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/phone/send',
         context: { route: 'verify/phone/send', phone }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Проверяем, не верифицирован ли уже телефон
@@ -63,13 +69,16 @@ export async function POST(request: NextRequest) {
         route: 'verify/phone/send',
         context: { route: 'verify/phone/send', phone }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Rate limiting - проверка отправки SMS на номер телефона
     const clientIp = request.headers.get('x-forwarded-for') ||
                      request.headers.get('x-real-ip') ||
                      'unknown'
+
     const environment = getEnvironmentFromRequest(request) as 'production' | 'test' | undefined
 
     const rateLimitResult = await rateLimitService.checkLimit(phone, 'registration-phone', {
@@ -110,7 +119,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/phone/send',
         context: { route: 'verify/phone/send', phone }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Генерируем SMS код
@@ -135,6 +146,7 @@ export async function POST(request: NextRequest) {
         })
 
         const smsResult = await smsProvider.sendCode(phone, phoneCode)
+
         smsSent = smsResult.success
         smsError = smsResult.error || null
 
@@ -211,7 +223,9 @@ export async function POST(request: NextRequest) {
       route: 'verify/phone/send',
       context: { route: 'verify/phone/send' }
     })
-    return new NextResponse(JSON.stringify(payload), init)
+
+    
+return new NextResponse(JSON.stringify(payload), init)
   }
 }
 

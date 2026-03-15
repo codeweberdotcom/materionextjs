@@ -52,7 +52,9 @@ function formatJoinDate(dateStr: string, lang: string): string {
   const date = new Date(dateStr)
   const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'long' }
   const locale = lang === 'ru' ? 'ru-RU' : 'en-US'
-  return date.toLocaleDateString(locale, options)
+
+  
+return date.toLocaleDateString(locale, options)
 }
 
 // Иконки для типов аккаунтов

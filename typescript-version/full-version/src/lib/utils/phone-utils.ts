@@ -63,7 +63,9 @@ export function validatePhoneFormat(phone: string): boolean {
  */
 export function isRussianPhone(phone: string): boolean {
   const normalized = normalizePhone(phone)
-  return /^\+7\d{10}$/.test(normalized)
+
+  
+return /^\+7\d{10}$/.test(normalized)
 }
 
 /**
@@ -76,6 +78,7 @@ export function formatPhoneForDisplay(phone: string): string {
   if (isRussianPhone(normalized)) {
     // Российский формат: +7 (999) 123-45-67
     const match = normalized.match(/^\+7(\d{3})(\d{3})(\d{2})(\d{2})$/)
+
     if (match) {
       return `+7 (${match[1]}) ${match[2]}-${match[3]}-${match[4]}`
     }

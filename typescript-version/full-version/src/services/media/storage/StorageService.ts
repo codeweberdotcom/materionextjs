@@ -54,9 +54,13 @@ export class StorageService {
       if (!this.s3Adapter) {
         throw new Error('S3 adapter not configured')
       }
-      return this.s3Adapter
+
+      
+return this.s3Adapter
     }
-    return this.localAdapter
+
+    
+return this.localAdapter
   }
 
   /**
@@ -93,15 +97,18 @@ export class StorageService {
           if (!this.s3Adapter) {
             throw new Error('S3 not configured, cannot use s3_only strategy')
           }
+
           result.s3Key = await this.s3Adapter.upload(buffer, relativePath, mimeType)
           break
           
         case 'both':
           // Загружаем в оба хранилища
           result.localPath = await this.localAdapter.upload(buffer, relativePath, mimeType)
+
           if (this.s3Adapter) {
             result.s3Key = await this.s3Adapter.upload(buffer, relativePath, mimeType)
           }
+
           break
           
         default:
@@ -176,6 +183,7 @@ export class StorageService {
     // Удаляем варианты
     if (media.variants) {
       const variants = JSON.parse(media.variants)
+
       for (const variant of Object.values(variants) as any[]) {
         if (variant.localPath) {
           try {
@@ -184,6 +192,7 @@ export class StorageService {
             errors.push(error as Error)
           }
         }
+
         if (variant.s3Key && this.s3Adapter) {
           try {
             await this.s3Adapter.delete(variant.s3Key)
@@ -215,18 +224,22 @@ export class StorageService {
     // Корзина недоступна публично, только через API
     if (isInTrash) {
       const variant = variantName || 'original'
-      return `/api/admin/media/${media.id}/trash?variant=${variant}`
+
+      
+return `/api/admin/media/${media.id}/trash?variant=${variant}`
     }
     
     // Если указан вариант, ищем его URL
     if (variantName && media.variants) {
       const variants = JSON.parse(media.variants)
       const variant = variants[variantName]
+
       if (variant) {
         // Предпочитаем S3 URL
         if (variant.s3Key && this.s3Adapter) {
           return this.s3Adapter.getUrl(variant.s3Key)
         }
+
         if (variant.localPath) {
           return this.localAdapter.getUrl(variant.localPath)
         }
@@ -260,7 +273,9 @@ export class StorageService {
     if (!this.s3Adapter) {
       return false
     }
-    return this.s3Adapter.exists(path)
+
+    
+return this.s3Adapter.exists(path)
   }
 
   /**
@@ -285,6 +300,7 @@ export class StorageService {
       if (!originalOnS3) {
         // Загружаем оригинал
         const buffer = await this.localAdapter.download(media.localPath)
+
         s3Key = await this.s3Adapter.upload(buffer, media.localPath, media.mimeType)
       }
       
@@ -297,6 +313,7 @@ export class StorageService {
           
           if (!variantOnS3) {
             const variantBuffer = await this.localAdapter.download(variant.localPath)
+
             variant.s3Key = await this.s3Adapter.upload(
               variantBuffer, 
               variant.localPath, 
@@ -319,12 +336,14 @@ export class StorageService {
       // Удаляем локальные файлы если нужно
       if (deleteLocal) {
         await this.localAdapter.delete(media.localPath)
+
         for (const variant of Object.values(variants) as any[]) {
           if (variant.localPath) {
             await this.localAdapter.delete(variant.localPath)
             variant.localPath = null
           }
         }
+
         updateData.localPath = null
         updateData.variants = JSON.stringify(variants)
       }
@@ -362,13 +381,16 @@ export class StorageService {
       // Загружаем оригинал
       const buffer = await this.s3Adapter.download(media.s3Key)
       const localPath = media.localPath || media.s3Key
+
       await this.localAdapter.upload(buffer, localPath, media.mimeType)
       
       // Синхронизируем варианты
       const variants = JSON.parse(media.variants || '{}')
+
       for (const [name, variant] of Object.entries(variants) as [string, any][]) {
         if (variant.s3Key && !variant.localPath) {
           const variantBuffer = await this.s3Adapter.download(variant.s3Key)
+
           variant.localPath = variant.s3Key // Используем тот же путь
           await this.localAdapter.upload(
             variantBuffer,
@@ -390,12 +412,14 @@ export class StorageService {
       // Удаляем из S3 если нужно
       if (deleteFromS3) {
         await this.s3Adapter.delete(media.s3Key)
+
         for (const variant of Object.values(variants) as any[]) {
           if (variant.s3Key) {
             await this.s3Adapter.delete(variant.s3Key)
             variant.s3Key = null
           }
         }
+
         updateData.s3Key = null
         updateData.s3Bucket = null
         updateData.variants = JSON.stringify(variants)
@@ -434,6 +458,7 @@ export class StorageService {
     
     // Удаляем варианты
     const variants = JSON.parse(media.variants || '{}')
+
     for (const variant of Object.values(variants) as any[]) {
       if (variant.localPath) {
         await this.localAdapter.delete(variant.localPath)
@@ -468,6 +493,7 @@ export class StorageService {
     
     // Удаляем варианты
     const variants = JSON.parse(media.variants || '{}')
+
     for (const variant of Object.values(variants) as any[]) {
       if (variant.s3Key) {
         await this.s3Adapter.delete(variant.s3Key)
@@ -512,6 +538,7 @@ export class StorageService {
     
     // Создаём директорию для корзины
     const fs = await import('fs/promises')
+
     await fs.mkdir(trashDir, { recursive: true })
     
     const variants = JSON.parse(media.variants || '{}')
@@ -540,6 +567,7 @@ export class StorageService {
         
         try {
           const buffer = await this.s3Adapter.download(media.s3Key)
+
           await fs.writeFile(trashFilePath, buffer)
           trashPath = trashFilePath
           
@@ -576,6 +604,7 @@ export class StorageService {
           
           try {
             const buffer = await this.s3Adapter.download(variant.s3Key)
+
             await fs.writeFile(variantTrashFilePath, buffer)
             trashVariants[name] = variantTrashFilePath
             
@@ -590,6 +619,7 @@ export class StorageService {
               variant: name,
               error: error instanceof Error ? error.message : String(error),
             })
+
             // Продолжаем с другими вариантами
           }
         }
@@ -609,6 +639,7 @@ export class StorageService {
               mediaId: media.id,
               error: error instanceof Error ? error.message : String(error),
             })
+
             // S3 deletion не критична, продолжаем
           }
         }
@@ -632,6 +663,7 @@ export class StorageService {
       // Очищаем пустые директории в uploads
       if (media.localPath) {
         const uploadsDir = path.dirname(path.join(this.config.local.basePath, media.localPath))
+
         await this.cleanupEmptyDirs(uploadsDir)
       }
       
@@ -675,13 +707,16 @@ export class StorageService {
    */
   private async cleanupEmptyDirs(dirPath: string): Promise<void> {
     const fs = await import('fs/promises')
+
     try {
       const basePath = this.config.local.basePath
+
       if (dirPath === basePath || !dirPath.startsWith(basePath)) {
         return
       }
       
       const files = await fs.readdir(dirPath)
+
       if (files.length === 0) {
         await fs.rmdir(dirPath)
         await this.cleanupEmptyDirs(path.dirname(dirPath))
@@ -733,8 +768,10 @@ export class StorageService {
       // Используем originalVariants или originalS3Variants для определения пути назначения
       if (trashVariants) {
         const variantPaths = originalVariants || originalS3Variants || {}
+
         for (const [name, trashVariantPath] of Object.entries(trashVariants) as [string, string][]) {
           const originalVariantPath = variantPaths[name]
+
           if (originalVariantPath) {
             const destAbsPath = path.join(this.config.local.basePath, originalVariantPath)
             
@@ -754,6 +791,7 @@ export class StorageService {
       // Удаляем пустую директорию корзины для этого файла
       try {
         const trashDir = path.join(this.getTrashBasePath(), media.id)
+
         await fs.rmdir(trashDir)
       } catch {
         // Игнорируем ошибки удаления директории
@@ -857,6 +895,7 @@ export class StorageService {
     try {
       const trashDir = path.join(this.getTrashBasePath(), media.id)
       const files = await fs.readdir(trashDir)
+
       if (files.length === 0) {
         // Директория пуста, удаляем её
         await fs.rmdir(trashDir)
@@ -888,7 +927,8 @@ async function getS3Config(): Promise<S3AdapterConfig | undefined> {
   // Если S3 отключен — не настраиваем
   if (!globalSettings?.s3Enabled) {
     logger.debug('[StorageService] S3 disabled in settings')
-    return undefined
+    
+return undefined
   }
   
   const s3ServiceId = globalSettings?.s3ServiceId
@@ -901,17 +941,20 @@ async function getS3Config(): Promise<S3AdapterConfig | undefined> {
     
     if (!s3Service || s3Service.type !== 'S3') {
       logger.warn('[StorageService] Selected S3 service not found', { s3ServiceId })
-      return undefined
+      
+return undefined
     }
     
     if (!s3Service.enabled) {
       logger.warn('[StorageService] Selected S3 service is disabled', { s3ServiceId })
-      return undefined
+      
+return undefined
     }
     
     if (!s3Service.username || !s3Service.password) {
       logger.warn('[StorageService] Selected S3 service has no credentials', { s3ServiceId })
-      return undefined
+      
+return undefined
     }
     
     const { safeDecrypt } = await import('@/lib/config/encryption')
@@ -921,7 +964,8 @@ async function getS3Config(): Promise<S3AdapterConfig | undefined> {
     
     if (!bucket) {
       logger.warn('[StorageService] No bucket configured for S3 service', { s3ServiceId })
-      return undefined
+      
+return undefined
     }
     
     logger.info('[StorageService] Using S3 config from ServiceConfiguration', { 
@@ -951,7 +995,8 @@ async function getS3Config(): Promise<S3AdapterConfig | undefined> {
   
   if (envEndpoint && envAccessKey && envSecretKey && envBucket) {
     logger.info('[StorageService] Using S3 config from ENV', { bucket: envBucket })
-    return {
+    
+return {
       endpoint: envEndpoint,
       accessKeyId: envAccessKey,
       secretAccessKey: envSecretKey,
@@ -997,7 +1042,8 @@ async function getS3Config(): Promise<S3AdapterConfig | undefined> {
   }
   
   logger.debug('[StorageService] No S3 configuration found')
-  return undefined
+  
+return undefined
 }
 
 // Promise для предотвращения race condition при инициализации
@@ -1053,7 +1099,9 @@ export async function getStorageService(): Promise<StorageService> {
   
   try {
     const instance = await initializationPromise
-    return instance
+
+    
+return instance
   } finally {
     // Сбрасываем promise после завершения (успех или ошибка)
     initializationPromise = null
@@ -1074,7 +1122,9 @@ export function resetStorageService(): void {
 export async function isS3Configured(): Promise<boolean> {
   try {
     const service = await getStorageService()
-    return service.isS3Available()
+
+    
+return service.isS3Available()
   } catch {
     return false
   }

@@ -43,6 +43,7 @@ const NotificationsActions = (props: Props) => {
       setSelectedNotifications(new Set())
     } else {
       const visibleNotificationIds = new Set(notifications.map(notification => notification.id))
+
       setSelectedNotifications(visibleNotificationIds)
     }
   }
@@ -52,6 +53,7 @@ const NotificationsActions = (props: Props) => {
     for (const id of selectedNotifications) {
       onArchive(id)
     }
+
     setSelectedNotifications(new Set())
   }
 

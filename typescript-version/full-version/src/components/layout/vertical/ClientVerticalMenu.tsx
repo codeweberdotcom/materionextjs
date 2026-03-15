@@ -61,9 +61,11 @@ const ClientVerticalMenu = ({ menuData, dictionary, scrollMenu, locale }: Props)
     )
 
   const adminSection = findSectionByLabel(menuData, navigationLabels.adminAndSettings)
+
   console.log('CLIENT MENU: Admin section found:', Boolean(adminSection))
 
   const referencesSection = findSectionByLabel(adminSection?.children, navigationLabels.references)
+
   console.log('CLIENT MENU: References section found:', Boolean(referencesSection))
 
   if (referencesSection?.children) {

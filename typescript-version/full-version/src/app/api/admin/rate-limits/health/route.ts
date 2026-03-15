@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { rateLimitService } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
@@ -7,6 +9,7 @@ export async function GET(request: NextRequest) {
   try {
     // Check authentication
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

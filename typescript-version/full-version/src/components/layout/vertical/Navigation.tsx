@@ -97,6 +97,7 @@ const Navigation = (props: Props) => {
 
   const scrollMenu: ScrollMenuHandler = (container, isPerfectScrollbar) => {
     const shadowElement = shadowRef.current
+
     if (!shadowElement) return
 
     const shouldUseEventTarget = isBreakpointReached || !isPerfectScrollbar

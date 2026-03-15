@@ -39,6 +39,7 @@ export const getMenuNavigationLabels = (
 
   return MENU_NAVIGATION_KEYS.reduce<MenuNavigationLabels>((labels, key) => {
     const value = navigationSection[key]
+
     labels[key] = typeof value === 'string' ? value : key
 
     return labels

@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
@@ -11,6 +13,7 @@ import logger from '@/lib/logger'
 export async function GET(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -22,6 +25,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const days = parseInt(searchParams.get('days') || '7', 10)
     const fromDate = new Date()
+
     fromDate.setDate(fromDate.getDate() - days)
 
     // Получаем статистику выполнений
@@ -97,10 +101,12 @@ export async function GET(request: NextRequest) {
 
     // Получаем имена сценариев для топа
     const scenarioIds = topScenarios.map(s => s.scenarioId)
+
     const scenarios = await prisma.notificationScenario.findMany({
       where: { id: { in: scenarioIds } },
       select: { id: true, name: true }
     })
+
     const scenarioMap = new Map(scenarios.map(s => [s.id, s.name]))
 
     const topScenariosWithNames = topScenarios.map(s => ({
@@ -111,9 +117,11 @@ export async function GET(request: NextRequest) {
 
     // Считаем статистику по каналам из результатов
     const channelStats: Record<string, number> = {}
+
     for (const exec of recentExecutions) {
       try {
         const result = exec.result ? JSON.parse(exec.result) : null
+
         if (result?.channel) {
           channelStats[result.channel] = (channelStats[result.channel] || 0) + 1
         }
@@ -148,7 +156,8 @@ export async function GET(request: NextRequest) {
     logger.error('[API:NotificationStats] Failed to get stats', {
       error: error instanceof Error ? error.message : String(error)
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Failed to get stats' },
       { status: 500 }
     )

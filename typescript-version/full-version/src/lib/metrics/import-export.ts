@@ -170,6 +170,7 @@ export const markImportSuccess = (
   importOperationsCounter.inc({ entity_type: entityType, mode, status: 'success', environment })
   importRecordCount.observe({ entity_type: entityType, mode, environment }, totalProcessed)
   importSuccessCount.inc({ entity_type: entityType, mode, environment }, successCount)
+
   if (errorCount > 0) {
     importErrorCount.inc({ entity_type: entityType, mode, environment }, errorCount)
   }

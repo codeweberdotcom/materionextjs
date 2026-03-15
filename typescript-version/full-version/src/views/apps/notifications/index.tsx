@@ -13,6 +13,7 @@ import classnames from 'classnames'
 
 // Redux Imports
 import { useDispatch, useSelector } from 'react-redux'
+
 import type { RootState, AppDispatch } from '@/redux-store'
 import type { NotificationStatusFilter, NotificationTypeFilter } from '@/types/apps/notificationTypes'
 
@@ -40,12 +41,14 @@ const NotificationsWrapper = ({ status, type }: { status?: NotificationStatusFil
   const { settings } = useSettings()
   const dispatch = useDispatch<AppDispatch>()
   const notificationsStore = useSelector((state: RootState) => state.notificationsReducer)
+
   const {
     setFilters: applyNotificationFilters,
     markAsRead,
     updateStatus,
     refresh
   } = useNotifications()
+
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))
   const isBelowSmScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'))

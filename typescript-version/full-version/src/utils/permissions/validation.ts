@@ -1,4 +1,5 @@
 import { z } from 'zod'
+
 import type { Permissions } from './permissions'
 
 /**
@@ -61,7 +62,9 @@ export const getPermissionValidationErrors = (permissions: unknown): string[] =>
   if (validation.errors) {
     return validation.errors.errors.map(err => {
       const path = err.path.join('.')
-      return path ? `${path}: ${err.message}` : err.message
+
+      
+return path ? `${path}: ${err.message}` : err.message
     })
   }
   

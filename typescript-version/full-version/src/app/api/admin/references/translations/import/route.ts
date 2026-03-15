@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
@@ -64,6 +65,7 @@ export async function POST(request: NextRequest) {
       message: 'translationsImportSuccess',
       importedCount: result.importedCount,
       languages: result.languages,
+
       // For client-side translation
       translationKey: 'translationsImportSuccess',
       translationParams: { count: result.importedCount }

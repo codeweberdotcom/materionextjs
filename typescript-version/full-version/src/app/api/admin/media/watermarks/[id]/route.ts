@@ -7,11 +7,13 @@
  * @module app/api/admin/media/watermarks/[id]
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
-import { getWatermarkService, WatermarkPosition } from '@/services/media'
+import type { WatermarkPosition } from '@/services/media';
+import { getWatermarkService } from '@/services/media'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
 
@@ -34,6 +36,7 @@ export async function GET(
     }
 
     const { id } = await params
+
     const watermark = await prisma.watermark.findUnique({
       where: { id },
     })
@@ -80,6 +83,7 @@ export async function PUT(
     const body = await request.json()
 
     const watermarkService = getWatermarkService()
+
     const watermark = await watermarkService.updateWatermark(id, {
       displayName: body.displayName,
       description: body.description,
@@ -134,6 +138,7 @@ export async function DELETE(
     const { id } = await params
 
     const watermarkService = getWatermarkService()
+
     await watermarkService.deleteWatermark(id)
 
     logger.info('[API] Watermark deleted', {

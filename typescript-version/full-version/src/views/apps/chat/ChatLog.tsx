@@ -12,8 +12,10 @@ import CircularProgress from '@mui/material/CircularProgress'
 
 // Third-party Imports
 import classnames from 'classnames'
-import { useAuth } from '@/contexts/AuthProvider'
+
 import Skeleton from '@mui/material/Skeleton'
+
+import { useAuth } from '@/contexts/AuthProvider'
 
 // Type Imports
 import type { ChatDataType } from '@/types/apps/chatTypes'
@@ -66,6 +68,7 @@ const ChatLog = ({
   const playNotificationSound = () => {
     try {
       const audio = new Audio(`/${locale}/new_message_codeweber.wav`)
+
       audio.volume = 0.2
       audio.play().catch(() => {})
     } catch (err) {}
@@ -79,9 +82,11 @@ const ChatLog = ({
 
   const handleScroll = useCallback(() => {
     const container = scrollRef.current
+
     if (!container) return
 
     const { scrollTop, scrollHeight, clientHeight } = container
+
     shouldAutoScrollRef.current = scrollHeight - (scrollTop + clientHeight) < 80
 
     if (scrollTop < 80 && hasMoreHistory && !historyLoading) {
@@ -93,6 +98,7 @@ const ChatLog = ({
 
   useEffect(() => {
     const container = scrollRef.current
+
     if (!container) return
 
     container.addEventListener('scroll', handleScroll, { passive: true })
@@ -106,13 +112,16 @@ const ChatLog = ({
     if (historyLoading) return
 
     const container = scrollRef.current
+
     if (!container) return
 
     if (prevScrollHeightRef.current !== null) {
       const diff = container.scrollHeight - prevScrollHeightRef.current
+
       container.scrollTop = (prevScrollTopRef.current ?? 0) + diff
       prevScrollHeightRef.current = null
-      return
+      
+return
     }
 
     if (messages.length && shouldAutoScrollRef.current) {
@@ -120,6 +129,7 @@ const ChatLog = ({
     }
 
     const latestMessage = messages[messages.length - 1]
+
     if (latestMessage && latestMessage.senderId !== user?.id && latestMessage.id !== lastProcessedMessageId.current) {
       lastProcessedMessageId.current = latestMessage.id
       playNotificationSound()

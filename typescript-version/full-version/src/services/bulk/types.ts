@@ -22,6 +22,7 @@ export interface BulkOperationResult<T = unknown> {
  * Опции для bulk операции
  */
 export interface BulkOperationOptions {
+
   /**
    * Модуль для проверки прав доступа (например, 'userManagement', 'roleManagement')
    */
@@ -70,6 +71,7 @@ export interface BulkOperationOptions {
  * Контекст для bulk операции
  */
 export interface BulkOperationContext {
+
   /**
    * Текущий пользователь, выполняющий операцию
    */
@@ -91,6 +93,7 @@ export interface BulkOperationContext {
  * Конфигурация для конкретной сущности
  */
 export interface BulkOperationConfig<T = unknown> {
+
   /**
    * Имя модели Prisma (например, 'user', 'role')
    */

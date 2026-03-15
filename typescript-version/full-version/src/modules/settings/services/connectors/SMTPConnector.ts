@@ -102,6 +102,7 @@ export class SMTPConnector extends BaseConnector {
       } else if (this.config.token) {
         // OAuth2 или API Key
         const token = safeDecrypt(this.config.token)
+
         transportConfig.auth = {
           type: 'OAuth2',
           user: this.config.username || '',
@@ -117,6 +118,7 @@ export class SMTPConnector extends BaseConnector {
 
         if (this.config.tlsCert) {
           const cert = safeDecrypt(this.config.tlsCert)
+
           transportConfig.tls.ca = cert
         }
       }
@@ -125,12 +127,15 @@ export class SMTPConnector extends BaseConnector {
       if (metadata.ignoreTLS !== undefined) {
         transportConfig.ignoreTLS = metadata.ignoreTLS
       }
+
       if (metadata.requireTLS !== undefined) {
         transportConfig.requireTLS = metadata.requireTLS
       }
+
       if (metadata.pool !== undefined) {
         transportConfig.pool = metadata.pool
       }
+
       if (metadata.maxConnections !== undefined) {
         transportConfig.maxConnections = metadata.maxConnections
       }
@@ -142,7 +147,7 @@ export class SMTPConnector extends BaseConnector {
       const verifyResult = await transporter.verify()
 
       // Получаем информацию о сервере через EHLO
-      let serverInfo: string[] = []
+      const serverInfo: string[] = []
       let serverName = 'unknown'
       
       try {
@@ -236,6 +241,7 @@ export class SMTPConnector extends BaseConnector {
       }
     } else if (this.config.token) {
       const token = safeDecrypt(this.config.token)
+
       transportConfig.auth = {
         type: 'OAuth2',
         user: this.config.username || '',
@@ -245,6 +251,7 @@ export class SMTPConnector extends BaseConnector {
 
     if (this.config.tlsEnabled || secure) {
       transportConfig.tls = { rejectUnauthorized: true }
+
       if (this.config.tlsCert) {
         transportConfig.tls.ca = safeDecrypt(this.config.tlsCert)
       }
@@ -252,6 +259,7 @@ export class SMTPConnector extends BaseConnector {
 
     if (metadata.pool) {
       transportConfig.pool = true
+
       if (metadata.maxConnections) {
         transportConfig.maxConnections = metadata.maxConnections
       }

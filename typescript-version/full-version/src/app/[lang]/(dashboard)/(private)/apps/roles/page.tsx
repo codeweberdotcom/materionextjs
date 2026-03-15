@@ -1,6 +1,7 @@
 // Next Imports
-import { requireAuth } from '@/utils/auth/auth'
 import { redirect } from 'next/navigation'
+
+import { requireAuth } from '@/utils/auth/auth'
 
 // Component Imports
 import Roles from '@views/apps/roles'

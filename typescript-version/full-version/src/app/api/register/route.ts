@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+import bcrypt from 'bcryptjs'
+
 
 import { prisma } from '@/libs/prisma'
 import { rateLimitService } from '@/lib/rate-limit'
@@ -33,7 +37,9 @@ export async function POST(request: NextRequest) {
         route: 'register',
         context: { route: 'register' }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     let body
@@ -51,7 +57,9 @@ export async function POST(request: NextRequest) {
         route: 'register',
         context: { route: 'register', error: (parseError as Error)?.message }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Получаем настройки регистрации
@@ -88,7 +96,9 @@ export async function POST(request: NextRequest) {
         route: 'register',
         context: { route: 'register', errors: validationResult.error.errors }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     const { name, email, phone, password } = validationResult.data
@@ -108,8 +118,11 @@ export async function POST(request: NextRequest) {
       if (!resetTime) {
         return 0
       }
+
       const diff = resetTime - Date.now()
-      return Math.max(0, Math.ceil(diff / 1000))
+
+      
+return Math.max(0, Math.ceil(diff / 1000))
     }
 
     const enforceRateLimit = async (
@@ -147,6 +160,7 @@ export async function POST(request: NextRequest) {
         }))
 
         const retryAfter = calculateRetryAfter(result.resetTime)
+
         const { payload, init } = createErrorResponse({
           status: 429,
           code: 'REG_RATE_LIMIT',
@@ -155,7 +169,9 @@ export async function POST(request: NextRequest) {
           route: 'register',
           context: { route: 'register', module, key }
         })
-        return { response: new NextResponse(JSON.stringify(payload), init) }
+
+        
+return { response: new NextResponse(JSON.stringify(payload), init) }
       }
 
       return null
@@ -164,20 +180,24 @@ export async function POST(request: NextRequest) {
     // Skip rate limiting for test requests
     if (!isTestRequest) {
       const ipCheck = await enforceRateLimit(clientIp || 'unknown', 'registration-ip', { keyType: 'ip' })
+
       if (ipCheck?.response) {
         return ipCheck.response
       }
 
       if (email) {
         const mailDomain = email.split('@')[1]?.toLowerCase() || null
+
         if (mailDomain) {
           const domainCheck = await enforceRateLimit(mailDomain, 'registration-domain', { mailDomain })
+
           if (domainCheck?.response) {
             return domainCheck.response
           }
         }
 
         const emailCheck = await enforceRateLimit(email, 'registration-email', { mailDomain: email.split('@')[1]?.toLowerCase() || null })
+
         if (emailCheck?.response) {
           return emailCheck.response
         }
@@ -185,6 +205,7 @@ export async function POST(request: NextRequest) {
 
       if (normalizedPhone) {
         const phoneCheck = await enforceRateLimit(normalizedPhone, 'registration-phone', { keyType: 'user' })
+
         if (phoneCheck?.response) {
           return phoneCheck.response
         }
@@ -193,6 +214,7 @@ export async function POST(request: NextRequest) {
 
     // Record signup attempt event
     const mailDomain = email ? email.split('@')[1]?.toLowerCase() || null : null
+
     await eventService.record(enrichEventInputFromRequest(request, {
       source: 'registration',
       type: 'signup_attempt',
@@ -243,7 +265,9 @@ export async function POST(request: NextRequest) {
           route: 'register',
           context: { route: 'register', email }
         })
-        return new NextResponse(JSON.stringify(payload), init)
+
+        
+return new NextResponse(JSON.stringify(payload), init)
       }
     }
 
@@ -278,7 +302,9 @@ export async function POST(request: NextRequest) {
           route: 'register',
           context: { route: 'register', phone: normalizedPhone }
         })
-        return new NextResponse(JSON.stringify(payload), init)
+
+        
+return new NextResponse(JSON.stringify(payload), init)
       }
     }
 
@@ -298,7 +324,9 @@ export async function POST(request: NextRequest) {
         route: 'register',
         context: { route: 'register' }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Определяем, нужно ли активировать пользователя сразу
@@ -343,6 +371,7 @@ export async function POST(request: NextRequest) {
       // Отправляем email с токеном
       try {
         const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/verify/email?token=${emailToken}`
+
         await emailService.sendEmail({
           to: email,
           subject: 'Подтвердите ваш email',
@@ -372,6 +401,7 @@ export async function POST(request: NextRequest) {
         }))
       } catch (emailError) {
         console.error('Failed to send verification email:', emailError)
+
         // Не прерываем регистрацию, если не удалось отправить email
         // Пользователь сможет запросить повторную отправку
       }
@@ -457,6 +487,7 @@ export async function POST(request: NextRequest) {
         }
       } catch (smsError) {
         console.error('Failed to send SMS:', smsError)
+
         // Не прерываем регистрацию, если не удалось отправить SMS
         // Пользователь сможет запросить повторную отправку
         await eventService.record(enrichEventInputFromRequest(request, {
@@ -510,6 +541,7 @@ export async function POST(request: NextRequest) {
       }))
     } catch (accountError) {
       console.error('Failed to create account during registration:', accountError)
+
       // Не прерываем регистрацию, если не удалось создать аккаунт
       // Пользователь сможет создать аккаунт позже
       await eventService.record(enrichEventInputFromRequest(request, {
@@ -584,6 +616,8 @@ export async function POST(request: NextRequest) {
       route: 'register',
       context: { route: 'register' }
     })
-    return new NextResponse(JSON.stringify(payload), init)
+
+    
+return new NextResponse(JSON.stringify(payload), init)
   }
 }

@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { importService } from '@/services/import/ImportService'
 import { importAdapterFactory } from '@/services/import/ImportAdapterFactory'
@@ -11,6 +13,7 @@ import logger from '@/lib/logger'
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -37,6 +40,7 @@ export async function POST(request: NextRequest) {
       if (selectedRowsJson) {
         selectedRows = JSON.parse(selectedRowsJson)
       }
+
       if (rowUpdatesJson) {
         rowUpdates = JSON.parse(rowUpdatesJson)
       }
@@ -72,6 +76,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

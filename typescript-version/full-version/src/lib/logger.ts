@@ -1,6 +1,7 @@
+import path from 'path'
+
 import winston from 'winston'
 import DailyRotateFile from 'winston-daily-rotate-file'
-import path from 'path'
 
 interface LoggerData {
   [key: string]: any
@@ -73,6 +74,7 @@ if (!isClient) {
   })
 } else {
   const noop = () => {}
+
   logger = {
     info: (message: string | LoggerData, meta?: LoggerData) =>
       typeof message === 'string' ? console.log(`[INFO] ${message}`, meta) : console.log('[INFO]', message, meta),

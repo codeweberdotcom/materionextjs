@@ -37,7 +37,7 @@ import CircularProgress from '@mui/material/CircularProgress'
 import classnames from 'classnames'
 import { rankItem } from '@tanstack/match-sorter-utils'
 import Skeleton from '@mui/material/Skeleton'
-import {
+import type { ColumnDef, FilterFn ,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -50,8 +50,7 @@ import {
   getSortedRowModel,
   type ColumnFiltersState,
   type Column
-} from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
+ } from '@tanstack/react-table';
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
 import { toast } from 'react-toastify'
 
@@ -485,6 +484,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
           if (refreshResponse.ok) {
             const updatedUsers = await refreshResponse.json()
+
             setData([...updatedUsers]) // Create new array reference
           } else {
             // If refresh fails, just remove from local data
@@ -494,6 +494,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
           toast.success(dictionary.navigation.deleteUser + ' ' + dictionary.navigation.successfully)
         } else {
           const error = await response.json()
+
           // Removed error toast notification for user deletion
         }
       } else if (mode === 'anonymize') {
@@ -519,18 +520,21 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
           if (refreshResponse.ok) {
             const updatedUsers = await refreshResponse.json()
+
             setData([...updatedUsers]) // Create new array reference
           }
 
           toast.success(dictionary.navigation.userDeleted || 'User Deleted')
         } else {
           const error = await response.json()
+
           toast.error('Ошибка анонимизации: ' + (error.message || 'Неизвестная ошибка'))
         }
       }
     } catch (error) {
       console.error('Error processing user:', error)
       const action = mode === 'delete' ? dictionary.navigation.deleteUser : 'анонимизации'
+
       toast.error(error instanceof Error ? error.message : `${action} failed`)
     }
   }
@@ -582,8 +586,10 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       // Remove user from loading set
       setTogglingUsers(prev => {
         const newSet = new Set(prev)
+
         newSet.delete(userId)
-        return newSet
+        
+return newSet
       })
     }
   }
@@ -591,6 +597,8 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
   // Bulk operations
   const getSelectedUsers = () => {
     const selectedIds = Object.keys(rowSelection).filter(id => (rowSelection as any)[id])
+
+
     // Since getRowId returns String(row.id), we need to find users by ID
     return selectedIds
       .map(id => filteredData.find(user => String(user.id) === id))
@@ -603,11 +611,13 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const handleBulkDelete = async (mode: 'delete' | 'anonymize') => {
     const selectedUsers = getFilteredSelectedUsers()
+
     if (selectedUsers.length === 0) return
 
     const userIds = selectedUsers.map(u => String(u.id))
 
     setDeleteLoading(true)
+
     try {
       // Use bulk delete endpoint for delete mode
       // Note: anonymize mode still uses the old endpoint as it requires different logic
@@ -620,6 +630,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
         if (!response.ok) {
           const error = await response.json()
+
           throw new Error(error.message || 'Bulk delete failed')
         }
 
@@ -644,8 +655,10 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
         // Refresh data
         const refreshResponse = await fetch('/api/admin/users')
+
         if (refreshResponse.ok) {
           const updatedUsers = await refreshResponse.json()
+
           setData([...updatedUsers])
           setFilteredData([...updatedUsers])
         }
@@ -688,8 +701,10 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
         // Refresh data
         const refreshResponse = await fetch('/api/admin/users')
+
         if (refreshResponse.ok) {
           const updatedUsers = await refreshResponse.json()
+
           setData([...updatedUsers])
           setFilteredData([...updatedUsers])
         }
@@ -699,6 +714,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
       console.error('Bulk delete error:', error)
       toast.error(errorMessage || dictionary.navigation.bulkOperationFailed)
     } finally {
@@ -708,6 +724,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
   const handleBulkStatusChange = async (activate: boolean) => {
     const selectedUsers = getFilteredSelectedUsers()
+
     if (selectedUsers.length === 0) return
 
     const userIds = selectedUsers.map(u => String(u.id))
@@ -718,6 +735,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
     } else {
       setDeactivateLoading(true)
     }
+
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -727,6 +745,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
       if (!response.ok) {
         const error = await response.json()
+
         throw new Error(error.message || 'Bulk status change failed')
       }
 
@@ -735,6 +754,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       // Show success message
       if (result.activated || result.deactivated) {
         const count = result.activated || result.deactivated
+
         if (result.skipped > 0) {
           toast.success(
             dictionary.navigation.bulkOperationPartialSuccess
@@ -750,8 +770,10 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
 
       // Refresh data from server
       const refreshResponse = await fetch('/api/admin/users')
+
       if (refreshResponse.ok) {
         const updatedUsers = await refreshResponse.json()
+
         setData([...updatedUsers])
         setFilteredData([...updatedUsers])
       }
@@ -760,6 +782,7 @@ const UserListTable = ({ tableData }: { tableData?: UsersType[] }) => {
       setRowSelection({})
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
       console.error('Bulk status change error:', error)
       toast.error(errorMessage || dictionary.navigation.bulkOperationFailed)
     } finally {
@@ -1217,6 +1240,7 @@ return (
                   variant='outlined'
                   onClick={() => {
                     const selectedUsers = getFilteredSelectedUsers()
+
                     if (selectedUsers.length > 0) {
                       setDeleteUserId('bulk')
                       setDeleteUserName(`${selectedUsers.length} users`)
@@ -1397,8 +1421,10 @@ return (
           // ImportDialog already shows success toast with proper i18n
           // Refresh data
           const refreshResponse = await fetch('/api/admin/users')
+
           if (refreshResponse.ok) {
             const updatedUsers = await refreshResponse.json()
+
             setData([...updatedUsers])
             setFilteredData([...updatedUsers])
           }

@@ -1,6 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/utils/auth/auth'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import type { Notification as DbNotification } from '@prisma/client'
+
+import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
 import { getSocketServer } from '@/lib/sockets'
 import { parseNotificationMetadata, serializeNotificationMetadata } from '@/utils/notifications/metadata'
@@ -52,9 +55,11 @@ const toApiNotification = (notification: DbNotification): ApiNotification => ({
 
 const emitNotificationEvent = (userId: string, event: NotificationEvent, payload: ApiNotification) => {
   const io = getSocketServer()
+
   if (!io) return
 
   const namespace = io.of('/notifications')
+
   namespace.to(`user_${userId}`).emit(event, payload)
 
   const legacyMap: Record<NotificationEvent, string> = {
@@ -72,6 +77,7 @@ const emitNotificationEvent = (userId: string, event: NotificationEvent, payload
 export async function GET(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -101,13 +107,15 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error fetching notifications:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -136,6 +144,7 @@ export async function POST(request: NextRequest) {
     })
 
     const payload = toApiNotification(notification)
+
     emitNotificationEvent(user.id, 'newNotification', payload)
 
     return NextResponse.json({
@@ -143,7 +152,8 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error creating notification:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 

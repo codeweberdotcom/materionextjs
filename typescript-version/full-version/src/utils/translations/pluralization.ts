@@ -199,6 +199,7 @@ export function formatTranslation(
   Object.entries(variables).forEach(([key, val]) => {
     // Формат {{key}}
     result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), String(val))
+
     // Формат ${key}
     result = result.replace(new RegExp(`\\$\\{${key}\\}`, 'g'), String(val))
   })

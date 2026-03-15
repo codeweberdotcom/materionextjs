@@ -146,6 +146,7 @@ export const decrementActiveRequests = (environment: string = getEnvironment()) 
  */
 export const trackHttpRequest = (method: string, route: string, environment: string = getEnvironment()) => {
   const stopTimer = startHttpRequestTimer(method, route, environment)
+
   incrementActiveRequests(environment)
 
   return (status: number, responseSize?: number) => {
@@ -159,6 +160,7 @@ export const trackHttpRequest = (method: string, route: string, environment: str
 
     if (status >= 400) {
       const errorType = status >= 500 ? 'server_error' : 'client_error'
+
       incrementHttpErrors(method, route, errorType, environment)
     }
   }

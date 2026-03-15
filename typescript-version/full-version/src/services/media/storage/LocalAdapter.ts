@@ -26,7 +26,9 @@ export class LocalAdapter implements StorageAdapter {
   private getAbsolutePath(relativePath: string): string {
     // Убираем начальный слэш если есть
     const cleanPath = relativePath.startsWith('/') ? relativePath.slice(1) : relativePath
-    return path.join(this.basePath, cleanPath)
+
+    
+return path.join(this.basePath, cleanPath)
   }
 
   /**
@@ -34,6 +36,7 @@ export class LocalAdapter implements StorageAdapter {
    */
   private async ensureDirectory(filePath: string): Promise<void> {
     const dir = path.dirname(filePath)
+
     if (!existsSync(dir)) {
       await fs.mkdir(dir, { recursive: true })
     }
@@ -120,6 +123,7 @@ export class LocalAdapter implements StorageAdapter {
       }
       
       const files = await fs.readdir(dirPath)
+
       if (files.length === 0) {
         await fs.rmdir(dirPath)
         await this.cleanupEmptyDirs(path.dirname(dirPath))
@@ -134,7 +138,9 @@ export class LocalAdapter implements StorageAdapter {
    */
   async exists(relativePath: string): Promise<boolean> {
     const absolutePath = this.getAbsolutePath(relativePath)
-    return existsSync(absolutePath)
+
+    
+return existsSync(absolutePath)
   }
 
   /**
@@ -202,6 +208,7 @@ export class LocalAdapter implements StorageAdapter {
       
       if (entry.isFile()) {
         const stat = statSync(entryAbsPath)
+
         results.push({
           path: entryRelPath.replace(/\\/g, '/'), // Windows path fix
           size: stat.size,
@@ -225,7 +232,9 @@ export class LocalAdapter implements StorageAdapter {
       }
       
       const stat = statSync(absolutePath)
-      return {
+
+      
+return {
         size: stat.size,
         lastModified: stat.mtime,
       }
@@ -289,6 +298,7 @@ export class LocalAdapter implements StorageAdapter {
     
     // Создаём директорию назначения
     const destDir = path.dirname(destAbsolute)
+
     if (!existsSync(destDir)) {
       await fs.mkdir(destDir, { recursive: true })
     }
@@ -321,6 +331,8 @@ export class LocalAdapter implements StorageAdapter {
       if ((error as Error).message.includes('verification failed')) {
         throw error
       }
+
+
       // Удаляем копию при ошибке проверки
       await fs.unlink(destAbsolute).catch(() => {})
       throw new Error(`Failed to verify copy: ${error instanceof Error ? error.message : String(error)}`)
@@ -373,6 +385,7 @@ export class LocalAdapter implements StorageAdapter {
   async reliableMoveRelative(sourcePath: string, destPath: string): Promise<void> {
     const sourceAbsolute = this.getAbsolutePath(sourcePath)
     const destAbsolute = this.getAbsolutePath(destPath)
+
     await this.reliableMove(sourceAbsolute, destAbsolute)
   }
 

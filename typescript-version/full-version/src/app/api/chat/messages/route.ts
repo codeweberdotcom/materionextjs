@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     const limitParam = Number(searchParams.get('limit'))
+
     const limit = Number.isFinite(limitParam)
       ? Math.max(1, Math.min(MAX_LIMIT, Math.floor(limitParam)))
       : DEFAULT_LIMIT
@@ -60,6 +61,7 @@ export async function GET(request: NextRequest) {
 
     const hasMore = messages.length > limit
     const sliced = hasMore ? messages.slice(0, limit) : messages
+
     const nextCursor = hasMore
       ? sliced[sliced.length - 1]?.createdAt.toISOString()
       : null
@@ -83,7 +85,8 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('[api/chat/messages] GET error', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -96,6 +99,7 @@ export async function POST(request: NextRequest) {
     }
 
     const clientIp = getRequestIp(request)
+
     const rateLimitResult = await rateLimitService.checkLimit(user.id, 'chat-messages', {
       userId: user.id,
       email: user.email ?? null,
@@ -105,16 +109,20 @@ export async function POST(request: NextRequest) {
 
     if (!rateLimitResult.allowed) {
       const blockedUntilMs = rateLimitResult.blockedUntil ?? rateLimitResult.resetTime
+
       const retryAfterSec = Math.max(
         1,
         Math.ceil((blockedUntilMs - Date.now()) / 1000)
       )
-      return NextResponse.json(
+
+      
+return NextResponse.json(
         {
           error: 'Rate limit exceeded',
           blockedUntilMs,
           retryAfterSec,
           remaining: rateLimitResult.remaining,
+
           // Legacy для обратной совместимости
           retryAfter: retryAfterSec,
           blockedUntil: blockedUntilMs
@@ -179,6 +187,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const io = globalThis.io
+
       if (io?.of) {
         io.of('/chat').to(`room_${roomId}`).emit('receiveMessage', messagePayload)
       }
@@ -196,6 +205,7 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('[api/chat/messages] POST error', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

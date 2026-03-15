@@ -5,7 +5,8 @@
  * @module app/api/admin/media/[id]/file
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
@@ -55,6 +56,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if (variantName && media.variants) {
       const variants = JSON.parse(media.variants)
       const variant = variants[variantName]
+
       if (variant) {
         // Создаём виртуальный объект для скачивания варианта
         mediaToDownload = {

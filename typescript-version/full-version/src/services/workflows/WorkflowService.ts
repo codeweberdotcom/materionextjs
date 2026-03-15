@@ -8,7 +8,8 @@
  * - getHistory() - получить историю переходов
  */
 
-import { createActor, createMachine, AnyMachineSnapshot, AnyActorRef } from 'xstate'
+import type { AnyMachineSnapshot} from 'xstate';
+import { createActor, createMachine, AnyActorRef } from 'xstate'
 
 import { prisma } from '@/libs/prisma'
 import { eventService } from '@/services/events/EventService'
@@ -179,6 +180,7 @@ class WorkflowService {
 
       // Создать actor без snapshot - используем начальное состояние машины
       const actor = createActor(machine)
+
       actor.start()
 
       // Проверить возможность перехода из текущего состояния
@@ -219,6 +221,7 @@ class WorkflowService {
 
       // Выполнить переход
       const fromState = currentState
+
       actor.send({ type: event })
 
       const newSnapshot = actor.getSnapshot() as AnyMachineSnapshot
@@ -361,6 +364,7 @@ class WorkflowService {
 
     // Создать actor для проверки
     const actor = createActor(machine)
+
     actor.start()
 
     const snapshot = actor.getSnapshot() as AnyMachineSnapshot
@@ -429,6 +433,7 @@ class WorkflowService {
     const machine = getMachine(type, currentState)
 
     const actor = createActor(machine)
+
     actor.start()
 
     const snapshot = actor.getSnapshot() as AnyMachineSnapshot

@@ -8,9 +8,13 @@
  * @module app/api/admin/media/upload-async
  */
 
-import { NextRequest, NextResponse } from 'next/server'
 import { writeFile, mkdir } from 'fs/promises'
+
 import path from 'path'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isAdminOrHigher } from '@/utils/permissions/permissions'
@@ -40,7 +44,8 @@ export async function POST(request: NextRequest) {
     if (!isAdminOrHigher(user)) {
       markAsyncUploadRequest(entityType, 'error')
       endTimer()
-      return NextResponse.json(
+      
+return NextResponse.json(
         { error: 'Forbidden' },
         { status: 403 }
       )
@@ -48,6 +53,7 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData()
     const file = formData.get('file') as File
+
     entityType = (formData.get('entityType') as string) || 'unknown'
     const entityId = formData.get('entityId') as string | null
     const alt = formData.get('alt') as string | null
@@ -57,7 +63,8 @@ export async function POST(request: NextRequest) {
     if (!file) {
       markAsyncUploadRequest(entityType, 'error')
       endTimer()
-      return NextResponse.json(
+      
+return NextResponse.json(
         { error: 'No file provided' },
         { status: 400 }
       )
@@ -66,7 +73,8 @@ export async function POST(request: NextRequest) {
     if (!entityType || entityType === 'unknown') {
       markAsyncUploadRequest(entityType, 'error')
       endTimer()
-      return NextResponse.json(
+      
+return NextResponse.json(
         { error: 'entityType is required' },
         { status: 400 }
       )
@@ -84,6 +92,7 @@ export async function POST(request: NextRequest) {
 
     // Сохраняем файл во временную папку
     const buffer = Buffer.from(await file.arrayBuffer())
+
     await writeFile(tempPath, buffer)
 
     // Записываем размер файла в метрики
@@ -145,6 +154,7 @@ export async function POST(request: NextRequest) {
       status: 'processing',
       jobId,
       message: 'Файл принят в обработку',
+
       // Временное превью - можно показать пользователю сразу
       tempPreview: {
         url: tempPreviewUrl,

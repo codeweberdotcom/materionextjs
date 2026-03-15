@@ -71,12 +71,15 @@ const SlugSettings = () => {
     if (!newReservedSlug.trim()) return
     
     const slug = newReservedSlug.toLowerCase().replace(/[^a-z0-9_]/g, '')
+
     if (!slug) return
 
     const current = getCustomReservedSlugs()
+
     if (current.includes(slug) || systemReservedSlugs.includes(slug)) {
       toast.warning('This slug is already reserved')
-      return
+      
+return
     }
 
     setSettings({
@@ -89,6 +92,7 @@ const SlugSettings = () => {
   // Remove reserved slug
   const removeReservedSlug = (slug: string) => {
     const current = getCustomReservedSlugs()
+
     setSettings({
       ...settings,
       reservedSlugs: JSON.stringify(current.filter(s => s !== slug))
@@ -103,6 +107,7 @@ const SlugSettings = () => {
         
         if (response.ok) {
           const data = await response.json()
+
           setSettings({
             changeIntervalDays: data.changeIntervalDays ?? defaultSettings.changeIntervalDays,
             minLength: data.minLength ?? defaultSettings.minLength,

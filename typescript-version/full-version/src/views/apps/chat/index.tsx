@@ -4,7 +4,6 @@
 import { useEffect, useRef, useState } from 'react'
 
 // Hook Imports
-import { usePermissions } from '@/hooks/usePermissions'
 
 // MUI Imports
 import Backdrop from '@mui/material/Backdrop'
@@ -14,6 +13,8 @@ import type { Theme } from '@mui/material/styles'
 // Third-party Imports
 import classNames from 'classnames'
 import { useDispatch, useSelector } from 'react-redux'
+
+import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/contexts/AuthProvider'
 
 // Type Imports
@@ -43,10 +44,12 @@ const ChatWrapper = () => {
   const dispatch = useDispatch<AppDispatch>()
   const chatStore = useSelector((state: RootState) => state.chatReducer)
   const { user, session } = useAuth()
+
   const unreadCount =
     typeof window !== 'undefined' && (window as unknown as { notificationsManager?: NotificationsManager }).notificationsManager
       ? (window as unknown as { notificationsManager?: NotificationsManager }).notificationsManager!.unreadCount
       : 0
+
   const {
     initializeRoom,
     room,
@@ -60,6 +63,7 @@ const ChatWrapper = () => {
     hasMoreHistory,
     isConnected
   } = useChatNew()
+
   const { checkPermission } = usePermissions()
   const isBelowLgScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('lg'))
   const isBelowMdScreen = useMediaQuery((theme: Theme) => theme.breakpoints.down('md'))

@@ -1,9 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+
 import { exec } from 'child_process'
 import { promisify } from 'util'
 import path from 'path'
 import fs from 'fs/promises'
 import { existsSync } from 'fs'
+
+import { NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+
 import { getPlaywrightTestById, playwrightTestScripts } from '@/data/testing/test-scripts'
 
 const execAsync = promisify(exec)
@@ -37,8 +41,10 @@ type RunSummary = {
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => ({}))
   const requestedTestId: string | undefined = body?.testId
+
   const requestedMode: 'headed' | 'headless' =
     body?.mode === 'headless' ? 'headless' : 'headed'
+
   const requestedTimeout: number = typeof body?.timeout === 'number' ? body.timeout : 300000
 
   const selectedTest =
@@ -54,12 +60,14 @@ export async function POST(request: NextRequest) {
   const baseCommand = selectedTest
     ? `pnpm exec playwright test ${selectedTest.file}`
     : 'pnpm exec playwright test'
+
   const command = requestedMode === 'headed' ? `${baseCommand} --headed` : baseCommand
 
   const execEnv = {
     ...process.env as any,
     TEST_TIMEOUT: requestedTimeout.toString()
   }
+
   delete execEnv.npm_config_verify_deps_before_run
   delete execEnv.NPM_CONFIG_VERIFY_DEPS_BEFORE_RUN
 
@@ -73,6 +81,7 @@ export async function POST(request: NextRequest) {
       timeout: Math.max(requestedTimeout + 60000, 600000), // Add 1 minute buffer, minimum 10 minutes
       env: execEnv
     })
+
     stdout = result.stdout
     stderr = result.stderr
   } catch (error: any) {
@@ -155,7 +164,8 @@ async function persistRunArtifacts({
     return { runId, summary }
   } catch (error) {
     console.error('Failed to persist Playwright artifacts:', error)
-    return null
+    
+return null
   }
 }
 
@@ -179,6 +189,7 @@ playwrightTestScripts.forEach(script => {
   
   // Добавляем только имя файла (для fallback)
   const fileName = path.basename(script.file)
+
   if (fileName && !scriptIdByFile.has(fileName)) {
     scriptIdByFile.set(fileName, script.id)
   }
@@ -198,6 +209,7 @@ async function buildRunSummary({
   requestedTimeout: number
 }): Promise<RunSummary> {
   const now = new Date().toISOString()
+
   const baseSummary: RunSummary = {
     runId,
     label: selectedTestTitle,
@@ -209,6 +221,7 @@ async function buildRunSummary({
   }
 
   const testResultsPath = PLAYWRIGHT_RESULTS_FILE
+
   if (!existsSync(testResultsPath)) {
     return baseSummary
   }
@@ -230,10 +243,12 @@ async function buildRunSummary({
       suite.specs?.forEach((spec: any) => {
         spec.tests?.forEach((test: any) => {
           const result = test.results?.[0]
+
           if (!result) return
           const duration = typeof result.duration === 'number' ? result.duration : 0
           const startedAt = result.startTime || stats.startTime || now
           const finishedAt = new Date(new Date(startedAt).getTime() + duration).toISOString()
+
           const filePath =
             suiteFile ||
             (spec.file ? spec.file.replace(/\\/g, '/') : undefined) ||
@@ -242,6 +257,7 @@ async function buildRunSummary({
           
           // Нормализуем путь для поиска в scriptIdByFile
           let normalizedPath = filePath
+
           if (filePath) {
             // Если путь абсолютный, делаем относительным
             if (filePath.startsWith(process.cwd())) {
@@ -257,6 +273,8 @@ async function buildRunSummary({
             if (normalizedPath.startsWith('tests/e2e/')) {
               normalizedPath = normalizedPath.replace('tests/e2e/', '')
             }
+
+
             // Если путь начинается с e2e/, убираем префикс
             if (normalizedPath.startsWith('e2e/')) {
               normalizedPath = normalizedPath.replace('e2e/', '')
@@ -287,10 +305,14 @@ async function buildRunSummary({
             // 4. По имени файла (базовое имя без расширения тоже пробуем)
             if (!scriptIdentifier && filePath) {
               const fileName = path.basename(filePath)
+
               scriptIdentifier = scriptIdByFile.get(fileName)
+
+
               // Также пробуем без расширения для совместимости
               if (!scriptIdentifier && fileName.includes('.')) {
                 const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'))
+
                 scriptIdentifier = scriptIdByFile.get(nameWithoutExt)
               }
             }
@@ -343,6 +365,7 @@ async function buildRunSummary({
     }
   } catch (error) {
     console.error('Failed to build Playwright run summary:', error)
-    return baseSummary
+    
+return baseSummary
   }
 }

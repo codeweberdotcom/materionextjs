@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client'
 
 // Metrics imports - only on server
 let metricsModule: typeof import('@/lib/metrics/database') | null = null
+
 if (typeof window === 'undefined') {
   // Dynamic import for server-only metrics
   metricsModule = require('@/lib/metrics/database')
@@ -36,6 +37,7 @@ const createPrismaClient = () => {
         
         // Count results for findMany operations
         let resultCount: number | undefined
+
         if (params.action === 'findMany' && Array.isArray(result)) {
           resultCount = result.length
         } else if (params.action === 'count' && typeof result === 'number') {
@@ -43,7 +45,8 @@ const createPrismaClient = () => {
         }
         
         stopTimer('success', resultCount)
-        return result
+        
+return result
       } catch (error) {
         stopTimer('error')
         
@@ -82,16 +85,21 @@ export async function withTransaction<T>(
   fn: (tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]) => Promise<T>
 ): Promise<T> {
   const startTime = Date.now()
+
   try {
     const result = await prisma.$transaction(fn)
+
     if (metricsModule) {
       metricsModule.trackTransaction('success', Date.now() - startTime)
     }
-    return result
+
+    
+return result
   } catch (error) {
     if (metricsModule) {
       metricsModule.trackTransaction('error', Date.now() - startTime)
     }
+
     throw error
   }
 }

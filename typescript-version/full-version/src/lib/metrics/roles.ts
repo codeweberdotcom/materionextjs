@@ -1,4 +1,5 @@
 import { Counter, Histogram, Gauge } from 'prom-client'
+
 import { metricsRegistry } from './registry'
 
 /**

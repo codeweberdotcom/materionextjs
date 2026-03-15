@@ -6,11 +6,13 @@
  * @module app/api/admin/media/watermarks
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
-import { getWatermarkService, WatermarkPosition } from '@/services/media'
+import type { WatermarkPosition } from '@/services/media';
+import { getWatermarkService } from '@/services/media'
 import logger from '@/lib/logger'
 
 /**
@@ -63,6 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+
     const {
       name,
       displayName,
@@ -83,6 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     const watermarkService = getWatermarkService()
+
     const watermark = await watermarkService.createWatermark({
       name,
       displayName,

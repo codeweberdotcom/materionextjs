@@ -20,11 +20,12 @@ import Chip from '@mui/material/Chip'
 import Skeleton from '@mui/material/Skeleton'
 
 // Context Imports
+import { toast } from 'react-toastify'
+
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Hook Imports
 import { usePermissions } from '@/hooks/usePermissions'
-import { toast } from 'react-toastify'
 
 interface TelegramSettings {
   botToken: string
@@ -73,6 +74,7 @@ const TelegramSettings = () => {
 
         if (response.ok) {
           const settings = await response.json()
+
           setFormData(settings)
         }
       } catch (error) {
@@ -108,6 +110,7 @@ const TelegramSettings = () => {
         toast.error('У вас нет прав для изменения настроек Telegram')
       } else {
         const error = await response.json()
+
         toast.error(error.message || 'Ошибка при сохранении настроек.')
       }
     } catch (error) {
@@ -120,12 +123,14 @@ const TelegramSettings = () => {
   const handleTestBot = async () => {
     if (!formData.botToken) {
       toast.error('Введите Bot Token')
-      return
+      
+return
     }
 
     if (!testChatId && !formData.defaultChatId) {
       toast.error('Введите Chat ID для тестирования')
-      return
+      
+return
     }
 
     setTestLoading(true)
@@ -146,6 +151,7 @@ const TelegramSettings = () => {
 
       if (result.success) {
         toast.success('Тестовое сообщение отправлено успешно!')
+
         if (result.botInfo) {
           setBotInfo(result.botInfo)
         }
@@ -164,12 +170,14 @@ const TelegramSettings = () => {
   const handleTestChannel = async () => {
     if (!formData.botToken) {
       toast.error('Введите Bot Token')
-      return
+      
+return
     }
 
     if (!formData.channelId) {
       toast.error('Введите Channel ID')
-      return
+      
+return
     }
 
     setTestChannelLoading(true)
@@ -190,6 +198,7 @@ const TelegramSettings = () => {
 
       if (result.success) {
         toast.success('Тестовое сообщение отправлено в канал!')
+
         if (result.botInfo) {
           setBotInfo(result.botInfo)
         }

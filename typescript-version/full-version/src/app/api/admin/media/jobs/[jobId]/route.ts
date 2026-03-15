@@ -5,7 +5,8 @@
  * @module app/api/admin/media/jobs/[jobId]
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
@@ -51,7 +52,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     if ('type' in job && job.type === 'in-memory') {
       // In-memory job
       const inMemoryJob = job as any
-      return NextResponse.json({
+
+      
+return NextResponse.json({
         jobId: inMemoryJob.id,
         status: inMemoryJob.status,
         progress: inMemoryJob.progress || 0,

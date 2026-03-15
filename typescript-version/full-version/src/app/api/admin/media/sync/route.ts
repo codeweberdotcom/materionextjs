@@ -6,11 +6,13 @@
  * @module app/api/admin/media/sync
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
-import { getMediaSyncService, SyncScope, SyncOperation, initializeMediaQueues, getStorageService } from '@/services/media'
+import type { SyncScope, SyncOperation} from '@/services/media';
+import { getMediaSyncService, initializeMediaQueues, getStorageService } from '@/services/media'
 import logger from '@/lib/logger'
 
 type SyncAction = 
@@ -40,6 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
+
     const { action, scope, entityType, mediaIds, overwrite } = body as {
       action: SyncAction
       scope: SyncScope
@@ -91,6 +94,7 @@ export async function POST(request: NextRequest) {
     
     if (s3RequiredActions.includes(action)) {
       const storageService = await getStorageService()
+
       if (!storageService.isS3Available()) {
         return NextResponse.json(
           { error: 'S3 не настроен. Настройте S3 в настройках медиатеки или добавьте внешний S3 сервис.' },
@@ -258,6 +262,7 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0')
 
     const syncService = getMediaSyncService()
+
     const result = await syncService.listJobs({
       status: status as any,
       operation: operation as SyncOperation,

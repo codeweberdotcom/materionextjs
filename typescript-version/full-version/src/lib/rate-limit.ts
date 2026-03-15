@@ -20,4 +20,5 @@ export { RateLimitContainer } from './rate-limit/di/container'
 
 // Legacy export for backward compatibility - now delegates to new architecture
 import { rateLimitContainer } from './rate-limit/di/container'
+
 export const rateLimitService = rateLimitContainer.getRateLimitEngine()

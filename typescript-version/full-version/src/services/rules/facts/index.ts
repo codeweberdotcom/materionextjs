@@ -165,11 +165,13 @@ export const listingStatsFact: AsyncFact = {
     })
 
     let ownerBlocked = false
+
     if (owner) {
       const ownerUser = await prisma.user.findUnique({
         where: { id: owner.ownerId },
         select: { status: true }
       })
+
       ownerBlocked = ownerUser?.status === 'blocked' || ownerUser?.status === 'suspended'
     }
 
@@ -286,6 +288,7 @@ export const accountFact: AsyncFact = {
     // Вычисляем дни до истечения тарифа
     const now = Date.now()
     const paidUntil = account.tariffPaidUntil?.getTime() || null
+
     const daysUntilExpiration = paidUntil 
       ? Math.ceil((paidUntil - now) / (24 * 60 * 60 * 1000))
       : null
@@ -308,6 +311,7 @@ export const accountFact: AsyncFact = {
       tariffPlanPrice: account.tariffPlan.price,
       name: account.name,
       createdAt: account.createdAt,
+
       // Tariff expiration info
       tariffStartedAt: account.tariffStartedAt,
       tariffPaidUntil: account.tariffPaidUntil,
@@ -318,6 +322,7 @@ export const accountFact: AsyncFact = {
       tariffExpiringIn3Days,
       tariffExpiringIn1Day,
       tariffExpired,
+
       // Для правил напоминаний - проверка, что напоминание ещё не отправлялось
       needsReminder7Days: tariffExpiringIn7Days && !account.tariffReminderSentAt,
       needsReminder3Days: tariffExpiringIn3Days && (!account.tariffReminderSentAt || 

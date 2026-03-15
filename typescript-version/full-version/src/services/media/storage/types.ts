@@ -5,6 +5,7 @@
  */
 
 export interface StorageAdapter {
+
   /**
    * Загрузить файл в хранилище
    */

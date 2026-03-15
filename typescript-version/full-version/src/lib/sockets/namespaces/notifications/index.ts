@@ -1,12 +1,15 @@
 import type { Namespace } from 'socket.io'
+
 import logger from '../../../logger'
 import type { TypedIOServer, TypedSocket } from '../../types/common'
-import {
-  NotificationEvents,
+import type {
   NotificationEmitEvents,
   NotificationLegacyEmitEvents,
   Notification,
   NotificationMetadata
+} from '../../types/notifications';
+import {
+  NotificationEvents
 } from '../../types/notifications'
 import { authenticateSocket, requirePermission } from '../../middleware/auth'
 import { rateLimitNotification } from '../../middleware/rateLimit'
@@ -36,13 +39,16 @@ const emitNotificationEvent = <T extends keyof NotificationEmitEvents>(
       event,
       userId
     })
-    return
+    
+return
   }
 
   const namespace = io.of('/notifications')
+
   namespace.to(`user_${userId}`).emit(event, ...args)
 
   const legacyEvent = legacyEventMap[event]
+
   if (legacyEvent) {
     namespace
       .to(`user_${userId}`)
@@ -145,7 +151,8 @@ const registerNotificationEventHandlers = (socket: TypedSocket) => {
 
       if (data.userId !== userId) {
         socket.emit('error', { message: 'Access denied' })
-        return
+        
+return
       }
 
       const notification = await prisma.notification.findFirst({
@@ -157,10 +164,12 @@ const registerNotificationEventHandlers = (socket: TypedSocket) => {
 
       if (!notification) {
         socket.emit('error', { message: 'Notification not found' })
-        return
+        
+return
       }
 
       const readAt = notification.readAt ?? new Date()
+
       await prisma.notification.update({
         where: { id: notification.id },
         data: {
@@ -199,7 +208,8 @@ const registerNotificationEventHandlers = (socket: TypedSocket) => {
 
       if (userIdParam !== userId) {
         socket.emit('error', { message: 'Access denied' })
-        return
+        
+return
       }
 
       const unreadNotifications = await prisma.notification.findMany({
@@ -216,7 +226,8 @@ const registerNotificationEventHandlers = (socket: TypedSocket) => {
           count: 0,
           notificationIds: []
         })
-        return
+        
+return
       }
 
       await prisma.notification.updateMany({
@@ -260,7 +271,8 @@ const registerNotificationEventHandlers = (socket: TypedSocket) => {
       // Проверяем, что уведомление принадлежит пользователю
       if (data.userId !== userId) {
         socket.emit('error', { message: 'Access denied' });
-        return;
+        
+return;
       }
 
       // Удаляем уведомление
@@ -273,7 +285,8 @@ const registerNotificationEventHandlers = (socket: TypedSocket) => {
 
       if (deletedNotification.count === 0) {
         socket.emit('error', { message: 'Notification not found' });
-        return;
+        
+return;
       }
 
       emitNotificationEvent(userId, 'notificationDeleted', {
@@ -305,6 +318,7 @@ const registerNotificationEventHandlers = (socket: TypedSocket) => {
           data: { lastSeen: new Date() }
         })
       }
+
       callback?.({ pong: true, timestamp: Date.now() })
     } catch (error) {
       logger.error('Failed to update lastSeen on notifications ping', {
@@ -319,6 +333,7 @@ const registerNotificationEventHandlers = (socket: TypedSocket) => {
   socket.on('presence:sync', async (_data: unknown, callback?: (data?: { [userId: string]: { isOnline: boolean; lastSeen?: string } } | undefined) => void) => {
     try {
       const userStatuses = await getOnlineUsers()
+
       callback?.(userStatuses)
     } catch (error) {
       logger.error('Failed to sync presence via notifications', {
@@ -363,7 +378,8 @@ export const sendNotificationToUser = async (
       userId,
       error: error instanceof Error ? error.message : 'Unknown error'
     });
-    return false;
+    
+return false;
   }
 };
 
@@ -419,6 +435,7 @@ export const createBulkNotifications = async (
     logger.error('Failed to create bulk notifications', {
       error: error instanceof Error ? error.message : 'Unknown error'
     })
-    return false
+    
+return false
   }
 }

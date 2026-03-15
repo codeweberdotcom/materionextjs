@@ -1,5 +1,6 @@
 import { Lucia } from 'lucia'
 import { PrismaAdapter } from '@lucia-auth/adapter-prisma'
+
 import { prisma } from './prisma'
 import { isProduction } from '@/shared/config/env'
 

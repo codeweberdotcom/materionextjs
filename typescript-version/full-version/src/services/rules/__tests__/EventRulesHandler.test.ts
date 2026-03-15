@@ -3,10 +3,12 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+
+import type { PrismaEvent } from '@prisma/client'
+
 import { EventRulesHandler } from '../EventRulesHandler'
 import { eventService } from '@/services/events/EventService'
 import { rulesService } from '../RulesService'
-import type { PrismaEvent } from '@prisma/client'
 
 // Мокаем зависимости
 vi.mock('@/services/events/EventService')
@@ -41,6 +43,7 @@ describe('EventRulesHandler', () => {
   describe('start/stop', () => {
     it('должен запускать обработчик событий', () => {
       const onEventSpy = vi.spyOn(eventService, 'onEvent')
+
       handler.start()
 
       expect(onEventSpy).toHaveBeenCalled()
@@ -57,6 +60,7 @@ describe('EventRulesHandler', () => {
 
     it('не должен запускаться дважды', () => {
       const onEventSpy = vi.spyOn(eventService, 'onEvent')
+
       handler.start()
       handler.start()
 
@@ -101,6 +105,7 @@ describe('EventRulesHandler', () => {
 
       // Симулируем событие через EventService
       const onEventCallback = vi.mocked(eventService.onEvent).mock.calls[0]?.[0]
+
       if (onEventCallback) {
         await onEventCallback(event)
       }

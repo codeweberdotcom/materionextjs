@@ -1,4 +1,5 @@
 import type { Event as PrismaEvent } from '@prisma/client'
+
 import { eventService } from '@/services/events/EventService'
 import { scenarioEngine } from './ScenarioEngine'
 import { scenarioService } from './ScenarioService'
@@ -18,7 +19,9 @@ export class NotificationEventHandlers {
     if (!NotificationEventHandlers.instance) {
       NotificationEventHandlers.instance = new NotificationEventHandlers()
     }
-    return NotificationEventHandlers.instance
+
+    
+return NotificationEventHandlers.instance
   }
 
   /**
@@ -30,7 +33,8 @@ export class NotificationEventHandlers {
   async initialize(): Promise<void> {
     // Система отключена - все уведомления обрабатываются через RulesEngine
     logger.warn('[NotificationEventHandlers] DEPRECATED: This system is disabled. Use RulesEngine instead.')
-    return
+    
+return
 
     // Старый код (закомментирован для возможного отката):
     // if (this.isInitialized) {
@@ -61,6 +65,7 @@ export class NotificationEventHandlers {
     try {
       // Парсим payload события
       let payload: Record<string, any> = {}
+
       try {
         payload = JSON.parse(event.payload || '{}')
       } catch (e) {
@@ -84,7 +89,8 @@ export class NotificationEventHandlers {
           source: event.source,
           type: event.type
         })
-        return
+        
+return
       }
 
       logger.info('[NotificationEventHandlers] Found matching scenarios', {
@@ -116,6 +122,7 @@ export class NotificationEventHandlers {
             eventId: event.id,
             error: error instanceof Error ? error.message : String(error)
           })
+
           // Продолжаем выполнение других сценариев
         }
       }
@@ -135,6 +142,7 @@ export class NotificationEventHandlers {
       this.unsubscribe()
       this.unsubscribe = null
     }
+
     this.isInitialized = false
     logger.info('[NotificationEventHandlers] Shutdown completed')
   }

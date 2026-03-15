@@ -1,4 +1,4 @@
-import { User, Permission, UserRole } from '../types/common'
+import type { User, Permission, UserRole } from '../types/common'
 
 // Карта разрешений по ролям
 const rolePermissions: Record<UserRole, Permission[]> = {
@@ -39,7 +39,9 @@ export const hasPermission = (user: User, permission: Permission): boolean => {
  */
 export const hasAllPermissions = (user: User, permissions: Permission[]): boolean => {
   const userPermissions = toPermissionArray(user.permissions)
-  return permissions.every(permission => userPermissions.includes(permission))
+
+  
+return permissions.every(permission => userPermissions.includes(permission))
 }
 
 /**
@@ -47,7 +49,9 @@ export const hasAllPermissions = (user: User, permissions: Permission[]): boolea
  */
 export const hasAnyPermission = (user: User, permissions: Permission[]): boolean => {
   const userPermissions = toPermissionArray(user.permissions)
-  return permissions.some(permission => userPermissions.includes(permission))
+
+  
+return permissions.some(permission => userPermissions.includes(permission))
 }
 
 /**
@@ -70,7 +74,9 @@ export const getUniquePermissions = (users: User[]): Permission[] => {
   }
 
   const allPermissions = users.flatMap(user => toPermissionArray(user.permissions))
-  return [...new Set(allPermissions)]
+
+  
+return [...new Set(allPermissions)]
 }
 
 /**

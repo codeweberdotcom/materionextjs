@@ -17,10 +17,11 @@ import classnames from 'classnames'
 import PerfectScrollbar from 'react-perfect-scrollbar'
 
 // Hook Imports
+import { useSelector } from 'react-redux'
+
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Redux Imports
-import { useSelector } from 'react-redux'
 import type { RootState } from '@/redux-store'
 
 // Util Imports

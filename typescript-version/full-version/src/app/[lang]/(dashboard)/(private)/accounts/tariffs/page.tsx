@@ -61,6 +61,7 @@ const TariffsPage = () => {
         }
 
         const result = await response.json()
+
         setTariffs(result.data || [])
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Ошибка загрузки')

@@ -83,11 +83,13 @@ const NotificationsList = (props: Props) => {
 
   const handleSelectNotification = (id: string, checked: boolean) => {
     const newSelected = new Set(selectedNotifications)
+
     if (checked) {
       newSelected.add(id)
     } else {
       newSelected.delete(id)
     }
+
     setSelectedNotifications(newSelected)
   }
 
@@ -170,6 +172,7 @@ const NotificationsList = (props: Props) => {
         <div className='flex flex-col'>
           {searchFilteredNotifications.map((notification: Notification, index: number) => {
             const isSelected = selectedNotifications.has(notification.id)
+
             const timestampLabel =
               formatNotificationTimestamp(notification.createdAt) ?? dictionary.navigation.justNow ?? 'Just now'
 

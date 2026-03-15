@@ -4,7 +4,7 @@
  * @module app/api/admin/media/upload-async/__tests__/route.test
  */
 
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 // Мокаем зависимости
 jest.mock('@/utils/auth/auth', () => ({
@@ -54,6 +54,7 @@ import { isAdminOrHigher } from '@/utils/permissions/permissions'
 import { mediaProcessingQueue, initializeMediaQueues } from '@/services/media'
 import { eventService } from '@/services/events'
 import { markAsyncUploadRequest, startAsyncUploadTimer, recordFileSize } from '@/lib/metrics/media'
+
 import { writeFile, mkdir } from 'fs/promises'
 
 describe('POST /api/admin/media/upload-async', () => {
@@ -86,6 +87,7 @@ describe('POST /api/admin/media/upload-async', () => {
     
     if (options.file !== null) {
       const file = options.file || new File(['test content'], 'test.jpg', { type: 'image/jpeg' })
+
       formData.append('file', file)
     }
     

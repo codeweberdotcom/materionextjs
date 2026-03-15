@@ -20,7 +20,9 @@ export class AccountRulesService {
     if (!AccountRulesService.instance) {
       AccountRulesService.instance = new AccountRulesService()
     }
-    return AccountRulesService.instance
+
+    
+return AccountRulesService.instance
   }
 
   /**
@@ -76,7 +78,9 @@ export class AccountRulesService {
       const errorEvent = result.events.find(
         e => e.type === 'account_limit_exceeded' || e.type === 'manager_limit_exceeded'
       )
-      return {
+
+      
+return {
         allowed: false,
         reason: errorEvent?.params?.message as string || 'Превышен лимит'
       }
@@ -148,7 +152,9 @@ export class AccountRulesService {
 
     if (hasErrors) {
       const errorEvent = result.events.find(e => e.type === 'manager_limit_exceeded')
-      return {
+
+      
+return {
         allowed: false,
         reason: errorEvent?.params?.message as string || 'Превышен лимит менеджеров'
       }

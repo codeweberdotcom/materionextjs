@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+
 import { useNotifications } from '@/hooks/useNotifications'
 import { useAuth } from '@/contexts/AuthProvider'
 
@@ -12,7 +13,8 @@ const NotificationsInitializer = () => {
   useEffect(() => {
     if (!user?.id) {
       lastUserIdRef.current = undefined
-      return
+      
+return
     }
 
     if (lastUserIdRef.current === user.id) {

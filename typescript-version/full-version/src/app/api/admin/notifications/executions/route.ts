@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
@@ -11,6 +13,7 @@ import logger from '@/lib/logger'
 export async function GET(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -40,9 +43,11 @@ export async function GET(request: NextRequest) {
 
     if (from || to) {
       where.createdAt = {}
+
       if (from) {
         where.createdAt.gte = new Date(from)
       }
+
       if (to) {
         where.createdAt.lte = new Date(to)
       }
@@ -68,8 +73,10 @@ export async function GET(request: NextRequest) {
     const items = executions.map(exec => {
       let channel = null
       let messageId = null
+
       try {
         const result = exec.result ? JSON.parse(exec.result) : null
+
         channel = result?.channel || null
         messageId = result?.messageId || null
       } catch {}
@@ -104,7 +111,8 @@ export async function GET(request: NextRequest) {
     logger.error('[API:NotificationExecutions] Failed to get executions', {
       error: error instanceof Error ? error.message : String(error)
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Failed to get executions' },
       { status: 500 }
     )

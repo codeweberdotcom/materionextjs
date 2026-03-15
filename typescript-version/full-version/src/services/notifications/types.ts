@@ -22,6 +22,7 @@ export interface NotificationChannelResult {
 }
 
 export interface NotificationChannelAdapter {
+
   /**
    * Отправить уведомление через канал
    */

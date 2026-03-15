@@ -1,6 +1,7 @@
-import { ExtendedError } from 'socket.io';
+import type { ExtendedError } from 'socket.io';
+
 import logger from '../../logger';
-import { TypedSocket } from '../types/common';
+import type { TypedSocket } from '../types/common';
 
 type SocketErrorPayload = {
   message: string;
@@ -122,7 +123,8 @@ export const heartbeat = (socket: TypedSocket, next: (err?: ExtendedError) => vo
           timeSinceLastActivity
         });
         socket.disconnect(true);
-        return;
+        
+return;
       }
 
       // Отправляем ping

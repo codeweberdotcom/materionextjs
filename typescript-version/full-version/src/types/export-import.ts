@@ -23,16 +23,22 @@ export type FieldType = 'string' | 'number' | 'date' | 'boolean'
  * Конфигурация поля экспорта
  */
 export interface ExportField {
+
   /** Ключ поля в данных */
   key: string
+
   /** Отображаемое название */
   label: string
+
   /** Тип поля */
   type: FieldType
+
   /** Обязательное поле */
   required?: boolean
+
   /** Функция трансформации значения */
   transform?: (value: any) => any
+
   /** Ширина колонки в Excel */
   width?: number
 }
@@ -41,14 +47,19 @@ export interface ExportField {
  * Конфигурация поля импорта
  */
 export interface ImportField extends ExportField {
+
   /** Валидационная функция */
   validate?: (value: any) => ValidationError | null
+
   /** Значение по умолчанию */
   defaultValue?: any
+
   /** Максимальная длина для строк */
   maxLength?: number
+
   /** Регулярное выражение для валидации */
   pattern?: RegExp
+
   /** Список допустимых значений (для enum) */
   enum?: string[]
 }
@@ -79,16 +90,22 @@ export interface ValidationResult {
  * Настройки экспорта
  */
 export interface ExportOptions {
+
   /** Формат файла */
   format: ExportFormat
+
   /** Фильтры для данных */
   filters?: Record<string, any>
+
   /** Выбранные ID записей */
   selectedIds?: string[]
+
   /** Включать заголовки */
   includeHeaders: boolean
+
   /** Формат дат */
   dateFormat?: string
+
   /** Имя файла (без расширения) */
   filename?: string
 }
@@ -102,8 +119,10 @@ export interface ExportResult {
   filename?: string
   recordCount: number
   error?: string
+
   /** Base64 encoded file content (for API responses) */
   base64?: string
+
   /** MIME type of the file */
   mimeType?: string
 }
@@ -114,20 +133,28 @@ export interface ExportResult {
  * Настройки импорта
  */
 export interface ImportOptions {
+
   /** Режим импорта */
   mode: ImportMode
+
   /** Пропускать валидацию */
   skipValidation?: boolean
+
   /** Размер пакета для обработки */
   batchSize?: number
+
   /** Callback прогресса */
   onProgress?: (progress: number) => void
+
   /** Импортировать только валидные строки (пропускать невалидные) */
   importOnlyValid?: boolean
+
   /** Предварительно отредактированные данные (если были изменения) */
   editedData?: RowWithValidation[]
+
   /** Обновления для конкретных строк (из inline редактирования) */
   rowUpdates?: Record<number, Record<string, unknown>>
+
   /** Выбранные строки для импорта */
   selectedRows?: number[]
 }
@@ -180,8 +207,10 @@ export interface DuplicateInfo {
  * Настройки предпросмотра
  */
 export interface PreviewOptions {
+
   /** Максимум строк для предпросмотра (по умолчанию 50) */
   maxPreviewRows?: number
+
   /** Показывать все ошибки или только первые */
   showAllErrors?: boolean
 }
@@ -190,14 +219,19 @@ export interface PreviewOptions {
  * Данные строки с информацией о валидности
  */
 export interface RowWithValidation {
+
   /** Индекс строки в файле (начиная с 1) */
   rowIndex: number
+
   /** Данные строки */
   data: Record<string, any>
+
   /** Валидна ли строка */
   isValid: boolean
+
   /** Ошибки валидации */
   errors: ValidationError[]
+
   /** Предупреждения */
   warnings: ImportWarning[]
 }
@@ -206,20 +240,28 @@ export interface RowWithValidation {
  * Результат предварительной валидации
  */
 export interface ValidationPreview {
+
   /** Всего строк в файле */
   totalRows: number
+
   /** Количество валидных строк */
   validRows: number
+
   /** Количество строк с ошибками */
   invalidRows: number
+
   /** Количество строк с предупреждениями */
   warningRows: number
+
   /** Все ошибки валидации */
   errors: ValidationError[]
+
   /** Все предупреждения */
   warnings: ImportWarning[]
+
   /** Предпросмотр данных (первые N строк) */
   previewData: RowWithValidation[]
+
   /** Процент валидности */
   validityPercentage: number
 }
@@ -240,6 +282,7 @@ export interface IExportableEntity {
  * Интерфейс адаптера сущности
  */
 export interface IEntityAdapter<T = any> {
+
   /** Тип сущности */
   entityType: string
 
@@ -257,6 +300,7 @@ export interface IEntityAdapter<T = any> {
   validateImportData(data: Record<string, any>[]): ValidationResult[]
   transformForImport(data: Record<string, any>[]): Partial<T>[]
   saveImportedData(data: Partial<T>[]): Promise<ImportResult>
+
   /**
    * Проверка дубликатов с существующими записями в БД
    * @param data Данные для проверки
@@ -297,24 +341,34 @@ export interface IImportService {
  * Props для компонента ExportButton
  */
 export interface ExportButtonProps {
+
   /** Тип сущности */
   entityType: string
+
   /** Доступные форматы */
   availableFormats?: ExportFormat[]
+
   /** Начальный формат */
   defaultFormat?: ExportFormat
+
   /** Фильтры */
   filters?: Record<string, any>
+
   /** Выбранные ID */
   selectedIds?: string[]
+
   /** Отключен */
   disabled?: boolean
+
   /** Размер кнопки */
   size?: 'small' | 'medium' | 'large'
+
   /** Вариант кнопки */
   variant?: 'contained' | 'outlined' | 'text'
+
   /** Callback успешного экспорта */
   onSuccess?: (result: ExportResult) => void
+
   /** Callback ошибки */
   onError?: (error: string) => void
 }
@@ -323,22 +377,31 @@ export interface ExportButtonProps {
  * Props для компонента ImportDialog
  */
 export interface ImportDialogProps {
+
   /** Открыт ли диалог */
   open: boolean
+
   /** Callback закрытия */
   onClose: () => void
+
   /** Тип сущности */
   entityType: string
+
   /** Режим импорта */
   mode?: ImportMode
+
   /** Callback успешного импорта */
   onSuccess?: (result: ImportResult) => void
+
   /** Callback ошибки */
   onError?: (error: string) => void
+
   /** Максимальный размер файла (в байтах) */
   maxFileSize?: number
+
   /** Разрешенные расширения */
   allowedExtensions?: string[]
+
   /** Максимальная ширина диалога */
   dialogMaxWidth?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | false
 }
@@ -383,7 +446,9 @@ export const IMPORT_RATE_LIMIT = {
  */
 export function generateFileName(entityType: string, format: ExportFormat): string {
   const timestamp = new Date().toISOString().split('T')[0]
-  return `${entityType}_${timestamp}.${format}`
+
+  
+return `${entityType}_${timestamp}.${format}`
 }
 
 /**
@@ -391,7 +456,9 @@ export function generateFileName(entityType: string, format: ExportFormat): stri
  */
 export function validateFileFormat(filename: string): boolean {
   const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'))
-  return ALLOWED_FILE_EXTENSIONS.includes(extension)
+
+  
+return ALLOWED_FILE_EXTENSIONS.includes(extension)
 }
 
 /**

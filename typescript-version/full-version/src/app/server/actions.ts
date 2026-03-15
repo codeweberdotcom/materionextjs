@@ -171,7 +171,8 @@ export const getProfileData = async () => {
 
     if (!currentUser) {
       console.error('User not found in database:', user.email)
-      return profileData // Return fake data as fallback
+      
+return profileData // Return fake data as fallback
     }
 
     // Use database role name directly
@@ -227,7 +228,8 @@ export const getProfileData = async () => {
     }
   } catch (error) {
     console.error('Error fetching profile data:', error instanceof Error ? error.message : String(error))
-    return profileData // Return fake data as fallback
+    
+return profileData // Return fake data as fallback
   }
 }
 

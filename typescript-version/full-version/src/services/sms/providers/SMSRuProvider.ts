@@ -2,8 +2,9 @@
  * Провайдер для отправки SMS через SMS.ru
  */
 
-import { SMSService, type SMSResult, type SMSConfig } from '../SMSService'
 import { SMSRu } from 'node-sms-ru'
+
+import { SMSService, type SMSResult, type SMSConfig } from '../SMSService'
 import logger from '@/lib/logger'
 
 export class SMSRuProvider extends SMSService {
@@ -26,7 +27,8 @@ export class SMSRuProvider extends SMSService {
           code,
           message: this.formatVerificationMessage(code)
         })
-        return {
+        
+return {
           success: true,
           message: 'SMS sent (test mode)',
           messageId: `test-${Date.now()}`
@@ -34,6 +36,7 @@ export class SMSRuProvider extends SMSService {
       }
 
       const message = this.formatVerificationMessage(code)
+
       const result = await this.smsRu.sendSms({
         to: phone,
         msg: message,
@@ -43,6 +46,7 @@ export class SMSRuProvider extends SMSService {
       // Проверяем результат отправки
       if ((result as any).status === 'OK' && result.sms) {
         const smsResult = result.sms[phone]
+
         if (smsResult && smsResult.status === 'OK') {
           logger.info('📱 SMS sent successfully:', {
             phone,
@@ -59,6 +63,7 @@ export class SMSRuProvider extends SMSService {
         } else {
           const errorCode = smsResult?.status_code || 'UNKNOWN'
           const errorText = (smsResult as any)?.status_text || 'Unknown error'
+
           logger.error('📱 SMS sending failed:', {
             phone,
             errorCode,
@@ -126,7 +131,9 @@ export class SMSRuProvider extends SMSService {
   validatePhone(phone: string): boolean {
     // Российские номера: +7XXXXXXXXXX (11 цифр после +7)
     const russianPhoneRegex = /^\+7\d{10}$/
-    return russianPhoneRegex.test(phone)
+
+    
+return russianPhoneRegex.test(phone)
   }
 
   /**
@@ -140,7 +147,8 @@ export class SMSRuProvider extends SMSService {
           phone,
           message
         })
-        return {
+        
+return {
           success: true,
           message: 'Test SMS sent (test mode)',
           messageId: `test-${Date.now()}`
@@ -155,6 +163,7 @@ export class SMSRuProvider extends SMSService {
 
       if ((result as any).status === 'OK' && result.sms) {
         const smsResult = result.sms[phone]
+
         if (smsResult && smsResult.status === 'OK') {
           return {
             success: true,

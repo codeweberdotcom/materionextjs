@@ -101,6 +101,7 @@ const CHANNELS = [
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return '–'
+
   try {
     return new Intl.DateTimeFormat('ru-RU', {
       dateStyle: 'medium',
@@ -153,14 +154,18 @@ const NotificationScenarios = () => {
   const fetchScenarios = useCallback(async () => {
     if (!canRead) {
       setLoading(false)
-      return
+      
+return
     }
 
     setLoading(true)
+
     try {
       const response = await fetch('/api/admin/notification-scenarios')
+
       if (!response.ok) throw new Error('Failed to load scenarios')
       const data = await response.json()
+
       setScenarios(data.scenarios || [])
     } catch (error) {
       toast.error('Ошибка загрузки сценариев')
@@ -173,10 +178,13 @@ const NotificationScenarios = () => {
   // Загрузка email шаблонов
   const fetchEmailTemplates = useCallback(async () => {
     setTemplatesLoading(true)
+
     try {
       const response = await fetch('/api/settings/email-templates')
+
       if (response.ok) {
         const data = await response.json()
+
         setEmailTemplates(data || [])
       }
     } catch (error) {
@@ -223,6 +231,7 @@ const NotificationScenarios = () => {
     setEditingScenario(scenario)
     fetchEmailTemplates()
     const action = scenario.actions[0] || {}
+
     setFormData({
       name: scenario.name,
       description: scenario.description || '',
@@ -245,7 +254,8 @@ const NotificationScenarios = () => {
   const handleSave = async () => {
     if (!formData.name.trim()) {
       toast.error('Введите название сценария')
-      return
+      
+return
     }
 
     setSaving(true)
@@ -284,6 +294,7 @@ const NotificationScenarios = () => {
 
       if (!response.ok) {
         const error = await response.json()
+
         throw new Error(error.error || 'Failed to save')
       }
 
@@ -340,12 +351,16 @@ const NotificationScenarios = () => {
 
   const getChannelIcon = (channel: string) => {
     const ch = CHANNELS.find(c => c.value === channel)
-    return ch ? <i className={ch.icon} /> : null
+
+    
+return ch ? <i className={ch.icon} /> : null
   }
 
   const getChannelLabel = (channel: string) => {
     const ch = CHANNELS.find(c => c.value === channel)
-    return ch?.label || channel
+
+    
+return ch?.label || channel
   }
 
   // Рендер
@@ -668,9 +683,11 @@ const NotificationScenarios = () => {
                   onChange={e => {
                     const templateId = e.target.value
                     const template = emailTemplates.find(t => t.id === templateId)
+
                     setFormData(prev => ({
                       ...prev,
                       actionTemplateId: templateId,
+
                       // Автозаполнение темы из шаблона
                       actionSubject: template?.subject || prev.actionSubject,
                     }))

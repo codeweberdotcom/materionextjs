@@ -55,38 +55,53 @@ export type ServiceName = 'redis' | 'postgresql' | 'prometheus' | 'loki' | 'graf
 
 /** Конфигурация сервиса */
 export interface ServiceConfig {
+
   /** Полный URL для подключения */
   url: string
+
   /** Хост сервера */
   host: string
+
   /** Порт */
   port: number
+
   /** Протокол (redis://, https://, etc.) */
   protocol?: string
+
   /** Имя пользователя */
   username?: string
+
   /** Пароль (расшифрованный) */
   password?: string
+
   /** API токен (расшифрованный) */
   token?: string
+
   /** Использовать TLS */
   tls: boolean
+
   /** Источник конфигурации */
   source: ConfigSource
+
   /** Дополнительные метаданные */
   metadata?: Record<string, unknown>
 }
 
 /** Результат тестирования подключения */
 export interface ConnectionTestResult {
+
   /** Успешность подключения */
   success: boolean
+
   /** Задержка в миллисекундах */
   latency?: number
+
   /** Версия сервиса */
   version?: string
+
   /** Сообщение об ошибке */
   error?: string
+
   /** Дополнительные детали */
   details?: Record<string, unknown>
 }

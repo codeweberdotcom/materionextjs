@@ -5,7 +5,8 @@
  * PUT /api/account/[id]/slug - Изменить slug
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
 import { requireAuth } from '@/utils/auth/auth'
@@ -77,7 +78,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     })
   } catch (error) {
     console.error('Error getting account slug info:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
@@ -177,7 +179,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     })
   } catch (error) {
     console.error('Error changing account slug:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )

@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { lucia } from '@/libs/lucia'
 import { optionalRequireAuth } from '@/utils/auth/auth'
 import logger from '@/lib/logger'
@@ -21,6 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const sessionCookie = lucia.createBlankSessionCookie()
+
     logger.info('рџљЄ [LOGOUT] Creating blank session cookie')
 
     const response = NextResponse.json({ success: true })
@@ -33,10 +36,12 @@ export async function POST(request: NextRequest) {
 
     trackLogout()
     logger.info('вњ… [LOGOUT] Logout completed successfully')
-    return response
+    
+return response
   } catch (error) {
     logger.error('Logout error', { error: error instanceof Error ? error.message : error, route: 'logout' })
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 

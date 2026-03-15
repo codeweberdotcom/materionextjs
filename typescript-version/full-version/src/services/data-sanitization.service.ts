@@ -3,13 +3,17 @@
  * Поддерживает GDPR compliance и тестовую инфраструктуру
  */
 
+import fs from 'fs/promises'
+
+import path from 'path'
+
+import crypto from 'crypto'
+
 import { PrismaClient } from '@prisma/client'
+
 import { createRateLimitStore } from '@/lib/rate-limit/stores'
 import type { RateLimitStore } from '@/lib/rate-limit/stores'
 import logger from '@/lib/logger'
-import fs from 'fs/promises'
-import path from 'path'
-import crypto from 'crypto'
 
 export enum SanitizationMode {
   DELETE = 'delete',           // Полное удаление
@@ -68,6 +72,7 @@ export interface SanitizationResult {
   target: SanitizationTarget
   options: SanitizationOptions
   cleaned: {
+
     // Database (existing)
     users: number
     messages: number
@@ -128,8 +133,10 @@ export class DataSanitizationService {
     if (this.redisInitialized || !this.options.enableRedisCleanup) return
     
     this.redisInitialized = true
+
     try {
       const { createRateLimitStore } = await import('@/lib/rate-limit/stores')
+
       this.redisStore = await createRateLimitStore(this.prisma)
       logger.info('[DataSanitizationService] Redis cleanup enabled')
     } catch (error) {
@@ -145,6 +152,7 @@ export class DataSanitizationService {
     await this.initRedisStore()
     
     const startTime = Date.now()
+
     const result: SanitizationResult = {
       id: `sanitize-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
@@ -189,6 +197,7 @@ export class DataSanitizationService {
     this.validateSanitizationRequest({ id: result.id, target, options }, throwOnValidationError)
 
     const preserveAnalytics = this.shouldPreserveAnalytics(target, options)
+
     result.options = { ...options, preserveAnalytics }
 
     try {
@@ -229,9 +238,12 @@ export class DataSanitizationService {
       ...target,
       dataTypes: target.dataTypes || Object.values(DataType)
     }
+
     const result = await this.sanitize(previewTarget, { ...options, mode: SanitizationMode.SELECTIVE })
+
     result.dryRun = true
-    return result
+    
+return result
   }
 
   /**
@@ -260,10 +272,13 @@ export class DataSanitizationService {
 
   async findDataByEmail(email: string): Promise<DataFootprint> {
     const user = await this.prisma.user.findUnique({ where: { email } })
+
     if (user) {
       return this.findDataByUserId(user.id)
     }
-    return {
+
+    
+return {
       user: null,
       messages: [],
       rooms: [],
@@ -302,6 +317,7 @@ export class DataSanitizationService {
       result.cleaned.messages = await this.cleanupMessagesInTransaction(target, tx)
       result.cleaned.rooms = await this.cleanupChatRoomsInTransaction(target, tx)
       result.cleaned.rateLimitStates = await this.cleanupRateLimitStatesInTransaction(target, tx)
+
       if (!preserveAnalytics) {
         result.cleaned.rateLimitEvents = await this.cleanupRateLimitEventsInTransaction(target, tx)
       } else {
@@ -311,6 +327,7 @@ export class DataSanitizationService {
 
     // Расширенная очистка других компонентов
     await this.cleanupRedisData(target, result)
+
     if (!preserveAnalytics) {
       await this.anonymizeLogs(target, result)
       await this.cleanupFileSystem(target, result)
@@ -327,6 +344,7 @@ export class DataSanitizationService {
     // Анонимизация вместо удаления (GDPR compliance) в транзакции
     await this.prisma.$transaction(async (tx) => {
       const user = await this.findUserInTransaction(target, tx)
+
       if (user) {
         // Анонимизация пользователя
         await tx.user.update({
@@ -334,6 +352,7 @@ export class DataSanitizationService {
           data: {
             email: `anonymous-${user.id}@deleted.example.com`,
             name: 'Anonymous User',
+
             // Очистка других PII полей по необходимости
             // Сохраняем createdAt, updatedAt для аналитики
           }
@@ -345,9 +364,11 @@ export class DataSanitizationService {
           where: { senderId: user.id },
           data: {
             content: '[Message deleted for privacy]',
+
             // Сохраняем timestamp, roomId для аналитики
           }
         })
+
         result.cleaned.anonymizedMessages = messagesResult.count
 
         // Удаляем rate limit данные (они содержат персональные данные)
@@ -387,6 +408,7 @@ export class DataSanitizationService {
             where: { senderId: user.id },
             data: { content: '[Message deleted for privacy]' }
           })
+
           result.cleaned.anonymizedMessages += messagesResult.count
 
           // Удалить rate limit данные
@@ -408,6 +430,7 @@ export class DataSanitizationService {
 
     // Расширенная очистка - Redis блокировки удаляем, логи анонимизируем
     await this.cleanupRedisBlocks(target, result)
+
     if (!preserveAnalytics) {
       await this.anonymizeLogs(target, result)
     } else {
@@ -453,10 +476,12 @@ export class DataSanitizationService {
       cleanupPromises.push(
         (async () => {
           const statesCount = await this.cleanupRateLimitStates(target)
+
           result.cleaned.rateLimitStates = statesCount
 
           if (!preserveAnalytics) {
             const eventsCount = await this.cleanupRateLimitEvents(target)
+
             result.cleaned.rateLimitEvents = eventsCount
           } else {
             logger.info('[DataSanitizationService] preserveAnalytics enabled - skipping rate limit event cleanup (selective mode)')
@@ -473,20 +498,26 @@ export class DataSanitizationService {
     if (target.userId) {
       return this.prisma.user.findUnique({ where: { id: target.userId } })
     }
+
     if (target.email) {
       return this.prisma.user.findUnique({ where: { email: target.email } })
     }
-    return null
+
+    
+return null
   }
 
   private async findUserInTransaction(target: SanitizationTarget, tx: any): Promise<any | null> {
     if (target.userId) {
       return tx.user.findUnique({ where: { id: target.userId } })
     }
+
     if (target.email) {
       return tx.user.findUnique({ where: { email: target.email } })
     }
-    return null
+
+    
+return null
   }
 
   private validateSanitizationRequest(request: SanitizationRequest, throwOnValidationError = false): void {
@@ -540,6 +571,7 @@ export class DataSanitizationService {
 
   private validateTargetPresence(target: SanitizationTarget): void {
     const hasTarget = target.userId || target.email || target.ip || target.emailDomain
+
     if (!hasTarget) {
       throw new Error('Необходимо указать хотя бы одну цель очистки (userId, email, ip или emailDomain)')
     }
@@ -556,6 +588,7 @@ export class DataSanitizationService {
 
     // Проверяем, что режим поддерживается
     const validModes = Object.values(SanitizationMode)
+
     if (!validModes.includes(mode as SanitizationMode)) {
       throw new Error(`Неподдерживаемый режим: ${mode}`)
     }
@@ -565,18 +598,23 @@ export class DataSanitizationService {
         if (!target.userId && !target.email) {
           throw new Error('Режим анонимизации требует указания userId или email')
         }
+
         break
 
       case SanitizationMode.SELECTIVE:
         if (!target.dataTypes || target.dataTypes.length === 0) {
           throw new Error('Selective режим требует указания типов данных для очистки')
         }
+
+
         // Проверка что указанные типы данных существуют
         const validTypes = Object.values(DataType)
         const invalidTypes = target.dataTypes.filter(type => !validTypes.includes(type))
+
         if (invalidTypes.length > 0) {
           throw new Error(`Неверные типы данных: ${invalidTypes.join(', ')}`)
         }
+
         break
 
       case SanitizationMode.DELETE:
@@ -644,7 +682,9 @@ export class DataSanitizationService {
     if (typeof options.preserveAnalytics === 'boolean') {
       return options.preserveAnalytics
     }
-    return this.isTestTarget(target)
+
+    
+return this.isTestTarget(target)
   }
 
   private isTestEmail(email: string): boolean {
@@ -677,7 +717,9 @@ export class DataSanitizationService {
       'playwright.test',
       'localhost'
     ]
-    return testDomains.includes(domain) || domain.includes('test')
+
+    
+return testDomains.includes(domain) || domain.includes('test')
   }
 
   // Методы очистки отдельных типов данных (без транзакций - для preview)
@@ -688,16 +730,19 @@ export class DataSanitizationService {
       const result = await this.prisma.user.deleteMany({
         where: { id: target.userId }
       })
+
       deletedCount = result.count
     } else if (target.email) {
       const result = await this.prisma.user.deleteMany({
         where: { email: target.email }
       })
+
       deletedCount = result.count
     } else if (target.emailDomain) {
       const result = await this.prisma.user.deleteMany({
         where: { email: { endsWith: `@${target.emailDomain}` } }
       })
+
       deletedCount = result.count
     }
 
@@ -712,16 +757,19 @@ export class DataSanitizationService {
       const result = await tx.user.deleteMany({
         where: { id: target.userId }
       })
+
       deletedCount = result.count
     } else if (target.email) {
       const result = await tx.user.deleteMany({
         where: { email: target.email }
       })
+
       deletedCount = result.count
     } else if (target.emailDomain) {
       const result = await tx.user.deleteMany({
         where: { email: { endsWith: `@${target.emailDomain}` } }
       })
+
       deletedCount = result.count
     }
 
@@ -735,6 +783,7 @@ export class DataSanitizationService {
       const result = await tx.message.deleteMany({
         where: { senderId: target.userId }
       })
+
       deletedCount = result.count
     } else if (target.email) {
       // Найти пользователя по email и удалить его сообщения
@@ -742,10 +791,12 @@ export class DataSanitizationService {
         where: { email: target.email },
         select: { id: true }
       })
+
       if (user) {
         const result = await tx.message.deleteMany({
           where: { senderId: user.id }
         })
+
         deletedCount = result.count
       }
     }
@@ -765,6 +816,7 @@ export class DataSanitizationService {
           ]
         }
       })
+
       deletedCount = result.count
     } else if (target.email) {
       // Найти пользователя по email и удалить его комнаты
@@ -772,6 +824,7 @@ export class DataSanitizationService {
         where: { email: target.email },
         select: { id: true }
       })
+
       if (user) {
         const result = await tx.chatRoom.deleteMany({
           where: {
@@ -781,6 +834,7 @@ export class DataSanitizationService {
             ]
           }
         })
+
         deletedCount = result.count
       }
     }
@@ -795,16 +849,19 @@ export class DataSanitizationService {
       const result = await tx.rateLimitState.deleteMany({
         where: { key: { contains: target.userId } }
       })
+
       deletedCount = result.count
     } else if (target.email) {
       const result = await tx.rateLimitState.deleteMany({
         where: { key: target.email }
       })
+
       deletedCount = result.count
     } else if (target.ip) {
       const result = await tx.rateLimitState.deleteMany({
         where: { key: target.ip }
       })
+
       deletedCount = result.count
     }
 
@@ -818,16 +875,19 @@ export class DataSanitizationService {
       const result = await tx.rateLimitEvent.deleteMany({
         where: { userId: target.userId }
       })
+
       deletedCount = result.count
     } else if (target.email) {
       const result = await tx.rateLimitEvent.deleteMany({
         where: { email: target.email }
       })
+
       deletedCount = result.count
     } else if (target.ip) {
       const result = await tx.rateLimitEvent.deleteMany({
         where: { ipAddress: target.ip }
       })
+
       deletedCount = result.count
     }
 
@@ -841,6 +901,7 @@ export class DataSanitizationService {
       const result = await this.prisma.message.deleteMany({
         where: { senderId: target.userId }
       })
+
       deletedCount = result.count
     } else if (target.email) {
       // Найти пользователя по email и удалить его сообщения
@@ -848,10 +909,12 @@ export class DataSanitizationService {
         where: { email: target.email },
         select: { id: true }
       })
+
       if (user) {
         const result = await this.prisma.message.deleteMany({
           where: { senderId: user.id }
         })
+
         deletedCount = result.count
       }
     }
@@ -871,6 +934,7 @@ export class DataSanitizationService {
           ]
         }
       })
+
       deletedCount = result.count
     } else if (target.email) {
       // Найти пользователя по email и удалить его комнаты
@@ -878,6 +942,7 @@ export class DataSanitizationService {
         where: { email: target.email },
         select: { id: true }
       })
+
       if (user) {
         const result = await this.prisma.chatRoom.deleteMany({
           where: {
@@ -887,6 +952,7 @@ export class DataSanitizationService {
             ]
           }
         })
+
         deletedCount = result.count
       }
     }
@@ -901,16 +967,19 @@ export class DataSanitizationService {
       const result = await this.prisma.rateLimitState.deleteMany({
         where: { key: { contains: target.userId } }
       })
+
       deletedCount = result.count
     } else if (target.email) {
       const result = await this.prisma.rateLimitState.deleteMany({
         where: { key: target.email }
       })
+
       deletedCount = result.count
     } else if (target.ip) {
       const result = await this.prisma.rateLimitState.deleteMany({
         where: { key: target.ip }
       })
+
       deletedCount = result.count
     }
 
@@ -924,16 +993,19 @@ export class DataSanitizationService {
       const result = await this.prisma.rateLimitEvent.deleteMany({
         where: { userId: target.userId }
       })
+
       deletedCount = result.count
     } else if (target.email) {
       const result = await this.prisma.rateLimitEvent.deleteMany({
         where: { email: target.email }
       })
+
       deletedCount = result.count
     } else if (target.ip) {
       const result = await this.prisma.rateLimitEvent.deleteMany({
         where: { ipAddress: target.ip }
       })
+
       deletedCount = result.count
     }
 
@@ -969,6 +1041,7 @@ export class DataSanitizationService {
       })
     } catch (error) {
       console.error('Failed to log sanitization operation:', error)
+
       // Не выбрасываем ошибку, чтобы не прерывать основную операцию
     }
   }
@@ -989,6 +1062,7 @@ export class DataSanitizationService {
         // Если Redis недоступен, будет выброшено исключение
         // Используем безопасный ключ для проверки
         const testKey = `__health_check_${Date.now()}__`
+
         await this.redisStore.resetCache(testKey)
         status.redis = 'available'
       } catch {
@@ -1012,7 +1086,8 @@ export class DataSanitizationService {
   private async cleanupRedisData(target: SanitizationTarget, result: SanitizationResult): Promise<void> {
     if (!this.redisStore || result.componentsStatus.redis !== 'available') {
       logger.warn('[DataSanitizationService] Redis cleanup skipped - Redis not available')
-      return
+      
+return
     }
 
     try {
@@ -1064,6 +1139,7 @@ export class DataSanitizationService {
         const invalidateResult = await this.prisma.session.deleteMany({
           where: { userId: target.userId }
         })
+
         sessionsInvalidated = invalidateResult.count
       } else if (target.email) {
         // Находим пользователя по email и инвалидируем его сессии
@@ -1076,6 +1152,7 @@ export class DataSanitizationService {
           const invalidateResult = await this.prisma.session.deleteMany({
             where: { userId: user.id }
           })
+
           sessionsInvalidated = invalidateResult.count
         }
       }
@@ -1088,6 +1165,7 @@ export class DataSanitizationService {
       if (!result.cleaned.sessionsInvalidated) {
         result.cleaned.sessionsInvalidated = 0
       }
+
       result.cleaned.sessionsInvalidated += sessionsInvalidated
 
     } catch (error) {
@@ -1109,6 +1187,7 @@ export class DataSanitizationService {
 
       for (const logFile of logFiles) {
         const anonymizedCount = await this.anonymizeLogFile(logFile, target)
+
         totalAnonymized += anonymizedCount
 
         if (anonymizedCount > 0) {
@@ -1135,13 +1214,15 @@ export class DataSanitizationService {
 
     try {
       let avatarsDeleted = 0
-      let filesDeleted = 0
+      const filesDeleted = 0
 
       // Очистка аватаров пользователей
       const usersWithAvatars = await this.findUsersWithAvatars(target)
+
       for (const user of usersWithAvatars) {
         if (user.image) {
           const deleted = await this.deleteAvatarFile(user.image)
+
           if (deleted) {
             avatarsDeleted++
           }
@@ -1169,12 +1250,15 @@ export class DataSanitizationService {
   private async findLogFiles(logsDir: string): Promise<string[]> {
     try {
       const files = await fs.readdir(logsDir)
-      return files
+
+      
+return files
         .filter(file => file.endsWith('.log'))
         .map(file => path.join(logsDir, file))
     } catch (error) {
       logger.warn('[DataSanitizationService] Could not read logs directory', { error })
-      return []
+      
+return []
     }
   }
 
@@ -1215,7 +1299,8 @@ export class DataSanitizationService {
       return anonymizedCount
     } catch (error) {
       logger.error(`[DataSanitizationService] Failed to anonymize log file ${filePath}`, { error })
-      return 0
+      
+return 0
     }
   }
 
@@ -1250,45 +1335,58 @@ export class DataSanitizationService {
 
   private shouldAnonymizeUserId(userId: string, target: SanitizationTarget): boolean {
     if (target.userId && userId === target.userId) return true
+
     if (target.email) {
       // Если указан email, проверяем соответствует ли userId тестовому формату
       return this.isTestUserId(userId)
     }
-    return false
+
+    
+return false
   }
 
   private shouldAnonymizeEmail(email: string, target: SanitizationTarget): boolean {
     if (target.email && email === target.email) return true
+
     if (target.userId) {
       // Если указан userId, анонимизируем тестовые emails
       return this.isTestEmail(email)
     }
-    return false
+
+    
+return false
   }
 
   private shouldAnonymizeIp(ip: string, target: SanitizationTarget): boolean {
     if (target.ip && ip === target.ip) return true
+
     if (target.userId || target.email) {
       // Если указан пользователь, анонимизируем тестовые IP
       return this.isTestIp(ip)
     }
-    return false
+
+    
+return false
   }
 
   private generateAnonymousId(type: string, originalValue: string): string {
     const hash = crypto.createHash('sha256').update(originalValue).digest('hex').substring(0, 8)
-    return `anonymous-${type}-${hash}`
+
+    
+return `anonymous-${type}-${hash}`
   }
 
   private generateAnonymousEmail(originalEmail: string): string {
     const hash = crypto.createHash('sha256').update(originalEmail).digest('hex').substring(0, 8)
-    return `anonymous-${hash}@deleted.example.com`
+
+    
+return `anonymous-${hash}@deleted.example.com`
   }
 
   // Методы для работы с файловой системой
 
   private async findUsersWithAvatars(target: SanitizationTarget): Promise<any[]> {
-    let whereClause: any = {}
+    const whereClause: any = {}
 
     if (target.userId) {
       whereClause.id = target.userId
@@ -1323,6 +1421,7 @@ export class DataSanitizationService {
 
       // Преобразуем относительный путь в абсолютный
       let fullPath: string
+
       if (avatarPath.startsWith('/')) {
         // Путь относительно public директории
         fullPath = path.join(process.cwd(), 'public', avatarPath.substring(1))
@@ -1341,10 +1440,12 @@ export class DataSanitizationService {
 
       // Удаляем файл
       await fs.unlink(fullPath)
-      return true
+      
+return true
     } catch (error) {
       logger.warn(`[DataSanitizationService] Failed to delete avatar file ${avatarPath}`, { error })
-      return false
+      
+return false
     }
   }
 
@@ -1364,6 +1465,7 @@ export class DataSanitizationService {
     duration: number
   }> {
     const startTime = Date.now()
+
     const result = {
       synced: {
         databaseToRedis: 0,
@@ -1404,6 +1506,7 @@ export class DataSanitizationService {
 
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown sync error'
+
       result.errors.push(errorMsg)
       logger.error('[DataSanitizationService] Cross-system synchronization failed', { error, target })
     } finally {
@@ -1483,6 +1586,7 @@ export class DataSanitizationService {
             userId: user.id,
             email: user.email
           })
+
           // В реальной реализации здесь можно создать аудит-запись
           result.synced.databaseToLogs++
         }
@@ -1575,7 +1679,7 @@ export class DataSanitizationService {
   // Вспомогательные методы для синхронизации
 
   private async findUsersForSync(target: SanitizationTarget): Promise<any[]> {
-    let whereClause: any = {}
+    const whereClause: any = {}
 
     if (target.userId) {
       whereClause.id = target.userId
@@ -1612,6 +1716,7 @@ export class DataSanitizationService {
           if (line.trim()) {
             try {
               const logEntry = JSON.parse(line)
+
               if (logEntry.userId === userId) {
                 entries.push(logEntry)
               }
@@ -1642,6 +1747,7 @@ export class DataSanitizationService {
           if (line.trim()) {
             try {
               const logEntry = JSON.parse(line)
+
               if (logEntry.userId && this.shouldAnonymizeUserId(logEntry.userId, target)) {
                 userIds.add(logEntry.userId)
               }
@@ -1665,6 +1771,7 @@ export class DataSanitizationService {
       }
 
       let fullPath: string
+
       if (avatarPath.startsWith('/')) {
         fullPath = path.join(process.cwd(), 'public', avatarPath.substring(1))
       } else {
@@ -1672,7 +1779,8 @@ export class DataSanitizationService {
       }
 
       await fs.access(fullPath)
-      return true
+      
+return true
     } catch {
       return false
     }
@@ -1682,7 +1790,9 @@ export class DataSanitizationService {
     try {
       const avatarsDir = path.join(process.cwd(), 'public', 'uploads', 'avatars')
       const files = await fs.readdir(avatarsDir)
-      return files.map(file => path.join(avatarsDir, file))
+
+      
+return files.map(file => path.join(avatarsDir, file))
     } catch {
       return []
     }
@@ -1691,11 +1801,14 @@ export class DataSanitizationService {
   private extractUserIdFromAvatarPath(filePath: string): string | null {
     const fileName = path.basename(filePath)
     const userId = fileName.split('.')[0] // Предполагаем формат userId.ext
-    return userId && userId.length > 0 ? userId : null
+
+    
+return userId && userId.length > 0 ? userId : null
   }
 
   async disconnect(): Promise<void> {
     await this.prisma.$disconnect()
+
     if (this.redisStore) {
       await this.redisStore.shutdown()
     }

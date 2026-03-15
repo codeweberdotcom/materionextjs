@@ -55,6 +55,7 @@ const UsernameCard = () => {
   const [newUsername, setNewUsername] = useState('')
   const [isEditing, setIsEditing] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
+
   const [availability, setAvailability] = useState<{
     available?: boolean
     valid?: boolean
@@ -69,6 +70,7 @@ const UsernameCard = () => {
         
         if (response.ok) {
           const data = await response.json()
+
           setUsernameInfo(data)
           setNewUsername(data.username || '')
         } else if (response.status === 401) {
@@ -89,16 +91,19 @@ const UsernameCard = () => {
   useEffect(() => {
     if (!isEditing || !newUsername || newUsername === usernameInfo?.username) {
       setAvailability(null)
-      return
+      
+return
     }
 
     const timeoutId = setTimeout(async () => {
       setChecking(true)
+
       try {
         const response = await fetch(`/api/user/username/check?username=${encodeURIComponent(newUsername)}`)
         
         if (response.ok) {
           const data = await response.json()
+
           setAvailability(data)
         }
       } catch (error) {
@@ -115,12 +120,14 @@ const UsernameCard = () => {
   const handleSave = async () => {
     if (!newUsername || newUsername === usernameInfo?.username) {
       setIsEditing(false)
-      return
+      
+return
     }
 
     if (availability && !availability.available) {
       toast.error(availability.error || 'Username not available')
-      return
+      
+return
     }
 
     setSaving(true)
@@ -139,6 +146,7 @@ const UsernameCard = () => {
         
         // Refresh info
         const infoResponse = await fetch('/api/user/username')
+
         if (infoResponse.ok) {
           setUsernameInfo(await infoResponse.json())
         }
@@ -318,6 +326,7 @@ const UsernameCard = () => {
             )}
           </Box>
         ) : (
+
           /* Edit Mode */
           <Box>
             <TextField

@@ -4,6 +4,7 @@
  */
 
 export interface SMSProvider {
+
   /**
    * Отправляет SMS с кодом верификации
    */

@@ -17,10 +17,15 @@ import CircularProgress from '@mui/material/CircularProgress'
 // Third-party Imports
 import Picker from '@emoji-mart/react'
 import data from '@emoji-mart/data'
-import { useAuth } from '@/contexts/AuthProvider'
+
 import { toast } from 'react-toastify'
 
+import { useParams } from 'next/navigation'
+
+import { useAuth } from '@/contexts/AuthProvider'
+
 import type { ChatRoom } from '@/lib/sockets/types/chat'
+import { formatTranslation } from '@/utils/translations/pluralization'
 
 // Type Imports
 import type { ContactType } from '@/types/apps/chatTypes'
@@ -112,12 +117,14 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
   // Hooks
   const { user, session } = useAuth()
   const { navigation } = useTranslation()
+  const { lang } = useParams() as { lang: string }
 
   // Handle rate limit countdown
   useEffect(() => {
     if (rateLimitData) {
       setIsRateLimited(true)
       const initialCountdown = Math.ceil((rateLimitData.blockedUntil - Date.now()) / 1000)
+
       setCountdown(Math.max(0, initialCountdown))
 
       const interval = setInterval(() => {
@@ -125,9 +132,12 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
           if (prev <= 1) {
             setIsRateLimited(false)
             clearInterval(interval)
-            return 0
+            
+return 0
           }
-          return prev - 1
+
+          
+return prev - 1
         })
       }, 1000)
 
@@ -137,6 +147,10 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
       setCountdown(0)
     }
   }, [rateLimitData])
+
+  const resolveCountdownText = (value: string | Record<string, string>, seconds: number): string => {
+    return formatTranslation(value as any, { countdown: seconds }, lang)
+  }
 
   const open = Boolean(anchorEl)
 
@@ -160,6 +174,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
     }
 
     const trimmed = value.trim()
+
     if (!trimmed) return
 
     console.log('🟠 [CHAT UI] Кнопка отправки нажата', {
@@ -192,9 +207,11 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
         const seconds = blockedUntil
           ? Math.max(1, Math.ceil((blockedUntil - Date.now()) / 1000))
           : 1
+
         const message = navigation.rateLimitMessage
-          ? navigation.rateLimitMessage.replace('${countdown}', seconds.toString())
+          ? resolveCountdownText(navigation.rateLimitMessage, seconds)
           : 'You are sending messages too frequently.'
+
         toast.error(message)
       } else if (error?.message !== 'Rate limit exceeded') {
         toast.error(navigation.failedToSendMessage ?? 'Failed to send message')
@@ -211,6 +228,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
       // Room is already loaded, no need to block
       return
     }
+
     // Block input when user is selected but room is not yet loaded
   }
 
@@ -332,7 +350,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
           >
             <div className='flex items-center gap-2'>
               {isRateLimited ? (
-                navigation.waitMessage.replace('${countdown}', countdown.toString())
+                resolveCountdownText(navigation.waitMessage, countdown)
               ) : isRoomLoading || !room ? (
                 navigation.loadingButton
               ) : (
@@ -361,7 +379,7 @@ const SendMsgForm = ({ dispatch, activeUser, isBelowSmScreen, messageInputRef, r
         fullWidth
         multiline
         maxRows={4}
-        placeholder={isRateLimited ? navigation.rateLimitMessage.replace('${countdown}', countdown.toString()) : isRoomLoading ? navigation.loading : navigation.typeMessage}
+        placeholder={isRateLimited ? resolveCountdownText(navigation.rateLimitMessage, countdown) : isRoomLoading ? navigation.loading : navigation.typeMessage}
         value={isRateLimited ? '' : msg}
         disabled={isRateLimited || isRoomLoading || !room}
         className='p-5'

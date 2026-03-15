@@ -144,6 +144,7 @@ const Login = ({ mode }: { mode: Mode }) => {
         const minutes = Math.floor(error.retryAfter / 60)
         const seconds = error.retryAfter % 60
         const timeString = `${minutes}:${seconds.toString().padStart(2, '0')}`
+
         setErrorState({
           message: [`Слишком много попыток. Попробуйте через: ${timeString}`]
         })
@@ -155,15 +156,19 @@ const Login = ({ mode }: { mode: Mode }) => {
               setIsBlocked(false)
               setErrorState(null)
               clearInterval(timer)
-              return 0
+              
+return 0
             }
+
             const mins = Math.floor(prev / 60)
             const secs = prev % 60
             const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`
+
             setErrorState({
               message: [`Слишком много попыток. Попробуйте через: ${timeStr}`]
             })
-            return prev - 1
+            
+return prev - 1
           })
         }, 1000)
       } else {
@@ -174,6 +179,7 @@ const Login = ({ mode }: { mode: Mode }) => {
 
         // Извлекаем сообщение об ошибке, обрабатывая разные форматы
         let errorMsg = 'Login failed'
+
         if (error?.message) {
           errorMsg = typeof error.message === 'string' ? error.message : String(error.message)
         } else if (error && typeof error === 'object') {
@@ -182,8 +188,10 @@ const Login = ({ mode }: { mode: Mode }) => {
         } else if (error) {
           errorMsg = String(error)
         }
+
         setErrorState({ message: [errorMsg] })
       }
+
       setLoading(false)
     }
   }

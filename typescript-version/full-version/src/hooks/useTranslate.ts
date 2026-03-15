@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback } from 'react'
+
 import { useParams } from 'next/navigation'
 
 import { useTranslation } from '@/contexts/TranslationContext'

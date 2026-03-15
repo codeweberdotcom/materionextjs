@@ -254,6 +254,7 @@ return
         }
       } catch (error) {
         console.error('Error creating user:', error)
+
         // Removed error toast notification for user creation
       }
     }

@@ -30,17 +30,21 @@ let RedisConstructorRef: RedisConstructor | null = null
 
 const ensureRedisDependency = (): RedisConstructor => {
   if (RedisConstructorRef) return RedisConstructorRef
+
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const RedisLib = require('ioredis') as RedisConstructor
+
     RedisConstructorRef = RedisLib
-    return RedisLib
+    
+return RedisLib
   } catch (error) {
     const message =
       error instanceof Error && error.message.includes("Cannot find module 'ioredis'")
         ? 'Optional dependency `ioredis` is missing. Install it or remove REDIS_URL to disable Redis mode.'
         : 'Failed to load `ioredis` package.'
+
     throw new Error(message, { cause: error })
   }
 }
@@ -52,6 +56,7 @@ export class RedisRateLimitStore implements RateLimitStore {
 
   constructor(url: string, tls?: boolean) {
     const RedisLib = ensureRedisDependency()
+
     this.redis = new RedisLib(url, {
       lazyConnect: true,
       ...(tls ? { tls: { rejectUnauthorized: false } } : {})
@@ -64,7 +69,8 @@ export class RedisRateLimitStore implements RateLimitStore {
     // Если уже идет подключение, ждем его завершения
     if (this.connecting) {
       await this.connecting
-      return
+      
+return
     }
 
     // Создаем промис подключения
@@ -110,6 +116,7 @@ export class RedisRateLimitStore implements RateLimitStore {
 
     const blockValue = await this.redis.get(blockKey)
     const blockUntilTs = blockValue ? Number(blockValue) : null
+
     if (blockUntilTs && blockUntilTs > now.getTime()) {
       return {
         allowed: false,
@@ -122,11 +129,14 @@ export class RedisRateLimitStore implements RateLimitStore {
     if (!increment) {
       const currentCount = Number((await this.redis.get(countKey)) ?? 0)
       let ttl = await this.redis.pttl(countKey)
+
       if (ttl < 0) ttl = config.windowMs
       const windowEnd = new Date(now.getTime() + ttl)
       const remainingBefore = Math.max(0, config.maxRequests - currentCount)
       const shouldWarn = warnThreshold > 0 && remainingBefore > 0 && remainingBefore <= warnThreshold
-      return {
+
+      
+return {
         allowed: true,
         remaining: remainingBefore,
         resetTime: windowEnd.getTime(),
@@ -135,22 +145,26 @@ export class RedisRateLimitStore implements RateLimitStore {
     }
 
     const pipeline = this.redis.multi()
+
     pipeline.incr(countKey)
     pipeline.pttl(countKey)
     const results = await pipeline.exec()
 
     const newCount = Number(results?.[0]?.[1] ?? 1)
     let ttl = Number(results?.[1]?.[1] ?? -1)
+
     if (ttl < 0) {
       await this.redis.pexpire(countKey, config.windowMs)
       ttl = config.windowMs
     }
+
     const windowEnd = new Date(now.getTime() + ttl)
     const windowStart = new Date(windowEnd.getTime() - config.windowMs)
 
     if (newCount > config.maxRequests) {
       const blockDuration = config.blockMs ?? config.windowMs
       const blockedUntil = new Date(now.getTime() + blockDuration)
+
       if (mode === 'enforce') {
         await this.redis.psetex(blockKey, blockDuration, blockedUntil.getTime().toString())
       }
@@ -186,6 +200,7 @@ export class RedisRateLimitStore implements RateLimitStore {
           createUserBlock: mode === 'enforce', // Save to UserBlock for long-term storage
           environment: params.environment // Передаем environment для различения тестовых и реальных событий
         })
+
         if (blockMetaKey) {
           await this.redis.psetex(blockMetaKey, metaTtl, '1')
         }
@@ -209,6 +224,7 @@ export class RedisRateLimitStore implements RateLimitStore {
     }
 
     const remainingAfter = Math.max(0, config.maxRequests - newCount)
+
     const shouldWarnAfter =
       warnThreshold > 0 &&
       remainingAfter > 0 &&
@@ -249,15 +265,21 @@ export class RedisRateLimitStore implements RateLimitStore {
   async setBlock(key: string, module: string, blockedUntil?: Date | null): Promise<void> {
     await this.ensureConnected()
     const blockKey = this.blockKey(module, key)
+
     if (blockedUntil) {
       const ttl = Math.max(0, blockedUntil.getTime() - Date.now())
+
       if (ttl <= 0) {
         await this.redis.del(blockKey)
-        return
+        
+return
       }
+
       await this.redis.psetex(blockKey, ttl, blockedUntil.getTime().toString())
-      return
+      
+return
     }
+
     await this.redis.del(blockKey)
   }
 
@@ -268,14 +290,17 @@ export class RedisRateLimitStore implements RateLimitStore {
     const blockKey = this.blockKey(module, key)
 
     const pipeline = this.redis.multi()
+
     ;(pipeline as any).set(countKey, count.toString())
 
     if (blockedUntil) {
       const ttl = Math.max(1000, blockedUntil.getTime() - Date.now())
+
       ;(pipeline as any).psetex(blockKey, ttl, blockedUntil.getTime().toString())
     } else {
       ;(pipeline as any).del(blockKey)
     }
+
     await pipeline.exec()
   }
 
@@ -288,19 +313,22 @@ export class RedisRateLimitStore implements RateLimitStore {
         this.blockKey(module, key)
       )
       await this.deleteByPattern(this.blockMetaPattern(module, key))
-      return
+      
+return
     }
 
     if (!module && !key) {
       await this.deleteByPattern(`${KEY_PREFIX}:*`)
-      return
+      
+return
     }
 
     if (module && !key) {
       await this.deleteByPattern(`${KEY_PREFIX}:count:${module}:*`)
       await this.deleteByPattern(`${KEY_PREFIX}:block:${module}:*`)
       await this.deleteByPattern(this.blockMetaPattern(module))
-      return
+      
+return
     }
 
     if (key && !module) {
@@ -345,7 +373,9 @@ export class RedisRateLimitStore implements RateLimitStore {
       }
     } catch (error) {
       const latency = Date.now() - startTime
-      return {
+
+      
+return {
         healthy: false,
         latency,
         error: error instanceof Error ? error.message : 'Unknown Redis error'
@@ -363,21 +393,28 @@ export class RedisRateLimitStore implements RateLimitStore {
 
   private blockEventMetaKey(module: string, key: string, windowMs: number, windowStart: Date) {
     const windowBucket = Math.floor(windowStart.getTime() / windowMs)
-    return `${KEY_PREFIX}:meta:block:${module}:${key}:${windowBucket}`
+
+    
+return `${KEY_PREFIX}:meta:block:${module}:${key}:${windowBucket}`
   }
 
   private blockMetaPattern(module: string, key?: string) {
     if (key) {
       return `${KEY_PREFIX}:meta:block:${module}:${key}:*`
     }
-    return `${KEY_PREFIX}:meta:block:${module}:*`
+
+    
+return `${KEY_PREFIX}:meta:block:${module}:*`
   }
 
   private async deleteByPattern(pattern: string) {
     let cursor = '0'
+
     do {
       const [nextCursor, keys] = await this.redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100)
+
       cursor = nextCursor
+
       if (keys.length) {
         await this.redis.del(...keys)
       }

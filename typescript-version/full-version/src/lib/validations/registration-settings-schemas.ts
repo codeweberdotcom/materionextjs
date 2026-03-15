@@ -33,7 +33,9 @@ export function formatZodError(error: z.ZodError): string {
   return error.errors
     .map(err => {
       const path = err.path.join('.')
-      return path ? `${path}: ${err.message}` : err.message
+
+      
+return path ? `${path}: ${err.message}` : err.message
     })
     .join(', ')
 }

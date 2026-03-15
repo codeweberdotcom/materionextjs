@@ -2,8 +2,9 @@
  * Интерфейсы для системы аккаунтов пользователей
  */
 
-import type { AccountType, AccountStatus, TransferStatus, TariffPlanCode, TariffPlanFeatures, AccountManagerPermissions } from './types'
 import type { UserAccount, TariffPlan, AccountManager, AccountTransfer, User } from '@prisma/client'
+
+import type { AccountType, AccountStatus, TransferStatus, TariffPlanCode, TariffPlanFeatures, AccountManagerPermissions } from './types'
 
 /**
  * Аккаунт пользователя с отношениями

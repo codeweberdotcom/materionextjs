@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isAdminByCode, isSuperadmin } from '@/utils/permissions/permissions'
@@ -11,7 +12,9 @@ const parseDateParam = (value: string | null) => {
   }
 
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? undefined : date
+
+  
+return Number.isNaN(date.getTime()) ? undefined : date
 }
 
 export async function GET(request: NextRequest) {
@@ -41,6 +44,7 @@ export async function GET(request: NextRequest) {
     const to = parseDateParam(searchParams.get('to'))
 
     const isSuperAdminFlag = isSuperadmin(user)
+
     logger.info('[rate-limit] API call', { userId: user.id, isSuperAdmin: isSuperAdminFlag })
 
     const result = await rateLimitService.listEvents({
@@ -60,6 +64,7 @@ export async function GET(request: NextRequest) {
     logger.error('Error fetching rate limit events', {
       error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
     })
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

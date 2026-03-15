@@ -93,10 +93,12 @@ export interface MessagesReadData {
 // Данные превышения rate limit
 export interface RateLimitExceededData {
   error: string
+
   // Новый единый формат: blockedUntilMs (unix ms), retryAfterSec (seconds)
   blockedUntilMs: number
   retryAfterSec: number
   remaining?: number
+
   // Legacy для обратной совместимости
   blockedUntil?: number
   retryAfter?: number

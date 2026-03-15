@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { accountService, accountAccessService } from '@/services/accounts'
@@ -25,6 +26,7 @@ export async function POST(
 
     // Проверяем доступ к аккаунту
     const hasAccess = await accountAccessService.canAccessAccount(user.id, id)
+
     if (!hasAccess) {
       return NextResponse.json(
         {
@@ -37,6 +39,7 @@ export async function POST(
 
     // Получаем аккаунт
     const account = await accountService.getAccountById(id, user.id)
+
     if (!account) {
       return NextResponse.json(
         {
@@ -68,7 +71,8 @@ export async function POST(
     })
   } catch (error) {
     console.error('[POST /api/accounts/[id]/switch] Error:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       {
         success: false,
         message: error instanceof Error ? error.message : 'Internal server error'

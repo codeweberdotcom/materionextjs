@@ -260,7 +260,9 @@ export function getPresetForEntityType(entityType: string): ImageSettingsInput {
  */
 export function getVariantsForEntityType(entityType: string): ImageVariantConfig[] {
   const preset = getPresetForEntityType(entityType)
-  return preset.variants || []
+
+  
+return preset.variants || []
 }
 
 /**
@@ -269,7 +271,9 @@ export function getVariantsForEntityType(entityType: string): ImageVariantConfig
 export function isMimeTypeAllowed(entityType: string, mimeType: string): boolean {
   const preset = getPresetForEntityType(entityType)
   const allowedTypes = preset.allowedMimeTypes?.split(',') || []
-  return allowedTypes.includes(mimeType)
+
+  
+return allowedTypes.includes(mimeType)
 }
 
 /**
@@ -277,7 +281,9 @@ export function isMimeTypeAllowed(entityType: string, mimeType: string): boolean
  */
 export function isFileSizeAllowed(entityType: string, size: number): boolean {
   const preset = getPresetForEntityType(entityType)
-  return size <= (preset.maxFileSize || DEFAULT_GLOBAL_SETTINGS.globalMaxFileSize!)
+
+  
+return size <= (preset.maxFileSize || DEFAULT_GLOBAL_SETTINGS.globalMaxFileSize!)
 }
 
 

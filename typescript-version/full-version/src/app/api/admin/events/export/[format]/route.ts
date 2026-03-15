@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { eventService, maskPayloadForSource } from '@/services/events'
 import { requireAuth } from '@/utils/auth/auth'
@@ -18,7 +19,9 @@ const parseDateParam = (value: string | null) => {
   }
 
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? undefined : date
+
+  
+return Number.isNaN(date.getTime()) ? undefined : date
 }
 
 const validSeverities: ReadonlySet<EventSeverity> = new Set(['info', 'warning', 'error', 'critical'])
@@ -76,7 +79,9 @@ const escapeCsvField = (field: string): string => {
   if (field.includes(',') || field.includes('"') || field.includes('\n')) {
     return `"${field.replace(/"/g, '""')}"`
   }
-  return field
+
+  
+return field
 }
 
 const generateCsv = (events: Array<Record<string, any>>): string => {
@@ -103,6 +108,7 @@ const generateCsv = (events: Array<Record<string, any>>): string => {
   ]
 
   const csvRows: string[] = []
+
   csvRows.push(headers.map(h => escapeCsvField(h)).join(','))
 
   events.forEach(event => {
@@ -123,6 +129,7 @@ const generateCsv = (events: Array<Record<string, any>>): string => {
       typeof event.metadata === 'object' ? JSON.stringify(event.metadata) : (event.metadata || '{}'),
       event.createdAt ? new Date(event.createdAt).toISOString() : ''
     ]
+
     csvRows.push(row.map(cell => escapeCsvField(String(cell))).join(','))
   })
 
@@ -147,18 +154,21 @@ export async function GET(
 
     // Проверка прав на чтение событий
     const hasReadPermission = checkPermission(user, 'events', 'read')
+
     if (!hasReadPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Проверка прав на экспорт
     const hasExportPermission = checkPermission(user, 'events', 'export')
+
     if (!hasExportPermission) {
       return NextResponse.json({ error: 'Forbidden: Export permission required' }, { status: 403 })
     }
 
     // Валидация формата
     const format = formatParam.toLowerCase()
+
     if (format !== 'csv' && format !== 'json') {
       return NextResponse.json({ error: 'Invalid format. Supported: csv, json' }, { status: 400 })
     }
@@ -181,6 +191,7 @@ export async function GET(
 
     // Validate severity parameter and log if invalid
     const severity = isEventSeverity(severityParam) ? severityParam : undefined
+
     if (severityParam && !severity) {
       logger.debug('Invalid severity parameter ignored in export', {
         invalidValue: severityParam,
@@ -227,6 +238,7 @@ export async function GET(
         eventId: event.id,
         source: event.source
       })
+
       const parsedMetadata = safeParseJson(event.metadata, {
         field: 'metadata',
         eventId: event.id,
@@ -278,6 +290,7 @@ export async function GET(
 
     // Проверка размера файла
     const contentSize = Buffer.byteLength(content, 'utf8')
+
     if (contentSize > MAX_EXPORT_SIZE_BYTES) {
       return NextResponse.json(
         {
@@ -322,6 +335,7 @@ export async function GET(
       }))
     } catch (error) {
       logger.warn('Failed to record export event', { error })
+
       // Не прерываем экспорт из-за ошибки записи события
     }
 

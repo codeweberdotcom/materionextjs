@@ -181,11 +181,13 @@ export const listingMachine = setup({
     events: {} as ListingEvent
   },
   guards: listingGuards,
+
   // @ts-expect-error - XState type mismatch
   actions: listingActions
 }).createMachine({
   id: 'listing',
   initial: 'draft',
+
   // @ts-expect-error - XState type mismatch
   context: ({ input }: { input?: Partial<ListingContext> }) => ({
     listingId: input?.listingId || '',
@@ -225,6 +227,7 @@ export const listingMachine = setup({
           guard: 'canReject',
           actions: ['logTransition', 'setRejectionData']
         },
+
         // Владелец может отменить отправку
         EDIT: {
           target: 'draft',
@@ -252,6 +255,7 @@ export const listingMachine = setup({
           guard: 'canDelete',
           actions: ['logTransition']
         },
+
         // Редактирование возвращает на модерацию
         EDIT: {
           target: 'pending',

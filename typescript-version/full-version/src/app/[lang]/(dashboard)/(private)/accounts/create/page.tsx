@@ -61,13 +61,15 @@ const CreateAccountPage = () => {
     description: '',
     type: 'LISTING' as AccountType
   })
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
       setError('Название аккаунта обязательно')
-      return
+      
+return
     }
 
     setLoading(true)
@@ -82,10 +84,12 @@ const CreateAccountPage = () => {
 
       if (!response.ok) {
         const result = await response.json()
+
         throw new Error(result.message || 'Ошибка создания аккаунта')
       }
 
       const result = await response.json()
+
       router.push(`/${lang}/accounts/${result.data.id}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Произошла ошибка')

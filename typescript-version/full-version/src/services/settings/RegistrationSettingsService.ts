@@ -24,7 +24,9 @@ export class RegistrationSettingsService {
     if (!RegistrationSettingsService.instance) {
       RegistrationSettingsService.instance = new RegistrationSettingsService()
     }
-    return RegistrationSettingsService.instance
+
+    
+return RegistrationSettingsService.instance
   }
 
   /**
@@ -119,7 +121,9 @@ export class RegistrationSettingsService {
    */
   async getRegistrationMode(): Promise<RegistrationMode> {
     const settings = await this.getSettings()
-    return settings.registrationMode
+
+    
+return settings.registrationMode
   }
 
   /**
@@ -127,7 +131,9 @@ export class RegistrationSettingsService {
    */
   async requiresPhoneVerification(): Promise<boolean> {
     const settings = await this.getSettings()
-    return settings.requirePhoneVerification
+
+    
+return settings.requirePhoneVerification
   }
 
   /**
@@ -135,7 +141,9 @@ export class RegistrationSettingsService {
    */
   async requiresEmailVerification(): Promise<boolean> {
     const settings = await this.getSettings()
-    return settings.requireEmailVerification
+
+    
+return settings.requireEmailVerification
   }
 
   /**
@@ -143,7 +151,9 @@ export class RegistrationSettingsService {
    */
   async getSmsProvider(): Promise<string> {
     const settings = await this.getSettings()
-    return settings.smsProvider
+
+    
+return settings.smsProvider
   }
 
   /**

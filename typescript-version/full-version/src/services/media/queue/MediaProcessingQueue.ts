@@ -81,7 +81,9 @@ export class MediaProcessingQueue {
     if (!MediaProcessingQueue.instance) {
       MediaProcessingQueue.instance = new MediaProcessingQueue()
     }
-    return MediaProcessingQueue.instance
+
+    
+return MediaProcessingQueue.instance
   }
 
   private statsInterval: NodeJS.Timeout | null = null
@@ -126,7 +128,8 @@ export class MediaProcessingQueue {
       if (!redisConfig.url) {
         logger.warn('[MediaProcessingQueue] Redis not configured, using in-memory fallback')
         this.queueAvailable = false
-        return
+        
+return
       }
 
       logger.info('[MediaProcessingQueue] Initializing with Redis', {
@@ -243,6 +246,7 @@ export class MediaProcessingQueue {
       }
 
       const now = new Date()
+
       const jobsToProcess = this.inMemoryQueue.filter(
         job => job.status === 'pending' && job.scheduledAt <= now
       )
@@ -320,6 +324,7 @@ export class MediaProcessingQueue {
     } else {
       // Retry с exponential backoff
       const delay = Math.pow(2, job.attempts) * 2000
+
       job.scheduledAt = new Date(Date.now() + delay)
       job.status = 'pending'
       markRetry('processing', job.attempts)
@@ -337,6 +342,7 @@ export class MediaProcessingQueue {
    */
   private cleanupInMemoryQueue(): void {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+
     this.inMemoryQueue = this.inMemoryQueue.filter(
       job =>
         job.status === 'pending' ||
@@ -352,7 +358,8 @@ export class MediaProcessingQueue {
     // Предотвращаем повторную регистрацию
     if (this.processorRegistered) {
       logger.debug('[MediaProcessingQueue] Processor already registered, skipping')
-      return
+      
+return
     }
 
     this.processor = processor
@@ -374,6 +381,7 @@ export class MediaProcessingQueue {
 
         try {
           const result = await processor(job)
+
           timer()
 
           if (!result.success) {
@@ -463,7 +471,9 @@ export class MediaProcessingQueue {
     // Проверяем Bull
     if (this.queue && this.queueAvailable && !jobId.startsWith('inmem_')) {
       const job = await this.queue.getJob(jobId)
-      return job
+
+      
+return job
     }
 
     // Проверяем in-memory

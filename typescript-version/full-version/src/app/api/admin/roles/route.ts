@@ -1,6 +1,9 @@
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { Prisma } from '@prisma/client'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
 import { checkPermission, isSuperadmin, parsePermissions } from '@/utils/permissions/permissions'
@@ -21,7 +24,9 @@ const getRoleCacheStore = async () => {
   if (!roleCacheStorePromise) {
     roleCacheStorePromise = createRoleCacheStore()
   }
-  return await roleCacheStorePromise
+
+  
+return await roleCacheStorePromise
 }
 
 const CACHE_KEY = 'all-roles'
@@ -50,11 +55,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const { user } = await requireAuth(request)
+
     actorEmail = user?.email ?? null
 
     if (!user?.email) {
       logger.warn('[roles] Unauthorized role creation attempt', getRequestContext(request))
-      return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
+      
+return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
         status: 401
       })
     }
@@ -64,11 +71,13 @@ export async function POST(request: NextRequest) {
       where: { email: user.email },
       include: { role: true }
     })
+
     actorId = currentUser?.id ?? null
 
     if (!currentUser || (!isSuperadmin(currentUser) && !checkPermission(currentUser, 'roleManagement', 'create'))) {
       logger.warn('[roles] Permission denied: create role', getRequestContext(request, { actorEmail }))
-      return NextResponse.json(
+      
+return NextResponse.json(
         buildRoleError('ROLE_PERMISSION_DENIED', 'Permission denied: Create Roles required'),
         { status: 403 }
       )
@@ -76,6 +85,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { name, description, permissions } = body
+
     requestedRoleName = name ?? null
 
     // Validate required fields
@@ -88,13 +98,15 @@ export async function POST(request: NextRequest) {
     // Validate permissions structure if provided
     if (permissions !== undefined && permissions !== null) {
       const validationErrors = getPermissionValidationErrors(permissions)
+
       if (validationErrors.length > 0) {
         debugLog('[roles] Role permission validation failed on creation', {
           errors: validationErrors,
           actorEmail,
           roleName: name
         })
-        return NextResponse.json(
+        
+return NextResponse.json(
           buildRoleError('ROLE_INVALID_PERMISSIONS', 'Invalid permissions format', {
             errors: validationErrors
           }),
@@ -139,6 +151,7 @@ export async function POST(request: NextRequest) {
 
     // Очищаем кэш после создания новой роли
     const store = await getRoleCacheStore()
+
     await store.delete(CACHE_KEY).catch(err => {
       logger.warn('[role-cache] Failed to clear cache after role creation', {
         error: err,
@@ -176,6 +189,7 @@ export async function POST(request: NextRequest) {
 
     // Метрики
     const duration = (Date.now() - startTime) / 1000
+
     recordRoleOperationDuration('create', duration)
     markRoleOperation('create', 'success')
     markRoleEvent('role.created', 'info')
@@ -183,6 +197,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(newRole)
   } catch (error) {
     const duration = (Date.now() - startTime) / 1000
+
     recordRoleOperationDuration('create', duration)
     markRoleOperation('create', 'error')
     markRoleEvent('role.create.failed', 'error')
@@ -209,6 +224,7 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const startTime = Date.now()
   let actorEmail: string | null = null
+
   try {
     const url = new URL(request.url)
     const clearCache = url.searchParams.get('clearCache')
@@ -216,18 +232,22 @@ export async function GET(request: NextRequest) {
     // Если запрос на очистку кэша
     if (clearCache === 'true') {
       const store = await getRoleCacheStore()
+
       await store.clear().catch(err => {
         logger.warn('[role-cache] Failed to clear cache', { error: err })
       })
-      return NextResponse.json({ message: 'Cache cleared' })
+      
+return NextResponse.json({ message: 'Cache cleared' })
     }
 
     const { user } = await requireAuth(request)
+
     actorEmail = user?.email ?? null
 
     if (!user?.email) {
       logger.warn('[roles] Unauthorized access to roles list', getRequestContext(request))
-      return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
+      
+return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
         status: 401
       })
     }
@@ -240,7 +260,8 @@ export async function GET(request: NextRequest) {
 
     if (!currentUser || (!isSuperadmin(currentUser) && !checkPermission(currentUser, 'roleManagement', 'read'))) {
       logger.warn('[roles] Permission denied: read roles', getRequestContext(request, { actorEmail }))
-      return NextResponse.json(
+      
+return NextResponse.json(
         buildRoleError('ROLE_PERMISSION_DENIED', 'Permission denied: Read Roles required'),
         { status: 403 }
       )
@@ -248,17 +269,23 @@ export async function GET(request: NextRequest) {
 
     // Проверяем кэш
     const store = await getRoleCacheStore()
+
     const cachedRoles = await store.get(CACHE_KEY).catch(err => {
       logger.warn('[role-cache] Failed to get from cache', { error: err })
-      return null
+      
+return null
     })
 
     if (cachedRoles) {
       const duration = (Date.now() - startTime) / 1000
+
       recordRoleOperationDuration('read', duration)
       markRoleOperation('read', 'success')
-      return NextResponse.json(cachedRoles)
+      
+return NextResponse.json(cachedRoles)
     }
+
+
     // Fetch roles sorted by level (hierarchy)
     const roles = await prisma.role.findMany({
       orderBy: [
@@ -286,12 +313,14 @@ export async function GET(request: NextRequest) {
 
     // Метрики
     const duration = (Date.now() - startTime) / 1000
+
     recordRoleOperationDuration('read', duration)
     markRoleOperation('read', 'success')
 
     return NextResponse.json(rolesWithParsedPermissions)
   } catch (error) {
     const duration = (Date.now() - startTime) / 1000
+
     recordRoleOperationDuration('read', duration)
     markRoleOperation('read', 'error')
     logger.error('[roles] Error fetching roles', {

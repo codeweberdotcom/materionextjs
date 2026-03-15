@@ -4,7 +4,8 @@
  * POST - создать новый bucket
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
@@ -118,6 +119,7 @@ export async function GET(request: NextRequest) {
 
       // Check if bucket is configured in service metadata
       const metadata = JSON.parse(service.metadata || '{}')
+
       if (metadata.bucket) {
         // Bucket is pre-configured - return only this bucket without ListBuckets call
         logger.debug('[S3 Buckets API] Using pre-configured bucket from service', { 
@@ -134,6 +136,7 @@ export async function GET(request: NextRequest) {
 
       // No pre-configured bucket - try to list from server
       s3Config = await getS3ConfigFromService(serviceId)
+
       if (!s3Config) {
         return NextResponse.json({
           configured: false,
@@ -141,6 +144,7 @@ export async function GET(request: NextRequest) {
           error: 'S3 сервис не настроен (нет credentials)',
         })
       }
+
       logger.debug('[S3 Buckets API] Listing buckets from service', { serviceId })
     } else {
       // Get config from ENV
@@ -154,6 +158,7 @@ export async function GET(request: NextRequest) {
           error: 'S3 не настроен. Укажите S3_ENDPOINT, S3_ACCESS_KEY и S3_SECRET_KEY в .env',
         })
       }
+
       logger.debug('[S3 Buckets API] Using ENV config', { defaultBucket })
     }
 
@@ -217,6 +222,7 @@ export async function POST(request: NextRequest) {
 
     // Валидация имени bucket'а
     const bucketNameRegex = /^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$/
+
     if (!bucketNameRegex.test(bucketName)) {
       return NextResponse.json(
         { 
@@ -230,6 +236,7 @@ export async function POST(request: NextRequest) {
 
     if (serviceId) {
       s3Config = await getS3ConfigFromService(serviceId)
+
       if (!s3Config) {
         return NextResponse.json(
           { error: 'S3 сервис не найден или не настроен' },
@@ -238,6 +245,7 @@ export async function POST(request: NextRequest) {
       }
     } else {
       s3Config = getS3ConfigFromEnv()
+
       if (!s3Config) {
         return NextResponse.json(
           { error: 'S3 не настроен. Укажите переменные окружения S3_*' },

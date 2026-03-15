@@ -31,6 +31,7 @@ export class PostgreSQLConnector extends BaseConnector {
 
       // Парсим metadata для дополнительных параметров
       let metadata: Record<string, any> = {}
+
       if (this.config.metadata) {
         try {
           metadata = JSON.parse(this.config.metadata)
@@ -71,12 +72,14 @@ export class PostgreSQLConnector extends BaseConnector {
           inet_server_port() as server_port,
           pg_postmaster_start_time() as start_time
       `)
+
       const serverInfo = serverInfoResult.rows[0] || {}
 
       // Получаем размер базы данных
       const dbSizeResult = await client.query(`
         SELECT pg_size_pretty(pg_database_size(current_database())) as size
       `)
+
       const dbSize = dbSizeResult.rows[0]?.size || 'unknown'
 
       await client.end()

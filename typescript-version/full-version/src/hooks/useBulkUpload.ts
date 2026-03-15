@@ -130,12 +130,14 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
   
   // Опции (актуальные значения)
   const optionsRef = useRef({ entityType, entityId, endpoint, useAsyncUpload, parallelLimit })
+
   useEffect(() => {
     optionsRef.current = { entityType, entityId, endpoint, useAsyncUpload, parallelLimit }
   }, [entityType, entityId, endpoint, useAsyncUpload, parallelLimit])
 
   // Callbacks refs
   const callbacksRef = useRef({ onFileSuccess, onFileError, onComplete })
+
   useEffect(() => {
     callbacksRef.current = { onFileSuccess, onFileError, onComplete }
   }, [onFileSuccess, onFileError, onComplete])
@@ -158,6 +160,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
       clearTimeout(uiUpdateTimeoutRef.current)
       uiUpdateTimeoutRef.current = null
     }
+
     setFiles([...queueRef.current])
   }, [])
 
@@ -167,6 +170,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
       if (uiUpdateTimeoutRef.current) {
         clearTimeout(uiUpdateTimeoutRef.current)
       }
+
       queueRef.current.forEach(f => {
         if (f.preview) URL.revokeObjectURL(f.preview)
       })
@@ -209,6 +213,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
     const elapsed = uploadStartTimeRef.current 
       ? (Date.now() - uploadStartTimeRef.current) / 1000 
       : 0
+
     const speed = elapsed > 0 ? bytesUploaded / elapsed : 0
     const bytesRemaining = bytesTotal - bytesUploaded
     const estimatedTimeLeft = speed > 0 ? bytesRemaining / speed : 0
@@ -263,10 +268,12 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
       const createPreviews = () => {
         for (const qf of previewsToCreate) {
           const fileInQueue = queueRef.current.find(f => f.id === qf.id)
+
           if (fileInQueue && !fileInQueue.preview) {
             fileInQueue.preview = URL.createObjectURL(qf.file)
           }
         }
+
         syncQueueToUI() // Batch update after all previews created
       }
       
@@ -280,9 +287,11 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
 
   const removeFile = useCallback((id: string) => {
     const file = queueRef.current.find(f => f.id === id)
+
     if (file?.preview) URL.revokeObjectURL(file.preview)
     
     const controller = abortControllersRef.current.get(id)
+
     if (controller) {
       controller.abort()
       abortControllersRef.current.delete(id)
@@ -316,6 +325,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
     
     // Создаём новый promise для следующего ожидающего
     let releaseMutex: () => void
+
     mutexRef.current = new Promise(resolve => { releaseMutex = resolve })
     
     try {
@@ -328,10 +338,12 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
       
       // Атомарно меняем статус
       const file = queueRef.current[index]
+
       queueRef.current[index] = { ...file, status: 'uploading', progress: 0 }
       
       syncQueueToUI()
-      return file
+      
+return file
     } finally {
       releaseMutex!()
     }
@@ -341,12 +353,15 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
   
   const uploadFile = useCallback(async (queuedFile: QueuedFile): Promise<boolean> => {
     const controller = new AbortController()
+
     abortControllersRef.current.set(queuedFile.id, controller)
 
     try {
       const formData = new FormData()
+
       formData.append('file', queuedFile.file)
       formData.append('entityType', optionsRef.current.entityType)
+
       if (optionsRef.current.entityId) {
         formData.append('entityId', optionsRef.current.entityId)
       }
@@ -378,6 +393,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
               
               // Direct update without findIndex (we know the file)
               const index = queueRef.current.findIndex(f => f.id === queuedFile.id)
+
               if (index !== -1) {
                 queueRef.current[index].progress = progress
                 syncQueueToUI()
@@ -389,6 +405,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
         xhr.addEventListener('load', () => {
           try {
             const response = JSON.parse(xhr.responseText)
+
             if (xhr.status >= 200 && xhr.status < 300) {
               resolve({ 
                 success: true, 
@@ -416,6 +433,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
 
       // Update file status in queue
       const index = queueRef.current.findIndex(f => f.id === queuedFile.id)
+
       if (index !== -1) {
         if (result.success) {
           queueRef.current[index] = { 
@@ -434,6 +452,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
           }
           callbacksRef.current.onFileError?.(queueRef.current[index], result.error || 'Unknown error')
         }
+
         syncQueueToUI()
       }
 
@@ -442,6 +461,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       
       const index = queueRef.current.findIndex(f => f.id === queuedFile.id)
+
       if (index !== -1) {
         queueRef.current[index] = { 
           ...queueRef.current[index], 
@@ -453,7 +473,8 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
       }
       
       abortControllersRef.current.delete(queuedFile.id)
-      return false
+      
+return false
     }
   }, [syncQueueToUI])
 
@@ -475,11 +496,14 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
       if (!file) {
         // No pending files, check if there are still uploading files
         const hasUploading = queueRef.current.some(f => f.status === 'uploading')
+
         if (!hasUploading) {
           // All done
           console.log(`[Worker ${workerId}] No more files, exiting`)
           break
         }
+
+
         // Wait a bit and retry
         await new Promise(resolve => setTimeout(resolve, 50))
         continue
@@ -498,9 +522,11 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
     if (isUploadingRef.current) return
     
     const pending = queueRef.current.filter(f => f.status === 'pending')
+
     if (pending.length === 0) return
 
     const currentParallelLimit = optionsRef.current.parallelLimit
+
     console.log(`[useBulkUpload] Starting upload of ${pending.length} files with ${currentParallelLimit} workers`)
     
     isUploadingRef.current = true
@@ -523,6 +549,7 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
       syncQueueToUIImmediate()
       
       const finalStats = calculateStats()
+
       callbacksRef.current.onComplete?.(finalStats)
     })
   }, [runWorker, syncQueueToUIImmediate, calculateStats])
@@ -569,10 +596,13 @@ export function useBulkUpload(options: UseBulkUploadOptions = {}): UseBulkUpload
       if (f.status === 'error' && f.retryCount < maxRetries) {
         return { ...f, status: 'pending' as const, error: undefined, retryCount: f.retryCount + 1 }
       }
+
       if (f.status === 'cancelled') {
         return { ...f, status: 'pending' as const, retryCount: 0 }
       }
-      return f
+
+      
+return f
     })
     
     syncQueueToUIImmediate()

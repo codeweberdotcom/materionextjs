@@ -60,7 +60,9 @@ const NotificationsContent = (props: Props) => {
   // Vars
   const notifications = store.filteredNotifications
   const isLoading = store.loading
+
   const currentNotification = notifications.find(notification => notification.id === store.currentNotificationId) ||
+
     // If current notification is not in filtered list, find it in all notifications
     store.notifications.find(notification => notification.id === store.currentNotificationId)
 
@@ -107,11 +109,15 @@ const NotificationsContent = (props: Props) => {
   useEffect(() => {
     if (status !== undefined || type !== undefined) {
       setFiltering(true)
+
+
       // Simulate filtering delay for better UX
       const timer = setTimeout(() => {
         setFiltering(false)
       }, 300)
-      return () => clearTimeout(timer)
+
+      
+return () => clearTimeout(timer)
     }
   }, [status, type])
 

@@ -58,6 +58,7 @@ const AccountsPage = () => {
 
       if (!response.ok) {
         const result = await response.json()
+
         throw new Error(result.message || 'Ошибка создания аккаунта')
       }
 
@@ -107,6 +108,7 @@ const AccountsPage = () => {
 
       if (!response.ok) {
         const result = await response.json()
+
         throw new Error(result.message || 'Ошибка передачи аккаунта')
       }
 
@@ -136,6 +138,7 @@ const AccountsPage = () => {
 
       if (!response.ok) {
         const result = await response.json()
+
         throw new Error(result.message || 'Ошибка удаления аккаунта')
       }
 

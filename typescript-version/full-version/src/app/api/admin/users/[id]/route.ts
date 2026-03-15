@@ -1,4 +1,5 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+﻿import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import type { UserWithRole } from '@/utils/permissions/permissions'
@@ -77,7 +78,8 @@ export async function GET(
     return NextResponse.json(transformedUser)
   } catch (error) {
     console.error('Error fetching user:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )
@@ -162,6 +164,7 @@ export async function PUT(
 
     if (contentType.includes('multipart/form-data')) {
       const formData = await request.formData()
+
       newAvatar = formData.get('avatar') as File | null
       const formDataObj = parseFormDataToObject(formData)
       
@@ -180,6 +183,7 @@ export async function PUT(
     // Валидация файла аватара (если предоставлен)
     if (newAvatar && newAvatar.size > 0) {
       const avatarValidation = avatarFileSchema.safeParse(newAvatar)
+
       if (!avatarValidation.success) {
         return NextResponse.json(
           { message: formatZodError(avatarValidation.error) },
@@ -258,6 +262,7 @@ export async function PUT(
         if (currentUser?.avatarMediaId) {
           try {
             const mediaService = getMediaService()
+
             await mediaService.delete(currentUser.avatarMediaId, true)
             logger.info('[Admin] Old avatar deleted', {
               userId,
@@ -298,9 +303,11 @@ export async function PUT(
             avatarUrl = `${s3PublicUrlPrefix}/${s3Key}`
           } else if (localPath) {
             let path = localPath.replace(/^public\//, '').replace(/^\//, '')
+
             while (path.startsWith('uploads/')) {
               path = path.substring(8)
             }
+
             avatarUrl = `/uploads/${path}`
           } else {
             avatarUrl = `/api/media/${result.media.id}?variant=medium`
@@ -320,6 +327,7 @@ export async function PUT(
           userId,
           error: error instanceof Error ? error.message : String(error)
         })
+
         // Continue without updating avatar
       }
     }
@@ -443,6 +451,7 @@ export async function PATCH(
 
     // Валидация тела запроса
     let parsedBody: any = {}
+
     try {
       parsedBody = await request.json()
     } catch {

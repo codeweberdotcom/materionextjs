@@ -1,13 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
+import * as os from 'os'
+
+import * as process from 'process'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+import Redis from 'ioredis'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
-import Redis from 'ioredis'
 import { metricsRegistry } from '@/lib/metrics/registry'
 import { httpRequestDuration } from '@/lib/metrics'
 import { serviceConfigResolver } from '@/lib/config'
 import logger from '@/lib/logger'
-import * as os from 'os'
-import * as process from 'process'
+
 
 let cachedRedisClient: Redis | null = null
 let cachedRedisConfig: { url: string; tls: boolean } | null = null
@@ -37,12 +43,14 @@ const getRedisClient = async () => {
     lazyConnect: true,
     maxRetriesPerRequest: 1
   })
-  return cachedRedisClient
+  
+return cachedRedisClient
 }
 
 // Функция проверки Redis
 async function checkRedisConnection(): Promise<{ status: 'up' | 'down'; latency?: number; memory?: any; source?: string }> {
   const redis = await getRedisClient()
+
   if (!redis) {
     return { status: 'down' }
   }
@@ -51,6 +59,7 @@ async function checkRedisConnection(): Promise<{ status: 'up' | 'down'; latency?
     if (!redis.status || redis.status === 'end') {
       await redis.connect()
     }
+
     const start = Date.now()
     const reply = await redis.ping()
     const latency = Date.now() - start
@@ -59,8 +68,10 @@ async function checkRedisConnection(): Promise<{ status: 'up' | 'down'; latency?
       // Получаем информацию о памяти
       const info = await redis.info('memory')
       const memoryInfo: any = {}
+
       info.split('\r\n').forEach(line => {
         const [key, value] = line.split(':')
+
         if (key && value) {
           memoryInfo[key] = value
         }
@@ -76,7 +87,9 @@ async function checkRedisConnection(): Promise<{ status: 'up' | 'down'; latency?
         }
       }
     }
-    return { status: 'down' }
+
+    
+return { status: 'down' }
   } catch (error) {
     return { status: 'down' }
   }
@@ -96,7 +109,9 @@ async function checkSocketIOStatus(): Promise<boolean> {
     if (!response.ok) return false
     
     const data = await response.json()
-    return data.status === 'ok'
+
+    
+return data.status === 'ok'
   } catch (error) {
     return false
   }
@@ -114,9 +129,11 @@ function parsePrometheusMetrics(metricsText: string) {
     // Пример: http_request_duration_seconds_count{method="GET",route="/api",status_code="200",environment="development"} 42
     // Или: http_request_duration_seconds_sum{method="GET",route="/api",status_code="200",environment="development"} 1.234
     const match = line.match(/^([a-zA-Z_:][a-zA-Z0-9_:]*)(?:\{.*?\})?\s+(.+)$/)
+
     if (match) {
       const [, name, value] = match
       const numValue = parseFloat(value)
+
       if (!isNaN(numValue)) {
         // Для Histogram метрик Prometheus создает суффиксы _count, _sum, _bucket
         // Суммируем значения для всех метрик с одинаковым именем (разные labels)
@@ -164,16 +181,19 @@ function getSystemMetrics() {
 async function getDatabaseMetrics() {
   try {
     const start = Date.now()
+
     await prisma.$queryRaw`SELECT 1`
     const latency = Date.now() - start
 
     // Получаем количество активных соединений для PostgreSQL
     let activeConnections = 0
+
     try {
       const result = await prisma.$queryRaw<[{ count: bigint }]>`
         SELECT count(*) as count FROM pg_stat_activity 
         WHERE datname = current_database()
       `
+
       activeConnections = Number(result[0]?.count || 0)
     } catch {
       // Fallback если нет доступа к pg_stat_activity
@@ -201,9 +221,11 @@ export async function GET(request: NextRequest) {
   try {
     // Проверка аутентификации
     const { user } = await requireAuth(request)
+
     if (!user) {
       const duration = (Date.now() - startTime) / 1000
       const environment = process.env.NODE_ENV || 'development'
+
       try {
         httpRequestDuration
           .labels(method, pathname, '401', environment)
@@ -211,7 +233,9 @@ export async function GET(request: NextRequest) {
       } catch (error) {
         logger.warn('[monitoring] Failed to record metric', { error })
       }
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+      
+return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Проверка прав (можно добавить специальное право для мониторинга)
@@ -221,6 +245,7 @@ export async function GET(request: NextRequest) {
 
     // 1. Получаем статус системы
     let databaseStatus: { status: string; latency?: number; activeConnections?: number; error?: string } = { status: 'down' }
+
     try {
       databaseStatus = await getDatabaseMetrics()
     } catch (error) {
@@ -240,13 +265,16 @@ export async function GET(request: NextRequest) {
 
     // 2. Получаем метрики из Prometheus
     let metricsData: Record<string, any> = {}
+
     try {
       // Теперь все метрики в одном registry (metricsRegistry)
       const metricsText = await metricsRegistry.metrics()
+
       metricsData = parsePrometheusMetrics(metricsText)
       
       // Логируем для отладки
       const httpMetrics = Object.keys(metricsData).filter(k => k.includes('http_request'))
+
       const httpMetricsLines = metricsText.split('\n').filter(line => 
         line.includes('http_request_duration_seconds') && !line.startsWith('#')
       )
@@ -280,6 +308,7 @@ export async function GET(request: NextRequest) {
     try {
       const { getSocketServer, getTotalConnections } = await import('@/lib/sockets')
       const io = getSocketServer()
+
       if (io) {
         // Используем функцию для подсчета всех соединений во всех namespaces
         const realConnections = getTotalConnections()
@@ -287,6 +316,7 @@ export async function GET(request: NextRequest) {
         // Также обновляем метрику Prometheus для синхронизации
         if (realConnections !== websocketActiveConnections) {
           const { websocketConnections } = await import('@/lib/metrics')
+
           websocketConnections.set(
             { environment: process.env.NODE_ENV || 'development' }, 
             realConnections
@@ -297,6 +327,7 @@ export async function GET(request: NextRequest) {
         
         // Подсчет по namespaces для детального логирования
         const connectionsByNamespace: Record<string, number> = {}
+
         io._nsps.forEach((nsp, name) => {
           connectionsByNamespace[name] = nsp.sockets.size
         })
@@ -402,6 +433,7 @@ export async function GET(request: NextRequest) {
 
     // Проверка использования памяти
     const memoryUsagePercent = (systemMetrics.memory.heapUsed / systemMetrics.memory.heapTotal) * 100
+
     if (memoryUsagePercent > 90) {
       alerts.push({
         type: 'memory',
@@ -419,6 +451,7 @@ export async function GET(request: NextRequest) {
     // Собираем метрику успешного запроса перед возвратом
     const duration = (Date.now() - startTime) / 1000
     const environment = process.env.NODE_ENV || 'development'
+
     try {
       httpRequestDuration
         .labels(method, pathname, '200', environment)

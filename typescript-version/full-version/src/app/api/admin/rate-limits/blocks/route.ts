@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isAdminByCode, isSuperadmin } from '@/utils/permissions/permissions'
@@ -14,6 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const hasPermission = isSuperadmin(user) || isAdminByCode(user)
+
     if (!hasPermission) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -50,6 +52,7 @@ export async function POST(request: NextRequest) {
 
     const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
     const isValidDomain = (value: string) => /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)
+
     const isValidIp = (value: string) =>
       /^(\d{1,3}\.){3}\d{1,3}$/.test(value) ||
       /^[\da-fA-F:]+$/.test(value)
@@ -64,9 +67,11 @@ export async function POST(request: NextRequest) {
 
     const normalizedTargetType =
       targetType === 'ip' ? 'ip' : targetType === 'email' ? 'email' : targetType === 'domain' ? 'domain' : 'user'
+
     const trimmedUserId = typeof userId === 'string' ? userId.trim() : ''
     const trimmedEmail = typeof email === 'string' ? email.trim() : ''
     const trimmedIp = typeof ipAddress === 'string' ? ipAddress.trim() : ''
+
     const trimmedDomain =
       typeof mailDomain === 'string' ? mailDomain.replace(/^\*@/, '').replace(/^@/, '').trim() : ''
 
@@ -78,6 +83,7 @@ export async function POST(request: NextRequest) {
       if (!trimmedEmail) {
         return NextResponse.json({ error: 'Email is required for email blocks' }, { status: 400 })
       }
+
       if (!isValidEmail(trimmedEmail)) {
         return NextResponse.json({ error: 'Invalid email format' }, { status: 400 })
       }
@@ -87,6 +93,7 @@ export async function POST(request: NextRequest) {
       if (!trimmedDomain) {
         return NextResponse.json({ error: 'Domain is required for domain blocks' }, { status: 400 })
       }
+
       if (!isValidDomain(trimmedDomain)) {
         return NextResponse.json({ error: 'Invalid domain format' }, { status: 400 })
       }
@@ -96,6 +103,7 @@ export async function POST(request: NextRequest) {
       if (!trimmedIp) {
         return NextResponse.json({ error: 'IP address is required for IP blocks' }, { status: 400 })
       }
+
       if (!isValidIp(trimmedIp)) {
         return NextResponse.json({ error: 'Invalid IP address' }, { status: 400 })
       }
@@ -124,10 +132,12 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error && (error as any).code === 'BLOCK_EXISTS') {
       return NextResponse.json({ error: 'Block already exists for this target', code: 'block_exists' }, { status: 409 })
     }
+
     logger.error('Error creating manual block', {
       error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Internal server error' },
       { status: 500 }
     )

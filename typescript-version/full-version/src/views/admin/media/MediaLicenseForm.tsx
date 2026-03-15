@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect } from 'react'
+
 import { useRouter, useParams } from 'next/navigation'
 
 import Card from '@mui/material/Card'
@@ -81,11 +82,13 @@ export default function MediaLicenseForm({ licenseId }: MediaLicenseFormProps) {
 
   // Document
   const [documentFile, setDocumentFile] = useState<File | null>(null)
+
   const [existingDocument, setExistingDocument] = useState<{
     path: string
     name: string
     size: number
   } | null>(null)
+
   const [uploadingDocument, setUploadingDocument] = useState(false)
 
   // Fetch license for edit

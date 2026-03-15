@@ -1,8 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import crypto from 'crypto'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+import bcrypt from 'bcryptjs'
+
 import { lucia } from '@/libs/lucia'
 import { prisma } from '@/libs/prisma'
-import bcrypt from 'bcryptjs'
-import crypto from 'crypto'
+
 import logger from '@/lib/logger'
 import { rateLimitService } from '@/lib/rate-limit'
 import { createErrorResponse } from '@/utils/apiError'
@@ -21,6 +26,7 @@ export async function POST(request: NextRequest) {
   const enforceMinimumResponseTime = async () => {
     const elapsed = Date.now() - startedAt
     const remainingDelay = MIN_RESPONSE_DURATION_MS - elapsed
+
     if (remainingDelay > 0) {
       await wait(remainingDelay)
     }
@@ -30,8 +36,11 @@ export async function POST(request: NextRequest) {
     if (!resetTime) {
       return 0
     }
+
     const diffMs = resetTime - Date.now()
-    return Math.max(0, Math.ceil(diffMs / 1000))
+
+    
+return Math.max(0, Math.ceil(diffMs / 1000))
   }
 
   // Start login duration timer
@@ -41,12 +50,14 @@ export async function POST(request: NextRequest) {
     logger.info('рџ"ђ [LOGIN] Login attempt started')
 
     const { email, password } = await request.json()
+
     logger.info('рџ”ђ [LOGIN] Login data:', { email, hasPassword: !!password })
 
     if (!email || !password) {
       logger.info('вќЊ [LOGIN] Missing email or password')
       stopLoginTimer()
       trackLoginFailed('credentials')
+
       const { payload, init } = createErrorResponse({
         status: 400,
         code: 'AUTH_MISSING_FIELDS',
@@ -55,8 +66,10 @@ export async function POST(request: NextRequest) {
         route: 'login',
         context: { route: 'login', missingEmail: !email, missingPassword: !password }
       })
+
       await enforceMinimumResponseTime()
-      return new NextResponse(JSON.stringify(payload), init)
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     const clientIp = request.headers.get('x-forwarded-for') ||
@@ -103,6 +116,7 @@ export async function POST(request: NextRequest) {
       })
 
       const retryAfter = calculateRetryAfterSeconds(initialRateLimitResult.resetTime)
+
       const { payload, init } = createErrorResponse({
         status: 429,
         code: 'AUTH_RATE_LIMIT_EMAIL',
@@ -111,8 +125,10 @@ export async function POST(request: NextRequest) {
         route: 'login',
         context: { route: 'login', key: email }
       })
+
       await enforceMinimumResponseTime()
-      return new NextResponse(JSON.stringify(payload), init)
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // После rate limit проверки ищем пользователя.
@@ -144,6 +160,7 @@ export async function POST(request: NextRequest) {
       if (!userRateLimitResult.allowed) {
         logger.info('вќЊ [LOGIN] User-specific rate limit exceeded for user:', user.id)
         const retryAfter = calculateRetryAfterSeconds(userRateLimitResult.resetTime)
+
         const { payload, init } = createErrorResponse({
           status: 429,
           code: 'AUTH_RATE_LIMIT_USER',
@@ -152,12 +169,15 @@ export async function POST(request: NextRequest) {
           route: 'login',
           context: { route: 'login', userId: user.id }
         })
+
         await enforceMinimumResponseTime()
-        return new NextResponse(JSON.stringify(payload), init)
+        
+return new NextResponse(JSON.stringify(payload), init)
       }
     }
 
     const hasWarning = rateLimitResult.warning || (rateLimitResult.remaining <= 3 && rateLimitResult.remaining > 0)
+
     if (hasWarning) {
       logger.info('⚠️ [LOGIN] Rate limit warning for key:', user ? user.id : email, 'remaining:', rateLimitResult.remaining)
     }
@@ -185,6 +205,7 @@ export async function POST(request: NextRequest) {
       })
 
       await enforceMinimumResponseTime()
+
       const { payload, init } = createErrorResponse({
         status: 401,
         code: 'AUTH_INVALID_CREDENTIALS',
@@ -194,12 +215,15 @@ export async function POST(request: NextRequest) {
         route: 'login',
         context: { route: 'login', reason: 'user_not_found' }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     logger.info('вњ… [LOGIN] User found:', user.email)
 
     const isValidPassword = await bcrypt.compare(password, user.password)
+
     if (!isValidPassword) {
       logger.info('вќЊ [LOGIN] Invalid password for user:', email)
       stopLoginTimer()
@@ -224,6 +248,7 @@ export async function POST(request: NextRequest) {
       })
 
       await enforceMinimumResponseTime()
+
       const { payload, init } = createErrorResponse({
         status: 401,
         code: 'AUTH_INVALID_CREDENTIALS',
@@ -233,7 +258,9 @@ export async function POST(request: NextRequest) {
         route: 'login',
         context: { route: 'login', reason: 'invalid_password', userId: user.id }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     if (!user.isActive) {
@@ -265,8 +292,10 @@ export async function POST(request: NextRequest) {
         route: 'login',
         context: { route: 'login', userId: user.id }
       })
+
       await enforceMinimumResponseTime()
-      return new NextResponse(JSON.stringify(payload), init)
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     logger.info('вњ… [LOGIN] Password valid, creating session for:', email)
@@ -275,10 +304,12 @@ export async function POST(request: NextRequest) {
 
     const sessionToken = crypto.randomUUID()
     const session = await lucia.createSession(user.id, { sessionToken })
+
     logger.info('вњ… [LOGIN] Session created:', session.id)
     trackSessionCreated('credentials')
 
     const sessionCookie = lucia.createSessionCookie(session.id)
+
     logger.info('рџЌЄ [LOGIN] Setting session cookie:', sessionCookie.name)
 
     const response = NextResponse.json({
@@ -318,11 +349,13 @@ export async function POST(request: NextRequest) {
 
     await enforceMinimumResponseTime()
     logger.info('вњ… [LOGIN] Login successful for:', email)
-    return response
+    
+return response
   } catch (error) {
     logger.error('Login error', { error: error instanceof Error ? error.message : error, route: 'login' })
     stopLoginTimer()
     trackLoginFailed('credentials')
+
     const { payload, init } = createErrorResponse({
       status: 500,
       code: 'AUTH_INTERNAL_ERROR',
@@ -330,8 +363,10 @@ export async function POST(request: NextRequest) {
       route: 'login',
       context: { route: 'login' }
     })
+
     await enforceMinimumResponseTime()
-    return new NextResponse(JSON.stringify(payload), init)
+    
+return new NextResponse(JSON.stringify(payload), init)
   }
 }
 

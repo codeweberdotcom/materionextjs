@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
@@ -17,6 +19,7 @@ export async function POST(
   
   try {
     const { user } = await requireAuth(request)
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -64,6 +67,7 @@ export async function POST(
 
     // Парсим данные сценария
     let actions = []
+
     try {
       actions = JSON.parse(execution.scenario.actions)
     } catch {}
@@ -79,6 +83,7 @@ export async function POST(
 
         // Выполняем действия
         const results = []
+
         for (const action of actions) {
           try {
             // Здесь должна быть логика выполнения действия
@@ -141,7 +146,8 @@ export async function POST(
       error: error instanceof Error ? error.message : String(error),
       executionId: id
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Failed to retry execution' },
       { status: 500 }
     )

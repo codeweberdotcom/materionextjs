@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
-import { eventService } from '@/services/events'
-import { maskPayloadForSource } from '@/services/events'
+import { eventService , maskPayloadForSource } from '@/services/events'
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
 import logger from '@/lib/logger'
@@ -14,7 +14,9 @@ const parseDateParam = (value: string | null) => {
   }
 
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? undefined : date
+
+  
+return Number.isNaN(date.getTime()) ? undefined : date
 }
 
 const parseLimit = (value: string | null) => {
@@ -108,12 +110,14 @@ export async function GET(request: NextRequest) {
     const excludeTestParam = searchParams.get('excludeTest')
     const excludeTest = excludeTestParam === 'true' ? true : excludeTestParam === 'false' ? false : undefined
     const environmentParam = searchParams.get('environment')
+
     const environment = environmentParam === 'test' || environmentParam === 'production' 
       ? environmentParam as 'test' | 'production' 
       : undefined
 
     // Validate severity parameter and log if invalid
     const severity = isEventSeverity(severityParam) ? severityParam : undefined
+
     if (severityParam && !severity) {
       logger.debug('Invalid severity parameter ignored', {
         invalidValue: severityParam,
@@ -148,6 +152,7 @@ export async function GET(request: NextRequest) {
         eventId: event.id,
         source: event.source
       })
+
       const parsedMetadata = safeParseJson(event.metadata, {
         field: 'metadata',
         eventId: event.id,

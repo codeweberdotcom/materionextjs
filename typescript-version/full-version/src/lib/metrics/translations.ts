@@ -1,4 +1,5 @@
 import { Counter, Histogram } from 'prom-client'
+
 import { metricsRegistry } from './registry'
 
 /**

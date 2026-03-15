@@ -1,10 +1,13 @@
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+import bcrypt from 'bcryptjs'
+
 import { requireAuth } from '@/utils/auth/auth'
 import type { UserWithRole } from '@/utils/permissions/permissions'
 
 import { prisma } from '@/libs/prisma'
-import bcrypt from 'bcryptjs'
 import { changePasswordSchema, formatZodError } from '@/lib/validations/user-schemas'
 
 

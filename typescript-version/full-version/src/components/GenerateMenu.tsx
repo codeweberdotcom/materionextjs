@@ -34,7 +34,8 @@ export const GenerateVerticalMenu = ({ menuData, locale }: { menuData: VerticalM
     // Use the map method to iterate through the array of menu data
     if (!data || !Array.isArray(data)) {
       console.error('GenerateVerticalMenu: data is not an array or is undefined', data)
-      return null
+      
+return null
     }
 
     console.log('🔍 [MENU] Rendering menu items, count:', data.length)

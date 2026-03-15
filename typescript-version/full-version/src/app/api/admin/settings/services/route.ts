@@ -7,7 +7,9 @@
  * @module app/api/admin/settings/services
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { serviceConfigurationService } from '@/modules/settings/services'
 import { createServiceConfigurationSchema, listServicesQuerySchema } from '@/lib/config/validators'
@@ -29,12 +31,14 @@ export async function GET(request: NextRequest) {
 
     // Проверяем права доступа (только admin/superadmin)
     const userRole = user.role?.code?.toUpperCase()
+
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Парсим query параметры
     const searchParams = request.nextUrl.searchParams
+
     const queryResult = listServicesQuerySchema.safeParse({
       type: searchParams.get('type') || undefined,
       enabled: searchParams.get('enabled') || undefined,
@@ -88,6 +92,7 @@ export async function POST(request: NextRequest) {
 
     // Проверяем права доступа (только admin/superadmin)
     const userRole = user.role?.code?.toUpperCase()
+
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

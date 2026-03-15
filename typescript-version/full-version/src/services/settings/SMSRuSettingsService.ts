@@ -5,6 +5,7 @@
 
 import fs from 'fs'
 import path from 'path'
+
 import logger from '@/lib/logger'
 
 const SETTINGS_FILE = path.join(process.cwd(), 'sms-ru-settings.json')
@@ -26,7 +27,9 @@ const defaultSettings: SMSRuSettings = {
 const isSMSRuSettings = (data: unknown): data is SMSRuSettings => {
   if (typeof data !== 'object' || data === null) return false
   const obj = data as Record<string, unknown>
-  return (
+
+  
+return (
     typeof obj.apiKey === 'string' &&
     typeof obj.testMode === 'boolean'
   )
@@ -42,7 +45,9 @@ export class SMSRuSettingsService {
     if (!SMSRuSettingsService.instance) {
       SMSRuSettingsService.instance = new SMSRuSettingsService()
     }
-    return SMSRuSettingsService.instance
+
+    
+return SMSRuSettingsService.instance
   }
 
   /**
@@ -64,7 +69,8 @@ export class SMSRuSettingsService {
         if (isSMSRuSettings(settings)) {
           this.settingsCache = settings
           this.cacheExpiry = now + this.CACHE_TTL
-          return settings
+          
+return settings
         }
       }
     } catch (error) {
@@ -76,9 +82,11 @@ export class SMSRuSettingsService {
 
     // Возвращаем настройки по умолчанию
     const settings = { ...defaultSettings }
+
     this.settingsCache = settings
     this.cacheExpiry = now + this.CACHE_TTL
-    return settings
+    
+return settings
   }
 
   /**
@@ -97,6 +105,7 @@ export class SMSRuSettingsService {
     // Сохраняем в файл
     try {
       const dir = path.dirname(SETTINGS_FILE)
+
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true })
       }

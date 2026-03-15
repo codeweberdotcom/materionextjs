@@ -11,12 +11,14 @@ import type { NextRequest } from 'next/server'
 export function getEnvironmentFromRequest(request: NextRequest): string {
   // Проверяем заголовок X-Environment
   const envHeader = request.headers.get('X-Environment')
+
   if (envHeader) {
     return envHeader
   }
 
   // Проверяем переменную окружения
   const nodeEnv = process.env.NODE_ENV
+
   if (nodeEnv) {
     return nodeEnv === 'production' ? 'production' : 'development'
   }

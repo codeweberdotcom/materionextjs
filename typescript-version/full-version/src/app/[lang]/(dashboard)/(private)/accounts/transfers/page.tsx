@@ -67,6 +67,7 @@ const AccountTransfersPage = () => {
         }
 
         const result = await response.json()
+
         setTransfers(result.data || [])
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Ошибка загрузки')
@@ -89,6 +90,7 @@ const AccountTransfersPage = () => {
 
       if (!response.ok) {
         const result = await response.json()
+
         throw new Error(result.message || 'Ошибка принятия')
       }
 
@@ -114,6 +116,7 @@ const AccountTransfersPage = () => {
 
       if (!response.ok) {
         const result = await response.json()
+
         throw new Error(result.message || 'Ошибка отклонения')
       }
 
@@ -139,6 +142,7 @@ const AccountTransfersPage = () => {
 
       if (!response.ok) {
         const result = await response.json()
+
         throw new Error(result.message || 'Ошибка отмены')
       }
 
@@ -263,6 +267,7 @@ const AccountTransfersPage = () => {
                         {transfer.status === 'pending' && (
                           <Box className='flex justify-end gap-1'>
                             {activeTab === 0 ? (
+
                               // Входящие - можно принять или отклонить
                               <>
                                 <Button
@@ -283,6 +288,7 @@ const AccountTransfersPage = () => {
                                 </Button>
                               </>
                             ) : (
+
                               // Исходящие - можно отменить
                               <Button
                                 size='small'

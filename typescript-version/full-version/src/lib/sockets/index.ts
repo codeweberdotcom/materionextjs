@@ -1,5 +1,7 @@
-import { Server as HTTPServer } from 'http'
+import type { Server as HTTPServer } from 'http'
+
 import { Server } from 'socket.io'
+
 import logger from '../logger'
 import { websocketConnections } from '../metrics'
 import { serviceConfigResolver } from '../config'
@@ -50,7 +52,8 @@ const metrics = {
 export const initializeSocketServer = async (httpServer: HTTPServer): Promise<TypedIOServer> => {
   if (io) {
     logger.warn('Socket.IO server already initialized')
-    return io
+    
+return io
   }
 
   // CORS origins из ENV или defaults
@@ -67,6 +70,7 @@ export const initializeSocketServer = async (httpServer: HTTPServer): Promise<Ty
       methods: ["GET", "POST"],
       credentials: true
     },
+
     // Настройки для production
     pingTimeout: 60000,    // 60 секунд
     pingInterval: 25000,   // 25 секунд
@@ -117,7 +121,8 @@ async function setupRedisAdapter(ioServer: TypedIOServer): Promise<void> {
 
     if (!redisConfig.url) {
       logger.info('[Socket.IO] Redis not configured, using in-memory adapter (single server mode)')
-      return
+      
+return
     }
 
     // Динамический импорт адаптера
@@ -129,7 +134,9 @@ async function setupRedisAdapter(ioServer: TypedIOServer): Promise<void> {
     const pubClient = new Redis(redisConfig.url, {
       retryStrategy: (times) => {
         const delay = Math.min(times * 50, 2000)
-        return delay
+
+        
+return delay
       },
       lazyConnect: true,
       ...(redisConfig.tls ? { tls: { rejectUnauthorized: false } } : {})
@@ -170,6 +177,7 @@ async function setupRedisAdapter(ioServer: TypedIOServer): Promise<void> {
     logger.warn('[Socket.IO] Failed to setup Redis adapter, using in-memory adapter', {
       error: error instanceof Error ? error.message : String(error)
     })
+
     // Продолжаем без Redis адаптера (single server mode)
   }
 }
@@ -221,9 +229,11 @@ const syncMetrics = () => {
   if (!io) return
   
   const realConnections = getTotalConnections()
+
   metrics.activeConnections = realConnections
   
   const environment = process.env.NODE_ENV || 'development'
+
   websocketConnections.set({ environment }, realConnections)
   
   // Prometheus метрики
@@ -232,6 +242,7 @@ const syncMetrics = () => {
   
   // Подсчёт активных комнат
   let totalRooms = 0
+
   io._nsps.forEach((nsp) => {
     totalRooms += nsp.adapter.rooms.size
   })
@@ -239,6 +250,7 @@ const syncMetrics = () => {
   
   // Uptime
   const uptimeSeconds = Math.floor((Date.now() - metrics.startTime) / 1000)
+
   setSocketServerUptime(uptimeSeconds, environment)
   
   logger.debug('Metrics synced', {
@@ -281,6 +293,7 @@ const handleConnection = (socket: TypedSocket) => {
       lastActivity: new Date(),
       role: userRole
     })
+
     // Записываем успешную аутентификацию
     recordSocketAuthEvent('success')
   }
@@ -289,6 +302,7 @@ const handleConnection = (socket: TypedSocket) => {
   socket.on('disconnect', reason => {
     // Записываем метрику отключения
     const disconnectReason = mapDisconnectReason(reason)
+
     recordSocketDisconnect(disconnectReason, '/')
     
     // Синхронизируем метрики с реальным количеством (после отключения)
@@ -350,7 +364,8 @@ export const getSocketServer = (): Server | null => {
   // Fallback на globalThis (для случаев, когда модуль перезагружен)
   if (typeof globalThis !== 'undefined' && globalThis.io) {
     io = globalThis.io as TypedIOServer
-    return io
+    
+return io
   }
   
   return null
@@ -361,9 +376,12 @@ export const getSocketServer = (): Server | null => {
  */
 export const getTotalConnections = (): number => {
   const server = getSocketServer()
+
   if (!server) return 0
   
   let total = 0
+
+
   // Подсчет во всех namespaces
   server._nsps.forEach((nsp) => {
     total += nsp.sockets.size
@@ -390,7 +408,9 @@ export const getSocketMetrics = () => {
   syncMetrics()
   
   const uptime = Date.now() - metrics.startTime;
-  return {
+
+  
+return {
     ...metrics,
     uptime,
     activeUsers: activeUsers.size,
@@ -408,26 +428,31 @@ export const sendNotificationToUser = <TEvent extends keyof ServerToClientEvents
 ) => {
   if (!io) {
     logger.warn('Socket.IO server not initialized');
-    return false;
+    
+return false;
   }
 
   const userData = activeUsers.get(userId);
+
   if (!userData) {
     logger.debug('User not connected, skipping notification', { userId, event });
-    return false;
+    
+return false;
   }
 
   try {
     io.to(userData.socketId).emit(event, ...args)
     logger.debug('Notification sent to user', { userId, event, socketId: userData.socketId })
-    return true;
+    
+return true;
   } catch (error) {
     logger.error('Failed to send notification to user', {
       userId,
       event,
       error: error instanceof Error ? error.message : 'Unknown error'
     });
-    return false;
+    
+return false;
   }
 };
 
@@ -441,21 +466,24 @@ export const sendMessageToRoom = <TEvent extends keyof ServerToClientEvents>(
 ) => {
   if (!io) {
     logger.warn('Socket.IO server not initialized');
-    return false;
+    
+return false;
   }
 
   try {
     io.to(`room_${roomId}`).emit(event, ...args)
     metrics.totalMessages++;
     logger.debug('Message sent to room', { roomId, event });
-    return true;
+    
+return true;
   } catch (error) {
     logger.error('Failed to send message to room', {
       roomId,
       event,
       error: error instanceof Error ? error.message : 'Unknown error'
     });
-    return false;
+    
+return false;
   }
 };
 

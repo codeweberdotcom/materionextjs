@@ -1,9 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+
 import { Button, Menu, MenuItem, CircularProgress } from '@mui/material'
 import { toast } from 'react-toastify'
-import {
+
+import type {
   ExportButtonProps,
   ExportFormat,
   ExportResult
@@ -30,18 +32,24 @@ export default function ExportButton({
   const { user } = useAuth()
   const dictionary = useTranslation()
   const nav = dictionary.navigation || {}
+
   const formatMessage = (template?: string, params?: Record<string, string | number>) => {
     if (!template || typeof template !== 'string') return ''
     let result = template
+
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         const stringValue = String(value)
+
         result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), stringValue)
         result = result.replace(new RegExp(`\\$\\{${key}\\}`, 'g'), stringValue)
       })
     }
-    return result
+
+    
+return result
   }
+
   const [loading, setLoading] = useState(false)
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null)
   const open = Boolean(anchorEl)
@@ -58,14 +66,17 @@ export default function ExportButton({
   const downloadFileFromBase64 = (base64: string, filename: string, mimeType: string) => {
     const byteCharacters = atob(base64)
     const byteNumbers = new Array(byteCharacters.length)
+
     for (let i = 0; i < byteCharacters.length; i++) {
       byteNumbers[i] = byteCharacters.charCodeAt(i)
     }
+
     const byteArray = new Uint8Array(byteNumbers)
     const blob = new Blob([byteArray], { type: mimeType })
     const url = URL.createObjectURL(blob)
     
     const link = document.createElement('a')
+
     link.href = url
     link.download = filename
     document.body.appendChild(link)
@@ -77,6 +88,7 @@ export default function ExportButton({
   // Download file from URL (legacy)
   const downloadFile = (url: string, filename: string) => {
     const link = document.createElement('a')
+
     link.href = url
     link.download = filename
     document.body.appendChild(link)
@@ -119,17 +131,21 @@ export default function ExportButton({
         const exportedLabel =
           formatMessage(nav.recordsExported, { count: result.recordCount || 0 }) ||
           `Records exported: ${result.recordCount || 0}`
+
         const successMsg = typeof nav.exportSuccess === 'string' ? nav.exportSuccess : 'Export completed successfully'
+
         toast.success(`${successMsg} ${exportedLabel}`)
 
         onSuccess?.(result)
       } else {
         const errorMessage = result.error || 'Export failed'
+
         toast.error(typeof nav.exportFailed === 'string' ? nav.exportFailed : errorMessage)
         onError?.(errorMessage)
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+
       toast.error(`Export failed: ${errorMessage}`)
       onError?.(errorMessage)
     } finally {

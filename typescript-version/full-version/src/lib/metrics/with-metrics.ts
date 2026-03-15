@@ -1,7 +1,8 @@
 /**
  * Helper для сбора метрик HTTP запросов в API routes
  */
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest, NextResponse } from 'next/server'
+
 import { httpRequestDuration } from '@/lib/metrics'
 
 export function withMetrics<T extends (...args: any[]) => Promise<NextResponse>>(

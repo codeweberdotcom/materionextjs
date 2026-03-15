@@ -1,6 +1,10 @@
 'use client'
 
 // MUI Imports
+import { useState } from 'react'
+
+import type { MouseEvent } from 'react'
+
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
@@ -12,8 +16,6 @@ import MenuItem from '@mui/material/MenuItem'
 import Divider from '@mui/material/Divider'
 
 // React Imports
-import { useState } from 'react'
-import type { MouseEvent } from 'react'
 
 // Type Imports
 import type { UserAccountWithRelations } from '@/types/accounts/interfaces'

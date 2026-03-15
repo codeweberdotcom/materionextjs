@@ -50,6 +50,7 @@ const AccountManagersPage = () => {
         }
 
         const accountResult = await accountResponse.json()
+
         setAccount(accountResult.data)
 
         // Загружаем менеджеров
@@ -57,6 +58,7 @@ const AccountManagersPage = () => {
 
         if (managersResponse.ok) {
           const managersResult = await managersResponse.json()
+
           setManagers(managersResult.data || [])
         }
       } catch (err) {
@@ -86,6 +88,7 @@ const AccountManagersPage = () => {
 
       if (!response.ok) {
         const result = await response.json()
+
         throw new Error(result.message || 'Ошибка назначения менеджера')
       }
 
@@ -94,6 +97,7 @@ const AccountManagersPage = () => {
 
       if (managersResponse.ok) {
         const managersResult = await managersResponse.json()
+
         setManagers(managersResult.data || [])
       }
 
@@ -117,6 +121,7 @@ const AccountManagersPage = () => {
 
       if (!response.ok) {
         const result = await response.json()
+
         throw new Error(result.message || 'Ошибка отзыва доступа')
       }
 

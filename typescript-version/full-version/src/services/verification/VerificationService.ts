@@ -3,9 +3,10 @@
  * Поддерживает верификацию email и телефона
  */
 
+import crypto from 'crypto'
+
 import { prisma } from '@/libs/prisma'
 import { generateVerificationCode, isVerificationCodeExpired } from '@/lib/utils/phone-utils'
-import crypto from 'crypto'
 
 export type VerificationType = 'email' | 'phone'
 
@@ -42,6 +43,7 @@ export class VerificationService {
     const code = type === 'email' ? crypto.randomBytes(32).toString('hex') : generateVerificationCode()
 
     const expires = new Date()
+
     expires.setMinutes(expires.getMinutes() + expiresInMinutes)
 
     // Удаляем старые неиспользованные коды для этого идентификатора
@@ -192,7 +194,9 @@ export class VerificationService {
    */
   async hasActiveCode(identifier: string, type: VerificationType): Promise<boolean> {
     const code = await this.getActiveCode(identifier, type)
-    return !!code
+
+    
+return !!code
   }
 }
 

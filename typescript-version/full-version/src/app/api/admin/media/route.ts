@@ -6,11 +6,13 @@
  * @module app/api/admin/media
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isAdminOrHigher } from '@/utils/permissions/permissions'
-import { getMediaService, MediaEntityType } from '@/services/media'
+import type { MediaEntityType } from '@/services/media';
+import { getMediaService } from '@/services/media'
 import logger from '@/lib/logger'
 
 /**
@@ -33,6 +35,7 @@ export async function GET(request: NextRequest) {
     // Handle deleted filter: 'true' = only deleted, 'false' = only non-deleted, undefined = all
     const deletedParam = searchParams.get('deleted')
     let deletedFilter: boolean | undefined = undefined
+
     if (deletedParam === 'true') {
       deletedFilter = true  // Only deleted items (trash)
     } else if (deletedParam === 'false') {

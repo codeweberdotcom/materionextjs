@@ -9,7 +9,9 @@ export class AccountTransferService {
     if (!AccountTransferService.instance) {
       AccountTransferService.instance = new AccountTransferService()
     }
-    return AccountTransferService.instance
+
+    
+return AccountTransferService.instance
   }
 
   /**
@@ -276,6 +278,7 @@ export class AccountTransferService {
           createdAt: 'desc'
         }
       }),
+
       // Исходящие запросы (где пользователь владелец)
       prisma.accountTransfer.findMany({
         where: {

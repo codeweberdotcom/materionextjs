@@ -76,10 +76,12 @@ const AccountSwitcher = () => {
   const handleSwitchAccount = async (accountId: string) => {
     if (accountId === currentAccount?.id) {
       setOpen(false)
-      return
+      
+return
     }
 
     setSwitching(accountId)
+
     try {
       await switchAccount(accountId)
       setOpen(false)
@@ -204,6 +206,7 @@ const AccountSwitcher = () => {
                     className='gap-3'
                     onClick={e => {
                       handleDropdownClose(e)
+
                       // TODO: Переход на страницу управления аккаунтами
                       window.location.href = '/accounts'
                     }}

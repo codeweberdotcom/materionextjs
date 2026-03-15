@@ -5,6 +5,7 @@
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react'
+
 import { useBulkUpload, QueuedFile, UploadStats } from '../useBulkUpload'
 
 // Мокаем XMLHttpRequest
@@ -22,9 +23,11 @@ const mockXHR = {
 
 const createMockXHR = () => {
   const xhr = { ...mockXHR }
+
   xhr.upload = { addEventListener: jest.fn() }
   xhr.addEventListener = jest.fn()
-  return xhr
+  
+return xhr
 }
 
 // @ts-ignore
@@ -45,7 +48,9 @@ describe('useBulkUpload', () => {
    */
   function createTestFile(name: string, size: number = 1024, type: string = 'image/jpeg'): File {
     const content = new Array(size).fill('a').join('')
-    return new File([content], name, { type })
+
+    
+return new File([content], name, { type })
   }
 
   describe('Инициализация', () => {
@@ -97,6 +102,7 @@ describe('useBulkUpload', () => {
       })
 
       const ids = result.current.files.map(f => f.id)
+
       expect(new Set(ids).size).toBe(2) // Все ID уникальны
     })
 
@@ -144,6 +150,7 @@ describe('useBulkUpload', () => {
     it('должен создавать превью для изображений', () => {
       // Мокаем URL.createObjectURL
       const mockUrl = 'blob:test-url'
+
       global.URL.createObjectURL = jest.fn(() => mockUrl)
 
       const { result } = renderHook(() => useBulkUpload({ maxPreviews: 10 }))
@@ -269,6 +276,7 @@ describe('useBulkUpload', () => {
 
       // Проверяем что хук инициализирован с правильными опциями
       expect(result.current.files).toEqual([])
+
       // Endpoint будет использоваться при вызове startUpload
     })
 

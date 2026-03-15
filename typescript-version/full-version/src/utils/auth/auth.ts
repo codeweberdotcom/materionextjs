@@ -1,8 +1,12 @@
 import type { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
-import { lucia, LuciaSession, LuciaUser } from '@/libs/lucia'
-import { prisma } from '@/libs/prisma'
+
 import type { Role } from '@prisma/client'
+
+import type { LuciaUser } from '@/libs/lucia';
+import { lucia, LuciaSession } from '@/libs/lucia'
+import { prisma } from '@/libs/prisma'
+
 
 export type AuthenticatedUser = LuciaUser extends null ? null : LuciaUser & { role?: Role | null }
 
@@ -14,6 +18,7 @@ export async function getLuciaSession(request?: NextRequest) {
   } else {
     // For server components, use cookies() from next/headers
     const cookieStore = await cookies()
+
     sessionId = lucia.readSessionCookie(cookieStore.toString())
   }
 

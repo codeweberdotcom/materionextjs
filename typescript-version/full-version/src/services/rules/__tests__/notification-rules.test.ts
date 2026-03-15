@@ -3,6 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
+
 import { getRulesEngine } from '../RulesEngine'
 import { notificationRules } from '../rules/notification-rules'
 import type { RuleFacts } from '../types'
@@ -41,6 +42,7 @@ describe('Notification Rules', () => {
       expect(result.events.length).toBeGreaterThan(0)
 
       const welcomeEvent = result.events.find(e => e.type === 'notification.send')
+
       expect(welcomeEvent).toBeDefined()
       expect(welcomeEvent?.params.channels).toContain('email')
       expect(welcomeEvent?.params.templateId).toBe('welcome')
@@ -66,6 +68,7 @@ describe('Notification Rules', () => {
 
       expect(result.success).toBe(true)
       const resetEvent = result.events.find(e => e.type === 'notification.send')
+
       expect(resetEvent).toBeDefined()
       expect(resetEvent?.params.channels).toContain('email')
       expect(resetEvent?.params.templateId).toBe('password-reset')
@@ -91,6 +94,7 @@ describe('Notification Rules', () => {
 
       expect(result.success).toBe(true)
       const smsEvent = result.events.find(e => e.type === 'notification.send')
+
       expect(smsEvent).toBeDefined()
       expect(smsEvent?.params.channels).toContain('sms')
     })
@@ -115,6 +119,7 @@ describe('Notification Rules', () => {
 
       expect(result.success).toBe(true)
       const approvedEvent = result.events.find(e => e.type === 'notification.send')
+
       expect(approvedEvent).toBeDefined()
       expect(approvedEvent?.params.channels).toContain('browser')
       expect(approvedEvent?.params.templateId).toBe('listing-approved')
@@ -140,6 +145,7 @@ describe('Notification Rules', () => {
 
       expect(result.success).toBe(true)
       const blockedEvent = result.events.find(e => e.type === 'notification.send')
+
       expect(blockedEvent).toBeDefined()
       expect(blockedEvent?.params.channels).toContain('browser')
       expect(blockedEvent?.params.templateId).toBe('account-blocked')
@@ -165,9 +171,11 @@ describe('Notification Rules', () => {
 
       expect(result.success).toBe(true)
       const notificationEvent = result.events.find(e => e.type === 'notification.send')
+
       expect(notificationEvent).toBeDefined()
       
       const channels = notificationEvent?.params.channels as string[]
+
       expect(Array.isArray(channels)).toBe(true)
       expect(channels.length).toBeGreaterThan(0)
     })

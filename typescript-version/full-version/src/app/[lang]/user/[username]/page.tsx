@@ -3,8 +3,9 @@
  * URL: /user/[username]
  */
 
-import { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
+
+import type { Metadata } from 'next'
 
 import { prisma } from '@/libs/prisma'
 import { slugService } from '@/services/slug'
@@ -69,6 +70,7 @@ export default async function PublicUserProfilePage({ params }: PageProps) {
       image: true,
       country: true,
       createdAt: true,
+
       // НЕ выводим приватные данные: email, phone, password
       ownedAccounts: {
         where: {

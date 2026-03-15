@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { optionalRequireAuth } from '@/utils/auth/auth'
 import logger from '@/lib/logger'
 
@@ -11,7 +13,8 @@ export async function GET(request: NextRequest) {
 
     if (!session || !user) {
       logger.info('вќЊ [SESSION] No valid session found')
-      return NextResponse.json({ user: null })
+      
+return NextResponse.json({ user: null })
     }
 
     logger.info('вњ… [SESSION] Session found for user:', user.email)
@@ -40,7 +43,8 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     logger.error('вќЊ [SESSION] Error getting session:', { error: error instanceof Error ? error.message : error, file: 'src/app/api/auth/session/route.ts' })
-    return NextResponse.json({ user: null })
+    
+return NextResponse.json({ user: null })
   }
 }
 

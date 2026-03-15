@@ -7,7 +7,6 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 
-import { useTranslationSafe } from '@/contexts/TranslationContext'
 
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -54,6 +53,8 @@ import Menu from '@mui/material/Menu'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'react-toastify'
 
+import { useTranslationSafe } from '@/contexts/TranslationContext'
+
 import MediaDetailSidebar from './MediaDetailSidebar'
 import { useBulkUpload, type QueuedFile } from '@/hooks/useBulkUpload'
 
@@ -97,7 +98,8 @@ const STORAGE_STATUS_VALUES = ['', 'local_only', 'synced', 's3_only', 'sync_pend
 const formatFileSize = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  
+return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 const getStorageStatusColor = (status: string): 'success' | 'warning' | 'error' | 'default' => {
@@ -190,12 +192,14 @@ export default function MediaLibrary() {
 
   // Delete confirmation dialog
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+
   const [deleteTarget, setDeleteTarget] = useState<{
     type: 'single' | 'bulk'
     id?: string
     count?: number
     mode?: 'soft' | 'hard'  // NEW: delete mode
   } | null>(null)
+
   const [deleting, setDeleting] = useState(false)
 
   // Delete menu anchor (for dropdown)
@@ -227,6 +231,7 @@ export default function MediaLibrary() {
           fetchMedia()
         fetchTrashCount()
       }
+
       // Не закрываем диалог автоматически - пользователь должен видеть результаты
     },
   })
@@ -240,6 +245,7 @@ export default function MediaLibrary() {
 
   const fetchMedia = useCallback(async () => {
     setLoading(true)
+
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -260,9 +266,11 @@ export default function MediaLibrary() {
       }
 
       const response = await fetch(`/api/admin/media?${params}`)
+
       if (!response.ok) throw new Error('Failed to fetch media')
 
       const data: MediaListResult = await response.json()
+
       setMedia(data.items)
       setTotalPages(data.totalPages)
       setTotal(data.total)
@@ -277,8 +285,10 @@ export default function MediaLibrary() {
   const fetchTrashCount = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/media?deleted=true&limit=1')
+
       if (response.ok) {
         const data = await response.json()
+
         setTrashCount(data.total || 0)
       }
     } catch {
@@ -290,10 +300,13 @@ export default function MediaLibrary() {
   const fetchS3Status = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/settings/services?type=S3')
+
       if (response.ok) {
         const result = await response.json()
+
         // S3 enabled = any S3 service is enabled (regardless of connection status)
         const enabledS3 = result.data?.find((s: any) => s.type === 'S3' && s.enabled)
+
         setS3Enabled(!!enabledS3)
       }
     } catch {
@@ -305,14 +318,19 @@ export default function MediaLibrary() {
   const fetchMediaSettings = useCallback(async () => {
     try {
       const response = await fetch('/api/admin/media/settings')
+
       if (response.ok) {
         const data = await response.json()
+
         if (data.global?.globalMaxFileSize) {
           setMaxFileSize(data.global.globalMaxFileSize)
         }
+
         if (data.global?.processingConcurrency) {
           setParallelLimit(data.global.processingConcurrency)
         }
+
+
         // S3 Public URL prefix for direct access
         setS3PublicUrlPrefix(data.global?.s3PublicUrlPrefix || null)
         
@@ -375,13 +393,16 @@ export default function MediaLibrary() {
 
   // Выбрать ВСЕ файлы во всей медиатеке (все страницы)
   const [selectingAll, setSelectingAll] = useState(false)
+
   const handleSelectAllPages = async () => {
     if (selectedIds.length === total) {
       setSelectedIds([])
-      return
+      
+return
     }
 
     setSelectingAll(true)
+
     try {
       // Запрашиваем все ID с сервера
       const params = new URLSearchParams({
@@ -392,6 +413,7 @@ export default function MediaLibrary() {
       if (search) params.set('search', search)
       if (entityType) params.set('entityType', entityType)
       if (storageStatus) params.set('storageStatus', storageStatus)
+
       if (activeTab === 'trash') {
         params.set('deleted', 'true')
       } else {
@@ -399,9 +421,11 @@ export default function MediaLibrary() {
       }
 
       const response = await fetch(`/api/admin/media?${params}`)
+
       if (!response.ok) throw new Error('Failed to fetch all IDs')
 
       const data = await response.json()
+
       setSelectedIds(data.items.map((m: { id: string }) => m.id))
       toast.success(`Выбрано файлов: ${data.items.length}`)
     } catch (error) {
@@ -456,6 +480,7 @@ export default function MediaLibrary() {
     try {
       if (deleteTarget.type === 'single' && deleteTarget.id) {
         const response = await fetch(`/api/admin/media/${deleteTarget.id}${endpoint}`, { method: 'DELETE' })
+
         if (!response.ok) throw new Error('Failed to delete')
         toast.success(isHardDelete ? 'Файл удалён навсегда' : 'Файл перемещён в корзину')
       } else if (deleteTarget.type === 'bulk') {
@@ -467,6 +492,7 @@ export default function MediaLibrary() {
 
         // Удаляем параллельно батчами по 10
         const BATCH_SIZE = 10
+
         for (let i = 0; i < selectedIds.length; i += BATCH_SIZE) {
           const batch = selectedIds.slice(i, i + BATCH_SIZE)
 
@@ -475,7 +501,8 @@ export default function MediaLibrary() {
               fetch(`/api/admin/media/${id}${endpoint}`, { method: 'DELETE' })
                 .then(res => {
                   if (!res.ok) throw new Error(`HTTP ${res.status}`)
-                  return res
+                  
+return res
                 })
             )
           )
@@ -530,12 +557,14 @@ export default function MediaLibrary() {
   
   const handleRestore = async (id: string) => {
     setRestoringIds(prev => [...prev, id])
+
     try {
       const response = await fetch(`/api/admin/media/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'restore' })
       })
+
       if (!response.ok) throw new Error('Failed to restore')
       toast.success(t?.fileRestored ?? 'File restored')
       fetchMedia()
@@ -552,6 +581,7 @@ export default function MediaLibrary() {
     if (selectedIds.length === 0) return
     
     const total = selectedIds.length
+
     setRestoreProgress({ current: 0, total, isRestoring: true })
     
     let successCount = 0
@@ -560,12 +590,14 @@ export default function MediaLibrary() {
     try {
       for (let i = 0; i < selectedIds.length; i++) {
         const id = selectedIds[i]
+
         try {
           const response = await fetch(`/api/admin/media/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'restore' })
         })
+
           if (response.ok) {
             successCount++
           } else {
@@ -574,12 +606,14 @@ export default function MediaLibrary() {
         } catch {
           errorCount++
         }
+
         setRestoreProgress({ current: i + 1, total, isRestoring: true })
       }
       
       if (successCount > 0) {
         toast.success(t?.filesRestored?.replace('{count}', String(successCount)) ?? `Restored: ${successCount} files`)
       }
+
       if (errorCount > 0) {
         toast.error(`Failed to restore: ${errorCount} files`)
       }
@@ -615,18 +649,23 @@ export default function MediaLibrary() {
       // Лимит файлов
       if (uploadFiles.length + acceptedFiles.length > MAX_FILES_PER_UPLOAD) {
         const allowed = MAX_FILES_PER_UPLOAD - uploadFiles.length
+
         if (allowed <= 0) {
           toast.warning(`Максимум ${MAX_FILES_PER_UPLOAD} файлов за раз`)
-          return
+          
+return
         }
+
         toast.warning(`Добавлено только ${allowed} из ${acceptedFiles.length} файлов (лимит: ${MAX_FILES_PER_UPLOAD})`)
         acceptedFiles = acceptedFiles.slice(0, allowed)
       }
+
       onDrop(acceptedFiles)
     },
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp', '.svg'],
     },
+
     // maxSize убран - проверка в useBulkUpload показывает ошибку в UI
     multiple: true,
   })
@@ -647,7 +686,9 @@ export default function MediaLibrary() {
       const prefix = s3PublicUrlPrefix.endsWith('/') 
         ? s3PublicUrlPrefix.slice(0, -1) 
         : s3PublicUrlPrefix
-      return `${prefix}/${m.s3Key}`
+
+      
+return `${prefix}/${m.s3Key}`
     }
 
     if (m.localPath) {
@@ -966,6 +1007,7 @@ export default function MediaLibrary() {
                 <Typography color="text.secondary">{t?.noFiles ?? 'No files'}</Typography>
               </Box>
             ) : viewMode === 'grid' ? (
+
               /* Grid View */
               <Box sx={{
                 display: 'grid',
@@ -1124,6 +1166,7 @@ export default function MediaLibrary() {
                 ))}
               </Box>
             ) : (
+
               /* List/Table View */
               <TableContainer>
                 <Table>
@@ -1467,7 +1510,9 @@ export default function MediaLibrary() {
                   .sort((a, b) => {
                     // Ошибки первыми, затем uploading, затем pending, затем success
                     const order = { error: 0, cancelled: 1, uploading: 2, pending: 3, success: 4 }
-                    return (order[a.status] ?? 5) - (order[b.status] ?? 5)
+
+                    
+return (order[a.status] ?? 5) - (order[b.status] ?? 5)
                   })
                   .map((uploadFile) => (
                   <Box

@@ -94,10 +94,12 @@ const NotificationDetails = (props: Props) => {
   // Hooks
   const dictionary = useTranslation()
   const router = useRouter()
+
   const metadata = useMemo(
     () => parseNotificationMetadata(currentNotification?.metadata),
     [currentNotification?.metadata]
   )
+
   const hasMetadata = Object.keys(metadata).length > 0
 
   // Auto-mark as read when drawer opens

@@ -45,11 +45,13 @@ export async function runMediaCleanup(dryRun: boolean = false): Promise<CleanupR
     if (trashRetentionDays <= 0) {
       logger.info('[MediaCleanup] Auto cleanup is disabled (trashRetentionDays = 0)')
       result.skipped = -1 // Указываем что пропущено из-за настроек
-      return result
+      
+return result
     }
 
     // Вычисляем дату отсечки
     const cutoffDate = new Date()
+
     cutoffDate.setDate(cutoffDate.getDate() - trashRetentionDays)
 
     logger.info('[MediaCleanup] Starting cleanup', {
@@ -88,7 +90,8 @@ export async function runMediaCleanup(dryRun: boolean = false): Promise<CleanupR
         count: toDelete.length,
         files: toDelete.slice(0, 10).map(f => f.filename),
       })
-      return result
+      
+return result
     }
 
     // Добавляем задачи на удаление в очередь
@@ -101,6 +104,7 @@ export async function runMediaCleanup(dryRun: boolean = false): Promise<CleanupR
         result.queuedForDeletion++
       } catch (error) {
         const errorMsg = `Failed to queue deletion for ${media.id}: ${error instanceof Error ? error.message : String(error)}`
+
         result.errors.push(errorMsg)
         logger.error('[MediaCleanup] Failed to queue deletion', {
           mediaId: media.id,
@@ -146,6 +150,7 @@ export async function runOrphanCleanup(dryRun: boolean = false): Promise<Cleanup
 
     // orphanRetentionDays из существующей схемы
     const cutoffDate = new Date()
+
     cutoffDate.setDate(cutoffDate.getDate() - (settings as any).orphanRetentionDays || 30)
 
     // Находим orphan файлы (без entityId и старше N дней)
@@ -170,7 +175,8 @@ export async function runOrphanCleanup(dryRun: boolean = false): Promise<Cleanup
 
     if (orphans.length === 0 || dryRun) {
       result.queuedForDeletion = orphans.length
-      return result
+      
+return result
     }
 
     // Сначала soft delete

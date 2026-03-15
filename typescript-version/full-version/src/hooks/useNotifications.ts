@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react'
+
 import { useDispatch, useSelector } from 'react-redux'
+
 import { useAuth } from '@/contexts/AuthProvider'
 import { useSockets } from '@/contexts/SocketProvider'
 import type { RootState, AppDispatch } from '@/redux-store'
@@ -66,9 +68,11 @@ export const useNotifications = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { user } = useAuth()
   const { notificationSocket } = useSockets()
+
   const { notifications, filteredNotifications, loading, filters } = useSelector(
     (state: RootState) => state.notificationsReducer
   )
+
   const filtersRef = useRef<NotificationFilters>(filters)
 
   useEffect(() => {
@@ -85,6 +89,7 @@ export const useNotifications = () => {
 
     logger.info('Refreshing notifications', { source, userId: user.id })
     dispatch(setLoading(true))
+
     try {
       const response = await fetch('/api/notifications', {
         method: 'GET'
@@ -93,6 +98,7 @@ export const useNotifications = () => {
       if (response.ok) {
         const data: NotificationsApiResponse = await response.json()
         const mapped = (data.notifications ?? []).map(normalizeNotification)
+
         dispatch(setNotificationsAction(mapped))
         dispatch(filterNotifications(filtersRef.current))
         logger.info('Notifications refreshed', {
@@ -246,6 +252,7 @@ export const useNotifications = () => {
 
     const handleNotificationUpdate = (payload: NotificationUpdatePayload) => {
       const notificationId = resolveNotificationId(payload)
+
       if (!notificationId) return
 
       const updates: NotificationUpdatePayload['updates'] =
@@ -261,6 +268,7 @@ export const useNotifications = () => {
 
     const handleNotificationDeleted = (payload: NotificationDeletePayload) => {
       const notificationId = resolveNotificationId(payload)
+
       if (!notificationId) return
       dispatch(deleteNotificationAction({ notificationId }))
     }

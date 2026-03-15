@@ -7,6 +7,7 @@ const toEventProperty = (value: unknown): string | number | boolean | undefined 
   if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
     return value
   }
+
   if (value instanceof Date) {
     return value.toISOString()
   }

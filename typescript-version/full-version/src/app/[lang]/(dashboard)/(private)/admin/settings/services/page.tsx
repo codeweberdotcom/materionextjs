@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+
 import {
   Card,
   CardContent,
@@ -40,6 +41,7 @@ import {
   Divider,
   InputAdornment
 } from '@mui/material'
+
 // Remix Icons components (проект использует Remix Icons)
 // Стиль для вертикального выравнивания иконок
 const iconStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }
@@ -48,18 +50,23 @@ const AddIcon = () => <i className='ri-add-line' style={iconStyle} />
 const EditIcon = () => <i className='ri-pencil-line' style={iconStyle} />
 const DeleteIcon = () => <i className='ri-delete-bin-line' style={iconStyle} />
 const RefreshIcon = () => <i className='ri-refresh-line' style={iconStyle} />
+
 const CheckCircleIcon = ({ fontSize }: { color?: string; fontSize?: string }) => (
   <i className='ri-checkbox-circle-fill' style={{ ...iconStyle, color: 'inherit', fontSize: fontSize === 'small' ? '16px' : undefined }} />
 )
+
 const ErrorIcon = ({ fontSize }: { color?: string; fontSize?: string }) => (
   <i className='ri-error-warning-fill' style={{ ...iconStyle, color: 'inherit', fontSize: fontSize === 'small' ? '16px' : undefined }} />
 )
+
 const WarningIcon = ({ fontSize }: { color?: string; fontSize?: string }) => (
   <i className='ri-alert-fill' style={{ ...iconStyle, color: 'inherit', fontSize: fontSize === 'small' ? '16px' : undefined }} />
 )
+
 const HelpIcon = ({ fontSize }: { color?: string; fontSize?: string }) => (
   <i className='ri-question-line' style={{ ...iconStyle, color: 'inherit', fontSize: fontSize === 'small' ? '16px' : undefined }} />
 )
+
 const VisibilityIcon = () => <i className='ri-eye-line' style={iconStyle} />
 const VisibilityOffIcon = () => <i className='ri-eye-off-line' style={iconStyle} />
 const StorageIcon = () => <i className='ri-server-line' style={iconStyle} />
@@ -98,11 +105,13 @@ interface ServiceFormData {
   token: string
   tlsEnabled: boolean
   enabled: boolean
+
   // S3 specific
   s3Region: string
   s3Bucket: string
   s3StorageType: string
   s3ForcePathStyle: boolean
+
   // PostgreSQL specific
   pgDatabase: string
 }
@@ -177,11 +186,13 @@ const initialFormData: ServiceFormData = {
   token: '',
   tlsEnabled: false,
   enabled: true,
+
   // S3 specific
   s3Region: 'us-east-1',
   s3Bucket: '',
   s3StorageType: 'minio',
   s3ForcePathStyle: true,
+
   // PostgreSQL specific
   pgDatabase: 'postgres'
 }
@@ -348,6 +359,7 @@ export default function ExternalServicesPage() {
         hasToken: service.hasToken || false
       })
     }
+
     setEditingId(service.id)
     setDialogMode('edit')
     setFormError(null)
@@ -435,12 +447,14 @@ export default function ExternalServicesPage() {
 
     try {
       setDeleting(true)
+
       const response = await fetch(`/api/admin/settings/services/${deletingService.id}`, {
         method: 'DELETE'
       })
 
       if (!response.ok) {
         const data = await response.json()
+
         throw new Error(data.error || 'Ошибка удаления')
       }
 
@@ -535,7 +549,9 @@ export default function ExternalServicesPage() {
   // Get type icon
   const getTypeIcon = (type: string) => {
     const found = SERVICE_TYPES.find(t => t.value === type)
-    return found?.icon || '🔧'
+
+    
+return found?.icon || '🔧'
   }
 
   return (

@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isAdminByCode, isSuperadmin } from '@/utils/permissions/permissions'
@@ -10,12 +11,15 @@ const CRON_NAME = 'retention_cleanup'
 export async function GET(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user || (!isAdminByCode(user) && !isSuperadmin(user))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const status = await getCronStatus(CRON_NAME)
-    return NextResponse.json({
+
+    
+return NextResponse.json({
       retentionDays: getRetentionDays(),
       status
     })
@@ -23,13 +27,15 @@ export async function GET(request: NextRequest) {
     logger.error('Failed to fetch retention status', {
       error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
     })
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const { user } = await requireAuth(request)
+
     if (!user || (!isAdminByCode(user) && !isSuperadmin(user))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -50,6 +56,7 @@ export async function POST(request: NextRequest) {
       error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
     })
     await recordCronStatus(CRON_NAME, { lastRunAt: new Date(), lastResult: 'error' })
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

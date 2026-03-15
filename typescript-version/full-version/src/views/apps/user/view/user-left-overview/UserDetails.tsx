@@ -123,6 +123,7 @@ const UserDetails = ({ userData }: UserDetailsProps) => {
         } else {
           // Handle API error response
           const errorData = await response.json()
+
           console.error('API Error:', errorData.message)
 
           toast.error(errorData.message || 'Failed to update user status')

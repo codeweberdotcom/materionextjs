@@ -102,8 +102,10 @@ const Register = ({ mode }: { mode: Mode }) => {
     const loadSettings = async () => {
       try {
         const response = await fetch('/api/settings/registration')
+
         if (response.ok) {
           const data = await response.json()
+
           setSettings(data)
         } else {
           // Default settings if API fails
@@ -115,6 +117,7 @@ const Register = ({ mode }: { mode: Mode }) => {
         }
       } catch (err) {
         console.error('Failed to load registration settings:', err)
+
         // Default settings
         setSettings({
           registrationMode: 'email_or_phone',

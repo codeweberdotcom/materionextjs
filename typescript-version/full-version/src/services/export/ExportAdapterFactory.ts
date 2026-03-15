@@ -1,4 +1,4 @@
-import { IEntityAdapter } from '@/types/export-import'
+import type { IEntityAdapter } from '@/types/export-import'
 import { UserAdapter } from '@/services/adapters/UserAdapter'
 
 /**

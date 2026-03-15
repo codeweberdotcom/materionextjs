@@ -17,6 +17,7 @@ let metrics: {
 if (typeof window === 'undefined') {
   try {
     const metricsModule = require('@/lib/metrics/events')
+
     metrics = {
       markEventsRetentionDeleted: metricsModule.markEventsRetentionDeleted,
       startRetentionTimer: metricsModule.startRetentionTimer,
@@ -79,6 +80,7 @@ export class EventRetentionService {
     const stopTimer = metrics?.startRetentionTimer(source) || (() => {})
     const ttlDays = this.getTTLDays(source)
     const cutoffDate = new Date()
+
     cutoffDate.setDate(cutoffDate.getDate() - ttlDays)
 
     logger.info(`[EventRetention] Cleaning ${source} events older than ${ttlDays} days (before ${cutoffDate.toISOString()})`, {
@@ -149,7 +151,8 @@ export class EventRetentionService {
 
     if (!env.EVENT_RETENTION_ENABLED) {
       logger.info('[EventRetention] Retention is disabled via EVENT_RETENTION_ENABLED=false')
-      return {
+      
+return {
         totalDeleted: 0,
         sources: [],
         duration: 0,
@@ -180,9 +183,11 @@ export class EventRetentionService {
     // Добавляем тестовые события как отдельный источник
     try {
       const testResult = await this.cleanTestEvents(dryRun)
+
       results.push(testResult)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
+
       logger.error('[EventRetention] Failed to clean test events', { error: errorMessage })
       metrics?.markRetentionError(TEST_EVENTS_SOURCE)
       errors.push({ source: TEST_EVENTS_SOURCE, error: errorMessage })
@@ -191,9 +196,11 @@ export class EventRetentionService {
     for (const source of sources) {
       try {
         const result = await this.cleanSource(source, dryRun)
+
         results.push(result)
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error)
+
         logger.error(`[EventRetention] Failed to clean source ${source}`, { error: errorMessage, source })
         metrics?.markRetentionError(source)
         errors.push({ source, error: errorMessage })
@@ -274,6 +281,7 @@ export class EventRetentionService {
       sources.map(async source => {
         const ttlDays = this.getTTLDays(source)
         const cutoffDate = new Date()
+
         cutoffDate.setDate(cutoffDate.getDate() - ttlDays)
 
         const [totalEvents, eventsToDelete, oldestEvent] = await Promise.all([
@@ -317,6 +325,7 @@ export class EventRetentionService {
     const stopTimer = metrics?.startRetentionTimer(source) || (() => {})
     const ttlDays = env.EVENT_RETENTION_TEST_EVENTS_DAYS
     const cutoffDate = new Date()
+
     cutoffDate.setDate(cutoffDate.getDate() - ttlDays)
 
     const where: Prisma.EventWhereInput = {
@@ -372,6 +381,7 @@ export class EventRetentionService {
     oldestEvent: Date | null
   }> {
     const cutoffDate = new Date()
+
     cutoffDate.setDate(cutoffDate.getDate() - env.EVENT_RETENTION_TEST_EVENTS_DAYS)
 
     const whereTestEvents: Prisma.EventWhereInput = {

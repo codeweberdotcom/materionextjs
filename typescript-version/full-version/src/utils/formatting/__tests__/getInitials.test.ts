@@ -26,6 +26,7 @@ describe('getInitials', () => {
   it('should handle non-string input', () => {
     // @ts-expect-error Testing invalid input
     expect(getInitials(123)).toBe('')
+
     // @ts-expect-error Testing invalid input
     expect(getInitials({})).toBe('')
   })

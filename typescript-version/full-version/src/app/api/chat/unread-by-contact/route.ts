@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
 
@@ -58,7 +60,8 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('❌ [API] Ошибка получения непрочитанных сообщений по контактам:', error instanceof Error ? error.message : error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 

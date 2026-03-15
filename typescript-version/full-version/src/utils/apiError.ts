@@ -6,6 +6,7 @@ let recordApiErrorMetric: ((route: string, code: string, status: number) => void
 if (typeof window === 'undefined') {
   try {
     const metricsModule = require('@/lib/metrics/api-errors')
+
     recordApiErrorMetric = metricsModule.recordApiErrorMetric
   } catch (error) {
     // Метрики недоступны

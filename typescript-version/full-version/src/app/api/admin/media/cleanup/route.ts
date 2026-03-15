@@ -5,7 +5,8 @@
  * @module app/api/admin/media/cleanup
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
       case 'all':
         const softDeletedResult = await runMediaCleanup(dryRun)
         const orphansResult = await runOrphanCleanup(dryRun)
+
         result = {
           success: softDeletedResult.success && orphansResult.success,
           softDeleted: softDeletedResult,

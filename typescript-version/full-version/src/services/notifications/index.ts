@@ -30,6 +30,7 @@ export async function publishToTelegramChannel(options: {
   
   try {
     const { notificationService } = await import('./NotificationService')
+
     const result = await notificationService.send({
       channel: 'telegram',
       to: '', // Пустой to означает отправку в канал

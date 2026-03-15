@@ -11,6 +11,7 @@ import Grid from '@mui/material/Grid2'
 import Box from '@mui/material/Box'
 import Stack from '@mui/material/Stack'
 import Divider from '@mui/material/Divider'
+
 import CustomAvatar from '@core/components/mui/Avatar'
 
 interface MetricData {
@@ -70,6 +71,7 @@ const groupMetrics = (metrics: MetricData[]): GroupedMetrics => {
       } else {
         grouped.nodejs.push(metric)
       }
+
       addedMetrics.add(uniqueKey)
     } else {
       grouped.other.push(metric)
@@ -88,7 +90,9 @@ const formatSizeValue = (value: number): string => {
   } else if (value >= 1024) {
     return `${(value / 1024).toFixed(2)} KB`
   }
-  return `${value.toFixed(2)} B`
+
+  
+return `${value.toFixed(2)} B`
 }
 
 const getDisplayName = (name: string): string => {
@@ -129,6 +133,7 @@ export const Variant1 = ({ metrics, formatValue: formatValueFn }: { metrics: Met
               {groupMetrics.map((metric, index) => {
                 const isSize = metric.name.includes('size') || metric.name.includes('bytes') || 
                               metric.name.includes('heap') || metric.name.includes('rss')
+
                 const displayValue = isSize
                   ? formatSizeValue(metric.value || 0)
                   : formatValueFn(metric.value || 0)

@@ -1,4 +1,6 @@
 // Component Imports
+import { redirect } from 'next/navigation'
+
 import UserList from '@views/apps/user/list'
 
 // Data Imports
@@ -6,7 +8,6 @@ import { getUserData } from '@/app/server/actions'
 
 // Util Imports
 import { requireAuth } from '@/utils/auth/auth'
-import { redirect } from 'next/navigation'
 
 import { checkPermission } from '@/utils/permissions/permissions'
 
@@ -31,6 +32,7 @@ import { checkPermission } from '@/utils/permissions/permissions'
 const UserListApp = async () => {
   // Check permissions
   const { user } = await requireAuth()
+
   if (!user || !checkPermission(user, 'userManagement', 'read')) {
     redirect('/not-authorized')
   }

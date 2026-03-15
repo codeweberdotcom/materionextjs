@@ -6,7 +6,6 @@
 
 import { useState, useEffect } from 'react'
 
-import { useTranslationSafe } from '@/contexts/TranslationContext'
 
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -45,29 +44,37 @@ import DialogActions from '@mui/material/DialogActions'
 
 import { toast } from 'react-toastify'
 
+import { useTranslationSafe } from '@/contexts/TranslationContext'
+
 import CustomAvatar from '@core/components/mui/Avatar'
 
 interface GlobalSettings {
   id: string
+
   // S3 Settings
   s3Enabled: boolean
   s3ServiceId?: string | null
+
   // Storage Location
   storageLocation: string // 'local' | 's3' | 'both'
   // Sync Behavior
   syncMode: string // 'immediate' | 'background' | 'delayed' | 'manual'
   syncDelayMinutes: number
+
   // Trash Settings
   deleteMode: string
   trashRetentionDays: number
   s3DeleteWithLocal: boolean
+
   // Legacy S3 settings
   s3DefaultBucket?: string
   s3DefaultRegion?: string
   s3PublicUrlPrefix?: string
+
   // Local storage
   localUploadPath: string
   localPublicUrlPrefix: string
+
   // File organization
   pathOrganization: string // 'date' | 'hash' | 'flat'
   organizeByEntityType: boolean
@@ -75,6 +82,7 @@ interface GlobalSettings {
   // Limits
   globalMaxFileSize: number
   globalDailyUploadLimit?: number
+
   // Processing
   defaultQuality: number
   outputFormat: string // 'webp' | 'jpeg' | 'original'
@@ -152,7 +160,8 @@ interface OrphanStats {
 const formatBytes = (bytes: number): string => {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(0)} MB`
+  
+return `${(bytes / (1024 * 1024)).toFixed(0)} MB`
 }
 
 export default function MediaSettings() {
@@ -188,10 +197,13 @@ export default function MediaSettings() {
       try {
         // First fetch settings to get s3ServiceId
         const settingsRes = await fetch('/api/admin/media/settings')
+
         if (settingsRes.ok) {
           const data = await settingsRes.json()
+
           setGlobalSettings(data.global || {})
           setEntitySettings(Array.isArray(data.entities) ? data.entities : [])
+
           // Pass serviceId to fetch buckets from correct server
           fetchBuckets(data.global?.s3ServiceId || null)
         } else {
@@ -202,20 +214,25 @@ export default function MediaSettings() {
       } finally {
         setLoading(false)
       }
+
       fetchS3Services()
       fetchOrphanStats()
     }
+
     init()
   }, [])
 
   const fetchSettings = async () => {
     try {
       const response = await fetch('/api/admin/media/settings')
+
       if (!response.ok) throw new Error('Failed to fetch settings')
 
       const data = await response.json()
+
       setGlobalSettings(data.global)
       setEntitySettings(Array.isArray(data.entities) ? data.entities : [])
+
       // Fetch buckets for configured service (or env if null)
       fetchBuckets(data.global?.s3ServiceId || null)
     } catch (error) {
@@ -236,9 +253,11 @@ export default function MediaSettings() {
         : '/api/admin/media/s3/buckets'
       
       const response = await fetch(url)
+
       if (!response.ok) throw new Error('Failed to fetch buckets')
 
       const data = await response.json()
+
       setS3Configured(data.configured)
       setS3Buckets(data.buckets || [])
       setBucketPreConfigured(data.preConfigured || false)
@@ -254,6 +273,7 @@ export default function MediaSettings() {
         const service = s3Services.find(s => s.id === serviceId)
         
         let publicUrl = ''
+
         if (service?.host) {
           const protocol = (service.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
           const metadata = service.metadata ? JSON.parse(service.metadata) : {}
@@ -311,11 +331,14 @@ export default function MediaSettings() {
 
   const fetchS3Services = async () => {
     setLoadingServices(true)
+
     try {
       const response = await fetch('/api/admin/settings/services?type=S3')
+
       if (!response.ok) throw new Error('Failed to fetch services')
 
       const result = await response.json()
+
       setS3Services(result.data || [])
     } catch (error) {
       console.error('Failed to fetch S3 services:', error)
@@ -326,11 +349,14 @@ export default function MediaSettings() {
 
   const fetchOrphanStats = async () => {
     setLoadingOrphans(true)
+
     try {
       const response = await fetch('/api/admin/media/orphans')
+
       if (!response.ok) throw new Error('Failed to fetch orphan stats')
 
       const data = await response.json()
+
       setOrphanStats(data.stats)
     } catch (error) {
       console.error('Failed to fetch orphan stats:', error)
@@ -342,7 +368,8 @@ export default function MediaSettings() {
   const validateBucket = async (bucketName: string) => {
     if (!bucketName) {
       setBucketValidation(null)
-      return
+      
+return
     }
 
     setValidatingBucket(true)
@@ -358,6 +385,7 @@ export default function MediaSettings() {
       })
 
       const data: BucketValidation = await response.json()
+
       setBucketValidation(data)
     } catch (error) {
       setBucketValidation({ exists: false, accessible: false, error: t?.checkError ?? 'Check error' })
@@ -369,7 +397,8 @@ export default function MediaSettings() {
   const createBucket = async () => {
     if (!newBucketName.trim()) {
       toast.error(t?.enterBucketName ?? 'Enter bucket name')
-      return
+      
+return
     }
 
     setCreatingBucket(true)
@@ -388,7 +417,8 @@ export default function MediaSettings() {
 
       if (!response.ok) {
         toast.error(data.error || (t?.bucketCreateError ?? 'Error creating bucket'))
-        return
+        
+return
       }
 
       toast.success(data.message || (t?.bucketCreated ?? 'Bucket created'))
@@ -412,12 +442,13 @@ export default function MediaSettings() {
     // Если выбран внешний сервис
     if (serviceId) {
       const service = s3Services.find(s => s.id === serviceId)
+
       if (service?.host) {
         const protocol = (service.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
         const metadata = service.metadata ? JSON.parse(service.metadata) : {}
         const forcePathStyle = metadata.forcePathStyle ?? true
         
-        let baseUrl = service.port 
+        const baseUrl = service.port 
           ? `${protocol}://${service.host}:${service.port}`
           : `${protocol}://${service.host}`
         
@@ -425,6 +456,8 @@ export default function MediaSettings() {
         if (forcePathStyle) {
           return `${baseUrl}/${bucket}`
         }
+
+
         // Virtual-hosted style: http://bucket.host:port
         return `${protocol}://${bucket}.${service.host}${service.port ? ':' + service.port : ''}`
       }
@@ -443,6 +476,7 @@ export default function MediaSettings() {
       // Автозаполнение S3 Public URL если он пустой
       if (!globalSettings?.s3PublicUrlPrefix) {
         const defaultUrl = buildDefaultS3PublicUrl(globalSettings?.s3ServiceId || null, bucketName)
+
         if (defaultUrl) {
           updateGlobal('s3PublicUrlPrefix', defaultUrl)
         }
@@ -463,6 +497,7 @@ export default function MediaSettings() {
     if (!globalSettings) return
 
     setSaving(true)
+
     try {
       const response = await fetch('/api/admin/media/settings', {
         method: 'PUT',
@@ -902,6 +937,7 @@ export default function MediaSettings() {
                                 globalSettings.s3ServiceId || null,
                                 globalSettings.s3DefaultBucket || ''
                               )
+
                               updateGlobal('s3PublicUrlPrefix', defaultUrl || null)
                             }}
                           >

@@ -1,4 +1,5 @@
 import type { ExtendedError } from 'socket.io'
+
 import { authLogger } from '../../logger'
 import type { Permission, TypedSocket, User, UserRole } from '../types/common'
 import { lucia } from '../../../libs/lucia'
@@ -13,6 +14,7 @@ authLogger.info('Lucia auth configured for Socket.IO middleware')
 export const authenticateSocket = async (socket: TypedSocket, next: (err?: ExtendedError) => void) => {
   try {
     const queryTokenProvided = hasQueryToken(socket)
+
     if (queryTokenProvided) {
       authLogger.warn('Socket connection attempt included token in query string. Query tokens are ignored.', {
         socketId: socket.id,
@@ -34,7 +36,8 @@ export const authenticateSocket = async (socket: TypedSocket, next: (err?: Exten
         socketId: socket.id,
         ip: socket.handshake.address
       })
-      return next(new Error('Authentication token required'))
+      
+return next(new Error('Authentication token required'))
     }
 
     authLogger.info('Token received for Lucia validation', {
@@ -57,7 +60,8 @@ export const authenticateSocket = async (socket: TypedSocket, next: (err?: Exten
         socketId: socket.id,
         ip: socket.handshake.address
       })
-      return next(new Error('Invalid session'))
+      
+return next(new Error('Invalid session'))
     }
 
     const socketUser = await buildSocketUser(user)
@@ -92,6 +96,7 @@ export const authenticateSocket = async (socket: TypedSocket, next: (err?: Exten
 
 const hasQueryToken = (socket: TypedSocket): boolean => {
   const queryToken = (socket.handshake.query as Record<string, unknown> | undefined)?.token
+
   if (typeof queryToken === 'string') {
     return true
   }
@@ -106,7 +111,9 @@ const normalizeTokenValue = (value: unknown): string | null => {
 
   if (Array.isArray(value)) {
     const found = value.find((entry): entry is string => typeof entry === 'string')
-    return found ?? null
+
+    
+return found ?? null
   }
 
   return null
@@ -114,11 +121,13 @@ const normalizeTokenValue = (value: unknown): string | null => {
 
 const extractToken = (socket: TypedSocket): string | null => {
   const authToken = normalizeTokenValue(socket.handshake.auth?.token)
+
   if (authToken) {
     return authToken
   }
 
   const headerToken = socket.handshake.headers?.authorization
+
   if (typeof headerToken === 'string' && headerToken.startsWith('Bearer ')) {
     return headerToken.slice('Bearer '.length)
   }
@@ -139,6 +148,7 @@ const ROLE_CODE_MAP: Record<string, UserRole> = {
   SUPPORT: 'user',
   SUBSCRIBER: 'user',
   USER: 'user',
+
   // By name (legacy fallback)
   superadmin: 'admin',
   admin: 'admin',
@@ -158,7 +168,9 @@ const mapRoleToSocketRole = (roleCode?: string | null, roleName?: string | null)
   // Fall back to name
   if (roleName) {
     const normalized = roleName.toLowerCase()
-    return ROLE_CODE_MAP[normalized] ?? 'user'
+
+    
+return ROLE_CODE_MAP[normalized] ?? 'user'
   }
   
   return 'user'
@@ -171,7 +183,9 @@ const mapRoleName = (roleName?: string | null): UserRole => {
   }
 
   const normalized = roleName.toLowerCase()
-  return ROLE_CODE_MAP[normalized] ?? 'user'
+
+  
+return ROLE_CODE_MAP[normalized] ?? 'user'
 }
 
 const getDefaultPermissions = (role: UserRole): Permission[] => {
@@ -207,7 +221,8 @@ const resolveUserRole = async (roleId?: string | null): Promise<UserRole> => {
       roleId,
       error: error instanceof Error ? error.message : 'Unknown error'
     })
-    return 'user'
+    
+return 'user'
   }
 }
 
@@ -232,10 +247,12 @@ export const requirePermission = (permission: string) => {
         socketId: socket.id,
         userId: socket.userId
       })
-      return next(new Error('Not authenticated'))
+      
+return next(new Error('Not authenticated'))
     }
 
     const userPermissions = socket.data.user.permissions
+
     const hasPermission =
       userPermissions === 'all' || (Array.isArray(userPermissions) && userPermissions.includes(permission as Permission))
 
@@ -246,7 +263,8 @@ export const requirePermission = (permission: string) => {
         requiredPermission: permission,
         userPermissions
       })
-      return next(new Error(`Permission denied: ${permission}`))
+      
+return next(new Error(`Permission denied: ${permission}`))
     }
 
     socket.data.lastActivity = new Date()
@@ -275,7 +293,8 @@ export const requireRole = (requiredRole: string) => {
         userRole,
         requiredRole
       });
-      return next(new Error(`Role access denied: requires ${requiredRole}`));
+      
+return next(new Error(`Role access denied: requires ${requiredRole}`));
     }
 
     socket.data.lastActivity = new Date();

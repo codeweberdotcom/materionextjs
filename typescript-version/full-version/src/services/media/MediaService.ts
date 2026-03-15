@@ -6,6 +6,7 @@
  */
 
 import path from 'path'
+
 import { nanoid } from 'nanoid'
 
 import type {
@@ -23,9 +24,12 @@ import type {
   MediaVariants,
   ImageVariantConfig,
 } from './types'
-import { getStorageService, StorageService } from './storage'
-import { getImageProcessingService, ImageProcessingService } from './ImageProcessingService'
-import { getWatermarkService, WatermarkService } from './WatermarkService'
+import type { StorageService } from './storage';
+import { getStorageService } from './storage'
+import type { ImageProcessingService } from './ImageProcessingService';
+import { getImageProcessingService } from './ImageProcessingService'
+import type { WatermarkService } from './WatermarkService';
+import { getWatermarkService } from './WatermarkService'
 import { getPresetForEntityType, isMimeTypeAllowed, isFileSizeAllowed } from './presets'
 import { mediaSyncQueue } from './queue/MediaSyncQueue'
 import { prisma } from '@/libs/prisma'
@@ -84,6 +88,7 @@ export class MediaService {
 
       // Валидация изображения
       const isValid = await this.imageProcessingService.isValidImage(buffer)
+
       if (!isValid) {
         return {
           success: false,
@@ -102,6 +107,7 @@ export class MediaService {
       // Определяем выходной формат
       const outputFormat = globalSettings?.outputFormat || 'webp'
       let extension: string
+
       switch (outputFormat) {
         case 'jpeg':
           extension = '.jpg'
@@ -140,15 +146,19 @@ export class MediaService {
         case 'date': {
           const date = new Date()
           const datePath = `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}`
+
           subPath = subPath ? `${subPath}/${datePath}` : datePath
           break
         }
+
         case 'hash': {
           // Первые 4 символа slug разбиваем на 2 папки: ab/cd/
           const hashPath = `${slug.slice(0, 2)}/${slug.slice(2, 4)}`
+
           subPath = subPath ? `${subPath}/${hashPath}` : hashPath
           break
         }
+
         case 'flat':
         default:
           // Без дополнительных папок
@@ -221,10 +231,12 @@ export class MediaService {
 
       // Загружаем варианты
       const mediaVariants: MediaVariants = {}
+
       for (const variant of processingResult.variants) {
         if (variant.name === 'original') continue
 
         const variantPath = subPath ? `${subPath}/${slug}_${variant.name}${extension}` : `${slug}_${variant.name}${extension}`
+
         const variantStorage = await this.storageService.upload(
           variant.buffer,
           variantPath,
@@ -245,6 +257,7 @@ export class MediaService {
 
       // Определяем статус хранения
       let storageStatus: StorageStatus = 'local_only'
+
       if (storageResult.localPath && storageResult.s3Key) {
         storageStatus = 'synced'
       } else if (storageResult.s3Key && !storageResult.localPath) {
@@ -346,6 +359,7 @@ export class MediaService {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
+
       const result = await this.upload(
         file.buffer,
         file.filename,
@@ -488,6 +502,7 @@ export class MediaService {
     const media = hard
       ? await prisma.media.findFirst({ where: { id } })
       : await prisma.media.findUnique({ where: { id } })
+
     if (!media) return
 
     if (hard) {
@@ -499,16 +514,19 @@ export class MediaService {
         // Файлы ещё не в корзине - удаляем напрямую
         await this.storageService.delete(media)
       }
+
       await prisma.media.delete({ where: { id } })
     } else {
       // Soft delete - перемещаем в .trash и удаляем с S3
       const variants = JSON.parse(media.variants || '{}')
       const originalVariants: Record<string, string> = {}
       const originalS3Variants: Record<string, string> = {}
+
       for (const [name, v] of Object.entries(variants) as [string, any][]) {
         if (v.localPath) {
           originalVariants[name] = v.localPath
         }
+
         if (v.s3Key) {
           originalS3Variants[name] = v.s3Key
         }
@@ -580,6 +598,7 @@ export class MediaService {
 
     // Сначала получаем текущие данные
     const currentMedia = await prisma.media.findFirst({ where: { id } })
+
     if (!currentMedia) {
       throw new Error(`Media not found: ${id}`)
     }
@@ -618,6 +637,7 @@ export class MediaService {
     await this.init()
 
     const media = await prisma.media.findUnique({ where: { id } })
+
     if (!media) {
       throw new Error(`Media not found: ${id}`)
     }
@@ -632,6 +652,7 @@ export class MediaService {
     await this.init()
 
     const media = await prisma.media.findUnique({ where: { id } })
+
     if (!media) {
       throw new Error(`Media not found: ${id}`)
     }
@@ -649,6 +670,7 @@ export class MediaService {
     await this.init()
 
     const media = await prisma.media.findUnique({ where: { id: mediaId } })
+
     if (!media) {
       throw new Error(`Media not found: ${mediaId}`)
     }
@@ -658,6 +680,7 @@ export class MediaService {
 
     // Применяем водяной знак
     let watermarkedBuffer: Buffer
+
     if (watermarkId) {
       watermarkedBuffer = await this.watermarkService.applyWatermarkById(buffer, watermarkId)
     } else {
@@ -763,7 +786,9 @@ export class MediaService {
    */
   private async getS3Bucket(): Promise<string | null> {
     const settings = await prisma.mediaGlobalSettings.findFirst()
-    return settings?.s3DefaultBucket || null
+
+    
+return settings?.s3DefaultBucket || null
   }
 
   /**
@@ -848,7 +873,9 @@ export function getMediaService(): MediaService {
   if (!mediaServiceInstance) {
     mediaServiceInstance = new MediaService()
   }
-  return mediaServiceInstance
+
+  
+return mediaServiceInstance
 }
 
 

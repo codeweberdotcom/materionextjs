@@ -214,6 +214,7 @@ export const startTransactionTimer = (environment: string = getEnvironment()) =>
 
   return (status: 'success' | 'error') => {
     const durationMs = Date.now() - startTime
+
     trackTransaction(status, durationMs, environment)
 
     return durationMs

@@ -29,7 +29,9 @@
 'use client'
 
 import { useState } from 'react'
-import Image, { ImageProps } from 'next/image'
+
+import type { ImageProps } from 'next/image';
+import Image from 'next/image'
 
 import { useMediaUrl, useMediaUrls } from '@/hooks/useMediaUrl'
 
@@ -45,16 +47,22 @@ interface MediaData {
 }
 
 interface MediaImageProps extends Omit<ImageProps, 'src' | 'alt'> {
+
   /** Данные медиа файла */
   media: MediaData | null | undefined
+
   /** Размер варианта */
   size?: 'thumb' | 'medium' | 'large' | 'original'
+
   /** Alt текст (переопределяет media.alt) */
   alt?: string
+
   /** Показывать placeholder при загрузке */
   showPlaceholder?: boolean
+
   /** URL placeholder изображения */
   placeholderSrc?: string
+
   /** Fallback при ошибке загрузки */
   fallbackSrc?: string
 }

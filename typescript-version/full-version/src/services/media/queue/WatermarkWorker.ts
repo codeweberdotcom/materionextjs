@@ -6,10 +6,12 @@
  * @module services/media/queue/WatermarkWorker
  */
 
-import Queue from 'bull'
-import sharp from 'sharp'
 import path from 'path'
+
 import fs from 'fs/promises'
+
+import type Queue from 'bull'
+import sharp from 'sharp'
 
 import { prisma } from '@/libs/prisma'
 import { getStorageService } from '../storage'
@@ -64,7 +66,8 @@ export async function processWatermark(
     // Проверяем, нужно ли применять водяной знак
     if (media.watermarkApplied && !overwrite) {
       logger.info('[WatermarkWorker] Watermark already applied, skipping', { mediaId })
-      return { success: true, mediaId, sizeKey }
+      
+return { success: true, mediaId, sizeKey }
     }
 
     // Получаем настройки для entityType
@@ -74,7 +77,8 @@ export async function processWatermark(
 
     if (!settings?.watermarkEnabled) {
       logger.info('[WatermarkWorker] Watermark not enabled for entityType', { entityType })
-      return { success: true, mediaId, sizeKey }
+      
+return { success: true, mediaId, sizeKey }
     }
 
     // Определяем, какие варианты обрабатывать
@@ -84,7 +88,8 @@ export async function processWatermark(
 
     if (targetVariants.length === 0) {
       logger.info('[WatermarkWorker] No variants configured for watermark', { entityType })
-      return { success: true, mediaId, sizeKey }
+      
+return { success: true, mediaId, sizeKey }
     }
 
     // Парсим существующие варианты
@@ -101,7 +106,8 @@ export async function processWatermark(
         targetVariants,
         availableVariants: Object.keys(variants),
       })
-      return { success: true, mediaId, sizeKey }
+      
+return { success: true, mediaId, sizeKey }
     }
 
     // Получаем watermark сервис и storage
@@ -110,11 +116,13 @@ export async function processWatermark(
 
     // Получаем watermark buffer
     let watermarkBuffer: Buffer
+
     if (watermarkId) {
       // Используем указанный watermark
       const wmMedia = await prisma.media.findUnique({
         where: { id: watermarkId },
       })
+
       if (!wmMedia) throw new Error(`Watermark media not found: ${watermarkId}`)
       watermarkBuffer = await storageService.download(wmMedia)
     } else if (settings.watermarkMediaId) {
@@ -122,6 +130,7 @@ export async function processWatermark(
       const wmMedia = await prisma.media.findUnique({
         where: { id: settings.watermarkMediaId },
       })
+
       if (!wmMedia) throw new Error(`Settings watermark media not found: ${settings.watermarkMediaId}`)
       watermarkBuffer = await storageService.download(wmMedia)
     } else {
@@ -140,6 +149,7 @@ export async function processWatermark(
 
     for (const variantKey of variantsToProcess) {
       const variant = variants[variantKey]
+
       if (!variant) continue
 
       try {
@@ -148,6 +158,7 @@ export async function processWatermark(
 
         if (variant.localPath) {
           const fullPath = path.join(process.cwd(), 'public', variant.localPath)
+
           imageBuffer = await fs.readFile(fullPath)
         } else if (variant.s3Key && media.s3Bucket) {
           // Загружаем из S3
@@ -170,6 +181,7 @@ export async function processWatermark(
         // Сохраняем обратно
         if (variant.localPath) {
           const fullPath = path.join(process.cwd(), 'public', variant.localPath)
+
           await fs.writeFile(fullPath, resultBuffer)
           logger.debug('[WatermarkWorker] Saved watermarked variant locally', {
             mediaId,
@@ -181,6 +193,7 @@ export async function processWatermark(
         if (variant.s3Key && media.s3Bucket) {
           // Загружаем в S3
           const mimeType = media.mimeType || 'image/webp'
+
           await (storageService as any).uploadBuffer(resultBuffer, variant.s3Key, mimeType)
           logger.debug('[WatermarkWorker] Uploaded watermarked variant to S3', {
             mediaId,
@@ -200,6 +213,7 @@ export async function processWatermark(
           variantKey,
           error: variantError instanceof Error ? variantError.message : String(variantError),
         })
+
         // Продолжаем с другими вариантами
       }
     }

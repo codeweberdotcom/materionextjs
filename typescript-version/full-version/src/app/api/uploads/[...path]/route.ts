@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+
 import { readFile } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
+
+import { NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
 
 const MIME_TYPES: Record<string, string> = {
   '.webp': 'image/webp',

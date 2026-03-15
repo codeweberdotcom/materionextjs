@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { eventService } from '@/services/events'
 import { requireAuth } from '@/utils/auth/auth'
 import logger from '@/lib/logger'
@@ -15,13 +17,15 @@ export async function POST(request: NextRequest) {
     const { user } = await requireAuth(request).catch(() => ({ user: null }))
 
     let body: RecordEventInput
+
     try {
       body = await request.json()
     } catch (error) {
       logger.warn('[events/record] Invalid JSON in request body', {
         error: error instanceof Error ? error.message : error
       })
-      return NextResponse.json(
+      
+return NextResponse.json(
         { error: 'Invalid JSON in request body' },
         { status: 400 }
       )
@@ -57,7 +61,8 @@ export async function POST(request: NextRequest) {
         source: body.source,
         type: body.type
       })
-      return NextResponse.json(
+      
+return NextResponse.json(
         { error: 'Failed to record event' },
         { status: 500 }
       )
@@ -73,7 +78,8 @@ export async function POST(request: NextRequest) {
       error: error instanceof Error ? error.message : error,
       file: 'src/app/api/events/record/route.ts'
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )

@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+
+import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
@@ -16,10 +17,13 @@ export async function GET() {
 
     const fileContents = fs.readFileSync(filePath, 'utf8')
     const testResults = JSON.parse(fileContents)
-    return NextResponse.json(testResults)
+
+    
+return NextResponse.json(testResults)
   } catch (error) {
     console.error('Error reading test results:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Failed to read test results' },
       { status: 500 }
     )

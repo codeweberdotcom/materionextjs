@@ -1,7 +1,6 @@
 import * as crypto from 'crypto'
-import type { PrismaClient } from '@prisma/client'
-import { Prisma } from '@prisma/client'
-import type { User, UserBlock } from '@prisma/client'
+
+import type { PrismaClient , User, UserBlock , Prisma } from '@prisma/client'
 
 import logger from '@/lib/logger'
 import { prisma } from '@/libs/prisma'
@@ -35,14 +34,18 @@ const MAX_DOMAIN_LENGTH = 255
 
 const getRateLimitSecret = (): string => {
   const secret = process.env.RATE_LIMIT_SECRET
+
   if (secret) return secret
+
   if (!rateLimitSecretWarningShown) {
     logger.warn(
       '[rate-limit] RATE_LIMIT_SECRET is not set; using a development fallback secret. Configure a strong secret in production.'
     )
     rateLimitSecretWarningShown = true
   }
-  return DEV_RATE_LIMIT_SECRET
+
+  
+return DEV_RATE_LIMIT_SECRET
 }
 
 // Backward compatibility - support old secrets during migration
@@ -62,7 +65,9 @@ const addTestPrefixIfNeeded = (key: string, environment: 'test' | 'production'):
   if (environment === 'test') {
     return `test:${key}`
   }
-  return key
+
+  
+return key
 }
 
 /**
@@ -76,7 +81,9 @@ const removeTestPrefix = (key: string): string => {
   if (key.startsWith('test:')) {
     return key.slice(5) // Удаляем 'test:'
   }
-  return key
+
+  
+return key
 }
 
 export class RateLimitEngine implements IRateLimitEngine {
@@ -102,6 +109,7 @@ export class RateLimitEngine implements IRateLimitEngine {
   async checkLimit(key: string, module: string, options?: RateLimitCheckOptions): Promise<RateLimitResult> {
     const environment = options?.environment || 'production'
     const timer = startCheckLimitDurationTimer(module, environment)
+
     try {
       const increment = options?.increment ?? true
       const now = new Date()
@@ -112,25 +120,31 @@ export class RateLimitEngine implements IRateLimitEngine {
       if (prefixedKey.length > MAX_KEY_LENGTH) {
         logger.warn('[rate-limit] Key too long, skipping rate limit check', { module })
         recordCheckLimit(module, true, environment)
-        return { allowed: true, remaining: 1, resetTime: now.getTime() }
+        
+return { allowed: true, remaining: 1, resetTime: now.getTime() }
       }
 
       // Check for active blocks first (используем prefixedKey)
       const activeBlock = await this.checkActiveBlocks(prefixedKey, module, options, now, environment)
+
       if (activeBlock) {
         recordCheckLimit(module, false, environment)
-        return activeBlock
+        
+return activeBlock
       }
 
       const config = await this.configService.getConfig(module)
+
       // Config is always returned (either from DB, defaults, or fallback template)
       // No need to check for null/undefined
 
       if (!config.isActive) {
         const windowMs = config.windowMs || 60000
         const remaining = config.maxRequests ?? 999
+
         recordCheckLimit(module, true, environment)
-        return { allowed: true, remaining, resetTime: now.getTime() + windowMs }
+        
+return { allowed: true, remaining, resetTime: now.getTime() + windowMs }
       }
 
       const mode: 'monitor' | 'enforce' = config.mode === 'monitor' ? 'monitor' : 'enforce'
@@ -150,6 +164,7 @@ export class RateLimitEngine implements IRateLimitEngine {
 
       // Используем prefixedKey для store (с префиксом test: если нужно)
       const store = await this.storeManager.getStore()
+
       const result = await store.consume({
         key: prefixedKey,
         module,
@@ -171,7 +186,8 @@ export class RateLimitEngine implements IRateLimitEngine {
       })
 
       recordCheckLimit(module, result.allowed, environment)
-      return result
+      
+return result
     } finally {
       timer()
     }
@@ -180,6 +196,7 @@ export class RateLimitEngine implements IRateLimitEngine {
   async resetLimits(key?: string, module?: string): Promise<boolean> {
     try {
       const stateWhere: Prisma.RateLimitStateWhereInput = {}
+
       if (key) stateWhere.key = key
       if (module) stateWhere.module = module
 
@@ -217,11 +234,14 @@ export class RateLimitEngine implements IRateLimitEngine {
       }
 
       const store = await this.storeManager.getStore()
+
       await store.clearCacheCompletely(key, module)
-      return true
+      
+return true
     } catch (error) {
       logger.error('Error resetting rate limits:', { error })
-      return false
+      
+return false
     }
   }
 
@@ -259,6 +279,7 @@ export class RateLimitEngine implements IRateLimitEngine {
     // Фильтры по времени
     if (params.olderThanDays) {
       const cutoffDate = new Date(Date.now() - params.olderThanDays * 24 * 60 * 60 * 1000)
+
       andConditions.push({ windowStart: { lt: cutoffDate } })
     }
 
@@ -335,6 +356,7 @@ export class RateLimitEngine implements IRateLimitEngine {
             blockedUntil: null
           }
         })
+
         affected = resetResult.count
         break
 
@@ -346,6 +368,7 @@ export class RateLimitEngine implements IRateLimitEngine {
             count: 0
           }
         })
+
         affected = clearResult.count
         break
 
@@ -354,6 +377,7 @@ export class RateLimitEngine implements IRateLimitEngine {
         const deleteResult = await this.prisma.rateLimitState.deleteMany({
           where
         })
+
         affected = deleteResult.count
         break
     }
@@ -371,6 +395,7 @@ export class RateLimitEngine implements IRateLimitEngine {
     for (const key of affectedKeys) {
       for (const module of affectedModules) {
         const store = await this.storeManager.getStore()
+
         await store.resetCache(key, module)
       }
     }
@@ -393,6 +418,7 @@ export class RateLimitEngine implements IRateLimitEngine {
     const originalKey = removeTestPrefix(key)
     
     const blockConditions: Prisma.UserBlockWhereInput[] = []
+
     blockConditions.push({ userId: originalKey })
 
     if (options?.userId && options.userId !== key) {
@@ -400,8 +426,10 @@ export class RateLimitEngine implements IRateLimitEngine {
     }
 
     const rawEmail = options?.email ?? null
+
     if (rawEmail && rawEmail.length <= MAX_EMAIL_LENGTH && this.validateEmail(rawEmail)) {
       const emailHash = this.hashEmail(rawEmail)
+
       blockConditions.push({ user: { is: { email: rawEmail } } })
       blockConditions.push({ email: rawEmail })
       if (emailHash) blockConditions.push({ emailHash })
@@ -409,6 +437,7 @@ export class RateLimitEngine implements IRateLimitEngine {
 
     const providedMailDomain = options?.mailDomain ?? null
     const derivedMailDomain = providedMailDomain ?? this.extractEmailDomain(rawEmail)
+
     if (derivedMailDomain && derivedMailDomain.length <= MAX_DOMAIN_LENGTH && this.validateDomain(derivedMailDomain)) {
       blockConditions.push({ mailDomain: derivedMailDomain })
     }
@@ -416,6 +445,7 @@ export class RateLimitEngine implements IRateLimitEngine {
     if (options?.ipAddress && this.validateIpAddress(options.ipAddress)) {
       const ipHash = this.hashIpAddress(options.ipAddress)
       const ipPrefix = this.extractIpPrefix(options.ipAddress)
+
       blockConditions.push({ ipAddress: options.ipAddress })
       if (ipHash) blockConditions.push({ ipHash })
       if (ipPrefix) blockConditions.push({ ipPrefix })
@@ -424,6 +454,7 @@ export class RateLimitEngine implements IRateLimitEngine {
     if (options?.keyType === 'ip' && this.validateIpAddress(originalKey)) {
       const keyIpHash = this.hashIpAddress(originalKey)
       const keyIpPrefix = this.extractIpPrefix(originalKey)
+
       blockConditions.push({ ipAddress: originalKey })
       if (keyIpHash) blockConditions.push({ ipHash: keyIpHash })
       if (keyIpPrefix) blockConditions.push({ ipPrefix: keyIpPrefix })
@@ -445,7 +476,9 @@ export class RateLimitEngine implements IRateLimitEngine {
 
     if (activeBlock) {
       const blockResetTime = (activeBlock.unblockedAt ?? new Date(now.getTime() + 24 * 60 * 60 * 1000)).getTime()
-      return {
+
+      
+return {
         allowed: false,
         remaining: 0,
         resetTime: blockResetTime,
@@ -459,56 +492,75 @@ export class RateLimitEngine implements IRateLimitEngine {
   private hashIpAddress(ip: string | null | undefined): string | null {
     if (!ip) return null
     const hmac = crypto.createHmac('sha256', getIpHashSecret())
+
     hmac.update(`${IP_HASH_VERSION}:${ip}`)
-    return hmac.digest('hex')
+    
+return hmac.digest('hex')
   }
 
   private hashEmail(email: string | null | undefined): string | null {
     if (!email) return null
     const hmac = crypto.createHmac('sha256', getEmailHashSecret())
+
     hmac.update(`${EMAIL_HASH_VERSION}:${email.toLowerCase()}`)
-    return hmac.digest('hex')
+    
+return hmac.digest('hex')
   }
 
   private extractEmailDomain(email: string | null | undefined): string | null {
     if (!email) return null
     const atIndex = email.indexOf('@')
+
     if (atIndex === -1) return null
     const domain = email.slice(atIndex + 1).trim().toLowerCase()
-    return domain || null
+
+    
+return domain || null
   }
 
   private extractIpPrefix(ip: string | null | undefined): string | null {
     if (!ip) return null
+
     if (ip.includes(':')) {
       // IPv6: use /48 prefix
       const segments = ip.split(':').filter(Boolean)
       const prefix = segments.slice(0, 4).join(':')
-      return `${prefix || ip}::/48`
+
+      
+return `${prefix || ip}::/48`
     }
+
     const octets = ip.split('.')
+
     if (octets.length >= 3) {
       return `${octets.slice(0, 3).join('.')}.0/24`
     }
-    return `${ip}/32`
+
+    
+return `${ip}/32`
   }
 
   private buildIpArtifacts(ip: string | null | undefined) {
     const ipHash = this.hashIpAddress(ip)
     const ipPrefix = this.extractIpPrefix(ip)
     const hashVersion = 1
-    return { ipHash, ipPrefix, hashVersion }
+
+    
+return { ipHash, ipPrefix, hashVersion }
   }
 
   private buildEmailArtifacts(email: string | null | undefined) {
     const emailHash = this.hashEmail(email)
     const hashVersion = emailHash ? EMAIL_HASH_VERSION : null
-    return { emailHash, hashVersion }
+
+    
+return { emailHash, hashVersion }
   }
 
   async getStats(module: string): Promise<RateLimitStats | null> {
     try {
       const config = await this.configService.getConfig(module)
+
       // Config is always returned, no need to check for null
 
       const activeStates = await this.prisma.rateLimitState.count({
@@ -529,6 +581,7 @@ export class RateLimitEngine implements IRateLimitEngine {
 
       if (module === 'chat-messages') {
         const oneHourAgo = new Date(Date.now() - config.windowMs)
+
         totalRequests = await this.prisma.message.count({
           where: {
             createdAt: { gte: oneHourAgo }
@@ -545,7 +598,8 @@ export class RateLimitEngine implements IRateLimitEngine {
       }
     } catch (error) {
       logger.error('Error getting rate limit stats:', { error })
-      return null
+      
+return null
     }
   }
 
@@ -586,7 +640,9 @@ export class RateLimitEngine implements IRateLimitEngine {
       if (!configs.has(state.module)) {
         configs.set(state.module, await this.configService.getConfig(state.module))
       }
+
       const config = configs.get(state.module)!
+
       // Config is guaranteed to exist as we just set it above
       const remaining = Math.max(0, (config.maxRequests ?? 0) - state.count)
 
@@ -673,7 +729,9 @@ export class RateLimitEngine implements IRateLimitEngine {
       if (!configs.has(moduleName)) {
         configs.set(moduleName, await this.configService.getConfig(moduleName))
       }
+
       const config = configs.get(moduleName)!
+
       // Config is guaranteed to exist as we just set it above
 
       items.push({
@@ -739,7 +797,9 @@ export class RateLimitEngine implements IRateLimitEngine {
     items.sort((a, b) => {
       const dateA = a.source === 'manual' ? a.windowStart : a.windowStart
       const dateB = b.source === 'manual' ? b.windowStart : b.windowStart
-      return new Date(dateB).getTime() - new Date(dateA).getTime()
+
+      
+return new Date(dateB).getTime() - new Date(dateA).getTime()
     })
 
     return {
@@ -766,15 +826,19 @@ export class RateLimitEngine implements IRateLimitEngine {
     overwrite?: boolean
   }) {
     const targets: Array<{ field: 'userId' | 'email' | 'mailDomain' | 'ipAddress'; value: string }> = []
+
     if (params.userId) targets.push({ field: 'userId', value: params.userId })
+
     if (params.email) {
       if (!this.validateEmail(params.email)) throw new Error('Invalid email')
       targets.push({ field: 'email', value: params.email })
     }
+
     if (params.mailDomain) {
       if (!this.validateDomain(params.mailDomain)) throw new Error('Invalid domain')
       targets.push({ field: 'mailDomain', value: params.mailDomain })
     }
+
     if (params.ipAddress) {
       if (!this.validateIpAddress(params.ipAddress)) throw new Error('Invalid IP address')
       targets.push({ field: 'ipAddress', value: params.ipAddress })
@@ -797,8 +861,10 @@ export class RateLimitEngine implements IRateLimitEngine {
     }
 
     const existing = await this.prisma.userBlock.findFirst({ where })
+
     if (existing && !params.overwrite) {
       const error = new Error('Block already exists for this target')
+
       ;(error as any).code = 'BLOCK_EXISTS'
       throw error
     }
@@ -838,14 +904,17 @@ export class RateLimitEngine implements IRateLimitEngine {
         })
 
     const keysToBlock = targets.map(t => t.value)
+
     for (const key of keysToBlock) {
       const store = await this.storeManager.getStore()
+
       await store.setBlock(key, params.module, blockedUntil ?? undefined)
     }
 
     // Record metrics for manual blocks by type
     // Manual blocks are typically created by admins, so use 'production' by default
     const environment = 'production'
+
     if (params.userId) {
       recordBlock(params.module, 'user', environment)
     } else if (params.ipAddress) {
@@ -855,6 +924,7 @@ export class RateLimitEngine implements IRateLimitEngine {
     } else if (params.mailDomain) {
       recordBlock(params.module, 'domain', environment)
     }
+
     recordBlock(params.module, 'manual', environment) // General manual block metric
 
     return block
@@ -862,6 +932,7 @@ export class RateLimitEngine implements IRateLimitEngine {
 
   async deactivateManualBlock(blockId: string) {
     const existing = await this.prisma.userBlock.findUnique({ where: { id: blockId } })
+
     if (!existing) return false
 
     await this.prisma.userBlock.update({
@@ -875,11 +946,15 @@ export class RateLimitEngine implements IRateLimitEngine {
     const keys = [existing.userId, existing.email, existing.mailDomain, existing.ipAddress].filter(
       Boolean
     ) as string[]
+
     for (const key of keys) {
       const store1 = await this.storeManager.getStore()
+
       await store1.setBlock(key, existing.module, null)
     }
+
     const store2 = await this.storeManager.getStore()
+
     await store2.resetCache(undefined, existing.module)
 
     return true
@@ -887,12 +962,15 @@ export class RateLimitEngine implements IRateLimitEngine {
 
   async clearState(stateId: string) {
     const state = await this.prisma.rateLimitState.findUnique({ where: { id: stateId } })
+
     if (!state) return false
 
     await this.prisma.rateLimitState.delete({ where: { id: stateId } })
     const store3 = await this.storeManager.getStore()
+
     await store3.resetCache(state.key, state.module)
-    return true
+    
+return true
   }
 
   /**
@@ -1093,9 +1171,11 @@ export class RateLimitEngine implements IRateLimitEngine {
     // Clear cache for affected keys
     const affectedModules = new Set<string>()
     const store = await this.storeManager.getStore()
+
     for (const block of blocks) {
       affectedModules.add(block.module)
       const keys = [block.userId, block.email, block.mailDomain, block.ipAddress].filter(Boolean) as string[]
+
       for (const key of keys) {
         await store.setBlock(key, block.module, null)
       }
@@ -1143,6 +1223,7 @@ export class RateLimitEngine implements IRateLimitEngine {
       })
     } else if (params.olderThanDays) {
       const cutoffDate = new Date(Date.now() - params.olderThanDays * 24 * 60 * 60 * 1000)
+
       andConditions.push({ blockedAt: { lt: cutoffDate } })
     }
 
@@ -1154,7 +1235,9 @@ export class RateLimitEngine implements IRateLimitEngine {
 
     if (params.dryRun) {
       const count = await this.prisma.userBlock.count({ where })
-      return {
+
+      
+return {
         wouldDelete: count,
         dryRun: true,
         blocks: []
@@ -1182,9 +1265,11 @@ export class RateLimitEngine implements IRateLimitEngine {
     // Clear cache for affected keys
     const affectedModules = new Set<string>()
     const store = await this.storeManager.getStore()
+
     for (const block of blocks) {
       affectedModules.add(block.module)
       const keys = [block.userId, block.email, block.mailDomain, block.ipAddress].filter(Boolean) as string[]
+
       for (const key of keys) {
         await store.setBlock(key, block.module, null)
       }
@@ -1211,12 +1296,14 @@ export class RateLimitEngine implements IRateLimitEngine {
     if (params.eventType) where.eventType = params.eventType
     if (params.mode) where.mode = params.mode
     if (params.key) where.key = params.key
+
     if (params.search) {
       where.OR = [
         { key: { contains: params.search, mode: 'insensitive' } },
         { module: { contains: params.search, mode: 'insensitive' } }
       ]
     }
+
     if (params.from || params.to) {
       where.createdAt = {}
       if (params.from) where.createdAt.gte = params.from
@@ -1224,6 +1311,7 @@ export class RateLimitEngine implements IRateLimitEngine {
     }
 
     const take = Math.min(params.limit ?? 20, 100)
+
     const events = await this.prisma.rateLimitEvent.findMany({
       where,
       orderBy: { createdAt: 'desc' },
@@ -1274,12 +1362,14 @@ export class RateLimitEngine implements IRateLimitEngine {
   async deleteEvent(eventId: string): Promise<boolean> {
     try {
       await this.prisma.rateLimitEvent.delete({ where: { id: eventId } })
-      return true
+      
+return true
     } catch (error) {
       logger.warn('Failed to delete rate limit event', {
         error: error instanceof Error ? error.message : error
       })
-      return false
+      
+return false
     }
   }
 
@@ -1290,16 +1380,22 @@ export class RateLimitEngine implements IRateLimitEngine {
   private validateIpAddress(ip: string): boolean {
     const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/
     const ipv6Regex = /^([\da-f]{1,4}:){1,7}[\da-f]{1,4}$/i
-    return ipv4Regex.test(ip) || ipv6Regex.test(ip)
+
+    
+return ipv4Regex.test(ip) || ipv6Regex.test(ip)
   }
 
   private validateEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return emailRegex.test(email)
+
+    
+return emailRegex.test(email)
   }
 
   private validateDomain(domain: string): boolean {
     const domainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
-    return domainRegex.test(domain)
+
+    
+return domainRegex.test(domain)
   }
 }

@@ -5,6 +5,7 @@ import { serviceConfigResolver } from '@/lib/config'
 import * as metricsModule from '@/lib/metrics/rate-limit'
 
 type RateLimitBackend = 'redis' | 'prisma'
+
 const metrics = metricsModule && typeof window === 'undefined'
   ? {
       markBackendActive: metricsModule.markBackendActive,
@@ -36,13 +37,16 @@ export class ResilientRateLimitStore implements RateLimitStore {
     return this.execute(store => {
       const backend: RateLimitBackend = store === this.primary ? 'redis' : 'prisma'
       const environment = args[0].environment || 'production'
+
       const stopTimer = metrics?.startConsumeDurationTimer({
         backend,
         module: args[0].module,
         mode: args[0].mode,
         environment
       }) || (() => {})
-      return store.consume(...args).finally(() => stopTimer())
+
+      
+return store.consume(...args).finally(() => stopTimer())
     })
   }
 
@@ -121,23 +125,29 @@ export class ResilientRateLimitStore implements RateLimitStore {
 
       if (shouldRetryPrimary) {
         logger.info('[rate-limit] Attempting to return to Redis backend after fallback period.')
+
         try {
           const result = await operation(this.primary)
+
           this.usingPrimary = true
           this.lastFailure = 0
           metrics?.recordBackendSwitch('prisma', 'redis', 'production')
+
           if (this.fallbackActiveSince !== null) {
             metrics?.recordFallbackDuration(Date.now() - this.fallbackActiveSince, 'production')
             this.fallbackActiveSince = null
           }
+
           logger.info('[rate-limit] Successfully switched back to Redis backend.')
-          return result
+          
+return result
         } catch (error) {
           this.lastFailure = now
           logger.warn('[rate-limit] Redis backend still unavailable, continuing with Prisma fallback.', {
             error: error instanceof Error ? { message: error.message, name: error.name } : error
           })
-          return operation(this.fallback)
+          
+return operation(this.fallback)
         }
       }
 
@@ -151,9 +161,11 @@ export class ResilientRateLimitStore implements RateLimitStore {
       this.lastFailure = Date.now()
       metrics?.recordRedisFailure('production')
       metrics?.recordBackendSwitch('redis', 'prisma', 'production')
+
       if (this.fallbackActiveSince === null) {
         this.fallbackActiveSince = this.lastFailure
       }
+
       logger.error('[rate-limit] Redis store failed. Falling back to Prisma store for rate limiting.', {
         error: error instanceof Error ? { message: error.message, name: error.name } : error
       })
@@ -179,7 +191,9 @@ export const createRateLimitStore = async (prisma: PrismaClient): Promise<RateLi
           port: redisConfig.port
         })
         const redisStore = new RedisRateLimitStore(redisConfig.url, redisConfig.tls)
-        return new ResilientRateLimitStore(redisStore, prismaStore)
+
+        
+return new ResilientRateLimitStore(redisStore, prismaStore)
       } catch (error) {
         logger.error('[rate-limit] Failed to initialize Redis backend. Falling back to Prisma.', {
           error: error instanceof Error ? error.message : error,

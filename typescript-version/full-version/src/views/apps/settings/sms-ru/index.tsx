@@ -20,11 +20,12 @@ import Skeleton from '@mui/material/Skeleton'
 import Chip from '@mui/material/Chip'
 
 // Context Imports
+import { toast } from 'react-toastify'
+
 import { useTranslation } from '@/contexts/TranslationContext'
 
 // Hook Imports
 import { usePermissions } from '@/hooks/usePermissions'
-import { toast } from 'react-toastify'
 
 const SMSRuSettings = () => {
   // Hooks
@@ -41,6 +42,7 @@ const SMSRuSettings = () => {
     sender: '',
     testMode: false
   })
+
   const [balance, setBalance] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -61,8 +63,10 @@ const SMSRuSettings = () => {
     try {
       setIsLoading(true)
       const response = await fetch('/api/settings/sms-ru')
+
       if (response.ok) {
         const data = await response.json()
+
         setFormData({
           apiKey: data.apiKey || '',
           sender: data.sender || '',
@@ -70,6 +74,7 @@ const SMSRuSettings = () => {
         })
       } else {
         const errorData = await response.json()
+
         setError(errorData.message || 'Failed to load settings')
       }
     } catch (err) {
@@ -83,7 +88,8 @@ const SMSRuSettings = () => {
   const handleSave = async () => {
     if (!canUpdate) {
       toast.error('Недостаточно прав для обновления настроек')
-      return
+      
+return
     }
 
     try {
@@ -100,6 +106,7 @@ const SMSRuSettings = () => {
 
       if (response.ok) {
         const data = await response.json()
+
         toast.success('Настройки SMS.ru успешно сохранены')
         setFormData({
           apiKey: data.settings.apiKey === '***provided***' ? formData.apiKey : data.settings.apiKey,
@@ -108,6 +115,7 @@ const SMSRuSettings = () => {
         })
       } else {
         const errorData = await response.json()
+
         setError(errorData.message || 'Failed to save settings')
         toast.error(errorData.message || 'Ошибка при сохранении настроек')
       }
@@ -126,12 +134,15 @@ const SMSRuSettings = () => {
       setError(null)
 
       const response = await fetch('/api/settings/sms-ru/balance')
+
       if (response.ok) {
         const data = await response.json()
+
         setBalance(data.balance)
         toast.success(`Баланс: ${data.balance} ${data.currency}`)
       } else {
         const errorData = await response.json()
+
         setError(errorData.message || 'Failed to check balance')
         toast.error(errorData.message || 'Ошибка при проверке баланса')
       }
@@ -147,7 +158,8 @@ const SMSRuSettings = () => {
   const handleSendTest = async () => {
     if (!testPhone) {
       toast.error('Введите номер телефона для теста')
-      return
+      
+return
     }
 
     try {
@@ -167,6 +179,7 @@ const SMSRuSettings = () => {
 
       if (response.ok) {
         const data = await response.json()
+
         toast.success(
           data.testMode
             ? 'Тестовое SMS отправлено (тестовый режим)'
@@ -174,6 +187,7 @@ const SMSRuSettings = () => {
         )
       } else {
         const errorData = await response.json()
+
         setError(errorData.message || 'Failed to send test SMS')
         toast.error(errorData.message || 'Ошибка при отправке тестового SMS')
       }

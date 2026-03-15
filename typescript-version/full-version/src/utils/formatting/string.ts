@@ -37,7 +37,9 @@ export const ROLE_HIERARCHY = ['superadmin', 'admin', 'manager', 'editor', 'mode
  */
 export const getRoleLevel = (role: string): number => {
   const index = ROLE_HIERARCHY.indexOf(role.toLowerCase() as typeof ROLE_HIERARCHY[number])
-  return index === -1 ? ROLE_HIERARCHY.length : index
+
+  
+return index === -1 ? ROLE_HIERARCHY.length : index
 }
 
 /**

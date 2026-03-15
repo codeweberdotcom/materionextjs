@@ -26,6 +26,7 @@ export class TelegramChannel extends BaseNotificationChannel {
 
   async send(options: NotificationChannelOptions): Promise<NotificationChannelResult> {
     const validation = this.validate(options)
+
     if (!validation.valid) {
       return {
         success: false,
@@ -61,6 +62,7 @@ export class TelegramChannel extends BaseNotificationChannel {
         // Если массив - это могут быть userId или chatId
         for (const to of options.to) {
           const chatId = await this.resolveChatId(to)
+
           if (chatId) {
             chatIds.push(chatId)
           }
@@ -68,6 +70,7 @@ export class TelegramChannel extends BaseNotificationChannel {
       } else {
         // Если строка - это userId или chatId
         const chatId = await this.resolveChatId(options.to)
+
         if (chatId) {
           chatIds.push(chatId)
         }
@@ -89,6 +92,7 @@ export class TelegramChannel extends BaseNotificationChannel {
       for (const chatId of chatIds) {
         try {
           const result = await this.sendTelegramMessage(settings.botToken, chatId, message)
+
           results.push({
             chatId,
             success: result.success,
@@ -128,7 +132,8 @@ export class TelegramChannel extends BaseNotificationChannel {
       }
     } catch (error) {
       this.logError('Failed to send Telegram notification', error, { to: options.to })
-      return {
+      
+return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       }
@@ -156,13 +161,15 @@ export class TelegramChannel extends BaseNotificationChannel {
       }
 
       logger.warn('[TelegramChannel] User has no telegramChatId', { userId: to })
-      return null
+      
+return null
     } catch (error) {
       logger.error('[TelegramChannel] Failed to resolve chat ID', {
         error: error instanceof Error ? error.message : String(error),
         to
       })
-      return null
+      
+return null
     }
   }
 
@@ -246,6 +253,7 @@ export class TelegramChannel extends BaseNotificationChannel {
 
     // Иконка по типу события (если есть metadata.eventType)
     const eventType = options.metadata?.eventType as string | undefined
+
     const icons: Record<string, string> = {
       'user:registered': '👤',
       'user:login': '🔐',
@@ -262,6 +270,7 @@ export class TelegramChannel extends BaseNotificationChannel {
       'system:maintenance': '🔧',
       'system:update': '🆕'
     }
+
     const icon = eventType ? icons[eventType] || '📢' : '📢'
 
     // Заголовок
@@ -288,8 +297,10 @@ export class TelegramChannel extends BaseNotificationChannel {
     // Метаданные события
     if (options.metadata) {
       const { sendToChannel, eventType: _eventType, ...otherMeta } = options.metadata
+
       if (Object.keys(otherMeta).length > 0) {
         message += '\n\n---\n'
+
         for (const [key, value] of Object.entries(otherMeta)) {
           if (value !== undefined && value !== null) {
             message += `\n• *${this.escapeMarkdown(key)}:* ${this.escapeMarkdown(String(value))}`
@@ -334,7 +345,9 @@ export class TelegramChannel extends BaseNotificationChannel {
 
       if (!response.ok) {
         const errorData = await response.json()
-        return {
+
+        
+return {
           success: false,
           error: errorData.description || `HTTP ${response.status}`
         }

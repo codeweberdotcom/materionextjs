@@ -1,4 +1,5 @@
 import type { NotificationScenario as PrismaScenario } from '@prisma/client'
+
 import { prisma } from '@/libs/prisma'
 import { notificationService } from '../NotificationService'
 import { notificationQueue } from '../NotificationQueue'
@@ -24,7 +25,9 @@ export class ScenarioEngine {
     if (!ScenarioEngine.instance) {
       ScenarioEngine.instance = new ScenarioEngine()
     }
-    return ScenarioEngine.instance
+
+    
+return ScenarioEngine.instance
   }
 
   /**
@@ -39,6 +42,7 @@ export class ScenarioEngine {
     try {
       // Проверяем глобальные условия сценария
       let conditions: ScenarioConditions | null = null
+
       if (scenario.conditions) {
         try {
           conditions = JSON.parse(scenario.conditions) as ScenarioConditions
@@ -49,6 +53,7 @@ export class ScenarioEngine {
           })
         }
       }
+
       if (conditions && !this.checkConditions(conditions, context)) {
         logger.info('[ScenarioEngine] Scenario conditions not met', {
           scenarioId: scenario.id,
@@ -58,7 +63,8 @@ export class ScenarioEngine {
           status: 'cancelled',
           error: 'Conditions not met'
         })
-        return {
+        
+return {
           scenarioId: scenario.id,
           eventId: context.event.id,
           status: 'cancelled',
@@ -80,6 +86,7 @@ export class ScenarioEngine {
               phoneVerified: true
             }
           })
+
           if (user) {
             context.user = {
               id: user.id,
@@ -99,6 +106,7 @@ export class ScenarioEngine {
 
       // Выполняем действия
       let actions: ScenarioAction[]
+
       try {
         actions = JSON.parse(scenario.actions || '[]') as ScenarioAction[]
       } catch (e) {
@@ -108,12 +116,15 @@ export class ScenarioEngine {
         })
         throw new Error('Invalid scenario actions format')
       }
+
       const actionResults: ActionExecutionResult[] = []
 
       for (let i = 0; i < actions.length; i++) {
         const action = actions[i]
+
         try {
           const result = await this.executeAction(action, context, i)
+
           actionResults.push(result)
         } catch (error) {
           logger.error('[ScenarioEngine] Failed to execute action', {
@@ -132,6 +143,7 @@ export class ScenarioEngine {
 
       // Обновляем статус выполнения
       const allSuccess = actionResults.every(r => r.success)
+
       await this.updateExecution(executionId, {
         status: allSuccess ? 'completed' : 'failed',
         result: actionResults,
@@ -176,7 +188,8 @@ export class ScenarioEngine {
         actionIndex: index,
         channel: action.channel
       })
-      return {
+      
+return {
         success: false,
         actionIndex: index,
         channel: action.channel,
@@ -186,6 +199,7 @@ export class ScenarioEngine {
 
     // Получаем получателя
     const to = this.resolveRecipient(action, context)
+
     if (!to) {
       return {
         success: false,
@@ -284,7 +298,9 @@ export class ScenarioEngine {
         return false
       }
     }
-    return true
+
+    
+return true
   }
 
   /**
@@ -331,6 +347,7 @@ export class ScenarioEngine {
       if (value === null || value === undefined) {
         return undefined
       }
+
       value = value[part]
     }
 
@@ -352,6 +369,7 @@ export class ScenarioEngine {
     // Если указано поле из контекста
     if (action.toField) {
       const value = this.getFieldValue(action.toField, context)
+
       if (value) {
         return value
       }
@@ -392,6 +410,7 @@ export class ScenarioEngine {
     if (action.variableFields) {
       for (const [key, field] of Object.entries(action.variableFields)) {
         const value = this.getFieldValue(field, context)
+
         if (value !== undefined) {
           variables[key] = value
         }
@@ -403,6 +422,7 @@ export class ScenarioEngine {
       variables.userName = context.user.email || context.user.phone || 'User'
       variables.userId = context.user.id
     }
+
     if (context.event) {
       variables.eventType = context.event.type
       variables.eventSource = context.event.source
@@ -424,7 +444,9 @@ export class ScenarioEngine {
         maxAttempts: 3
       }
     })
-    return execution.id
+
+    
+return execution.id
   }
 
   /**

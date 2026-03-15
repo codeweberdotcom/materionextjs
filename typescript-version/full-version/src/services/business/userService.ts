@@ -1,8 +1,9 @@
 // User service for business logic
+import type { Prisma, User } from '@prisma/client'
+
 import { UserRepository } from '../database/userRepository'
 import { emailService } from '../external/emailService'
 import logger from '@/lib/logger'
-import type { Prisma, User } from '@prisma/client'
 
 export class UserService {
   private userRepository: UserRepository
@@ -42,6 +43,7 @@ export class UserService {
         })
       } catch (emailError) {
         logger.error('Failed to send welcome email:', emailError)
+
         // Don't fail user creation if email fails
       }
 

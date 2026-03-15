@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+
 import { useAuth } from '@/contexts/AuthProvider'
 import { useSockets } from '@/contexts/SocketProvider'
 
@@ -15,8 +16,10 @@ export const useUnreadMessages = () => {
     try {
       setIsLoading(true)
       const response = await fetch('/api/chat/unread')
+
       if (response.ok) {
         const data = await response.json()
+
         setUnreadCount(data.count || 0)
       }
     } catch (error) {
@@ -74,7 +77,8 @@ export const useUnreadMessages = () => {
     }
 
     window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
+    
+return () => window.removeEventListener('focus', handleFocus)
   }, [user?.id, fetchUnreadCount])
 
   // Update when page becomes visible (user returns from another tab)
@@ -86,7 +90,8 @@ export const useUnreadMessages = () => {
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+    
+return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [user?.id, fetchUnreadCount])
 
   return {

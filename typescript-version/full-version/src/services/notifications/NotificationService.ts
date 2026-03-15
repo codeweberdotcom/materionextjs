@@ -24,7 +24,9 @@ export class NotificationService {
     if (!NotificationService.instance) {
       NotificationService.instance = new NotificationService()
     }
-    return NotificationService.instance
+
+    
+return NotificationService.instance
   }
 
   private initializeChannels(): void {
@@ -35,6 +37,7 @@ export class NotificationService {
     // Импортируем TelegramChannel динамически, чтобы избежать ошибок при отсутствии настроек
     try {
       const { TelegramChannel } = require('./channels/TelegramChannel')
+
       this.channels.set('telegram', new TelegramChannel())
     } catch (error) {
       logger.warn('[NotificationService] Telegram channel not available', {
@@ -51,8 +54,10 @@ export class NotificationService {
 
     if (!channel) {
       const error = `Channel ${options.channel} is not supported`
+
       logger.error('[NotificationService]', { error, channel: options.channel })
-      return {
+      
+return {
         success: false,
         error
       }
@@ -60,14 +65,17 @@ export class NotificationService {
 
     try {
       const result = await channel.send(options)
-      return result
+
+      
+return result
     } catch (error) {
       logger.error('[NotificationService] Failed to send notification', {
         error: error instanceof Error ? error.message : String(error),
         channel: options.channel,
         to: options.to
       })
-      return {
+      
+return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error'
       }
@@ -81,7 +89,9 @@ export class NotificationService {
     optionsList: NotificationChannelOptions[]
   ): Promise<NotificationChannelResult[]> {
     const promises = optionsList.map(options => this.send(options))
-    return Promise.all(promises)
+
+    
+return Promise.all(promises)
   }
 
   /**

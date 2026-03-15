@@ -1,4 +1,5 @@
 import { render } from '@testing-library/react'
+
 import DirectionalIcon from '../DirectionalIcon'
 
 // Mock MUI theme at the top level
@@ -16,6 +17,7 @@ describe('DirectionalIcon', () => {
     )
 
     const icon = container.querySelector('i')
+
     expect(icon).toBeTruthy()
   })
 
@@ -29,6 +31,7 @@ describe('DirectionalIcon', () => {
     )
 
     const icon = container.querySelector('i')
+
     expect(icon?.className).toContain('custom-icon')
   })
 })

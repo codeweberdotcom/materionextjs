@@ -6,7 +6,9 @@
  * @module app/api/admin/settings/services/status
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { serviceConfigResolver } from '@/lib/config'
 import logger from '@/lib/logger'
@@ -26,6 +28,7 @@ export async function GET(request: NextRequest) {
 
     // Проверяем права доступа
     const userRole = user.role?.code?.toUpperCase()
+
     if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }

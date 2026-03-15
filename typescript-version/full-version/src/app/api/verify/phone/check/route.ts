@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { prisma } from '@/libs/prisma'
 import { verificationService } from '@/services/verification/VerificationService'
 import { verifyPhoneCodeSchema } from '@/lib/validations/verification-schemas'
@@ -26,7 +28,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/phone/check',
         context: { route: 'verify/phone/check', errors: validationResult.error.errors }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     const { phone, code } = validationResult.data
@@ -46,7 +50,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/phone/check',
         context: { route: 'verify/phone/check', phone }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Проверяем код верификации
@@ -80,7 +86,9 @@ export async function POST(request: NextRequest) {
         route: 'verify/phone/check',
         context: { route: 'verify/phone/check', phone }
       })
-      return new NextResponse(JSON.stringify(payload), init)
+
+      
+return new NextResponse(JSON.stringify(payload), init)
     }
 
     // Обновляем пользователя: верифицируем телефон и активируем (полный доступ)
@@ -133,7 +141,9 @@ export async function POST(request: NextRequest) {
       route: 'verify/phone/check',
       context: { route: 'verify/phone/check' }
     })
-    return new NextResponse(JSON.stringify(payload), init)
+
+    
+return new NextResponse(JSON.stringify(payload), init)
   }
 }
 

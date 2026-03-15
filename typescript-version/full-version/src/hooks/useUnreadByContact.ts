@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
+
+import { useParams } from 'next/navigation'
+
 import { useAuth } from '@/contexts/AuthProvider'
 import { useSockets } from '@/contexts/SocketProvider'
-import { useParams } from 'next/navigation'
 
 export const useUnreadByContact = () => {
   const { user } = useAuth()
@@ -15,6 +17,7 @@ export const useUnreadByContact = () => {
   const playNotificationSound = useCallback(() => {
     try {
       const audio = new Audio(`/${locale}/new_message_codeweber.wav`)
+
       audio.volume = 0.2
       audio.play().catch(() => {})
     } catch (err) {
@@ -29,8 +32,10 @@ export const useUnreadByContact = () => {
     try {
       setIsLoading(true)
       const response = await fetch('/api/chat/unread-by-contact')
+
       if (response.ok) {
         const data = await response.json()
+
         setUnreadByContact(data.unreadByContact || {})
         setUserStatuses(data.userStatuses || {})
       }
@@ -90,7 +95,8 @@ export const useUnreadByContact = () => {
     }
 
     window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
+    
+return () => window.removeEventListener('focus', handleFocus)
   }, [user?.id, fetchUnreadByContact])
 
   // Update when page becomes visible (user returns from another tab)
@@ -102,7 +108,8 @@ export const useUnreadByContact = () => {
     }
 
     document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+    
+return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
   }, [user?.id, fetchUnreadByContact])
 
   return {

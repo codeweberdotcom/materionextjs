@@ -80,6 +80,7 @@ export class ImageProcessingService {
           convertToWebP,
           quality
         )
+
         processedVariants.push(processed)
       }
 
@@ -124,7 +125,7 @@ export class ImageProcessingService {
     // config.quality используется только если defaultQuality не задан
     const quality = defaultQuality || config.quality || 85
 
-    let image = sharp(buffer).resize(config.width, config.height, {
+    const image = sharp(buffer).resize(config.width, config.height, {
       fit: FIT_MAP[config.fit] || 'cover',
       withoutEnlargement: config.withoutEnlargement ?? true,
       background: { r: 255, g: 255, b: 255, alpha: 0 }, // Прозрачный фон для contain
@@ -327,7 +328,9 @@ export class ImageProcessingService {
   async isValidImage(buffer: Buffer): Promise<boolean> {
     try {
       const metadata = await sharp(buffer).metadata()
-      return !!metadata.format && !!metadata.width && !!metadata.height
+
+      
+return !!metadata.format && !!metadata.width && !!metadata.height
     } catch {
       return false
     }
@@ -374,7 +377,9 @@ export function getImageProcessingService(): ImageProcessingService {
   if (!imageProcessingServiceInstance) {
     imageProcessingServiceInstance = new ImageProcessingService()
   }
-  return imageProcessingServiceInstance
+
+  
+return imageProcessingServiceInstance
 }
 
 

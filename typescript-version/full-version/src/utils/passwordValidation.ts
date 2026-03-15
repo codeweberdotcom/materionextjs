@@ -69,6 +69,7 @@ export const validatePassword = (
 
   if (config.banCommonPasswords) {
     const lowerPassword = password.toLowerCase()
+
     if (commonPasswords.some(common => common === lowerPassword)) {
       errors.push('Password is too common. Choose a more secure password.')
     }

@@ -65,13 +65,15 @@ const AccountForm = ({
     description: initialData?.description || '',
     type: initialData?.type || AccountType.LISTING
   })
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
       setError('Название аккаунта обязательно')
-      return
+      
+return
     }
 
     setLoading(true)

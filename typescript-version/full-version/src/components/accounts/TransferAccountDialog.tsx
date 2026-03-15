@@ -36,17 +36,20 @@ const TransferAccountDialog = ({
   const handleSubmit = async () => {
     if (!email.trim()) {
       setError('Email пользователя обязателен')
-      return
+      
+return
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
       setError('Введите корректный email')
-      return
+      
+return
     }
 
     if (!confirmed) {
       setConfirmed(true)
-      return
+      
+return
     }
 
     setLoading(true)

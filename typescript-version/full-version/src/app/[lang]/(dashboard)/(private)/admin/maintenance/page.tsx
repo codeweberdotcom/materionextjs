@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader'
@@ -23,6 +24,7 @@ type RetentionResponse = {
 
 const formatDate = (value?: string | null) => {
   if (!value) return '—'
+
   try {
     return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
   } catch {
@@ -40,8 +42,10 @@ const MaintenancePage = () => {
     try {
       setLoading(true)
       const res = await fetch('/api/admin/maintenance/retention', { credentials: 'include' })
+
       if (!res.ok) throw new Error('Failed to load status')
       const json = (await res.json()) as RetentionResponse
+
       setData(json)
       setError(null)
     } catch (err) {
@@ -58,10 +62,12 @@ const MaintenancePage = () => {
   const runCleanup = async () => {
     try {
       setRunning(true)
+
       const res = await fetch('/api/admin/maintenance/retention', {
         method: 'POST',
         credentials: 'include'
       })
+
       if (!res.ok) throw new Error('Failed to run cleanup')
       await fetchStatus()
     } catch (err) {

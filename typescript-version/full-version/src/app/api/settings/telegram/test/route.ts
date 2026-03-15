@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { telegramSettingsService } from '@/services/settings/TelegramSettingsService'
@@ -42,7 +44,9 @@ export async function POST(request: NextRequest) {
       
       if (!botInfoResponse.ok) {
         const errorData = await botInfoResponse.json()
-        return NextResponse.json({
+
+        
+return NextResponse.json({
           success: false,
           message: errorData.description || 'Invalid bot token'
         })
@@ -64,7 +68,9 @@ export async function POST(request: NextRequest) {
 
       if (!sendMessageResponse.ok) {
         const errorData = await sendMessageResponse.json()
-        return NextResponse.json({
+
+        
+return NextResponse.json({
           success: false,
           message: errorData.description || 'Failed to send test message'
         })

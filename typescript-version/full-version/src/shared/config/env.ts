@@ -64,6 +64,7 @@ const envSchema = z.object({
   MAPBOX_ACCESS_TOKEN: z.string().optional(),
   GLITCHTIP_DSN: z.string().optional(),
   SENTRY_DSN: z.string().optional(),
+
   // Event Retention Policy (days)
   EVENT_RETENTION_DEFAULT_DAYS: numberFromEnv.default('90'),
   EVENT_RETENTION_RATE_LIMIT_DAYS: numberFromEnv.default('30'),
@@ -76,6 +77,7 @@ const envSchema = z.object({
   EVENT_RETENTION_NOTIFICATIONS_DAYS: numberFromEnv.default('90'),
   EVENT_RETENTION_SYSTEM_DAYS: numberFromEnv.default('90'),
   EVENT_RETENTION_TEST_EVENTS_DAYS: numberFromEnv.default('30'),
+
   // Retention Job Settings
   EVENT_RETENTION_BATCH_SIZE: numberFromEnv.default('1000'),
   EVENT_RETENTION_ENABLED: booleanFromEnv.default('true')

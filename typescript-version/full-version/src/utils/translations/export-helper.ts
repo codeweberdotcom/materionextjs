@@ -85,6 +85,7 @@ function processTranslationValue(value: unknown): string {
       return JSON.stringify(value)
     } catch (stringifyError) {
       console.error('Failed to stringify value:', value, stringifyError)
+
       // Fallback - пытаемся преобразовать в строку
       return String(value)
     }
@@ -122,6 +123,7 @@ export async function importTranslationsFromJSON(): Promise<{
   }
 
   let languagesJson: Array<{ code: string }>
+
   try {
     languagesJson = JSON.parse(fs.readFileSync(languagesJsonPath, 'utf8'))
   } catch (error) {
@@ -129,6 +131,7 @@ export async function importTranslationsFromJSON(): Promise<{
   }
 
   const languages = languagesJson.map((lang: { code: string }) => lang.code)
+
   const translationsToCreate: {
     key: string
     language: string
@@ -150,6 +153,7 @@ export async function importTranslationsFromJSON(): Promise<{
         }
 
         let jsonData: Record<string, unknown>
+
         try {
           jsonData = JSON.parse(fileContent)
         } catch (parseError) {
@@ -199,6 +203,7 @@ export async function importTranslationsFromJSON(): Promise<{
               })
             } catch (valueError) {
               console.error(`Error processing key "${key}" in namespace "${namespace}" for language ${language}:`, valueError)
+
               // Продолжаем обработку других ключей
             }
           }
@@ -223,6 +228,7 @@ export async function importTranslationsFromJSON(): Promise<{
       // Insert new translations using createMany for better performance
       // Используем batch insert для больших объёмов данных
       const batchSize = 1000
+
       for (let i = 0; i < translationsToCreate.length; i += batchSize) {
         const batch = translationsToCreate.slice(i, i + batchSize)
 
@@ -230,13 +236,15 @@ export async function importTranslationsFromJSON(): Promise<{
         const validBatch = batch.filter(t => {
           if (!t.key || !t.language || !t.namespace || typeof t.value !== 'string') {
             console.warn(`Skipping invalid translation:`, t)
-            return false
+            
+return false
           }
 
           // Проверяем длину значения (если база данных имеет ограничения)
           if (t.value.length > 100000) {
             console.warn(`Translation value too long for key "${t.key}" in namespace "${t.namespace}", skipping`)
-            return false
+            
+return false
           }
 
           return true

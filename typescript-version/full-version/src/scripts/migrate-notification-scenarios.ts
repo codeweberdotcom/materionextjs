@@ -207,6 +207,7 @@ async function migrateScenario(
     // Парсим JSON
     const trigger = JSON.parse(scenario.trigger) as EventTrigger
     const actions = JSON.parse(scenario.actions) as ScenarioAction[]
+
     const conditions = scenario.conditions
       ? (JSON.parse(scenario.conditions) as ScenarioConditions)
       : null
@@ -224,6 +225,7 @@ async function migrateScenario(
       // Проверяем, существует ли уже правило
       if (options.skipExisting) {
         const existing = await rulesService.getRuleByName(ruleName)
+
         if (existing) {
           logger.info(`[Migration] Skipping existing rule: ${ruleName}`)
           results.push({ success: true, skipped: true, ruleName })
@@ -261,8 +263,10 @@ async function migrateScenario(
     return { success: true, ruleId: results[0]?.ruleId }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error)
+
     logger.error(`[Migration] Failed to migrate scenario ${scenario.name}:`, errorMessage)
-    return { success: false, error: errorMessage }
+    
+return { success: false, error: errorMessage }
   }
 }
 
@@ -275,6 +279,7 @@ async function migrate(options: MigrationOptions = {}) {
   try {
     // Получаем все сценарии
     const whereClause: any = {}
+
     if (options.enabledOnly) {
       whereClause.enabled = true
     }
@@ -288,7 +293,8 @@ async function migrate(options: MigrationOptions = {}) {
 
     if (scenarios.length === 0) {
       logger.info('[Migration] No scenarios to migrate')
-      return
+      
+return
     }
 
     // Мигрируем каждый сценарий
@@ -323,6 +329,7 @@ async function migrate(options: MigrationOptions = {}) {
 // Запуск скрипта
 if (require.main === module) {
   const args = process.argv.slice(2)
+
   const options: MigrationOptions = {
     dryRun: args.includes('--dry-run'),
     skipExisting: args.includes('--skip-existing'),

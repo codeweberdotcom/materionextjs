@@ -5,6 +5,7 @@
  */
 
 import { Counter, Histogram, Gauge } from 'prom-client'
+
 import { metricsRegistry } from './registry'
 
 // ========================================
@@ -17,10 +18,13 @@ function getOrCreateCounter<T extends string>(
   labelNames: readonly T[]
 ): Counter<T> {
   const existing = metricsRegistry.getSingleMetric(name)
+
   if (existing) {
     return existing as Counter<T>
   }
-  return new Counter({ name, help, labelNames, registers: [metricsRegistry] })
+
+  
+return new Counter({ name, help, labelNames, registers: [metricsRegistry] })
 }
 
 function getOrCreateHistogram<T extends string>(
@@ -30,10 +34,13 @@ function getOrCreateHistogram<T extends string>(
   buckets: number[]
 ): Histogram<T> {
   const existing = metricsRegistry.getSingleMetric(name)
+
   if (existing) {
     return existing as Histogram<T>
   }
-  return new Histogram({ name, help, labelNames, buckets, registers: [metricsRegistry] })
+
+  
+return new Histogram({ name, help, labelNames, buckets, registers: [metricsRegistry] })
 }
 
 function getOrCreateGauge<T extends string>(
@@ -42,10 +49,13 @@ function getOrCreateGauge<T extends string>(
   labelNames: readonly T[]
 ): Gauge<T> {
   const existing = metricsRegistry.getSingleMetric(name)
+
   if (existing) {
     return existing as Gauge<T>
   }
-  return new Gauge({ name, help, labelNames, registers: [metricsRegistry] })
+
+  
+return new Gauge({ name, help, labelNames, registers: [metricsRegistry] })
 }
 
 // ========================================
@@ -262,7 +272,9 @@ export function markSyncJobCompleted(operation: string, status: 'success' | 'fai
  */
 export function startProcessingTimer(entityType: string): () => void {
   const end = mediaProcessingDuration.startTimer({ entity_type: entityType })
-  return end
+
+  
+return end
 }
 
 /**
@@ -270,7 +282,9 @@ export function startProcessingTimer(entityType: string): () => void {
  */
 export function startSyncTimer(operation: string): () => void {
   const end = mediaSyncDuration.startTimer({ operation })
-  return end
+
+  
+return end
 }
 
 /**
@@ -334,7 +348,9 @@ export function markWatermarkJobCompleted(status: 'success' | 'failed') {
  */
 export function startWatermarkTimer(entityType: string): () => void {
   const end = watermarkDuration.startTimer({ entity_type: entityType })
-  return end
+
+  
+return end
 }
 
 /**
@@ -349,6 +365,8 @@ export function markAsyncUploadRequest(entityType: string, status: 'success' | '
  */
 export function startAsyncUploadTimer(entityType: string): () => void {
   const end = asyncUploadDuration.startTimer({ entity_type: entityType })
-  return end
+
+  
+return end
 }
 

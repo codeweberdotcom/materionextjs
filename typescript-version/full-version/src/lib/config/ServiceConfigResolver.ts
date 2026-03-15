@@ -11,7 +11,8 @@
 
 import { prisma } from '@/libs/prisma'
 import { decrypt } from './encryption'
-import { ServiceConfig, ServiceName, ConfigSource, DEFAULT_CONFIGS, ENV_MAPPING } from './types'
+import type { ServiceConfig, ServiceName} from './types';
+import { ConfigSource, DEFAULT_CONFIGS, ENV_MAPPING } from './types'
 import logger from '@/lib/logger'
 
 /**
@@ -47,34 +48,40 @@ class ServiceConfigResolver {
 
     // 1️⃣ Пробуем получить из Admin Panel (БД)
     const adminConfig = await this.getFromAdmin(serviceName)
+
     if (adminConfig) {
       logger.debug(`[ConfigResolver] ${serviceName}: using Admin Panel config`, {
         host: adminConfig.host,
         port: adminConfig.port
       })
       this.setCache(serviceName, adminConfig)
-      return adminConfig
+      
+return adminConfig
     }
 
     // 2️⃣ Пробуем получить из Environment
     const envConfig = this.getFromEnv(serviceName)
+
     if (envConfig) {
       logger.debug(`[ConfigResolver] ${serviceName}: using ENV config`, {
         host: envConfig.host,
         port: envConfig.port
       })
       this.setCache(serviceName, envConfig)
-      return envConfig
+      
+return envConfig
     }
 
     // 3️⃣ Используем Default (Docker)
     const defaultConfig = this.getDefault(serviceName)
+
     logger.debug(`[ConfigResolver] ${serviceName}: using Default (Docker) config`, {
       host: defaultConfig.host,
       port: defaultConfig.port
     })
     this.setCache(serviceName, defaultConfig)
-    return defaultConfig
+    
+return defaultConfig
   }
 
   /**
@@ -105,6 +112,7 @@ class ServiceConfigResolver {
 
       // Парсим metadata
       let metadata: Record<string, unknown> = {}
+
       if (config.metadata) {
         try {
           metadata = JSON.parse(config.metadata)
@@ -130,7 +138,8 @@ class ServiceConfigResolver {
       logger.warn(`[ConfigResolver] Cannot read from DB for ${serviceName}`, {
         error: error instanceof Error ? error.message : String(error)
       })
-      return null
+      
+return null
     }
   }
 
@@ -196,7 +205,9 @@ class ServiceConfigResolver {
       elasticsearch: 'http://',
       firecrawl: 'https://'
     }
-    return protocols[serviceName] || 'http://'
+
+    
+return protocols[serviceName] || 'http://'
   }
 
   /**
@@ -240,7 +251,9 @@ class ServiceConfigResolver {
    */
   async getConfigSource(serviceName: ServiceName): Promise<ConfigSource> {
     const config = await this.getConfig(serviceName)
-    return config.source
+
+    
+return config.source
   }
 
   /**
@@ -255,7 +268,9 @@ class ServiceConfigResolver {
    */
   async getServiceUrl(serviceName: ServiceName): Promise<string | null> {
     const config = await this.getConfig(serviceName)
-    return config.url || null
+
+    
+return config.url || null
   }
 
   /**
@@ -273,7 +288,9 @@ class ServiceConfigResolver {
         },
         select: { id: true }
       })
-      return !!config
+
+      
+return !!config
     } catch {
       return false
     }
@@ -304,6 +321,7 @@ class ServiceConfigResolver {
 
     for (const service of services) {
       const config = await this.getConfig(service)
+
       result[service] = {
         configured: config.source !== ConfigSource.DEFAULT,
         source: config.source,

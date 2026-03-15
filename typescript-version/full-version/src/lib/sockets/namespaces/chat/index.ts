@@ -1,7 +1,9 @@
 import type { Namespace } from 'socket.io'
+
 import logger from '../../../logger'
 import type { ServerToClientEvents, TypedIOServer, TypedSocket } from '../../types/common'
-import { ChatEvents, ChatEmitEvents, ChatMessage, ChatRoom } from '../../types/chat';
+import type { ChatMessage} from '../../types/chat';
+import { ChatEvents, ChatEmitEvents, ChatRoom } from '../../types/chat';
 import { authenticateSocket, requirePermission, requireRole } from '../../middleware/auth';
 import { rateLimitChatConnections } from '../../middleware/rateLimit';
 import { rateLimitService } from '@/lib/rate-limit';
@@ -25,6 +27,7 @@ const emitRateLimitExceeded = (
     blockedUntilMs: blockTarget,
     retryAfterSec,
     remaining: result.remaining,
+
     // Legacy
     retryAfter: retryAfterSec,
     blockedUntil: blockTarget
@@ -183,18 +186,21 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
 
       if (!rateLimitResult.allowed) {
         emitRateLimitExceeded(socket, rateLimitResult, callback)
-        return
+        
+return
       }
 
       // Валидация данных
       if (!data.roomId || !data.message || !data.senderId) {
         socket.emit('error', { message: 'Invalid message data' });
-        return;
+        
+return;
       }
 
       if (data.message.length > 1000) {
         socket.emit('error', { message: 'Message too long' });
-        return;
+        
+return;
       }
 
       // Проверяем, что пользователь в комнате
@@ -210,7 +216,8 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
 
       if (!room) {
         socket.emit('error', { message: 'Access denied to room' });
-        return;
+        
+return;
       }
 
       // Сохраняем сообщение в БД
@@ -284,14 +291,17 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
 
       if (!rateLimitResult.allowed) {
         emitRateLimitExceeded(socket, rateLimitResult)
-        return
+        
+return
       }
+
       logger.debug('Processing getOrCreateRoom', { userId, user1Id: data.user1Id, user2Id: data.user2Id });
 
       // Проверяем, что текущий пользователь участвует в комнате
       if (data.user1Id !== userId && data.user2Id !== userId) {
         socket.emit('error', { message: 'Access denied' });
-        return;
+        
+return;
       }
 
       // Ищем существующую комнату
@@ -369,6 +379,7 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
       if (socket1) {
         io.of('/chat').sockets.get(socket1)?.join(`room_${room.id}`);
       }
+
       if (socket2) {
         io.of('/chat').sockets.get(socket2)?.join(`room_${room.id}`);
       }
@@ -400,7 +411,8 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
 
       if (!room) {
         socket.emit('error', { message: 'Access denied to room' });
-        return;
+        
+return;
       }
 
       // Отмечаем сообщения как прочитанные
@@ -456,6 +468,7 @@ const registerChatEventHandlers = (socket: TypedSocket) => {
         userId,
         error: error instanceof Error ? error.message : 'Unknown error'
       });
+
       if (callback) {
         callback({ pong: false, error: 'Failed to update status' });
       }
@@ -516,6 +529,7 @@ export const sendToChatRoom = <TEvent extends keyof ServerToClientEvents>(
   ...args: Parameters<ServerToClientEvents[TEvent]>
 ) => {
   const chatNamespace = globalThis.io?.of('/chat')
+
   if (chatNamespace) {
     chatNamespace.to(`room_${roomId}`).emit(event, ...args)
     logger.debug('Sent to chat room', { roomId, event })

@@ -5,9 +5,13 @@
  * @module app/api/admin/media/scan
  */
 
-import { NextRequest, NextResponse } from 'next/server'
 import { existsSync, readdirSync, statSync } from 'fs'
+
 import path from 'path'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isAdminOrHigher } from '@/utils/permissions/permissions'
@@ -30,12 +34,14 @@ function getEntityTypeFromPath(filePath: string): string {
   if (filePath.includes('/listings/')) return 'listing_image'
   if (filePath.includes('/watermarks/')) return 'watermark'
   if (filePath.includes('/documents/')) return 'document'
-  return 'other'
+  
+return 'other'
 }
 
 // Получение MIME типа по расширению
 function getMimeType(filename: string): string {
   const ext = path.extname(filename).toLowerCase()
+
   const mimeTypes: Record<string, string> = {
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
@@ -45,13 +51,17 @@ function getMimeType(filename: string): string {
     '.svg': 'image/svg+xml',
     '.ico': 'image/x-icon',
   }
-  return mimeTypes[ext] || 'application/octet-stream'
+
+  
+return mimeTypes[ext] || 'application/octet-stream'
 }
 
 // Генерация slug из filename
 function generateSlug(filename: string): string {
   const name = path.basename(filename, path.extname(filename))
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
+  
+return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
 // Рекурсивное сканирование директории
@@ -70,9 +80,11 @@ function scanDirectory(dir: string, baseDir: string): string[] {
       files.push(...scanDirectory(fullPath, baseDir))
     } else if (stat.isFile()) {
       const ext = path.extname(item).toLowerCase()
+
       if (['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'].includes(ext)) {
         // Относительный путь от public/
         const relativePath = '/' + path.relative(baseDir, fullPath).replace(/\\/g, '/')
+
         files.push(relativePath)
       }
     }
@@ -119,6 +131,7 @@ export async function POST(request: NextRequest) {
 
     // Сканируем файлы
     const files = scanDirectory(scanDir, publicDir)
+
     result.scanned = files.length
 
     logger.info('[API] Scanning files for import', {
@@ -133,6 +146,7 @@ export async function POST(request: NextRequest) {
       },
       select: { localPath: true },
     })
+
     const existingPaths = new Set(existingMedia.map(m => m.localPath))
 
     // Импортируем новые файлы
@@ -169,6 +183,7 @@ export async function POST(request: NextRequest) {
         result.imported++
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error)
+
         result.errors.push(`${filePath}: ${errorMessage}`)
         logger.error('[API] Failed to import file', {
           filePath,
@@ -226,6 +241,7 @@ export async function GET(request: NextRequest) {
       },
       select: { localPath: true },
     })
+
     const existingPaths = new Set(existingMedia.map(m => m.localPath))
 
     // Группируем по типу
@@ -233,10 +249,13 @@ export async function GET(request: NextRequest) {
     
     for (const file of files) {
       const entityType = getEntityTypeFromPath(file)
+
       if (!byType[entityType]) {
         byType[entityType] = { total: 0, imported: 0, pending: 0 }
       }
+
       byType[entityType].total++
+
       if (existingPaths.has(file)) {
         byType[entityType].imported++
       } else {

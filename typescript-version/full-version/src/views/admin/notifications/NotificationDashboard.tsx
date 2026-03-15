@@ -79,6 +79,7 @@ interface ChartDataPoint {
 
 const formatDateTime = (value?: string | null) => {
   if (!value) return '–'
+
   try {
     return new Intl.DateTimeFormat('ru-RU', {
       dateStyle: 'short',
@@ -164,10 +165,13 @@ const NotificationDashboard = () => {
     
     // Создаём пустые записи для всех дней периода
     const days = stats.period.days
+
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date()
+
       date.setDate(date.getDate() - i)
       const dateStr = date.toISOString().split('T')[0]
+
       dataByDate[dateStr] = {
         date: new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: 'short' }).format(date),
         completed: 0,
@@ -180,8 +184,10 @@ const NotificationDashboard = () => {
     // Заполняем данными
     for (const item of stats.executionsByDay) {
       const dateStr = item.date.toString().split('T')[0]
+
       if (dataByDate[dateStr]) {
         const count = Number(item.count)
+
         ;(dataByDate[dateStr] as any)[item.status as keyof ChartDataPoint] = count
         dataByDate[dateStr].total += count
       }
@@ -193,7 +199,8 @@ const NotificationDashboard = () => {
   // Данные для круговой диаграммы каналов
   const pieData = useMemo(() => {
     if (!stats?.channelStats) return []
-    return Object.entries(stats.channelStats).map(([name, value]) => ({
+    
+return Object.entries(stats.channelStats).map(([name, value]) => ({
       name: name.charAt(0).toUpperCase() + name.slice(1),
       value
     }))
@@ -202,7 +209,8 @@ const NotificationDashboard = () => {
   const fetchStats = useCallback(async () => {
     if (!canRead) {
       setLoading(false)
-      return
+      
+return
     }
 
     setLoading(true)
@@ -210,8 +218,10 @@ const NotificationDashboard = () => {
 
     try {
       const response = await fetch('/api/admin/notifications/stats?days=7')
+
       if (!response.ok) throw new Error('Failed to load stats')
       const data = await response.json()
+
       setStats(data)
     } catch (err) {
       setError('Ошибка загрузки статистики')
@@ -402,7 +412,9 @@ const NotificationDashboard = () => {
                         failed: 'Ошибки',
                         pending: 'Ожидание'
                       }
-                      return [value, labels[name] || name]
+
+                      
+return [value, labels[name] || name]
                     }}
                   />
                   <Area 

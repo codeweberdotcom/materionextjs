@@ -43,6 +43,7 @@ export class PrismaRateLimitStore implements RateLimitStore {
       })
 
       const windowExpired = state ? state.windowEnd <= now : true
+
       if (!state || windowExpired) {
         const windowStart = this.calculateWindowStart(now, config.windowMs)
         const windowEnd = new Date(windowStart.getTime() + config.windowMs)
@@ -61,6 +62,7 @@ export class PrismaRateLimitStore implements RateLimitStore {
         } else {
           const stillBlocked =
             state.blockedUntil && state.blockedUntil.getTime() > now.getTime() ? state.blockedUntil : null
+
           state = await tx.rateLimitState.update({
             where: {
               key_module: {
@@ -96,8 +98,10 @@ export class PrismaRateLimitStore implements RateLimitStore {
           })
         } else {
           const blockDuration = config.blockMs ?? config.windowMs
+
           if (blockDuration > 0) {
             const latestAllowedEnd = new Date(now.getTime() + blockDuration)
+
             if (state.blockedUntil.getTime() > latestAllowedEnd.getTime()) {
               state = await tx.rateLimitState.update({
                 where: { key_module: { key, module } },
@@ -259,6 +263,7 @@ export class PrismaRateLimitStore implements RateLimitStore {
     if (outcome.warningEvent) {
       await recordEvent(outcome.warningEvent)
     }
+
     if (outcome.blockEvent) {
       await recordEvent(outcome.blockEvent)
     }
@@ -331,7 +336,9 @@ export class PrismaRateLimitStore implements RateLimitStore {
       }
     } catch (error) {
       const latency = Date.now() - startTime
-      return {
+
+      
+return {
         healthy: false,
         latency,
         error: error instanceof Error ? error.message : 'Database connection error'
@@ -342,6 +349,8 @@ export class PrismaRateLimitStore implements RateLimitStore {
   private calculateWindowStart(now: Date, windowMs: number) {
     const timestamp = now.getTime()
     const aligned = timestamp - (timestamp % windowMs)
-    return new Date(aligned)
+
+    
+return new Date(aligned)
   }
 }

@@ -1,9 +1,10 @@
 // Component Imports
+import { redirect } from 'next/navigation'
+
 import DocumentsVerification from '@views/apps/user/documents-verification'
 
 // Utils Imports
 import { requireAuth } from '@/utils/auth/auth'
-import { redirect } from 'next/navigation'
 import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
 
 const DocumentsVerificationPage = async () => {

@@ -34,6 +34,7 @@ const chatQueueSlice = createSlice({
   reducers: {
     enqueueMessage: (state, action: PayloadAction<EnqueuePayload>) => {
       const clientId = action.payload.clientId || nanoid()
+
       state.messages[clientId] = {
         clientId,
         createdAt: action.payload.createdAt || new Date().toISOString(),
@@ -47,6 +48,7 @@ const chatQueueSlice = createSlice({
     },
     markMessageSending: (state, action: PayloadAction<{ clientId: string }>) => {
       const message = state.messages[action.payload.clientId]
+
       if (message) {
         message.status = 'sending'
         message.attempts += 1
@@ -55,6 +57,7 @@ const chatQueueSlice = createSlice({
     },
     markMessageFailed: (state, action: PayloadAction<{ clientId: string; error?: string }>) => {
       const message = state.messages[action.payload.clientId]
+
       if (message) {
         message.status = 'failed'
         message.lastError = action.payload.error

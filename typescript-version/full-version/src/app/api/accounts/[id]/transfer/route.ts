@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { accountTransferService } from '@/services/accounts'
@@ -69,7 +70,8 @@ export async function POST(
     }, { status: 201 })
   } catch (error) {
     console.error('[POST /api/accounts/[id]/transfer] Error:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       {
         success: false,
         message: error instanceof Error ? error.message : 'Internal server error'
@@ -122,7 +124,8 @@ export async function GET(
     })
   } catch (error) {
     console.error('[GET /api/accounts/[id]/transfer] Error:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       {
         success: false,
         message: error instanceof Error ? error.message : 'Internal server error'

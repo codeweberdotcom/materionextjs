@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
 import { getSocketServer } from '@/lib/sockets'
@@ -6,9 +8,11 @@ import { parseNotificationMetadata, serializeNotificationMetadata } from '@/util
 
 const emitNotificationEvent = (userId: string, event: string, payload: any) => {
   const io = getSocketServer()
+
   if (!io) return
 
   const namespace = io.of('/notifications')
+
   namespace.to(`user_${userId}`).emit(event, payload)
 
   const legacyMap: Record<string, string> = {
@@ -80,7 +84,8 @@ export async function PATCH(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error updating notification:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -119,6 +124,7 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting notification:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

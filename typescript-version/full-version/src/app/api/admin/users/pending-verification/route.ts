@@ -3,7 +3,9 @@
  * GET /api/admin/users/pending-verification
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { prisma } from '@/libs/prisma'
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
@@ -53,6 +55,7 @@ export async function GET(request: NextRequest) {
         documentsVerified: { not: null }
       }
     }
+
     // status === 'all' - без фильтра
 
     // Получаем пользователей
@@ -70,7 +73,9 @@ export async function GET(request: NextRequest) {
     // Трансформируем данные
     const transformedUsers = users.map(user => {
       const { password: _, ...userWithoutPassword } = user
-      return {
+
+      
+return {
         ...userWithoutPassword,
         documentsStatus: getDocumentsStatus(user)
       }
@@ -87,7 +92,8 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error fetching pending verification users:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

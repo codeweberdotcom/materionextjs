@@ -5,7 +5,7 @@
  * @module services/media/queue/MediaSyncWorker
  */
 
-import Queue from 'bull'
+import type Queue from 'bull'
 
 import type { MediaSyncJobData, MediaSyncResult } from './types'
 import { getStorageService } from '../storage'
@@ -172,6 +172,7 @@ export class MediaSyncWorker {
       if (allCompleted) {
         // Финализируем parent job
         const { getMediaSyncService } = await import('../sync/MediaSyncService')
+
         await getMediaSyncService().finalizeParentJob(parentJobId)
       }
     } catch (error) {
@@ -190,10 +191,12 @@ export class MediaSyncWorker {
     storageService: Awaited<ReturnType<typeof getStorageService>>
   ): Promise<MediaSyncResult> {
     const { mediaId, options, deleteSource: directDeleteSource } = job.data
+
     // Check both direct deleteSource and options.deleteSource for backwards compatibility
     const deleteSource = directDeleteSource ?? options?.deleteSource ?? false
 
     const media = await prisma.media.findUnique({ where: { id: mediaId } })
+
     if (!media) {
       return {
         success: false,
@@ -257,10 +260,12 @@ export class MediaSyncWorker {
     storageService: Awaited<ReturnType<typeof getStorageService>>
   ): Promise<MediaSyncResult> {
     const { mediaId, options, deleteSource: directDeleteSource } = job.data
+
     // Check both direct deleteSource and options.deleteSource for backwards compatibility
     const deleteSource = directDeleteSource ?? options?.deleteSource ?? false
 
     const media = await prisma.media.findUnique({ where: { id: mediaId } })
+
     if (!media) {
       return {
         success: false,
@@ -325,6 +330,7 @@ export class MediaSyncWorker {
     const { mediaId } = job.data
 
     const media = await prisma.media.findUnique({ where: { id: mediaId } })
+
     if (!media) {
       return {
         success: false,
@@ -359,6 +365,7 @@ export class MediaSyncWorker {
     const { mediaId } = job.data
 
     const media = await prisma.media.findUnique({ where: { id: mediaId } })
+
     if (!media) {
       return {
         success: false,
@@ -393,6 +400,7 @@ export class MediaSyncWorker {
     const { mediaId } = job.data
 
     const media = await prisma.media.findUnique({ where: { id: mediaId } })
+
     if (!media) {
       // Уже удалено — это ОК
       return {

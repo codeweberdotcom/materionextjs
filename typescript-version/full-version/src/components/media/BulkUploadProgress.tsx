@@ -13,6 +13,7 @@
  */
 
 import React from 'react'
+
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import LinearProgress from '@mui/material/LinearProgress'
@@ -26,26 +27,37 @@ import Paper from '@mui/material/Paper'
 import type { UploadStats, QueuedFile } from '@/hooks/useBulkUpload'
 
 interface BulkUploadProgressProps {
+
   /** Статистика загрузки */
   stats: UploadStats
+
   /** Идёт ли загрузка */
   isUploading: boolean
+
   /** Приостановлена ли загрузка */
   isPaused: boolean
+
   /** Начать загрузку */
   onStart: () => void
+
   /** Приостановить */
   onPause: () => void
+
   /** Возобновить */
   onResume: () => void
+
   /** Отменить */
   onCancel: () => void
+
   /** Повторить failed */
   onRetry: () => void
+
   /** Очистить успешные */
   onClearSuccess: () => void
+
   /** Очистить всё */
   onClearAll: () => void
+
   /** Показывать компактно */
   compact?: boolean
 }
@@ -58,7 +70,9 @@ const formatBytes = (bytes: number): string => {
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`
+
+  
+return `${(bytes / Math.pow(k, i)).toFixed(1)} ${sizes[i]}`
 }
 
 /**
@@ -73,7 +87,9 @@ const formatTime = (seconds: number): string => {
   if (mins >= 60) {
     const hours = Math.floor(mins / 60)
     const remainingMins = mins % 60
-    return `${hours}:${remainingMins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+
+    
+return `${hours}:${remainingMins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
   }
   
   return `${mins}:${secs.toString().padStart(2, '0')}`

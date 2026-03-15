@@ -1,10 +1,15 @@
+import fs from 'fs'
+
+import path from 'path'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import logger from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { sendEmail } from '@/utils/email'
-import fs from 'fs'
-import path from 'path'
+
 
 type SendTestPayload = {
   host?: string

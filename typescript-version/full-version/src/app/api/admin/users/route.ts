@@ -1,5 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 
 import bcrypt from 'bcryptjs'
 
@@ -61,6 +64,7 @@ export async function POST(request: NextRequest) {
     // Валидация файла аватара (если предоставлен)
     if (avatar && avatar.size > 0) {
       const avatarValidation = avatarFileSchema.safeParse(avatar)
+
       if (!avatarValidation.success) {
         return NextResponse.json(
           { message: formatZodError(avatarValidation.error) },
@@ -71,6 +75,7 @@ export async function POST(request: NextRequest) {
 
     // Парсим FormData в объект и валидируем
     const formDataObj = parseFormDataToObject(formData)
+
     const validationResult = createUserSchema.safeParse({
       fullName: formDataObj.fullName,
       username: formDataObj.username,
@@ -98,6 +103,7 @@ export async function POST(request: NextRequest) {
       validatedData.password && validatedData.password.length >= 8
         ? validatedData.password
         : generateTemporaryPassword()
+
     const hashedPassword = await hashPassword(plainPassword)
 
     // Find the role by name
@@ -162,9 +168,11 @@ export async function POST(request: NextRequest) {
             avatarUrl = `${s3PublicUrlPrefix}/${s3Key}`
           } else if (localPath) {
             let path = localPath.replace(/^public\//, '').replace(/^\//, '')
+
             while (path.startsWith('uploads/')) {
               path = path.substring(8)
             }
+
             avatarUrl = `/uploads/${path}`
           } else {
             avatarUrl = `/api/media/${result.media.id}?variant=medium`
@@ -226,6 +234,7 @@ export async function POST(request: NextRequest) {
         logger.warn('[Admin] Failed to upload avatar for new user', {
           error: error instanceof Error ? error.message : String(error)
         })
+
         // Continue without avatar
       }
     }
@@ -283,6 +292,7 @@ export async function POST(request: NextRequest) {
       // Обработка ошибок Prisma
       if (error.message.includes('Unique constraint')) {
         statusCode = 409
+
         if (error.message.includes('email')) {
           errorMessage = 'User with this email already exists'
         } else if (error.message.includes('username')) {
@@ -295,6 +305,7 @@ export async function POST(request: NextRequest) {
         statusCode = 400
         errorMessage = error.message
       }
+
       // Для остальных ошибок используем общее сообщение
     }
     
@@ -319,7 +330,8 @@ export async function GET(request: NextRequest) {
     if (clearCache === 'true') {
       usersCache = null
       usersCacheTimestamp = 0
-      return NextResponse.json({ message: 'Cache cleared' })
+      
+return NextResponse.json({ message: 'Cache cleared' })
     }
 
     const { user } = await requireAuth(request)
@@ -346,6 +358,7 @@ export async function GET(request: NextRequest) {
 
     // Проверяем кеш
     const now = Date.now()
+
     if (usersCache && (now - usersCacheTimestamp) < USERS_CACHE_DURATION) {
       return NextResponse.json(usersCache)
     }
@@ -400,7 +413,8 @@ export async function GET(request: NextRequest) {
     // Сохраняем в кеш
     usersCache = transformedUsers
     usersCacheTimestamp = now
-    return NextResponse.json(transformedUsers)
+    
+return NextResponse.json(transformedUsers)
   } catch (error) {
     console.error('Error fetching users:', error)
 

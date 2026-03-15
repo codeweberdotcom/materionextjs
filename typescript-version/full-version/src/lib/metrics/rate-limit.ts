@@ -10,6 +10,7 @@ const backendGauge = new Gauge({
   labelNames: ['backend', 'environment'],
   registers: [metricsRegistry]
 })
+
 backendGauge.set({ backend: 'redis', environment: 'production' }, 0)
 backendGauge.set({ backend: 'prisma', environment: 'production' }, 0)
 

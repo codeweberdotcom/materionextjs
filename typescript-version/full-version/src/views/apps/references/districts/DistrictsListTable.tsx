@@ -17,9 +17,11 @@ import Chip from '@mui/material/Chip'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import Switch from '@mui/material/Switch'
+import CircularProgress from '@mui/material/CircularProgress'
 import { styled } from '@mui/material/styles'
 
 import type { TextFieldProps } from '@mui/material/TextField'
+import type { RowSelectionState } from '@tanstack/react-table'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
@@ -142,6 +144,10 @@ const DistrictsListTable = () => {
   const [loading, setLoading] = useState(true)
   const [addDistrictOpen, setAddDistrictOpen] = useState(false)
   const [editDistrict, setEditDistrict] = useState<District | null>(null)
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false)
+  const [bulkActivateLoading, setBulkActivateLoading] = useState(false)
+  const [bulkDeactivateLoading, setBulkDeactivateLoading] = useState(false)
 
   const { lang: locale } = useParams()
 
@@ -272,7 +278,8 @@ const DistrictsListTable = () => {
       fuzzy: fuzzyFilter
     },
     state: {
-      globalFilter
+      globalFilter,
+      rowSelection
     },
     initialState: {
       pagination: {
@@ -280,6 +287,7 @@ const DistrictsListTable = () => {
       }
     },
     enableRowSelection: true,
+    onRowSelectionChange: setRowSelection,
     globalFilterFn: fuzzyFilter,
     getCoreRowModel: getCoreRowModel(),
     onGlobalFilterChange: setGlobalFilter,
@@ -290,6 +298,101 @@ const DistrictsListTable = () => {
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getFacetedMinMaxValues: getFacetedMinMaxValues()
   })
+
+  const getSelectedIds = (): string[] => {
+    return table.getSelectedRowModel().rows.map(row => row.original.id)
+  }
+
+  const selectedCount = table.getSelectedRowModel().rows.length
+  const bulkLoading = bulkDeleteLoading || bulkActivateLoading || bulkDeactivateLoading
+
+  const refetchData = async () => {
+    const response = await fetch(`/api/districts?locale=${locale}`)
+
+    if (response.ok) {
+      const districts = await response.json()
+
+      setData(districts)
+      setFilteredData(districts)
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    const ids = getSelectedIds()
+
+    if (ids.length === 0) return
+
+    if (!confirm(dictionary.navigation.bulkDeleteConfirm?.replace('${count}', String(ids.length)) || `Delete ${ids.length} records?`)) return
+
+    setBulkDeleteLoading(true)
+
+    try {
+      const response = await fetch('/api/admin/references/districts/bulk/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+
+        throw new Error(error.message || 'Bulk delete failed')
+      }
+
+      const result = await response.json()
+
+      toast.success(dictionary.navigation.bulkOperationSuccess?.replace('${successCount}', String(result.deleted)) || `Deleted ${result.deleted} records`)
+      await refetchData()
+      setRowSelection({})
+    } catch (error) {
+      console.error('Bulk delete error:', error)
+      toast.error(error instanceof Error ? error.message : (dictionary.navigation.bulkOperationFailed || 'Operation failed'))
+    } finally {
+      setBulkDeleteLoading(false)
+    }
+  }
+
+  const handleBulkStatusChange = async (activate: boolean) => {
+    const ids = getSelectedIds()
+
+    if (ids.length === 0) return
+
+    if (activate) {
+      setBulkActivateLoading(true)
+    } else {
+      setBulkDeactivateLoading(true)
+    }
+
+    const endpoint = activate
+      ? '/api/admin/references/districts/bulk/activate'
+      : '/api/admin/references/districts/bulk/deactivate'
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+
+        throw new Error(error.message || 'Bulk status change failed')
+      }
+
+      const result = await response.json()
+
+      toast.success(dictionary.navigation.bulkOperationSuccess?.replace('${successCount}', String(result.affected)) || `Updated ${result.affected} records`)
+      await refetchData()
+      setRowSelection({})
+    } catch (error) {
+      console.error('Bulk status change error:', error)
+      toast.error(error instanceof Error ? error.message : (dictionary.navigation.bulkOperationFailed || 'Operation failed'))
+    } finally {
+      setBulkActivateLoading(false)
+      setBulkDeactivateLoading(false)
+    }
+  }
 
   const handleDeleteDistrict = async (id: string, name: string) => {
     if (!confirm(dictionary.navigation.deleteDistrictConfirm.replace('${name}', name))) {
@@ -476,11 +579,49 @@ const DistrictsListTable = () => {
               className='max-sm:is-full'
             />
           </div>
-          {canCreate && (
-            <Button variant='contained' onClick={() => setAddDistrictOpen(true)} className='max-sm:is-full'>
-              {dictionary.navigation.addNewDistrict}
-            </Button>
-          )}
+          <div className='flex items-center gap-2 flex-wrap'>
+            {canDelete && (
+              <Button
+                color='error'
+                variant='outlined'
+                size='small'
+                onClick={handleBulkDelete}
+                disabled={bulkLoading || selectedCount === 0}
+                startIcon={bulkDeleteLoading ? <CircularProgress size={16} /> : <i className='ri-delete-bin-line text-xl' />}
+              >
+                {dictionary.navigation.bulkDelete || 'Delete'}
+              </Button>
+            )}
+            {canUpdate && (
+              <>
+                <Button
+                  color='success'
+                  variant='outlined'
+                  size='small'
+                  onClick={() => handleBulkStatusChange(true)}
+                  disabled={bulkLoading || selectedCount === 0}
+                  startIcon={bulkActivateLoading ? <CircularProgress size={16} /> : <i className='ri-check-line text-xl' />}
+                >
+                  {dictionary.navigation.bulkActivate || 'Activate'}
+                </Button>
+                <Button
+                  color='warning'
+                  variant='outlined'
+                  size='small'
+                  onClick={() => handleBulkStatusChange(false)}
+                  disabled={bulkLoading || selectedCount === 0}
+                  startIcon={bulkDeactivateLoading ? <CircularProgress size={16} /> : <i className='ri-pause-line text-xl' />}
+                >
+                  {dictionary.navigation.bulkDeactivate || 'Deactivate'}
+                </Button>
+              </>
+            )}
+            {canCreate && (
+              <Button variant='contained' size='small' onClick={() => setAddDistrictOpen(true)} className='max-sm:is-full'>
+                {dictionary.navigation.addNewDistrict}
+              </Button>
+            )}
+          </div>
         </div>
       <TableContainer className='overflow-x-auto'>
         <Table className={tableStyles.table}>

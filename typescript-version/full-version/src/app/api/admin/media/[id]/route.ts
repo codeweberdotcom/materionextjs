@@ -7,7 +7,8 @@
  * @module app/api/admin/media/[id]
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
@@ -48,9 +49,11 @@ export async function GET(
 
     // Получаем настройки для s3PublicUrlPrefix
     const { prisma } = await import('@/libs/prisma')
+
     const globalSettings = await prisma.mediaGlobalSettings.findFirst({
       select: { s3PublicUrlPrefix: true }
     })
+
     const s3PublicUrlPrefix = globalSettings?.s3PublicUrlPrefix
 
     // Получаем URL для всех вариантов
@@ -63,14 +66,18 @@ export async function GET(
       if (s3PublicUrlPrefix && s3Key) {
         const prefix = s3PublicUrlPrefix.endsWith('/') ? s3PublicUrlPrefix.slice(0, -1) : s3PublicUrlPrefix
         const key = s3Key.startsWith('/') ? s3Key.slice(1) : s3Key
-        return `${prefix}/${key}`
+
+        
+return `${prefix}/${key}`
       }
       
       // 2. Локальный путь
       if (localPath) {
         let path = localPath.replace(/^public\//, '').replace(/^\//, '')
+
         while (path.startsWith('uploads/')) path = path.substring(8)
-        return `/uploads/${path}`
+        
+return `/uploads/${path}`
       }
       
       // 3. Proxy URL (fallback)
@@ -87,11 +94,13 @@ export async function GET(
     for (const name of Object.keys(variants)) {
       const variant = variants[name]
       const url = buildUrl(variant.localPath, variant.s3Key, name)
+
       if (url) urls[name] = url
     }
 
     // URL оригинала
     const originalUrl = buildUrl(media.localPath, media.s3Key)
+
     if (originalUrl) urls.original = originalUrl
 
     return NextResponse.json({
@@ -249,6 +258,7 @@ export async function DELETE(
     const hard = searchParams.get('hard') === 'true'
 
     const mediaService = getMediaService()
+
     // includeDeleted=true чтобы находить файлы в корзине для hard delete
     const media = await mediaService.getById(id, true)
 

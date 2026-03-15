@@ -1,4 +1,5 @@
 import type { Server, Socket } from 'socket.io'
+
 import type { ChatEvents, ChatEmitEvents } from './chat'
 import type { NotificationEvents, NotificationEmitEvents, NotificationLegacyEmitEvents } from './notifications'
 

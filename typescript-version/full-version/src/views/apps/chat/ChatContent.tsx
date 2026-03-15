@@ -11,7 +11,7 @@ import Typography from '@mui/material/Typography'
 import IconButton from '@mui/material/IconButton'
 import CardContent from '@mui/material/CardContent'
 
-import type { ChatRoom } from '@/lib/sockets/types/chat'
+import type { ChatRoom , ChatMessage } from '@/lib/sockets/types/chat'
 import type { ThemeColor } from '@core/types'
 
 // Type Imports
@@ -32,7 +32,6 @@ import { useTranslate } from '@/hooks/useTranslate'
 import { useUnreadByContact } from '@/hooks/useUnreadByContact'
 import { usePresence } from '@/contexts/PresenceProvider'
 
-import type { ChatMessage } from '@/lib/sockets/types/chat'
 
 type Props = {
   chatStore: ChatDataType
@@ -106,6 +105,7 @@ const UserAvatar = ({
     } else {
       statusText = lastSeenDate.toLocaleDateString('ru-RU')
     }
+
     statusColor = statusObj.offline
   } else {
     // User is offline and has no last seen time

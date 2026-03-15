@@ -48,7 +48,7 @@ export class WatermarkService {
       const watermarkWidth = Math.round(imageWidth * scale)
 
       // Масштабируем водяной знак
-      let watermark = sharp(watermarkBuffer)
+      const watermark = sharp(watermarkBuffer)
         .resize(watermarkWidth, null, {
           fit: 'inside',
           withoutEnlargement: false,
@@ -66,6 +66,7 @@ export class WatermarkService {
 
       // Применяем opacity к alpha каналу
       const { data, info } = watermarkWithOpacity
+
       for (let i = 3; i < data.length; i += 4) {
         data[i] = Math.round(data[i] * opacity)
       }
@@ -178,7 +179,8 @@ export class WatermarkService {
         entityType,
         mediaId: settings.watermarkMediaId,
       })
-      return imageBuffer
+      
+return imageBuffer
     }
 
     // Загружаем файл водяного знака
@@ -309,6 +311,7 @@ export class WatermarkService {
     }
 
     const updateData: any = { ...data }
+
     if (data.entityTypes) {
       updateData.entityTypes = JSON.stringify(data.entityTypes)
     }
@@ -339,7 +342,9 @@ export function getWatermarkService(): WatermarkService {
   if (!watermarkServiceInstance) {
     watermarkServiceInstance = new WatermarkService()
   }
-  return watermarkServiceInstance
+
+  
+return watermarkServiceInstance
 }
 
 

@@ -6,11 +6,14 @@
  * @module app/api/admin/tools/web-scraper
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+import { z } from 'zod'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { getWebScraperService } from '@/services/web-scraper'
 import type { ScrapeOptions } from '@/services/web-scraper/types'
-import { z } from 'zod'
 
 // Схема валидации входных данных
 const scrapeRequestSchema = z.object({
@@ -42,8 +45,10 @@ export async function POST(request: NextRequest) {
   try {
     // Проверка авторизации
     let user
+
     try {
       const auth = await requireAuth(request)
+
       user = auth.user
     } catch {
       return NextResponse.json(
@@ -54,6 +59,7 @@ export async function POST(request: NextRequest) {
 
     // Проверка роли (только ADMIN и SUPERADMIN)
     const roleCode = user?.role?.code
+
     if (!roleCode || !['SUPERADMIN', 'ADMIN'].includes(roleCode)) {
       return NextResponse.json(
         { success: false, error: 'Недостаточно прав. Требуется роль ADMIN.' },

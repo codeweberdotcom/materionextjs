@@ -204,9 +204,12 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
                 setIsBlocked(false)
                 setErrors([])
                 clearInterval(timer)
-                return 0
+                
+return 0
               }
-              return prev - 1
+
+              
+return prev - 1
             })
           }, 1000)
         } else {

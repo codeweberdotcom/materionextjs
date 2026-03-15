@@ -116,7 +116,8 @@ export const checkPermission = (user: UserWithRoleLike, module: string, action: 
 
   if (!user?.role) {
     logger.debug('❌ [PERMISSIONS] No user or role found', { module, action })
-    return false
+    
+return false
   }
 
   const permissions = getUserPermissions(user)
@@ -164,9 +165,11 @@ export const isUser = (user: UserWithRole | null): boolean => hasRole(user, 'use
 export const isSuperadmin = (user: UserWithRole | null): boolean => {
   // Check by permissions (for backward compatibility)
   if (getUserPermissions(user) === 'all') return true
+
   // Check by role code
   if (user?.role?.code === 'SUPERADMIN') return true
-  return false
+  
+return false
 }
 
 // =============================================================================

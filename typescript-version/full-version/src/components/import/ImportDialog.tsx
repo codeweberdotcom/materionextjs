@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+
 import {
   Dialog,
   DialogTitle,
@@ -26,16 +27,19 @@ import {
   IconButton
 } from '@mui/material'
 import { toast } from 'react-toastify'
-import {
+
+import type {
   ImportDialogProps,
   ImportMode,
-  MAX_IMPORT_FILE_SIZE,
-  ALLOWED_FILE_EXTENSIONS,
-  formatFileSize,
   ValidationPreview,
   RowWithValidation,
   ImportResult,
   ImportField
+} from '@/types/export-import';
+import {
+  MAX_IMPORT_FILE_SIZE,
+  ALLOWED_FILE_EXTENSIONS,
+  formatFileSize
 } from '@/types/export-import'
 import { useAuth } from '@/contexts/AuthProvider'
 import { useTranslation } from '@/contexts/TranslationContext'
@@ -63,18 +67,24 @@ export default function ImportDialog({
   const { user } = useAuth()
   const dictionary = useTranslation()
   const nav = dictionary.navigation || {}
+
   const formatMessage = (template?: string, params?: Record<string, string | number>) => {
     if (!template || typeof template !== 'string') return ''
     let result = template
+
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         const stringValue = String(value)
+
         result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), stringValue)
         result = result.replace(new RegExp(`\\$\\{${key}\\}`, 'g'), stringValue)
       })
     }
-    return result
+
+    
+return result
   }
+
   const [step, setStep] = useState<StepType>('select')
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
@@ -139,19 +149,24 @@ export default function ImportDialog({
     if (selectedFile.size > maxFileSize) {
       const sizeLabel =
         formatMessage(nav.fileSize, { size: formatFileSize(maxFileSize) }) || formatFileSize(maxFileSize)
+
       toast.error(`${nav.fileTooLarge || 'File is too large'}. ${sizeLabel}`)
-      return
+      
+return
     }
 
     // Валидация расширения
     const extension = selectedFile.name.toLowerCase().substring(selectedFile.name.lastIndexOf('.'))
+
     if (!allowedExtensions.includes(extension)) {
       const formatsLabel =
         formatMessage(nav.supportedFormats, {
           formats: allowedExtensions.map(ext => ext.replace('.', '').toUpperCase()).join(', ')
         }) || `Supported formats: ${allowedExtensions.join(', ').toUpperCase()}`
+
       toast.error(`${nav.invalidFileFormat || 'Invalid file format'}. ${formatsLabel}`)
-      return
+      
+return
     }
 
     setFile(selectedFile)
@@ -160,6 +175,7 @@ export default function ImportDialog({
     try {
       // Загружаем предпросмотр через API
       const formData = new FormData()
+
       formData.append('file', selectedFile)
       formData.append('entityType', entityType)
       formData.append('mode', importMode)
@@ -180,6 +196,7 @@ export default function ImportDialog({
       setStep('preview')
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : nav.previewLoadError || 'Failed to load preview'
+
       toast.error(errorMessage)
       onError?.(errorMessage)
     } finally {
@@ -192,6 +209,7 @@ export default function ImportDialog({
     setDragOver(false)
 
     const files = e.dataTransfer.files
+
     if (files.length > 0) {
       handleFileSelect(files[0])
     }
@@ -208,6 +226,7 @@ export default function ImportDialog({
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
+
     if (files && files.length > 0) {
       handleFileSelect(files[0])
     }
@@ -223,17 +242,24 @@ export default function ImportDialog({
             ...row, 
             data: { ...data } // Создаем новый объект, чтобы гарантировать обновление
           }
+
           console.log('[ImportDialog] Updated row:', rowIndex, 'Old data keys:', Object.keys(row.data), 'New data keys:', Object.keys(updatedRow.data))
-          return updatedRow
+          
+return updatedRow
         }
-        return row
+
+        
+return row
       })
-      return updated
+
+      
+return updated
     })
   }
 
   const handleEditRowClick = (rowIndex: number) => {
     const row = editableData.find(r => r.rowIndex === rowIndex)
+
     if (row) {
       setEditingRow(row)
     }
@@ -264,6 +290,7 @@ export default function ImportDialog({
     try {
       // Build form data for API call
       const formData = new FormData()
+
       formData.append('file', file)
       formData.append('entityType', entityType)
       formData.append('mode', importMode)
@@ -272,9 +299,11 @@ export default function ImportDialog({
       if (editableData.length > 0) {
         // Send selected rows and their updates
         const selectedRows = editableData.map(r => r.rowIndex)
+
         formData.append('selectedRows', JSON.stringify(selectedRows))
         
         const rowUpdates: Record<number, Record<string, unknown>> = {}
+
         editableData.forEach(row => {
           rowUpdates[row.rowIndex] = row.data
         })
@@ -295,10 +324,12 @@ export default function ImportDialog({
       // Показываем предупреждения о дубликатах, если есть
       if (result.warnings && result.warnings.length > 0) {
         const duplicateWarnings = result.warnings.filter(w => w.message?.includes('already exists'))
+
         if (duplicateWarnings.length > 0) {
           const message =
             formatMessage(nav.duplicatesFound, { count: duplicateWarnings.length }) ||
             `${duplicateWarnings.length} duplicates found. Please review import results.`
+
           toast.warning(message, {
             autoClose: 5000
           })
@@ -320,15 +351,18 @@ export default function ImportDialog({
         } else {
           toast.warning(`Import completed with errors. ${failedLabel}`)
         }
+
         setStep('result')
       } else {
         // No records processed - show error details
         const errorDetails = result.errors && result.errors.length > 0
           ? result.errors.slice(0, 3).map(e => e.message || 'Unknown error').join('; ')
           : 'No records were imported'
+
         const errorMessage = `Import failed: ${errorDetails}${
           result.errors && result.errors.length > 3 ? '...' : ''
         }`
+
         console.error('[ImportDialog] Import failed:', errorMessage, result)
         toast.error(errorMessage)
         onError?.(errorMessage)
@@ -337,6 +371,7 @@ export default function ImportDialog({
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error) || nav.unknownError || 'Unknown error'
+
       console.error('[ImportDialog] Import error:', error)
       toast.error(`${nav.importFailed || 'Import failed'}: ${errorMessage}`)
       onError?.(errorMessage)
@@ -800,6 +835,7 @@ export default function ImportDialog({
                   onRowClick={(rowIndex) => {
                     // Можно добавить прокрутку к строке
                     const row = editableData.find(r => r.rowIndex === rowIndex)
+
                     if (row) {
                       setEditingRow(row)
                     }
@@ -871,7 +907,9 @@ export default function ImportDialog({
             {(() => {
               const fallbackCount = preview ? Math.max(preview.validRows - preview.invalidRows, 0) : 0
               const importedCount = importResultState?.successCount ?? fallbackCount
-              return (
+
+              
+return (
             <Alert severity="success" sx={{ mb: 2 }}>
               <Typography variant="h6" gutterBottom>
                 {nav.importCompletedSuccessfully || 'Import completed successfully!'}

@@ -72,24 +72,31 @@ export class ResilientRoleCacheStore implements RoleCacheStore {
 
       if (shouldRetryPrimary) {
         logger.info('[role-cache] Attempting to return to Redis backend after fallback period.')
+
         try {
           const result = await operation(this.primary)
+
           this.usingPrimary = true
           this.lastFailure = 0
+
           if (this.fallbackActiveSince !== null) {
             const fallbackDuration = Date.now() - this.fallbackActiveSince
+
             logger.info('[role-cache] Successfully switched back to Redis backend.', {
               fallbackDurationMs: fallbackDuration
             })
             this.fallbackActiveSince = null
           }
-          return result
+
+          
+return result
         } catch (error) {
           this.lastFailure = now
           logger.warn('[role-cache] Redis backend still unavailable, continuing with in-memory fallback.', {
             error: error instanceof Error ? { message: error.message, name: error.name } : error
           })
-          return operation(this.fallback)
+          
+return operation(this.fallback)
         }
       }
 
@@ -101,9 +108,11 @@ export class ResilientRoleCacheStore implements RoleCacheStore {
     } catch (error) {
       this.usingPrimary = false
       this.lastFailure = Date.now()
+
       if (this.fallbackActiveSince === null) {
         this.fallbackActiveSince = this.lastFailure
       }
+
       logger.error('[role-cache] Redis store failed. Falling back to in-memory store for role caching.', {
         error: error instanceof Error ? { message: error.message, name: error.name } : error
       })
@@ -137,7 +146,9 @@ export const createRoleCacheStore = async (): Promise<RoleCacheStore> => {
           port: redisConfig.port
         })
         const redisStore = new RedisRoleCacheStore(redisConfig.url, redisConfig.tls)
-        return new ResilientRoleCacheStore(redisStore, inMemoryStore)
+
+        
+return new ResilientRoleCacheStore(redisStore, inMemoryStore)
       } catch (error) {
         logger.error('[role-cache] Failed to initialize Redis backend. Falling back to in-memory.', {
           error: error instanceof Error ? error.message : error,

@@ -1,4 +1,5 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+﻿import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
@@ -225,6 +226,7 @@ export async function PUT(
       await exportTranslationsToJSON()
     } catch (exportError) {
       console.error('Error exporting to JSON:', exportError)
+
       // Don't fail the main request if export fails
     }
 

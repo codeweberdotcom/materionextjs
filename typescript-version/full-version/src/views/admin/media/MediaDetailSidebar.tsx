@@ -7,7 +7,6 @@
 
 import { useState, useEffect } from 'react'
 
-import { useTranslationSafe } from '@/contexts/TranslationContext'
 
 import Drawer from '@mui/material/Drawer'
 import Dialog from '@mui/material/Dialog'
@@ -29,6 +28,8 @@ import Fade from '@mui/material/Fade'
 import Grid from '@mui/material/Grid'
 
 import { toast } from 'react-toastify'
+
+import { useTranslationSafe } from '@/contexts/TranslationContext'
 
 interface MediaItem {
   id: string
@@ -170,6 +171,7 @@ export default function MediaDetailSidebar({
       const url = includeDeleted 
         ? `/api/admin/media/${mediaId}?includeDeleted=true`
         : `/api/admin/media/${mediaId}`
+
       const response = await fetch(url)
 
       if (!response.ok) {
@@ -224,6 +226,7 @@ export default function MediaDetailSidebar({
     const fullUrl = typeof window !== 'undefined' 
       ? `${window.location.origin}${url}` 
       : url
+
     navigator.clipboard.writeText(fullUrl)
     toast.success(t?.urlCopied ?? 'URL copied')
   }
@@ -334,6 +337,7 @@ export default function MediaDetailSidebar({
             if (job.status === 'failed') {
               throw new Error(job.error || 'Sync failed')
             }
+
             break
           }
           
@@ -355,7 +359,8 @@ export default function MediaDetailSidebar({
   // Исправляет двойной /uploads/uploads/ в пути
   const fixUploadsPath = (url: string): string => {
     if (!url) return ''
-    return url.replace(/\/uploads\/uploads\//g, '/uploads/')
+    
+return url.replace(/\/uploads\/uploads\//g, '/uploads/')
   }
 
   // Формируем URL изображения
@@ -393,12 +398,16 @@ export default function MediaDetailSidebar({
     if (media?.deletedAt && media?.trashMetadata) {
       try {
         const trashMeta = JSON.parse(media.trashMetadata)
-        return trashMeta.trashPath || 'Корзина'
+
+        
+return trashMeta.trashPath || 'Корзина'
       } catch {
         return 'Корзина'
       }
     }
-    return media?.localPath || media?.s3Key || '-'
+
+    
+return media?.localPath || media?.s3Key || '-'
   }
   
   // Проверка, находится ли файл в корзине
@@ -424,6 +433,7 @@ export default function MediaDetailSidebar({
       {/* Content */}
       <div className='p-6'>
         {loading ? (
+
           // Skeleton Loading
           <div className='flex flex-col gap-6'>
             <Skeleton variant='rectangular' height={420} className='rounded-lg' />
@@ -731,6 +741,7 @@ export default function MediaDetailSidebar({
             {/* Actions */}
             <Divider />
             {isInTrash ? (
+
               // Buttons for trashed files
               <div className='grid grid-cols-2 gap-2'>
                 <Button
@@ -753,6 +764,7 @@ export default function MediaDetailSidebar({
                 </Button>
               </div>
             ) : (
+
               // Кнопки для обычных файлов
             <div className='grid grid-cols-2 sm:grid-cols-4 gap-2'>
               <Button

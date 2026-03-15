@@ -4,7 +4,8 @@
  * GET /api/user/username/check?username=xxx - Проверить доступность
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { slugService } from '@/services/slug'
@@ -28,6 +29,7 @@ export async function GET(request: NextRequest) {
 
     // Валидация формата
     const validation = slugService.validateSlug(username)
+
     if (!validation.valid) {
       return NextResponse.json({
         available: false,
@@ -46,7 +48,8 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error checking username availability:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )

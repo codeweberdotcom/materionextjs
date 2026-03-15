@@ -30,10 +30,12 @@ export class PrometheusConnector extends BaseConnector {
 
       if (this.config.token) {
         const token = safeDecrypt(this.config.token)
+
         headers['Authorization'] = `Bearer ${token}`
       } else if (this.config.username && this.config.password) {
         const password = safeDecrypt(this.config.password)
         const auth = Buffer.from(`${this.config.username}:${password}`).toString('base64')
+
         headers['Authorization'] = `Basic ${auth}`
       }
 
@@ -60,6 +62,7 @@ export class PrometheusConnector extends BaseConnector {
 
       if (buildInfoResponse.ok) {
         const data = await buildInfoResponse.json()
+
         if (data.status === 'success' && data.data) {
           version = data.data.version || 'unknown'
           buildInfo = data.data

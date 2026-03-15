@@ -133,18 +133,23 @@ const SystemEvents = () => {
       if (severity) params.set('severity', severity)
       if (type) params.set('type', type)
       if (search) params.set('search', search)
+
       if (from) {
         const date = new Date(from)
+
         if (!Number.isNaN(date.getTime())) {
           params.set('from', date.toISOString())
         }
       }
+
       if (to) {
         const date = new Date(to)
+
         if (!Number.isNaN(date.getTime())) {
           params.set('to', date.toISOString())
         }
       }
+
       if (cursor) params.set('cursor', cursor)
 
       return params.toString()
@@ -156,7 +161,8 @@ const SystemEvents = () => {
     async (options?: { append?: boolean; cursor?: string }) => {
       if (!hasAccess) {
         setInitialLoading(false)
-        return
+        
+return
       }
 
       setLoading(true)
@@ -225,14 +231,17 @@ const SystemEvents = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Export failed' }))
+
         throw new Error(errorData.error || `Export failed: ${response.statusText}`)
       }
 
       // Получаем имя файла из заголовка Content-Disposition
       const contentDisposition = response.headers.get('content-disposition')
       let filename = `events-export-${new Date().toISOString().split('T')[0]}.${format}`
+
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="?(.+?)"?$/i)
+
         if (filenameMatch) {
           filename = filenameMatch[1]
         }
@@ -242,6 +251,7 @@ const SystemEvents = () => {
       const blob = await response.blob()
       const downloadUrl = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
+
       link.href = downloadUrl
       link.download = filename
       document.body.appendChild(link)
@@ -252,6 +262,7 @@ const SystemEvents = () => {
       toast.success(`Экспорт завершен. Скачан файл: ${filename}`)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Ошибка экспорта'
+
       toast.error(errorMessage)
       console.error('Export error:', error)
     } finally {

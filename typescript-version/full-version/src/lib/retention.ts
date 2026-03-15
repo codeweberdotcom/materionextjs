@@ -4,7 +4,9 @@ const prisma = new PrismaClient()
 
 export const getRetentionDays = () => {
   const days = Number.parseInt(process.env.RATE_LIMIT_EVENT_RETENTION_DAYS || '90', 10)
-  return Number.isFinite(days) && days > 0 ? days : 90
+
+  
+return Number.isFinite(days) && days > 0 ? days : 90
 }
 
 export const runRateLimitEventCleanup = async () => {

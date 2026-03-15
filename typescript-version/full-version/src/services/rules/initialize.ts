@@ -27,6 +27,7 @@ export async function initializeRulesEngine(): Promise<void> {
 
     // Загрузить правила из БД
     const loadedCount = await rulesService.loadRules()
+
     logger.info(`[RulesEngine] Загружено ${loadedCount} правил из БД`)
 
     // Запустить обработчик событий

@@ -5,6 +5,7 @@
 
 import fs from 'fs'
 import path from 'path'
+
 import logger from '@/lib/logger'
 
 const SETTINGS_FILE = path.join(process.cwd(), 'telegram-settings.json')
@@ -30,7 +31,9 @@ const defaultSettings: TelegramSettings = {
 const isTelegramSettings = (data: unknown): data is TelegramSettings => {
   if (typeof data !== 'object' || data === null) return false
   const obj = data as Record<string, unknown>
-  return (
+
+  
+return (
     typeof obj.botToken === 'string' &&
     typeof obj.enabled === 'boolean' &&
     (obj.channelEnabled === undefined || typeof obj.channelEnabled === 'boolean')
@@ -47,7 +50,9 @@ export class TelegramSettingsService {
     if (!TelegramSettingsService.instance) {
       TelegramSettingsService.instance = new TelegramSettingsService()
     }
-    return TelegramSettingsService.instance
+
+    
+return TelegramSettingsService.instance
   }
 
   /**
@@ -69,7 +74,8 @@ export class TelegramSettingsService {
         if (isTelegramSettings(settings)) {
           this.settingsCache = settings
           this.cacheExpiry = now + this.CACHE_TTL
-          return settings
+          
+return settings
         }
       }
     } catch (error) {
@@ -81,9 +87,11 @@ export class TelegramSettingsService {
 
     // Возвращаем настройки по умолчанию
     const settings = { ...defaultSettings }
+
     this.settingsCache = settings
     this.cacheExpiry = now + this.CACHE_TTL
-    return settings
+    
+return settings
   }
 
   /**
@@ -102,6 +110,7 @@ export class TelegramSettingsService {
     // Сохраняем в файл
     try {
       const dir = path.dirname(SETTINGS_FILE)
+
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true })
       }

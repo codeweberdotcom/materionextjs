@@ -6,6 +6,7 @@
  */
 
 import crypto from 'crypto'
+
 import logger from '@/lib/logger'
 
 const ALGORITHM = 'aes-256-gcm'
@@ -61,6 +62,7 @@ export function encrypt(plaintext: string): string {
     const cipher = crypto.createCipheriv(ALGORITHM, key, iv)
 
     let encrypted = cipher.update(plaintext, 'utf8', 'hex')
+
     encrypted += cipher.final('hex')
 
     const authTag = cipher.getAuthTag()
@@ -95,6 +97,7 @@ export function decrypt(encryptedText: string): string {
     const key = getEncryptionKey()
 
     const parts = encryptedText.split(':')
+
     if (parts.length !== 3) {
       throw new Error('Invalid encrypted text format')
     }
@@ -108,14 +111,17 @@ export function decrypt(encryptedText: string): string {
     if (iv.length !== IV_LENGTH) {
       throw new Error('Invalid IV length')
     }
+
     if (authTag.length !== AUTH_TAG_LENGTH) {
       throw new Error('Invalid auth tag length')
     }
 
     const decipher = crypto.createDecipheriv(ALGORITHM, key, iv)
+
     decipher.setAuthTag(authTag)
 
     let decrypted = decipher.update(ciphertext, 'hex', 'utf8')
+
     decrypted += decipher.final('utf8')
 
     return decrypted
@@ -135,7 +141,8 @@ export function decrypt(encryptedText: string): string {
 export function isEncryptionAvailable(): boolean {
   try {
     getEncryptionKey()
-    return true
+    
+return true
   } catch {
     return false
   }
@@ -168,6 +175,7 @@ export function safeDecrypt(encryptedText: string): string {
 
   // Проверяем формат зашифрованных данных (iv:authTag:ciphertext)
   const parts = encryptedText.split(':')
+
   if (parts.length !== 3) {
     // Не зашифровано - возвращаем как есть
     return encryptedText
@@ -175,6 +183,7 @@ export function safeDecrypt(encryptedText: string): string {
 
   // Проверяем что это hex строки правильной длины
   const [ivHex, authTagHex] = parts
+
   if (ivHex.length !== IV_LENGTH * 2 || authTagHex.length !== AUTH_TAG_LENGTH * 2) {
     // Не похоже на зашифрованные данные
     return encryptedText
@@ -185,7 +194,8 @@ export function safeDecrypt(encryptedText: string): string {
   } catch {
     // Расшифровка не удалась - возвращаем как есть
     logger.warn('[Encryption] Failed to decrypt, returning plaintext')
-    return encryptedText
+    
+return encryptedText
   }
 }
 

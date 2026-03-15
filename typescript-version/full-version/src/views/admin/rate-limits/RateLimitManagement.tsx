@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
+import { useParams } from 'next/navigation'
+
 import Grid from '@mui/material/Grid2'
 import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
@@ -35,13 +37,14 @@ import DialogActions from '@mui/material/DialogActions'
 import IconButton from '@mui/material/IconButton'
 import ToggleButton from '@mui/material/ToggleButton'
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup'
-import CustomAvatar from '@core/components/mui/Avatar'
+
 import Skeleton from '@mui/material/Skeleton'
 
 import { formatDistanceToNow } from 'date-fns'
 import { enUS, fr, ru, ar as arLocale } from 'date-fns/locale'
-import { useParams } from 'next/navigation'
 import { toast } from 'react-toastify'
+
+import CustomAvatar from '@core/components/mui/Avatar'
 
 import { usePermissions } from '@/hooks/usePermissions'
 import { useTranslation } from '@/contexts/TranslationContext'
@@ -181,7 +184,9 @@ const getModuleLabel = (
     email: navigation.email,
     notifications: navigation.notifications
   }
-  return fallbackMap[moduleName] || moduleName
+
+  
+return fallbackMap[moduleName] || moduleName
 }
 
 const formatUsagePercentage = (count: number, max: number) => {
@@ -197,12 +202,14 @@ const RateLimitManagement = () => {
   const dictionary = useTranslation()
   const params = useParams()
   const langParam = typeof params?.lang === 'string' ? params.lang : Array.isArray(params?.lang) ? params.lang[0] : undefined
+
   const localeMap = {
     en: enUS,
     fr,
     ru,
     ar: arLocale
   }
+
   const dateFnsLocale = localeMap[(langParam as keyof typeof localeMap) ?? 'en'] ?? enUS
 
   const [states, setStates] = useState<RateLimitStateEntry[]>([])
@@ -218,6 +225,7 @@ const RateLimitManagement = () => {
   const [error, setError] = useState<string | null>(null)
   const [clearingId, setClearingId] = useState<string | null>(null)
   const [configDialogOpen, setConfigDialogOpen] = useState(false)
+
   const [configForm, setConfigForm] = useState<ConfigFormState>({
     module: '',
     maxRequests: '',
@@ -225,6 +233,7 @@ const RateLimitManagement = () => {
     blockMinutes: '',
     warnThreshold: ''
   })
+
   const [savingConfig, setSavingConfig] = useState(false)
   const [statusSavingModule, setStatusSavingModule] = useState<string | null>(null)
   const [modeSavingModule, setModeSavingModule] = useState<string | null>(null)
@@ -232,6 +241,7 @@ const RateLimitManagement = () => {
   const [instructionsOpen, setInstructionsOpen] = useState(false)
 
   const hasAccess = isSuperadmin || checkPermission('rateLimitManagement', 'read')
+
   const canModify =
     isSuperadmin ||
     checkPermission('rateLimitManagement', 'update') ||
@@ -257,6 +267,7 @@ const RateLimitManagement = () => {
       }
 
       const data = await response.json()
+
       setSummary({
         configs: data.configs ?? [],
         stats: (data.stats ?? []).filter(Boolean)
@@ -275,6 +286,7 @@ const RateLimitManagement = () => {
         }
 
         setError(null)
+
         const params = new URLSearchParams({
           view: 'states',
           limit: '25'
@@ -304,6 +316,7 @@ const RateLimitManagement = () => {
         }
 
         const data: RateLimitStatesResponse = await response.json()
+
         setNextCursor(data.nextCursor)
         setTotalCount(typeof data.total === 'number' ? data.total : data.items.length)
 
@@ -414,6 +427,7 @@ const RateLimitManagement = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+
         throw new Error(errorData.error || 'Failed to clear rate limit state')
       }
 
@@ -441,7 +455,8 @@ const RateLimitManagement = () => {
 
     if (!configForm.module) {
       toast.error(dictionary.rateLimit?.configValidationError || 'Module not selected')
-      return
+      
+return
     }
 
     const maxRequests = Number(configForm.maxRequests)
@@ -455,7 +470,8 @@ const RateLimitManagement = () => {
       !Number.isFinite(blockMinutes) || blockMinutes <= 0
     ) {
       toast.error(dictionary.rateLimit?.configValidationError || 'Please provide valid positive numbers')
-      return
+      
+return
     }
 
     setSavingConfig(true)
@@ -477,6 +493,7 @@ const RateLimitManagement = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
+
         throw new Error(errorData.error || 'Failed to update config')
       }
 
@@ -560,9 +577,11 @@ const RateLimitManagement = () => {
   }
 
   const t = dictionary.rateLimit ?? {}
+
   const formatRelativeTime = useCallback(
     (value?: string | null) => {
       if (!value) return null
+
       try {
         return formatDistanceToNow(new Date(value), { addSuffix: true, locale: dateFnsLocale })
       } catch {
@@ -682,6 +701,7 @@ const RateLimitManagement = () => {
                   dictionary.navigation,
                   dictionary.rateLimit?.moduleLabels
                 )
+
                 const stat = statsMap.get(config.module)
                 const windowMinutes = Math.max(1, Math.round((config.windowMs || 60000) / 60000))
                 const blockMinutes = Math.max(1, Math.round(((config.blockMs ?? config.windowMs) || 60000) / 60000))
@@ -690,10 +710,12 @@ const RateLimitManagement = () => {
                 const statusLabel = isActive ? (t.configStatusActive || 'Active') : (t.configStatusInactive || 'Inactive')
                 const minutesLabel = t.minutesShort || 'min'
                 const currentMode: 'monitor' | 'enforce' = config.mode === 'monitor' ? 'monitor' : 'enforce'
+
                 const modeLabel =
                   currentMode === 'monitor'
                     ? (t.configModeMonitor || 'Monitoring')
                     : (t.configModeEnforce || 'Blocking')
+
                 const warnValue =
                   warnThresholdDisplay > 0
                     ? warnThresholdDisplay.toLocaleString()
@@ -727,6 +749,7 @@ const RateLimitManagement = () => {
                                   if (!value || value === currentMode) {
                                     return
                                   }
+
                                   handleToggleModuleMode(config.module, value)
                                 }}
                                 disabled={isModePending}

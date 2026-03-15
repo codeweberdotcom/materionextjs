@@ -3,7 +3,8 @@
  * POST - проверить доступность bucket'а
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
@@ -97,6 +98,7 @@ export async function POST(request: NextRequest) {
 
     if (serviceId) {
       s3Config = await getS3ConfigFromService(serviceId)
+
       if (!s3Config) {
         return NextResponse.json({
           exists: false,
@@ -106,6 +108,7 @@ export async function POST(request: NextRequest) {
       }
     } else {
       s3Config = getS3ConfigFromEnv()
+
       if (!s3Config) {
         return NextResponse.json({
           exists: false,

@@ -191,6 +191,7 @@ export interface SyncProgress {
   percentage: number
   currentFile?: string
   error?: string
+
   // Parent job fields
   isParent?: boolean
   totalBatches?: number
@@ -272,6 +273,7 @@ export interface ImageSettingsInput {
 }
 
 export interface MediaGlobalSettingsInput {
+
   // S3 Settings
   s3Enabled?: boolean
   s3ServiceId?: string | null  // null = default (ENV)

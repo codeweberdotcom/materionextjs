@@ -26,6 +26,7 @@ export class ConfigService implements IConfigService {
 
   async getConfig(module: string): Promise<RateLimitConfig> {
     await this.ensureConfigsFresh()
+
     // Return config from map, or fallback to default template if not found
     // This ensures we always have a config, even during startup before DB configs are loaded
     return this.configs.get(module) ?? this.fallbackConfigTemplate
@@ -75,7 +76,8 @@ export class ConfigService implements IConfigService {
 
   async getAllConfigs(): Promise<RateLimitConfig[]> {
     await this.ensureConfigsFresh()
-    return Array.from(this.configs.entries()).map(([module, config]) => ({
+    
+return Array.from(this.configs.entries()).map(([module, config]) => ({
       module,
       ...config
     }))
@@ -88,6 +90,7 @@ export class ConfigService implements IConfigService {
   private async loadConfigs(): Promise<void> {
     try {
       const configs = await this.prisma.rateLimitConfig.findMany()
+
       this.configs.clear()
 
       for (const config of configs) {
@@ -144,6 +147,7 @@ export class ConfigService implements IConfigService {
         storeIpInEvents: false,
         isFallback: false
       },
+
       // Создание комнат чата
       'chat-rooms': {
         maxRequests: 10,
@@ -218,6 +222,7 @@ export class ConfigService implements IConfigService {
         storeIpInEvents: false,
         isFallback: false
       },
+
       // Новые модули для защиты регистрации
       'registration-ip': {
         maxRequests: 3,
@@ -252,6 +257,7 @@ export class ConfigService implements IConfigService {
         storeIpInEvents: true,
         isFallback: false
       },
+
       // Rate limit для защиты самой системы
       'rate-limit-checks': {
         maxRequests: 1000,

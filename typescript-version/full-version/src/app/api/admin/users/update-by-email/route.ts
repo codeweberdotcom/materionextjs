@@ -1,11 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+import bcrypt from 'bcryptjs'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
 import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
 import { authBaseUrl } from '@/shared/config/env'
 import { updateUserByEmailSchema, formatZodError } from '@/lib/validations/user-schemas'
-import bcrypt from 'bcryptjs'
 
 const buildUserResponse = (user: any) => ({
   id: user.id,
@@ -89,6 +91,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const isSuperadminUser = isSuperadmin(currentUser)
+
     if (userToUpdate.role?.code === 'SUPERADMIN' && !isSuperadminUser) {
       return NextResponse.json({ message: 'Cannot edit superadmin users' }, { status: 403 })
     }
@@ -154,7 +157,8 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json(buildUserResponse(updatedUser))
   } catch (error) {
     console.error('Error updating user by email:', error)
-    return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
+    
+return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
   }
 }
 

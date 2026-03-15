@@ -29,6 +29,7 @@ async function migrateRoles() {
   try {
     // Получаем все существующие роли
     const roles = await prisma.role.findMany()
+
     console.log(`📋 Found ${roles.length} roles to migrate`)
     
     for (const role of roles) {
@@ -50,6 +51,7 @@ async function migrateRoles() {
       } else {
         // Кастомная роль - генерируем code из имени
         const code = role.name.toUpperCase().replace(/[^A-Z0-9]/g, '_')
+
         console.log(`📝 Migrating custom role: ${role.name} -> code: ${code}, level: 100`)
         
         await prisma.role.update({

@@ -12,7 +12,9 @@ import type { UserAccountWithRelations } from '@/types/accounts/interfaces'
  */
 export const useCurrentAccount = (): UserAccountWithRelations | null => {
   const { currentAccount } = useAccountContext()
-  return currentAccount
+
+  
+return currentAccount
 }
 
 /**
@@ -20,7 +22,9 @@ export const useCurrentAccount = (): UserAccountWithRelations | null => {
  */
 export const useUserAccounts = (): UserAccountWithRelations[] => {
   const { userAccounts } = useAccountContext()
-  return userAccounts
+
+  
+return userAccounts
 }
 
 /**
@@ -28,7 +32,9 @@ export const useUserAccounts = (): UserAccountWithRelations[] => {
  */
 export const useSwitchAccount = () => {
   const { switchAccount } = useAccountContext()
-  return switchAccount
+
+  
+return switchAccount
 }
 
 /**
@@ -42,7 +48,9 @@ export const useAccount = useAccountContext
  */
 export const useHasAccounts = (): boolean => {
   const { userAccounts } = useAccountContext()
-  return userAccounts.length > 0
+
+  
+return userAccounts.length > 0
 }
 
 /**
@@ -50,7 +58,9 @@ export const useHasAccounts = (): boolean => {
  */
 export const useHasCurrentAccount = (): boolean => {
   const { currentAccount } = useAccountContext()
-  return currentAccount !== null
+
+  
+return currentAccount !== null
 }
 
 /**
@@ -58,7 +68,9 @@ export const useHasCurrentAccount = (): boolean => {
  */
 export const useAccountCount = (): number => {
   const { userAccounts } = useAccountContext()
-  return userAccounts.length
+
+  
+return userAccounts.length
 }
 
 

@@ -1,11 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { createReadStream, existsSync } from 'fs'
+
+import { stat } from 'fs/promises'
+
+import path from 'path'
+
+import { Readable } from 'stream'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
-import { createReadStream, existsSync } from 'fs'
-import { stat } from 'fs/promises'
-import path from 'path'
-import { Readable } from 'stream'
+
 
 /**
  * GET /api/admin/media/[id]/trash
@@ -54,6 +61,7 @@ export async function GET(
     
     // Определяем MIME тип
     const ext = path.extname(filePath).toLowerCase()
+
     const mimeTypes: Record<string, string> = {
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
@@ -63,6 +71,7 @@ export async function GET(
       '.svg': 'image/svg+xml',
       '.pdf': 'application/pdf',
     }
+
     const contentType = mimeTypes[ext] || media.mimeType || 'application/octet-stream'
 
     // Читаем файл и возвращаем
@@ -79,7 +88,8 @@ export async function GET(
     })
   } catch (error) {
     console.error('[API] GET /api/admin/media/[id]/trash error:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Failed to serve trash file' },
       { status: 500 }
     )

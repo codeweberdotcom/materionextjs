@@ -1,6 +1,7 @@
+import type { TariffPlan } from '@prisma/client'
+
 import { prisma } from '@/libs/prisma'
 import type { TariffPlanCode, TariffPlanFeatures } from '@/types/accounts/types'
-import type { TariffPlan } from '@prisma/client'
 
 export class TariffPlanService {
   private static instance: TariffPlanService
@@ -9,7 +10,9 @@ export class TariffPlanService {
     if (!TariffPlanService.instance) {
       TariffPlanService.instance = new TariffPlanService()
     }
-    return TariffPlanService.instance
+
+    
+return TariffPlanService.instance
   }
 
   /**
@@ -53,10 +56,13 @@ export class TariffPlanService {
    */
   async getFreePlan(): Promise<TariffPlan> {
     const plan = await this.getPlanByCode('FREE' as any)
+
     if (!plan) {
       throw new Error('FREE tariff plan not found. Please run database seed.')
     }
-    return plan
+
+    
+return plan
   }
 
   /**
@@ -66,6 +72,7 @@ export class TariffPlanService {
     if (!featuresJson) {
       return {}
     }
+
     try {
       return JSON.parse(featuresJson) as TariffPlanFeatures
     } catch {

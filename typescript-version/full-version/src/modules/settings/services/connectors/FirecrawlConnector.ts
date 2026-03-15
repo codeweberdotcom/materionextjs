@@ -18,6 +18,8 @@ export class FirecrawlConnector extends BaseConnector {
 
   constructor(config: ServiceConfigurationModel) {
     super(config)
+
+
     // API ключ хранится в поле token (зашифрованный)
     if (config.token) {
       this.apiKey = safeDecrypt(config.token)
@@ -70,9 +72,11 @@ export class FirecrawlConnector extends BaseConnector {
           if (response.status === 401) {
             throw new Error('Неверный API ключ')
           }
+
           if (response.status === 402) {
             throw new Error('Недостаточно кредитов на аккаунте Firecrawl')
           }
+
           if (response.status === 429) {
             throw new Error('Превышен лимит запросов')
           }
@@ -177,7 +181,9 @@ export class FirecrawlConnector extends BaseConnector {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        return {
+
+        
+return {
           success: false,
           error: errorData.error || `HTTP ${response.status}`
         }
@@ -237,7 +243,9 @@ export class FirecrawlConnector extends BaseConnector {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        return {
+
+        
+return {
           success: false,
           error: errorData.error || `HTTP ${response.status}`
         }
@@ -286,7 +294,9 @@ export class FirecrawlConnector extends BaseConnector {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        return {
+
+        
+return {
           success: false,
           error: errorData.error || `HTTP ${response.status}`
         }
@@ -343,7 +353,9 @@ export class FirecrawlConnector extends BaseConnector {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        return {
+
+        
+return {
           success: false,
           error: errorData.error || `HTTP ${response.status}`
         }

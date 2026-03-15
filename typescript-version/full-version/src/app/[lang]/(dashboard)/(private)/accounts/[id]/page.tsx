@@ -61,6 +61,7 @@ const AccountDetailPage = () => {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [editMode, setEditMode] = useState(false)
+
   const [formData, setFormData] = useState({
     name: '',
     description: ''
@@ -77,6 +78,7 @@ const AccountDetailPage = () => {
         }
 
         const result = await response.json()
+
         setAccount(result.data)
         setFormData({
           name: result.data.name || '',
@@ -105,10 +107,12 @@ const AccountDetailPage = () => {
 
       if (!response.ok) {
         const result = await response.json()
+
         throw new Error(result.message || 'Ошибка сохранения')
       }
 
       const result = await response.json()
+
       setAccount(result.data)
       setEditMode(false)
     } catch (err) {

@@ -77,7 +77,9 @@ export class MediaSyncQueue {
     if (!MediaSyncQueue.instance) {
       MediaSyncQueue.instance = new MediaSyncQueue()
     }
-    return MediaSyncQueue.instance
+
+    
+return MediaSyncQueue.instance
   }
 
   private statsInterval: NodeJS.Timeout | null = null
@@ -118,13 +120,15 @@ export class MediaSyncQueue {
     
     if (this.storageReadyPromise) {
       await this.storageReadyPromise
-      return
+      
+return
     }
     
     this.storageReadyPromise = (async () => {
       try {
         const { getStorageService } = await import('../storage/StorageService')
         const storageService = await getStorageService()
+
         this.storageReady = true
         logger.info('[MediaSyncQueue] StorageService ready', {
           hasS3: storageService.isS3Available(),
@@ -133,6 +137,7 @@ export class MediaSyncQueue {
         logger.warn('[MediaSyncQueue] StorageService warmup failed', {
           error: error instanceof Error ? error.message : String(error),
         })
+
         // Не блокируем - задачи будут использовать retry
         this.storageReady = true
       }
@@ -163,7 +168,8 @@ export class MediaSyncQueue {
       if (!redisConfig.url) {
         logger.warn('[MediaSyncQueue] Redis not configured, using in-memory fallback')
         this.queueAvailable = false
-        return
+        
+return
       }
 
       logger.info('[MediaSyncQueue] Initializing with Redis', {
@@ -244,6 +250,7 @@ export class MediaSyncQueue {
       if (this.queueAvailable || !this.processor) return
 
       const now = new Date()
+
       const jobsToProcess = this.inMemoryQueue.filter(
         job => job.status === 'pending' && job.scheduledAt <= now
       )
@@ -312,6 +319,7 @@ export class MediaSyncQueue {
       })
     } else {
       const delay = Math.pow(2, job.attempts) * 3000
+
       job.scheduledAt = new Date(Date.now() + delay)
       job.status = 'pending'
       markRetry('sync', job.attempts)
@@ -323,6 +331,7 @@ export class MediaSyncQueue {
    */
   private cleanupInMemoryQueue(): void {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+
     this.inMemoryQueue = this.inMemoryQueue.filter(
       job =>
         job.status === 'pending' ||
@@ -338,7 +347,8 @@ export class MediaSyncQueue {
     // Предотвращаем повторную регистрацию
     if (this.processorRegistered) {
       logger.debug('[MediaSyncQueue] Processor already registered, skipping')
-      return
+      
+return
     }
 
     this.processor = processor
@@ -360,6 +370,7 @@ export class MediaSyncQueue {
 
         try {
           const result = await processor(job)
+
           timer()
 
           if (!result.success) {

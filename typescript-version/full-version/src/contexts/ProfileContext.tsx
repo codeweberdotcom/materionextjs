@@ -89,6 +89,7 @@ export const ProfileProvider = ({ children }: { children: React.ReactNode }) => 
 
   useEffect(() => {
     load()
+
     // we only want to run once on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

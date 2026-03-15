@@ -9,7 +9,9 @@ export class AccountManagerService {
     if (!AccountManagerService.instance) {
       AccountManagerService.instance = new AccountManagerService()
     }
-    return AccountManagerService.instance
+
+    
+return AccountManagerService.instance
   }
 
   /**

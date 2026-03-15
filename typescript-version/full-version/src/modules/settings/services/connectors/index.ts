@@ -17,7 +17,7 @@ export { SMTPConnector } from './SMTPConnector'
 export { FirecrawlConnector } from './FirecrawlConnector'
 
 import type { ServiceConfigurationModel, ServiceType } from '@/lib/config/types'
-import { BaseConnector } from './BaseConnector'
+import type { BaseConnector } from './BaseConnector'
 import { RedisConnector } from './RedisConnector'
 import { PostgreSQLConnector } from './PostgreSQLConnector'
 import { PrometheusConnector } from './PrometheusConnector'

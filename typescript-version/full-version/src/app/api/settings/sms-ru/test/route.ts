@@ -1,11 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+import { z } from 'zod'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import { smsRuSettingsService } from '@/services/settings/SMSRuSettingsService'
 import { SMSRuProvider } from '@/services/sms'
-import { z } from 'zod'
 import logger from '@/lib/logger'
 
 // Схема валидации для тестовой отправки
@@ -40,6 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     const hasPermission = checkPermission(currentUser.role, 'smtpManagement', 'update')
+
     if (!hasPermission) {
       return NextResponse.json(
         { message: 'Forbidden: Insufficient permissions' },
@@ -51,6 +54,7 @@ export async function POST(request: NextRequest) {
 
     // Валидация
     const validationResult = testSMSSchema.safeParse(body)
+
     if (!validationResult.success) {
       return NextResponse.json(
         {

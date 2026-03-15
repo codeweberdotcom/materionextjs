@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useAuth } from '@/contexts/AuthProvider'
+
 import { useDispatch, useSelector } from 'react-redux'
+
+import { toast } from 'react-toastify'
+
+import { useAuth } from '@/contexts/AuthProvider'
 import { sendMsg } from '@/redux-store/slices/chat'
 import { useSockets } from '@/contexts/SocketProvider'
 import type { ChatMessage, ChatRoom } from '@/lib/sockets/types/chat'
 import { normalizeMessageContent } from '@/utils/chat/normalizeMessageContent'
-import { toast } from 'react-toastify'
+
+
 import { useTranslation } from '@/contexts/TranslationContext'
 import type { RootState } from '@/redux-store'
 import {
@@ -74,6 +79,7 @@ export const useChatNew = (otherUserId?: string) => {
 
     const template = dictionary.navigation.rateLimitMonitorWarning || dictionary.navigation.rateLimitWarning || 'You are close to being rate limited. Only ${countdown} messages left.'
     const message = template.replace('${countdown}', remaining.toString())
+
     toast.warning(message)
   }, [dictionary.navigation.rateLimitWarning])
 
@@ -104,11 +110,13 @@ export const useChatNew = (otherUserId?: string) => {
             : typeof data.blockedUntil === 'number'
               ? data.blockedUntil
               : null
+
         const retryAfterSec = Number.isFinite(data.retryAfterSec)
           ? data.retryAfterSec
           : Number.isFinite(data.retryAfter)
             ? data.retryAfter
             : 300
+
         const blockedUntil =
           blockedUntilMs ??
           Date.now() + retryAfterSec * 1000
@@ -125,6 +133,7 @@ export const useChatNew = (otherUserId?: string) => {
         const warningRemaining = data?.warning?.remaining
         const remaining = typeof data?.remaining === 'number' ? data.remaining : undefined
         const resetTimeMs = typeof data?.resetTime === 'number' ? data.resetTime : undefined
+
         const warningBlockedUntil =
           typeof data?.warning?.blockedUntilMs === 'number'
             ? data.warning.blockedUntilMs
@@ -141,11 +150,13 @@ export const useChatNew = (otherUserId?: string) => {
 
         if (isHardBlock && resetTimeMs) {
           const retryAfter = Math.max(1, Math.ceil((resetTimeMs - Date.now()) / 1000))
+
           setRateLimitData({
             retryAfter,
             blockedUntil: resetTimeMs
           })
-          return { blockedUntil: resetTimeMs, warningRemaining, remaining }
+          
+return { blockedUntil: resetTimeMs, warningRemaining, remaining }
         }
 
         if (warningRemaining && warningRemaining > 0) {
@@ -182,6 +193,7 @@ export const useChatNew = (otherUserId?: string) => {
       if (cancelled) return
 
       const status = await requestRateLimitStatus()
+
       if (!status?.blockedUntil) {
         clearCachedRateLimit()
       }
@@ -233,7 +245,8 @@ export const useChatNew = (otherUserId?: string) => {
 
       const filtered = prev.filter(existing => {
         if (!existing.isOptimistic || !existing.clientId) return true
-        return !sanitized.some(msg => msg.clientId && msg.clientId === existing.clientId)
+        
+return !sanitized.some(msg => msg.clientId && msg.clientId === existing.clientId)
       })
 
       return mergeMessages(sanitized, filtered)
@@ -272,6 +285,7 @@ export const useChatNew = (otherUserId?: string) => {
       setRoom(data.room)
 
       const incoming = Array.isArray(data.messages) ? data.messages : []
+
       applyIncomingMessages(incoming)
 
       setHistoryCursor(data.nextCursor ?? null)
@@ -405,7 +419,8 @@ export const useChatNew = (otherUserId?: string) => {
     setMessages(prev => {
       const withoutStaleOptimistic = prev.filter(existing => {
         if (!existing.isOptimistic || !existing.clientId) return true
-        return queueIds.has(existing.clientId)
+        
+return queueIds.has(existing.clientId)
       })
 
       if (!queuedForRoom.length) {
@@ -430,7 +445,8 @@ export const useChatNew = (otherUserId?: string) => {
 
       const filtered = withoutStaleOptimistic.filter(existing => {
         if (!existing.clientId) return true
-        return !queueIds.has(existing.clientId)
+        
+return !queueIds.has(existing.clientId)
       })
 
       return mergeMessages(queueMessages, filtered)
@@ -487,6 +503,7 @@ export const useChatNew = (otherUserId?: string) => {
 
   const finalizeOptimisticMessage = (clientId: string, serverMessage: ChatMessage) => {
     const normalized = normalizeMessage(serverMessage)
+
     normalized.isOptimistic = false
 
     applyIncomingMessages([normalized])
@@ -507,7 +524,8 @@ export const useChatNew = (otherUserId?: string) => {
   const failOptimisticMessage = (clientId: string, errorMessage?: string) => {
     if (errorMessage === 'RATE_LIMITED') {
       removeOptimisticMessage(clientId)
-      return
+      
+return
     }
 
     setMessages(prev => prev.map(msg => (
@@ -523,7 +541,8 @@ export const useChatNew = (otherUserId?: string) => {
     return new Promise<ChatMessage>((resolve, reject) => {
       if (!chatSocket || !chatSocket.connected) {
         reject(new Error('Socket disconnected'))
-        return
+        
+return
       }
 
       chatSocket.timeout(5000).emit('sendMessage', payload, (first?: unknown, second?: SendMessageAck) => {
@@ -542,7 +561,8 @@ export const useChatNew = (otherUserId?: string) => {
 
         if (error) {
           reject(error)
-          return
+          
+return
         }
 
         if (!ack || !ack.ok || !ack.message) {
@@ -550,6 +570,7 @@ export const useChatNew = (otherUserId?: string) => {
 
           if (ack?.error === 'RATE_LIMITED') {
             const retryAfter = ack.retryAfter && Number.isFinite(ack.retryAfter) ? ack.retryAfter : 300
+
             const blockedUntil =
               typeof ack.blockedUntil === 'number'
                 ? ack.blockedUntil
@@ -561,13 +582,16 @@ export const useChatNew = (otherUserId?: string) => {
             })
 
             const rateLimitError = new Error('RATE_LIMITED') as Error & { blockedUntil?: number }
+
             rateLimitError.blockedUntil = blockedUntil
             reject(rateLimitError)
-            return
+            
+return
           }
 
           reject(new Error(errorMessage))
-          return
+          
+return
         }
 
         resolve(ack.message)
@@ -589,6 +613,7 @@ export const useChatNew = (otherUserId?: string) => {
     if (!response.ok) {
       if (response.status === 429) {
         const retryAfter = Number.isFinite(payloadData.retryAfter) ? payloadData.retryAfter : 300
+
         const blockedUntil =
           typeof payloadData.blockedUntil === 'number'
             ? payloadData.blockedUntil
@@ -600,6 +625,7 @@ export const useChatNew = (otherUserId?: string) => {
         })
 
         const rateLimitError = new Error('RATE_LIMITED') as Error & { blockedUntil?: number }
+
         rateLimitError.blockedUntil = blockedUntil
         throw rateLimitError
       }
@@ -624,7 +650,8 @@ export const useChatNew = (otherUserId?: string) => {
         return await sendViaSocket(payload)
       } catch (socketError) {
         console.warn('Socket send failed, falling back to HTTP:', socketError)
-        return await sendViaHttp({ roomId: payload.roomId, message: payload.message, clientId: payload.clientId })
+        
+return await sendViaHttp({ roomId: payload.roomId, message: payload.message, clientId: payload.clientId })
       }
     }
 
@@ -636,9 +663,11 @@ export const useChatNew = (otherUserId?: string) => {
 
     const throwRateLimited = (blockedUntil?: number) => {
       const rateLimitError = new Error('RATE_LIMITED') as Error & { blockedUntil?: number }
+
       if (blockedUntil) {
         rateLimitError.blockedUntil = blockedUntil
       }
+
       throw rateLimitError
     }
 
@@ -663,6 +692,7 @@ export const useChatNew = (otherUserId?: string) => {
 
     const now = Date.now()
     const currentBlock = rateLimitData?.blockedUntil && rateLimitData.blockedUntil > now
+
     if (currentBlock) {
       throwRateLimited(rateLimitData?.blockedUntil)
     }
@@ -748,6 +778,7 @@ export const useChatNew = (otherUserId?: string) => {
     historyFetchAbort.current?.abort()
 
     const controller = new AbortController()
+
     historyFetchAbort.current = controller
 
     try {
@@ -820,7 +851,8 @@ export const useChatNew = (otherUserId?: string) => {
 
     const retryable = queuedMessages.filter(message => {
       if (message.roomId !== room.id) return false
-      return message.status === 'failed' || message.status === 'pending'
+      
+return message.status === 'failed' || message.status === 'pending'
     })
 
     if (!retryable.length) {
@@ -850,6 +882,7 @@ export const useChatNew = (otherUserId?: string) => {
           finalizeOptimisticMessage(message.clientId, serverMessage)
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : undefined
+
           failOptimisticMessage(message.clientId, errorMessage)
         }
       }

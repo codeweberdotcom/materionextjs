@@ -94,7 +94,8 @@ const VerifyPhone = ({ mode }: { mode: Mode }) => {
   const handleSendCode = async () => {
     if (!phone) {
       setError('Введите номер телефона')
-      return
+      
+return
     }
 
     setIsSending(true)
@@ -131,7 +132,8 @@ const VerifyPhone = ({ mode }: { mode: Mode }) => {
   const handleVerifyCode = async () => {
     if (!phone || !otp || otp.length !== 6) {
       setError('Введите номер телефона и 6-значный код')
-      return
+      
+return
     }
 
     setIsVerifying(true)

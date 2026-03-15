@@ -1,4 +1,4 @@
-import { ExtendedError } from 'socket.io'
+import type { ExtendedError } from 'socket.io'
 
 import { rateLimitContainer } from '@/lib/rate-limit/di/container'
 import logger, { rateLimitLogger } from '../../logger'
@@ -31,7 +31,8 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
           socketId: socket.id,
           ip: socket.handshake.address
         })
-        return next()
+        
+return next()
       }
 
       const result = await rateLimitContainer.getRateLimitEngine().checkLimit(rateKey, options.module, {
@@ -47,7 +48,8 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
 
       if (result.allowed) {
         rateLimitLogger.limitApplied(rateKey, socket.handshake.address, result.remaining, result.resetTime)
-        return next()
+        
+return next()
       }
 
       const blockedUntil = result.blockedUntil ?? result.resetTime
@@ -62,6 +64,7 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
           blockedUntilMs: blockedUntil,
           retryAfterSec,
           remaining: result.remaining,
+
           // Legacy для совместимости
           retryAfter: retryAfterSec,
           blockedUntil
@@ -75,7 +78,8 @@ const createSocketRateLimiter = (options: SocketRateLimitOptions) => {
         socketId: socket.id,
         module: options.module
       })
-      return next(new Error('Rate limit error'))
+      
+return next(new Error('Rate limit error'))
     }
   }
 }

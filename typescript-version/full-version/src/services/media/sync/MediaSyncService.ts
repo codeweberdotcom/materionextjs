@@ -15,7 +15,8 @@ import type {
   SyncResult,
   Media,
 } from '../types'
-import { getStorageService, StorageService } from '../storage'
+import type { StorageService } from '../storage';
+import { getStorageService } from '../storage'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
 import { mediaSyncQueue } from '../queue/MediaSyncQueue'
@@ -27,8 +28,10 @@ import { eventService } from '@/services/events'
 const BATCH_CONFIG = {
   /** Размер одного batch */
   batchSize: 100,
+
   /** Минимальное кол-во файлов для активации batch режима */
   minFilesForBatching: 50,
+
   /** Максимальное параллельных файлов в batch (оптимизировано для PostgreSQL) */
   parallelLimit: 10,
 }
@@ -395,10 +398,13 @@ export class MediaSyncService {
    */
   private splitIntoBatches<T>(array: T[], batchSize: number): T[][] {
     const batches: T[][] = []
+
     for (let i = 0; i < array.length; i += batchSize) {
       batches.push(array.slice(i, i + batchSize))
     }
-    return batches
+
+    
+return batches
   }
 
   /**
@@ -429,35 +435,43 @@ export class MediaSyncService {
             ...(currentBucket ? [{ s3Bucket: { not: currentBucket } }] : []),
           ]
         }
+
         break
 
       case 'download_from_s3':
         // Файлы на S3 (в текущем bucket), которые нужно скачать локально
         where.s3Key = { not: null }
+
         if (currentBucket) {
           where.s3Bucket = currentBucket
         }
+
         if (!options.overwrite) {
           where.localPath = null
         }
+
         break
 
       case 'delete_local':
         // Файлы с локальным путём И с S3 в текущем bucket (синхронизированные)
         where.localPath = { not: null }
         where.s3Key = { not: null }
+
         if (currentBucket) {
           where.s3Bucket = currentBucket
         }
+
         break
 
       case 'delete_s3':
         // Файлы на S3 в текущем bucket И с локальным путём
         where.s3Key = { not: null }
         where.localPath = { not: null }
+
         if (currentBucket) {
           where.s3Bucket = currentBucket
         }
+
         break
     }
 
@@ -467,12 +481,14 @@ export class MediaSyncService {
         if (options.entityType) {
           where.entityType = options.entityType
         }
+
         break
 
       case 'selected':
         if (options.mediaIds && options.mediaIds.length > 0) {
           where.id = { in: options.mediaIds }
         }
+
         break
 
       case 'all':
@@ -519,6 +535,7 @@ export class MediaSyncService {
       for (const media of mediaList) {
         try {
           const result = await this.processMediaSync(media, options)
+
           results.push(result)
 
           if (result.success) {
@@ -550,11 +567,13 @@ export class MediaSyncService {
 
       // Завершаем задачу
       const duration = Date.now() - startTime
+
       const status: SyncJobStatus = failedFiles === 0 ? 'completed' : 
         (processedFiles > 0 ? 'completed' : 'failed')
 
       // Собираем детальные ошибки из results
       const failedResults = results.filter(r => !r.success && r.error)
+
       const errorDetails = failedResults.length > 0
         ? failedResults.map(r => `[${r.mediaId}] ${r.error}`).join('\n')
         : null
@@ -621,6 +640,7 @@ export class MediaSyncService {
             media,
             options.deleteSource
           )
+
           result.success = true
           result.destinationPath = uploadedMedia.s3Key || undefined
           result.size = media.size
@@ -631,6 +651,7 @@ export class MediaSyncService {
             media,
             options.deleteSource
           )
+
           result.success = true
           result.destinationPath = downloadedMedia.localPath || undefined
           result.size = media.size
@@ -699,6 +720,7 @@ export class MediaSyncService {
           ? Math.round((aggregated.processedFiles / job.totalFiles) * 100)
           : 0,
         error: job.error || undefined,
+
         // Дополнительная info для parent job
         isParent: true,
         totalBatches: childJobs.length,
@@ -822,6 +844,7 @@ export class MediaSyncService {
 
     // Получаем данные создателей задач
     const creatorIds = [...new Set(jobs.map(j => j.createdBy).filter(Boolean))] as string[]
+
     const creators = creatorIds.length > 0
       ? await prisma.user.findMany({
           where: { id: { in: creatorIds } },
@@ -860,7 +883,8 @@ export class MediaSyncService {
           c => !['completed', 'failed', 'cancelled'].includes(c.status)
         ).length,
       })
-      return
+      
+return
     }
 
     // Агрегируем результаты из дочерних задач
@@ -883,8 +907,10 @@ export class MediaSyncService {
     // Для upload_to_s3: считаем реальное количество файлов без s3Key
     // Это учитывает успешные retries - файл считается failed только если все попытки неуспешны
     let realFailedFiles = 0
+
     if (parentJob?.operation === 'upload_to_s3' && parentJob.mediaIds) {
       const mediaIds = JSON.parse(parentJob.mediaIds)
+
       const stillNotSynced = await prisma.media.count({
         where: {
           id: { in: mediaIds },
@@ -892,6 +918,7 @@ export class MediaSyncService {
           deletedAt: null
         }
       })
+
       realFailedFiles = stillNotSynced
     }
 
@@ -901,6 +928,7 @@ export class MediaSyncService {
 
     // Формируем сообщение об ошибках (включая информацию о retry)
     let errorMessage: string | null = null
+
     if (realFailedFiles > 0) {
       errorMessage = `${realFailedFiles} files failed to sync`
     } else if (aggregated.attemptFailures > 0) {
@@ -1000,6 +1028,7 @@ export class MediaSyncService {
 
         // Определяем правильный статус
         let newStatus: string
+
         if (localExists && s3Exists) {
           newStatus = 'synced'
         } else if (localExists && !s3Exists) {
@@ -1018,6 +1047,7 @@ export class MediaSyncService {
             where: { id: media.id },
             data: { 
               storageStatus: newStatus,
+
               // Очищаем s3Key если файла нет на S3
               s3Key: s3Exists ? media.s3Key : null,
               s3Bucket: s3Exists ? undefined : null,
@@ -1119,6 +1149,7 @@ export class MediaSyncService {
         startedAt: new Date(),
       },
     })
+
     result.job = { id: job.id, status: job.status }
 
     logger.warn('[MediaSyncService] Starting S3 bucket purge', { jobId: job.id })
@@ -1145,6 +1176,7 @@ export class MediaSyncService {
 
       // Удаляем файлы партиями по 10
       const BATCH_SIZE = 10
+
       for (let i = 0; i < files.length; i += BATCH_SIZE) {
         const batch = files.slice(i, i + BATCH_SIZE)
         
@@ -1153,15 +1185,18 @@ export class MediaSyncService {
           batch.map(async (file) => {
             try {
               await s3Adapter.delete(file.path)
-              return { success: true, size: file.size }
+              
+return { success: true, size: file.size }
             } catch (error) {
               const errorMsg = `Failed to delete ${file.path}: ${error instanceof Error ? error.message : String(error)}`
+
               result.details.push(errorMsg)
               logger.error('[MediaSyncService] Failed to delete S3 file', {
                 path: file.path,
                 error: error instanceof Error ? error.message : String(error),
               })
-              return { success: false, size: 0 }
+              
+return { success: false, size: 0 }
             }
           })
         )
@@ -1262,7 +1297,9 @@ export function getMediaSyncService(): MediaSyncService {
   if (!mediaSyncServiceInstance) {
     mediaSyncServiceInstance = new MediaSyncService()
   }
-  return mediaSyncServiceInstance
+
+  
+return mediaSyncServiceInstance
 }
 
 

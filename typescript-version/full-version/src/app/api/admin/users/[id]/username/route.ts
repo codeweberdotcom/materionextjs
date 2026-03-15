@@ -4,7 +4,8 @@
  * PUT /api/admin/users/[id]/username - Принудительно изменить username (без ограничений)
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
 import { requireAuth } from '@/utils/auth/auth'
@@ -29,6 +30,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Проверяем права администратора
     const hasPermission = await checkPermission(admin, 'users', 'edit')
+
     if (!hasPermission) {
       return NextResponse.json(
         { error: 'Access denied. Admin permission required.' },
@@ -109,7 +111,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     })
   } catch (error) {
     console.error('Error changing username by admin:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )

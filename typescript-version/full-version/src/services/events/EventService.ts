@@ -15,6 +15,7 @@ let metrics: {
 if (typeof window === 'undefined') {
   try {
     const metricsModule = require('@/lib/metrics/events')
+
     metrics = {
       markEventFailed: metricsModule.markEventFailed,
       markEventRecorded: metricsModule.markEventRecorded,
@@ -50,6 +51,7 @@ export type RecordEventInput = {
   payload?: Record<string, any>
   correlationId?: string | null
   metadata?: Record<string, any>
+
   // Контекст для различения тестовых и реальных событий
   environment?: 'test' | 'production'
   testRunId?: string
@@ -71,6 +73,7 @@ export type ListEventsParams = {
   to?: Date
   limit?: number
   cursor?: string | null
+
   // Фильтрация по environment
   excludeTest?: boolean // Если true, исключает события с environment='test'
   environment?: 'test' | 'production' // Фильтр по конкретному environment
@@ -122,10 +125,13 @@ export class EventService {
             type: input.type,
             status: response.status
           })
-          return null
+          
+return null
         }
 
         const result = await response.json()
+
+
         // Возвращаем объект с id для совместимости
         return result.eventId ? ({ id: result.eventId } as PrismaEvent) : null
       } catch (error) {
@@ -134,7 +140,8 @@ export class EventService {
           type: input.type,
           error: error instanceof Error ? error.message : error
         })
-        return null
+        
+return null
       }
     }
 
@@ -162,6 +169,7 @@ export class EventService {
       ...(input.testRunId && { testRunId: input.testRunId }),
       ...(input.testSuite && { testSuite: input.testSuite })
     }
+
     const maskedMetadataObj = maskPayloadForSource(source, moduleName, enrichedMetadata)
 
     const payload = safeStringify(maskedPayloadObj)
@@ -245,6 +253,7 @@ export class EventService {
 
     if (params.search) {
       const searchValue = params.search.trim()
+
       if (searchValue) {
         conditions.push({
           OR: [
@@ -300,6 +309,7 @@ export class EventService {
     }
 
     const cursorPayload = decodeCursor(params.cursor)
+
     if (cursorPayload) {
       conditions.push({
         OR: [
@@ -360,6 +370,7 @@ const isValidSeverity = (s?: string): s is EventSeverity => !!s && SEVERITIES.ha
 
 const maskEmail = (email: string): string => {
   const [local, domain] = email.split('@')
+
   if (!domain) return email.replace(/.(?=.{2})/g, '*')
   const visibleLocal = local.slice(0, 2)
   const maskedLocal = visibleLocal + (local.length > 2 ? '*'.repeat(local.length - 2) : '')
@@ -367,15 +378,21 @@ const maskEmail = (email: string): string => {
   const d0 = parts[0] ?? ''
   const maskedD0 = d0.slice(0, 1) + (d0.length > 1 ? '*'.repeat(d0.length - 1) : '')
   const rest = parts.slice(1).join('.')
-  return `${maskedLocal}@${maskedD0}${rest ? '.' + rest : ''}`
+
+  
+return `${maskedLocal}@${maskedD0}${rest ? '.' + rest : ''}`
 }
 
 const maskIp = (ip: string): string => {
   // Примитивное маскирование IPv4: оставляем первые 2 октета
   if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
     const parts = ip.split('.')
-    return `${parts[0]}.${parts[1]}.*.*`
+
+    
+return `${parts[0]}.${parts[1]}.*.*`
   }
+
+
   // IPv6/прочее — обрезаем
   return ip.slice(0, 6) + '…'
 }
@@ -383,15 +400,18 @@ const maskIp = (ip: string): string => {
 const maskValue = (key: string, value: unknown): unknown => {
   if (typeof value !== 'string') return value
   const k = key.toLowerCase()
+
   if (k.includes('email')) return maskEmail(value)
   if (k.includes('ip')) return maskIp(value)
-  return value
+  
+return value
 }
 
 const deepMaskObject = (obj: any): any => {
   if (!obj || typeof obj !== 'object') return obj
   if (Array.isArray(obj)) return obj.map(v => deepMaskObject(v))
   const out: Record<string, any> = {}
+
   for (const [k, v] of Object.entries(obj)) {
     if (typeof v === 'object' && v !== null) {
       out[k] = deepMaskObject(v)
@@ -399,7 +419,9 @@ const deepMaskObject = (obj: any): any => {
       out[k] = maskValue(k, v)
     }
   }
-  return out
+
+  
+return out
 }
 
 // Базовые профили маскирования по источникам/модулям.
@@ -411,6 +433,7 @@ export const maskPayloadForSource = (
 ): Record<string, any> => {
   const src = source.toLowerCase()
   const mod = (moduleName ?? '').toLowerCase()
+
   if (
     src === 'rate_limit' ||
     src === 'auth' ||
@@ -420,6 +443,8 @@ export const maskPayloadForSource = (
   ) {
     return deepMaskObject(payload)
   }
+
+
   // По умолчанию — без изменений
   return payload
 }
@@ -452,6 +477,7 @@ const decodeCursor = (cursor?: string | null): CursorPayload | null => {
     }
 
     const createdAt = new Date(parsed.createdAt)
+
     if (Number.isNaN(createdAt.getTime())) {
       return null
     }
@@ -462,6 +488,7 @@ const decodeCursor = (cursor?: string | null): CursorPayload | null => {
     }
   } catch (error) {
     logger.warn('Failed to decode events cursor', { error })
-    return null
+    
+return null
   }
 }

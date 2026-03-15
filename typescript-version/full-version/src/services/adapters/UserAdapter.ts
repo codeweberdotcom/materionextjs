@@ -1,4 +1,4 @@
-import { IEntityAdapter, ExportField, ImportField, ValidationError, ImportResult, DuplicateInfo, ImportMode } from '@/types/export-import'
+import type { IEntityAdapter, ExportField, ImportField, ValidationError, ImportResult, DuplicateInfo, ImportMode } from '@/types/export-import'
 import type { UsersType } from '@/types/apps/userTypes'
 
 // Helper to get base URL for client-side fetch
@@ -8,9 +8,13 @@ const getBaseUrl = () => ''
 const getPrisma = async () => {
   if (typeof window === 'undefined') {
     const { prisma } = await import('@/libs/prisma')
-    return prisma
+
+    
+return prisma
   }
-  return null
+
+  
+return null
 }
 
 /**
@@ -48,6 +52,7 @@ export class UserAdapter implements IEntityAdapter {
     try {
       // On server, use Prisma directly
       const prisma = await getPrisma()
+
       if (prisma) {
         console.log('Export: Using Prisma directly on server')
         
@@ -56,9 +61,11 @@ export class UserAdapter implements IEntityAdapter {
         if (filters?.role) {
           where.role = { code: filters.role.toUpperCase() }
         }
+
         if (filters?.status) {
           where.status = filters.status
         }
+
         if (filters?.q) {
           where.OR = [
             { name: { contains: filters.q } },
@@ -91,6 +98,7 @@ export class UserAdapter implements IEntityAdapter {
       
       // On client, use API
       const queryParams = new URLSearchParams()
+
       if (filters) {
         Object.entries(filters).forEach(([key, value]) => {
           if (value !== undefined && value !== null) {
@@ -100,6 +108,7 @@ export class UserAdapter implements IEntityAdapter {
       }
 
       const url = `${getBaseUrl()}/api/admin/users${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
+
       console.log('Export: Fetching users from:', url)
       
       const response = await fetch(url, {
@@ -111,17 +120,20 @@ export class UserAdapter implements IEntityAdapter {
 
       if (!response.ok) {
         const errorText = await response.text()
+
         console.error('Export: API error response:', response.status, errorText)
         throw new Error(`Failed to fetch users: ${response.statusText}`)
       }
 
       const data = await response.json()
+
       console.log('Export: Received users data:', Array.isArray(data) ? `${data.length} users` : 'Not an array', data)
       
       // Убеждаемся, что возвращаем массив
       if (!Array.isArray(data)) {
         console.warn('Export: API returned non-array data, converting to array')
-        return Array.isArray(data.data) ? data.data : []
+        
+return Array.isArray(data.data) ? data.data : []
       }
 
       return data
@@ -166,6 +178,7 @@ export class UserAdapter implements IEntityAdapter {
       
       // Преобразование Active: может быть "true"/"false" (строка) или true/false (boolean)
       const activeValue = row['Active'] !== undefined ? row['Active'] : (row.isActive !== undefined ? row.isActive : row['isActive'])
+
       if (typeof activeValue === 'string') {
         transformed.isActive = activeValue.toLowerCase() === 'true' || activeValue === '1'
       } else if (typeof activeValue === 'boolean') {
@@ -195,6 +208,7 @@ export class UserAdapter implements IEntityAdapter {
       // Проверка обязательных полей
       this.importFields.forEach(field => {
         const value = getValue(field.key, field.label)
+
         if (field.required && (!value || value === '')) {
           errors.push({
             field: field.key,
@@ -247,6 +261,7 @@ export class UserAdapter implements IEntityAdapter {
 
       if (email) {
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
         if (typeof email !== 'string') {
           errors.push({
             field: 'email',
@@ -271,6 +286,7 @@ export class UserAdapter implements IEntityAdapter {
       }
 
       const validRoles = ['superadmin', 'admin', 'manager', 'editor', 'moderator', 'seo', 'marketolog', 'support', 'subscriber', 'user', 'author', 'maintainer']
+
       if (role && !validRoles.includes(role)) {
         errors.push({
           field: 'role',
@@ -289,6 +305,7 @@ export class UserAdapter implements IEntityAdapter {
 
       // Преобразуем isActive в boolean для проверки
       let isActiveBool: boolean | undefined
+
       if (isActive !== undefined && isActive !== '') {
         if (typeof isActive === 'string') {
           isActiveBool = isActive.toLowerCase() === 'true' || isActive === '1'
@@ -339,6 +356,7 @@ export class UserAdapter implements IEntityAdapter {
           // Find role by name or code
           const roleName = (row.role || 'user').toLowerCase()
           const roleCode = roleName.toUpperCase()
+
           const role = await prisma.role.findFirst({
             where: { 
               OR: [
@@ -386,6 +404,7 @@ export class UserAdapter implements IEntityAdapter {
               update: baseData
             })
           }
+
           results.successCount++
         } else {
           // Client-side: use API (this branch shouldn't be reached in normal flow)
@@ -464,6 +483,7 @@ export class UserAdapter implements IEntityAdapter {
           // Находим дубликаты
           emails.forEach(({ email, rowIndex }) => {
             const existingId = existingEmailMap.get(email!)
+
             if (existingId) {
               duplicates.push({
                 row: rowIndex,

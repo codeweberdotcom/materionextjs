@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { requireAuth } from '@/utils/auth/auth'
 import type { UserWithRole } from '@/utils/permissions/permissions'
 import { userService } from '@/services/business/userService'
@@ -10,6 +12,7 @@ export async function GET(request: NextRequest) {
 
     // Get current user
     const currentUser = await userService.getUserByEmail(user.email)
+
     if (!currentUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
@@ -37,6 +40,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(users)
   } catch (error) {
     console.error('Error fetching users:', error)
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
+    
+return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
   }
 }

@@ -1,4 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { importService } from '@/services/import/ImportService'
 import { rateLimitService } from '@/lib/rate-limit'
 import { requireAuth } from '@/utils/auth/auth'
@@ -16,15 +18,18 @@ export async function POST(
   { params }: { params: Promise<{ entity: string }> }
 ) {
   const resolvedParams = await params
+
   try {
     // Валидация параметров пути
     const paramsValidation = importParamsSchema.safeParse(resolvedParams)
+
     if (!paramsValidation.success) {
       logger.warn('[import] Invalid path parameters', {
         params,
         errors: paramsValidation.error.errors
       })
-      return NextResponse.json(
+      
+return NextResponse.json(
         createValidationErrorResponse(paramsValidation.error),
         { status: 400 }
       )
@@ -38,6 +43,7 @@ export async function POST(
 
     // Проверка rate limit через централизованную систему
     const environment = getEnvironmentFromRequest(request) as 'production' | 'test' | undefined
+
     const rateLimitResult = await rateLimitService.checkLimit(rateLimitKey, 'import', {
       increment: true,
       userId: user?.id ?? null,
@@ -49,6 +55,7 @@ export async function POST(
 
     if (!rateLimitResult.allowed) {
       const blockedUntilMs = rateLimitResult.blockedUntil ?? rateLimitResult.resetTime
+
       const retryAfterSec = Math.max(
         1,
         Math.ceil((blockedUntilMs - Date.now()) / 1000)
@@ -91,6 +98,7 @@ export async function POST(
     }
 
     const fileValidation = importFileSchema.safeParse({ file })
+
     if (!fileValidation.success) {
       logger.warn('[import] File validation failed', {
         entity: resolvedParams.entity,
@@ -98,7 +106,8 @@ export async function POST(
         fileSize: file.size,
         errors: fileValidation.error.errors
       })
-      return NextResponse.json(
+      
+return NextResponse.json(
         createValidationErrorResponse(fileValidation.error),
         { status: 400 }
       )
@@ -111,12 +120,14 @@ export async function POST(
     }
 
     const formDataValidation = importFormDataSchema.safeParse(formDataToValidate)
+
     if (!formDataValidation.success) {
       logger.warn('[import] FormData validation failed', {
         entity: resolvedParams.entity,
         errors: formDataValidation.error.errors
       })
-      return NextResponse.json(
+      
+return NextResponse.json(
         createValidationErrorResponse(formDataValidation.error),
         { status: 400 }
       )
@@ -139,7 +150,8 @@ export async function POST(
       entity: resolvedParams.entity,
       file: 'src/app/api/import/[entity]/route.ts'
     })
-    return NextResponse.json(
+    
+return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )

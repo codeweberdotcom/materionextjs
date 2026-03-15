@@ -4,7 +4,8 @@
  * DELETE /api/user/avatar - Удалить аватар
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
@@ -58,6 +59,7 @@ export async function POST(request: NextRequest) {
     if (currentUser.avatarMediaId) {
       try {
         const mediaService = getMediaService()
+
         await mediaService.delete(currentUser.avatarMediaId, true) // hard delete
         logger.info('[Avatar] Old avatar deleted', { 
           userId: user.id, 
@@ -69,6 +71,7 @@ export async function POST(request: NextRequest) {
           oldMediaId: currentUser.avatarMediaId,
           error: error instanceof Error ? error.message : String(error)
         })
+
         // Продолжаем загрузку нового аватара
       }
     }
@@ -110,9 +113,11 @@ export async function POST(request: NextRequest) {
     } else if (localPath) {
       // Используем локальный URL
       let path = localPath.replace(/^public\//, '').replace(/^\//, '')
+
       while (path.startsWith('uploads/')) {
         path = path.substring(8)
       }
+
       avatarUrl = `/uploads/${path}`
       logger.info('[Avatar] Using local URL', { localPath, avatarUrl })
     } else {
@@ -182,6 +187,7 @@ export async function DELETE(request: NextRequest) {
     if (currentUser.avatarMediaId) {
       try {
         const mediaService = getMediaService()
+
         await mediaService.delete(currentUser.avatarMediaId, true) // hard delete
         logger.info('[Avatar] Avatar media deleted', {
           userId: user.id,

@@ -1,7 +1,12 @@
-import logger from '@/lib/logger'
-import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
+
 import path from 'path'
+
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
+
+import logger from '@/lib/logger'
 
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
@@ -24,7 +29,9 @@ type SmtpSettingsPayload = {
 const isSmtpSettings = (data: unknown): data is SmtpSettingsPayload => {
   if (typeof data !== 'object' || data === null) return false
   const obj = data as Record<string, unknown>
-  return (
+
+  
+return (
     typeof obj.host === 'string' &&
     typeof obj.port === 'string' &&
     typeof obj.username === 'string' &&

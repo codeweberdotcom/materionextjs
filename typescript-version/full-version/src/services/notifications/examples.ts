@@ -150,7 +150,9 @@ export async function exampleSendMultipleChannels(userId: string, email: string,
  */
 export async function exampleGetQueueStats() {
   const stats = await notificationQueue.getStats()
+
   console.log('Queue stats:', stats)
+
   // {
   //   waiting: 5,
   //   active: 2,

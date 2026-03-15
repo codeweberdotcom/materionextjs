@@ -1,5 +1,6 @@
-import { prisma } from '@/libs/prisma'
 import type { Prisma } from '@prisma/client'
+
+import { prisma } from '@/libs/prisma'
 import type {
   NotificationScenarioConfig,
   EventTrigger
@@ -18,7 +19,9 @@ export class ScenarioService {
     if (!ScenarioService.instance) {
       ScenarioService.instance = new ScenarioService()
     }
-    return ScenarioService.instance
+
+    
+return ScenarioService.instance
   }
 
   /**
@@ -102,6 +105,7 @@ export class ScenarioService {
    */
   async getAll(enabled?: boolean) {
     const where: Prisma.NotificationScenarioWhereInput = {}
+
     if (enabled !== undefined) {
       where.enabled = enabled
     }
@@ -159,6 +163,7 @@ export class ScenarioService {
     // Фильтруем сценарии по триггерам
     const matchingScenarios = scenarios.filter(scenario => {
       let trigger: EventTrigger
+
       try {
         trigger = JSON.parse(scenario.trigger || '{}') as EventTrigger
       } catch (e) {
@@ -166,7 +171,8 @@ export class ScenarioService {
           scenarioId: scenario.id,
           error: e instanceof Error ? e.message : String(e)
         })
-        return false
+        
+return false
       }
 
       // Проверяем source

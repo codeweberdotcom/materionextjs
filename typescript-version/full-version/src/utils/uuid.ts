@@ -9,13 +9,17 @@ export const generateUUID = (): string => {
     if (globalThis.crypto && globalThis.crypto.randomUUID) {
       return globalThis.crypto.randomUUID()
     }
+
+
     // Fallback для старых браузеров
     return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${Math.random().toString(36).slice(2, 8)}`
   } else {
     // На сервере используем Node.js crypto
     try {
       const nodeCrypto = require('crypto')
-      return nodeCrypto.randomUUID()
+
+      
+return nodeCrypto.randomUUID()
     } catch (error) {
       // Fallback если crypto недоступен
       return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${Math.random().toString(36).slice(2, 8)}`

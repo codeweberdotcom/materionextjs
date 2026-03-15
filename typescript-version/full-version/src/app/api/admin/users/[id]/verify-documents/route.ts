@@ -3,7 +3,9 @@
  * POST /api/admin/users/[id]/verify-documents
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { prisma } from '@/libs/prisma'
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
@@ -96,7 +98,8 @@ export async function POST(
     })
   } catch (error) {
     console.error('Error verifying documents:', error)
-    return NextResponse.json(
+    
+return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
     )

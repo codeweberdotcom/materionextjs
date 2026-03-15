@@ -2,12 +2,15 @@
  * Middleware и helpers для проверки уровня верификации
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { prisma } from '@/libs/prisma'
 import { requireAuth } from '@/utils/auth/auth'
+import type {
+  VerificationLevel} from './verification-levels';
 import {
   getVerificationStatus,
-  VerificationLevel,
   canViewAdmin,
   canManage,
   requiresEmailVerification,
@@ -46,7 +49,9 @@ export async function requireEmailVerification(
         route: 'verification',
         context: { route: 'verification' }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init)
       }
@@ -65,7 +70,9 @@ export async function requireEmailVerification(
         route: 'verification',
         context: { route: 'verification' }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init)
       }
@@ -73,6 +80,7 @@ export async function requireEmailVerification(
 
     if (!user.emailVerified) {
       const status = getVerificationStatus(user)
+
       const { payload, init } = createErrorResponse({
         status: 403,
         code: 'VERIFICATION_EMAIL_REQUIRED',
@@ -85,7 +93,9 @@ export async function requireEmailVerification(
         route: 'verification',
         context: { route: 'verification', userId: user.id }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init),
         user,
@@ -94,7 +104,9 @@ export async function requireEmailVerification(
     }
 
     const status = getVerificationStatus(user)
-    return {
+
+    
+return {
       allowed: true,
       user,
       status
@@ -107,7 +119,9 @@ export async function requireEmailVerification(
       route: 'verification',
       context: { route: 'verification' }
     })
-    return {
+
+    
+return {
       allowed: false,
       response: new NextResponse(JSON.stringify(payload), init)
     }
@@ -132,7 +146,9 @@ export async function requirePhoneVerification(
         route: 'verification',
         context: { route: 'verification' }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init)
       }
@@ -151,7 +167,9 @@ export async function requirePhoneVerification(
         route: 'verification',
         context: { route: 'verification' }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init)
       }
@@ -159,6 +177,7 @@ export async function requirePhoneVerification(
 
     if (!user.phoneVerified) {
       const status = getVerificationStatus(user)
+
       const { payload, init } = createErrorResponse({
         status: 403,
         code: 'VERIFICATION_PHONE_REQUIRED',
@@ -171,7 +190,9 @@ export async function requirePhoneVerification(
         route: 'verification',
         context: { route: 'verification', userId: user.id }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init),
         user,
@@ -180,7 +201,9 @@ export async function requirePhoneVerification(
     }
 
     const status = getVerificationStatus(user)
-    return {
+
+    
+return {
       allowed: true,
       user,
       status
@@ -193,7 +216,9 @@ export async function requirePhoneVerification(
       route: 'verification',
       context: { route: 'verification' }
     })
-    return {
+
+    
+return {
       allowed: false,
       response: new NextResponse(JSON.stringify(payload), init)
     }
@@ -218,7 +243,9 @@ export async function requireFullVerification(
         route: 'verification',
         context: { route: 'verification' }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init)
       }
@@ -237,7 +264,9 @@ export async function requireFullVerification(
         route: 'verification',
         context: { route: 'verification' }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init)
       }
@@ -258,7 +287,9 @@ export async function requireFullVerification(
         route: 'verification',
         context: { route: 'verification', userId: user.id }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init),
         user,
@@ -279,7 +310,9 @@ export async function requireFullVerification(
       route: 'verification',
       context: { route: 'verification' }
     })
-    return {
+
+    
+return {
       allowed: false,
       response: new NextResponse(JSON.stringify(payload), init)
     }
@@ -304,7 +337,9 @@ export async function requireAdminView(
         route: 'verification',
         context: { route: 'verification' }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init)
       }
@@ -323,7 +358,9 @@ export async function requireAdminView(
         route: 'verification',
         context: { route: 'verification' }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init)
       }
@@ -344,7 +381,9 @@ export async function requireAdminView(
         route: 'verification',
         context: { route: 'verification', userId: user.id }
       })
-      return {
+
+      
+return {
         allowed: false,
         response: new NextResponse(JSON.stringify(payload), init),
         user,
@@ -365,7 +404,9 @@ export async function requireAdminView(
       route: 'verification',
       context: { route: 'verification' }
     })
-    return {
+
+    
+return {
       allowed: false,
       response: new NextResponse(JSON.stringify(payload), init)
     }

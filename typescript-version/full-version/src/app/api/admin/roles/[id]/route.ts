@@ -1,6 +1,9 @@
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
+
 import { Prisma } from '@prisma/client'
+
 import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
 import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
@@ -22,7 +25,9 @@ const getRoleCacheStore = async () => {
   if (!roleCacheStorePromise) {
     roleCacheStorePromise = createRoleCacheStore()
   }
-  return await roleCacheStorePromise
+
+  
+return await roleCacheStorePromise
 }
 
 const CACHE_KEY = 'all-roles'
@@ -52,13 +57,16 @@ export async function PUT(
   let targetRoleId: string | null = null
   let targetRoleName: string | null = null
   let requestedRoleName: string | null = null
+
   try {
     const { user } = await requireAuth(request)
+
     actorEmail = user?.email ?? null
 
     if (!user?.email) {
       logger.warn('[roles] Unauthorized role update attempt', getRequestContext(request))
-      return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
+      
+return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
         status: 401
       })
     }
@@ -68,11 +76,13 @@ export async function PUT(
       where: { email: user.email },
       include: { role: true }
     })
+
     actorId = currentUser?.id ?? null
 
     if (!currentUser || (!isSuperadmin(currentUser) && !checkPermission(currentUser, 'roleManagement', 'update'))) {
       logger.warn('[roles] Permission denied: update role', getRequestContext(request, { actorEmail }))
-      return NextResponse.json(
+      
+return NextResponse.json(
         buildRoleError('ROLE_PERMISSION_DENIED', 'Permission denied: Edit Roles required'),
         { status: 403 }
       )
@@ -111,6 +121,7 @@ export async function PUT(
 
     const body = await request.json()
     const { name, description, permissions } = body
+
     requestedRoleName = name ?? null
 
     // Validate required fields
@@ -123,13 +134,15 @@ export async function PUT(
     // Validate permissions structure if provided
     if (permissions !== undefined && permissions !== null) {
       const validationErrors = getPermissionValidationErrors(permissions)
+
       if (validationErrors.length > 0) {
         debugLog('[roles] Role permission validation failed on update', {
           errors: validationErrors,
           actorEmail,
           roleId: targetRoleId
         })
-        return NextResponse.json(
+        
+return NextResponse.json(
           buildRoleError('ROLE_INVALID_PERMISSIONS', 'Invalid permissions format', {
             errors: validationErrors
           }),
@@ -153,6 +166,7 @@ export async function PUT(
 
     // Очищаем кэш после обновления роли
     const store = await getRoleCacheStore()
+
     await store.delete(CACHE_KEY).catch(err => {
       logger.warn('[role-cache] Failed to clear cache after role update', { error: err })
     })
@@ -185,6 +199,7 @@ export async function PUT(
 
     // Метрики
     const duration = (Date.now() - startTime) / 1000
+
     recordRoleOperationDuration('update', duration)
     markRoleOperation('update', 'success')
     markRoleEvent('role.updated', 'info')
@@ -192,6 +207,7 @@ export async function PUT(
     return NextResponse.json(updatedRole)
   } catch (error) {
     const duration = (Date.now() - startTime) / 1000
+
     recordRoleOperationDuration('update', duration)
     markRoleOperation('update', 'error')
     markRoleEvent('role.update.failed', 'error')
@@ -219,13 +235,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   let actorEmail: string | null = null
+
   try {
     const { user } = await requireAuth(request)
+
     actorEmail = user?.email ?? null
 
     if (!user?.email) {
       logger.warn('[roles] Unauthorized single role fetch attempt', getRequestContext(request))
-      return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
+      
+return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
         status: 401
       })
     }
@@ -238,7 +257,8 @@ export async function GET(
 
     if (!currentUser || (!isSuperadmin(currentUser) && !checkPermission(currentUser, 'roleManagement', 'read'))) {
       logger.warn('[roles] Permission denied: read single role', getRequestContext(request, { actorEmail }))
-      return NextResponse.json(
+      
+return NextResponse.json(
         buildRoleError('ROLE_PERMISSION_DENIED', 'Permission denied: Read Roles required'),
         { status: 403 }
       )
@@ -277,13 +297,16 @@ export async function DELETE(
   let actorId: string | null = null
   let targetRoleId: string | null = null
   let targetRoleName: string | null = null
+
   try {
     const { user } = await requireAuth(request)
+
     actorEmail = user?.email ?? null
 
     if (!user?.email) {
       logger.warn('[roles] Unauthorized role delete attempt', getRequestContext(request))
-      return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
+      
+return NextResponse.json(buildRoleError('ROLE_UNAUTHORIZED', 'Unauthorized'), {
         status: 401
       })
     }
@@ -293,11 +316,13 @@ export async function DELETE(
       where: { email: user.email },
       include: { role: true }
     })
+
     actorId = currentUser?.id ?? null
 
     if (!currentUser || (!isSuperadmin(currentUser) && !checkPermission(currentUser, 'roleManagement', 'delete'))) {
       logger.warn('[roles] Permission denied: delete role', getRequestContext(request, { actorEmail }))
-      return NextResponse.json(
+      
+return NextResponse.json(
         buildRoleError('ROLE_PERMISSION_DENIED', 'Permission denied: Delete Roles required'),
         { status: 403 }
       )
@@ -363,6 +388,7 @@ export async function DELETE(
 
     // Очищаем кэш после удаления роли
     const store = await getRoleCacheStore()
+
     await store.delete(CACHE_KEY).catch(err => {
       logger.warn('[role-cache] Failed to clear cache after role deletion', {
         error: err,
@@ -396,6 +422,7 @@ export async function DELETE(
 
     // Метрики
     const duration = (Date.now() - startTime) / 1000
+
     recordRoleOperationDuration('delete', duration)
     markRoleOperation('delete', 'success')
     markRoleEvent('role.deleted', 'warning')
@@ -403,6 +430,7 @@ export async function DELETE(
     return NextResponse.json({ message: 'Role deleted successfully' })
   } catch (error) {
     const duration = (Date.now() - startTime) / 1000
+
     recordRoleOperationDuration('delete', duration)
     markRoleOperation('delete', 'error')
     markRoleEvent('role.delete.failed', 'error')

@@ -33,7 +33,9 @@ const Roles = ({ userData }: { userData?: UsersType[] }) => {
     if (isLoading) return
 
     const hasPermission = checkPermission('roleManagement', 'read')
+
     console.log('Client-side permission check:', hasPermission, 'for roleManagement read')
+
     if (!hasPermission) {
       router.push('/not-authorized')
     }
