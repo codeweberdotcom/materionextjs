@@ -1,18 +1,10 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 
-export async function GET(request: NextRequest) {
-  try {
-    // Check authentication
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const GET = withApiHandler({
+  handler: async () => {
     // Получаем количество уникальных пользователей с активными сессиями
     const activeUsers = await prisma.session.findMany({
       where: {
@@ -31,9 +23,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       activeUsers: activeUsersCount
     })
-  } catch (error) {
-    console.error('Error fetching active users count:', error)
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

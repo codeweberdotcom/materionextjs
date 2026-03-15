@@ -5,31 +5,20 @@
  * POST /api/admin/users/[id]/workflow - Выполнить переход
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { userWorkflowService } from '@/services/workflows/UserWorkflowService'
 import { userStateLabels, userEventLabels } from '@/services/workflows/machines/UserMachine'
-
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
 
 /**
  * GET /api/admin/users/[id]/workflow
  *
  * Получить состояние workflow пользователя
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.id) {
-      return NextResponse.json({ error: 'Требуется авторизация' }, { status: 401 })
-    }
-
-    const { id: userId } = await params
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id: userId } = params
 
     const workflowState = await userWorkflowService.getWorkflowState(userId, user.id)
 
@@ -48,15 +37,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json(response)
-  } catch (error) {
-    console.error('[API] GET /api/admin/users/[id]/workflow error:', error)
-
-    return NextResponse.json(
-      { error: 'Внутренняя ошибка сервера' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * POST /api/admin/users/[id]/workflow
@@ -70,15 +52,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  *   metadata?: object   // Дополнительные данные
  * }
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.id) {
-      return NextResponse.json({ error: 'Требуется авторизация' }, { status: 401 })
-    }
-
-    const { id: userId } = await params
+export const POST = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
+    const { id: userId } = params
     const body = await request.json()
     const { event, reason, metadata } = body
 
@@ -134,15 +110,5 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       eventLabel: userEventLabels[event],
       user: result.user
     })
-  } catch (error) {
-    console.error('[API] POST /api/admin/users/[id]/workflow error:', error)
-
-    return NextResponse.json(
-      { error: 'Внутренняя ошибка сервера' },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})

@@ -1,15 +1,11 @@
 import crypto from 'crypto'
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
-
 
 import bcrypt from 'bcryptjs'
 
-import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
-import { checkPermission } from '@/utils/permissions/permissions'
-import { getOnlineUsers } from '@/lib/sockets/namespaces/chat'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import {
   createUserSchema,
   parseFormDataToObject,
@@ -33,30 +29,9 @@ const generateTemporaryPassword = () => {
 }
 
 // POST - Create new user (admin only)
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check permission for creating users
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || !checkPermission(currentUser, 'Users', 'Create')) {
-      return NextResponse.json(
-        { message: 'Permission denied: Create Users required' },
-        { status: 403 }
-      )
-    }
-
+export const POST = withApiHandler({
+  permission: 'Users.Create',
+  handler: async ({ request }) => {
     const formData = await request.formData()
     const avatar = formData.get('avatar') as File | null
     const providedPassword = formData.get('password') as string | null
@@ -129,7 +104,7 @@ export async function POST(request: NextRequest) {
       try {
         const mediaService = getMediaService()
         const buffer = Buffer.from(await avatar.arrayBuffer())
-        
+
         // Create user first to get ID for entityId
         const tempUser = await prisma.user.create({
           data: {
@@ -281,48 +256,13 @@ export async function POST(request: NextRequest) {
       ...transformedUser,
       ...(validatedData.password ? {} : { temporaryPassword: plainPassword })
     })
-  } catch (error) {
-    console.error('Error creating user:', error || 'Unknown error')
-    
-    // Извлекаем детальное сообщение об ошибке
-    let errorMessage = 'Internal server error'
-    let statusCode = 500
-    
-    if (error instanceof Error) {
-      // Обработка ошибок Prisma
-      if (error.message.includes('Unique constraint')) {
-        statusCode = 409
-
-        if (error.message.includes('email')) {
-          errorMessage = 'User with this email already exists'
-        } else if (error.message.includes('username')) {
-          errorMessage = 'User with this username already exists'
-        }
-      } else if (error.message.includes('Foreign key constraint')) {
-        statusCode = 400
-        errorMessage = 'Invalid role or reference data'
-      } else if (error.message.includes('Invalid')) {
-        statusCode = 400
-        errorMessage = error.message
-      }
-
-      // Для остальных ошибок используем общее сообщение
-    }
-    
-    return NextResponse.json(
-      { 
-        message: errorMessage,
-        error: error instanceof Error ? error.name : 'UnknownError',
-        ...(process.env.NODE_ENV === 'development' && error instanceof Error ? { stack: error.stack } : {})
-      },
-      { status: statusCode }
-    )
   }
-}
+})
 
 // GET - Get all users (admin only)
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withApiHandler({
+  permission: 'userManagement.read',
+  handler: async ({ request }) => {
     const url = new URL(request.url)
     const clearCache = url.searchParams.get('clearCache')
 
@@ -330,30 +270,8 @@ export async function GET(request: NextRequest) {
     if (clearCache === 'true') {
       usersCache = null
       usersCacheTimestamp = 0
-      
-return NextResponse.json({ message: 'Cache cleared' })
-    }
 
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check permission for reading users
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || !checkPermission(currentUser, 'userManagement', 'read')) {
-      return NextResponse.json(
-        { message: 'Permission denied: Read Users required' },
-        { status: 403 }
-      )
+      return NextResponse.json({ message: 'Cache cleared' })
     }
 
     // Проверяем кеш
@@ -388,22 +306,22 @@ return NextResponse.json({ message: 'Cache cleared' })
     const userStatuses = await getOnlineUsers()
 
     // Transform the data to match the expected UsersType format
-    const transformedUsers = users.map((user: any) => {
-      const userStatus = userStatuses[user.id] || { isOnline: false, lastSeen: undefined }
+    const transformedUsers = users.map((u: any) => {
+      const userStatus = userStatuses[u.id] || { isOnline: false, lastSeen: undefined }
 
       return {
-        id: user.id,
-        fullName: user.name || 'Unknown User',
+        id: u.id,
+        fullName: u.name || 'Unknown User',
         company: 'N/A',
-        role: user.role?.name || 'subscriber',
-        username: user.email.split('@')[0],
-        country: user.country,
+        role: u.role?.name || 'subscriber',
+        username: u.email.split('@')[0],
+        country: u.country,
         contact: 'N/A',
-        email: user.email,
+        email: u.email,
         currentPlan: 'basic',
-        status: (user.isActive ?? true) ? 'active' : 'inactive',
-        isActive: user.isActive ?? true,
-        avatar: user.image || '',
+        status: (u.isActive ?? true) ? 'active' : 'inactive',
+        isActive: u.isActive ?? true,
+        avatar: u.image || '',
         avatarColor: 'primary' as const,
         isOnline: userStatus.isOnline,
         lastSeen: userStatus.lastSeen
@@ -413,16 +331,7 @@ return NextResponse.json({ message: 'Cache cleared' })
     // Сохраняем в кеш
     usersCache = transformedUsers
     usersCacheTimestamp = now
-    
-return NextResponse.json(transformedUsers)
-  } catch (error) {
-    console.error('Error fetching users:', error)
 
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
+    return NextResponse.json(transformedUsers)
   }
-}
-
-
+})

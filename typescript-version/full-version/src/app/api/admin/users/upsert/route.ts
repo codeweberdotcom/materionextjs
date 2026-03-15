@@ -1,11 +1,10 @@
 import crypto from 'crypto'
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import bcrypt from 'bcryptjs'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { authBaseUrl } from '@/shared/config/env'
@@ -45,32 +44,18 @@ const clearUsersCache = async () => {
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser) {
-      return NextResponse.json({ message: 'User not found' }, { status: 404 })
-    }
-
-    const canCreate = checkPermission(currentUser, 'Users', 'Create')
-    const canUpdate = checkPermission(currentUser, 'Users', 'Update')
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
+    // Dual permission check: need Create or Update
+    const canCreate = checkPermission(user, 'Users', 'Create')
+    const canUpdate = checkPermission(user, 'Users', 'Update')
 
     if (!canCreate && !canUpdate) {
       return NextResponse.json({ message: 'Permission denied' }, { status: 403 })
     }
 
     const body = await request.json()
-    
+
     // Валидация данных
     const validationResult = upsertUserSchema.safeParse({
       email: body.email,
@@ -117,8 +102,8 @@ export async function POST(request: NextRequest) {
 
       if (validatedData.status !== undefined) {
         const newStatus = validatedData.status
-        
-        if (currentUser.id === existingUser.id && newStatus !== 'active') {
+
+        if (user.id === existingUser.id && newStatus !== 'active') {
           return NextResponse.json({ message: 'Cannot change status of your own account' }, { status: 400 })
         }
 
@@ -199,10 +184,5 @@ export async function POST(request: NextRequest) {
       ...buildUserResponse(createdUser),
       temporaryPassword: validatedData.password ? undefined : plainPassword
     })
-  } catch (error) {
-    console.error('Error upserting user via import endpoint:', error)
-    
-return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
   }
-}
-
+})

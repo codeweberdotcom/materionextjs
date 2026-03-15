@@ -3,38 +3,17 @@
  * POST /api/admin/users/[id]/verify-documents
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { eventService } from '@/services/events'
 import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user: adminUser } = await requireAuth(request)
-
-    if (!adminUser) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Проверяем права на управление пользователями
-    if (!isSuperadmin(adminUser) && !checkPermission(adminUser, 'userManagement', 'update')) {
-      return NextResponse.json(
-        { message: 'Forbidden: insufficient permissions' },
-        { status: 403 }
-      )
-    }
-
-    const { id: userId } = await params
+export const POST = withApiHandler<unknown, { id: string }>({
+  permission: 'userManagement.update',
+  handler: async ({ user: adminUser, request, params }) => {
+    const { id: userId } = params
 
     // Получаем пользователя
     const targetUser = await prisma.user.findUnique({
@@ -96,17 +75,5 @@ export async function POST(
         documentsStatus: 'verified'
       }
     })
-  } catch (error) {
-    console.error('Error verifying documents:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
-
-
-
-
+})

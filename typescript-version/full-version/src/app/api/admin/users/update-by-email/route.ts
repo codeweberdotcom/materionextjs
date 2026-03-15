@@ -1,11 +1,10 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import bcrypt from 'bcryptjs'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
-import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
+import { isSuperadmin } from '@/utils/permissions/permissions'
 import { authBaseUrl } from '@/shared/config/env'
 import { updateUserByEmailSchema, formatZodError } from '@/lib/validations/user-schemas'
 
@@ -38,25 +37,11 @@ const clearUsersCache = async () => {
   }
 }
 
-export async function PATCH(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    }
-
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || !checkPermission(currentUser, 'Users', 'Update')) {
-      return NextResponse.json({ message: 'Permission denied: Update Users required' }, { status: 403 })
-    }
-
+export const PATCH = withApiHandler({
+  permission: 'Users.Update',
+  handler: async ({ user, request }) => {
     const body = await request.json()
-    
+
     // Валидация данных
     const validationResult = updateUserByEmailSchema.safeParse({
       email: body.email,
@@ -90,7 +75,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ message: 'User not found' }, { status: 404 })
     }
 
-    const isSuperadminUser = isSuperadmin(currentUser)
+    const isSuperadminUser = isSuperadmin(user)
 
     if (userToUpdate.role?.code === 'SUPERADMIN' && !isSuperadminUser) {
       return NextResponse.json({ message: 'Cannot edit superadmin users' }, { status: 403 })
@@ -108,8 +93,8 @@ export async function PATCH(request: NextRequest) {
 
     if (validatedData.status !== undefined) {
       const newStatus = validatedData.status
-      
-      if (currentUser.id === userToUpdate.id && newStatus !== 'active') {
+
+      if (user.id === userToUpdate.id && newStatus !== 'active') {
         return NextResponse.json({ message: 'Cannot change status of your own account' }, { status: 400 })
       }
 
@@ -155,10 +140,5 @@ export async function PATCH(request: NextRequest) {
     await clearUsersCache()
 
     return NextResponse.json(buildUserResponse(updatedUser))
-  } catch (error) {
-    console.error('Error updating user by email:', error)
-    
-return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
   }
-}
-
+})

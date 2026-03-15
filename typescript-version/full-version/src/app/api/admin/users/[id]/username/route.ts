@@ -1,42 +1,26 @@
 /**
  * Admin API для управления username пользователя
- * 
+ *
  * PUT /api/admin/users/[id]/username - Принудительно изменить username (без ограничений)
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission } from '@/utils/permissions/permissions'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { slugService } from '@/services/slug'
 import { eventService } from '@/services/events'
 import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
-
 /**
  * PUT - Принудительно изменить username (администратор)
  */
-export async function PUT(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user: admin } = await requireAuth(request)
-    const { id: userId } = await params
+export const PUT = withApiHandler<unknown, { id: string }>({
+  permission: 'users.edit',
+  handler: async ({ user: admin, request, params }) => {
+    const { id: userId } = params
     const body = await request.json()
     const { username: newUsername } = body
-
-    // Проверяем права администратора
-    const hasPermission = await checkPermission(admin, 'users', 'edit')
-
-    if (!hasPermission) {
-      return NextResponse.json(
-        { error: 'Access denied. Admin permission required.' },
-        { status: 403 }
-      )
-    }
 
     if (!newUsername) {
       return NextResponse.json(
@@ -60,10 +44,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Проверяем, изменился ли username
     if (targetUser.username === newUsername) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         success: true,
         message: 'Username not changed (same value)',
-        username: newUsername 
+        username: newUsername
       })
     }
 
@@ -109,13 +93,5 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       oldUsername: result.oldSlug,
       newUsername: result.newSlug
     })
-  } catch (error) {
-    console.error('Error changing username by admin:', error)
-    
-return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
+})

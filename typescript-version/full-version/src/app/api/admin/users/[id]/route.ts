@@ -1,8 +1,6 @@
-﻿import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import { authBaseUrl } from '@/shared/config/env'
@@ -17,34 +15,10 @@ import { getMediaService } from '@/services/media'
 import logger from '@/lib/logger'
 
 // GET - Get user by id (admin only)
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const { id: userId } = await params
-
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+export const GET = withApiHandler<unknown, { id: string }>({
+  permission: 'userManagement.read',
+  handler: async ({ params }) => {
+    const { id: userId } = params
 
     const targetUser = await prisma.user.findUnique({
       where: { id: userId },
@@ -76,51 +50,19 @@ export async function GET(
     }
 
     return NextResponse.json(transformedUser)
-  } catch (error) {
-    console.error('Error fetching user:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
-// PUT - Update user information (admin only)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check if user is admin or if they're editing their own data
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    const { id: userId } = await params
+// PUT - Update user information (admin only or self)
+export const PUT = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
+    const { id: userId } = params
 
     // Allow admins and superadmins to edit any user, or users to edit their own data
     // But prevent editing superadmin users unless you're a superadmin
-    const isAdmin = currentUser.role?.code === 'ADMIN'
-    const isSuperadminUser = isSuperadmin(currentUser)
-    const isEditingOwnData = currentUser.id === userId
+    const isAdmin = user.role?.code === 'ADMIN'
+    const isSuperadminUser = isSuperadmin(user)
+    const isEditingOwnData = user.id === userId
 
     if (!isAdmin && !isSuperadminUser && !isEditingOwnData) {
       return NextResponse.json(
@@ -167,7 +109,7 @@ export async function PUT(
 
       newAvatar = formData.get('avatar') as File | null
       const formDataObj = parseFormDataToObject(formData)
-      
+
       body = {
         fullName: formDataObj.fullName,
         email: formDataObj.email,
@@ -253,20 +195,20 @@ export async function PUT(
     if (newAvatar && newAvatar instanceof File) {
       try {
         // Get current user to check for existing avatar
-        const currentUser = await prisma.user.findUnique({
+        const currentUserData = await prisma.user.findUnique({
           where: { id: userId },
           select: { avatarMediaId: true }
         })
 
         // Delete old avatar if exists
-        if (currentUser?.avatarMediaId) {
+        if (currentUserData?.avatarMediaId) {
           try {
             const mediaService = getMediaService()
 
-            await mediaService.delete(currentUser.avatarMediaId, true)
+            await mediaService.delete(currentUserData.avatarMediaId, true)
             logger.info('[Admin] Old avatar deleted', {
               userId,
-              oldMediaId: currentUser.avatarMediaId
+              oldMediaId: currentUserData.avatarMediaId
             })
           } catch (error) {
             logger.warn('[Admin] Failed to delete old avatar', {
@@ -355,18 +297,6 @@ export async function PUT(
       // Игнорируем ошибки очистки кеша
     }
 
-    // Очищаем кеш после изменения статуса пользователя
-    try {
-      await fetch(`${authBaseUrl}/api/admin/users?clearCache=true`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-    } catch (e) {
-      // Игнорируем ошибки очистки кеша
-    }
-
     return NextResponse.json({
       id: updatedUser.id,
       fullName: updatedUser.name || 'Unknown User',
@@ -382,50 +312,14 @@ export async function PUT(
       avatar: updatedUser.image || '',
       avatarColor: 'primary'
     })
-  } catch (error) {
-    if (error) {
-      console.error('Error updating user:', error)
-    } else {
-      console.error('Error updating user: Unknown error')
-    }
-
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // PATCH - Set user active status (admin only)
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const { id: userId } = await params
-
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+export const PATCH = withApiHandler<unknown, { id: string }>({
+  permission: 'userManagement.update',
+  handler: async ({ user, request, params }) => {
+    const { id: userId } = params
 
     // Find the user to update
     const userToUpdate = await prisma.user.findUnique({
@@ -460,7 +354,7 @@ export async function PATCH(
     }
 
     const validationResult = toggleUserStatusSchema.safeParse(parsedBody)
-    
+
     if (!validationResult.success) {
       return NextResponse.json(
         { message: formatZodError(validationResult.error) },
@@ -471,7 +365,7 @@ export async function PATCH(
     const nextStatus = validationResult.data.isActive
 
     // Prevent admin from deactivating themselves
-    if (currentUser.id === userId && !nextStatus) {
+    if (user.id === userId && !nextStatus) {
       return NextResponse.json(
         { message: 'Cannot deactivate your own account' },
         { status: 400 }
@@ -530,48 +424,17 @@ export async function PATCH(
       avatar: updatedUser.image || '',
       avatarColor: 'primary'
     })
-  } catch (error) {
-    console.error('Error toggling user status:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // DELETE - Delete user (admin only)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const { id: userId } = await params
-
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || (currentUser.role?.name !== 'admin' && currentUser.role?.name !== 'superadmin')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
+export const DELETE = withApiHandler<unknown, { id: string }>({
+  permission: 'userManagement.delete',
+  handler: async ({ user, params }) => {
+    const { id: userId } = params
 
     // Prevent admin from deleting themselves
-    if (currentUser.id === userId) {
+    if (user.id === userId) {
       return NextResponse.json(
         { message: 'Cannot delete your own account' },
         { status: 400 }
@@ -613,7 +476,6 @@ export async function DELETE(
     })
 
     // Очищаем кеш после удаления пользователя
-    // Используем простой HTTP запрос для очистки кеша
     try {
       await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/admin/users?clearCache=true`, {
         method: 'GET',
@@ -628,12 +490,5 @@ export async function DELETE(
     return NextResponse.json({
       message: 'User deleted successfully'
     })
-  } catch (error) {
-    console.error('Error deleting user:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})

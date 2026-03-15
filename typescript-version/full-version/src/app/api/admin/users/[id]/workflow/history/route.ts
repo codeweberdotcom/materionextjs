@@ -4,15 +4,10 @@
  * GET /api/admin/users/[id]/workflow/history - Получить историю переходов
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { userWorkflowService } from '@/services/workflows/UserWorkflowService'
-
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
 
 /**
  * GET /api/admin/users/[id]/workflow/history
@@ -22,15 +17,9 @@ interface RouteParams {
  * Query params:
  * - limit: number (по умолчанию 50)
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.id) {
-      return NextResponse.json({ error: 'Требуется авторизация' }, { status: 401 })
-    }
-
-    const { id: userId } = await params
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ request, params }) => {
+    const { id: userId } = params
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '50', 10)
 
@@ -50,15 +39,5 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       })),
       total: history.length
     })
-  } catch (error) {
-    console.error('[API] GET /api/admin/users/[id]/workflow/history error:', error)
-
-    return NextResponse.json(
-      { error: 'Внутренняя ошибка сервера' },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})

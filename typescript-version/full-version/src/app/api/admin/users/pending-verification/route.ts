@@ -3,33 +3,15 @@
  * GET /api/admin/users/pending-verification
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { getDocumentsStatus } from '@/utils/verification/verification-levels'
 
-export async function GET(request: NextRequest) {
-  try {
-    const { user: adminUser } = await requireAuth(request)
-
-    if (!adminUser) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Проверяем права на просмотр пользователей
-    if (!isSuperadmin(adminUser) && !checkPermission(adminUser, 'userManagement', 'read')) {
-      return NextResponse.json(
-        { message: 'Forbidden: insufficient permissions' },
-        { status: 403 }
-      )
-    }
-
+export const GET = withApiHandler({
+  permission: 'userManagement.read',
+  handler: async ({ request }) => {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status') || 'pending' // pending | rejected | verified | all
     const page = parseInt(searchParams.get('page') || '1')
@@ -74,8 +56,7 @@ export async function GET(request: NextRequest) {
     const transformedUsers = users.map(user => {
       const { password: _, ...userWithoutPassword } = user
 
-      
-return {
+      return {
         ...userWithoutPassword,
         documentsStatus: getDocumentsStatus(user)
       }
@@ -90,17 +71,5 @@ return {
         totalPages: Math.ceil(total / limit)
       }
     })
-  } catch (error) {
-    console.error('Error fetching pending verification users:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
-
-
-
-
+})
