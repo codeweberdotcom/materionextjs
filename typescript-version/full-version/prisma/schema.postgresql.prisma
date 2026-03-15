@@ -419,15 +419,17 @@ model Event {
   subjectType   String?
   subjectId     String?
   key           String?
+  ip            String?
   message       String
-  payload       String   @default("{}")
+  payload       Json     @default("{}")
   correlationId String?
-  metadata      String?  @default("{}")
+  metadata      Json     @default("{}")
   createdAt     DateTime @default(now())
 
   @@index([source, createdAt])
   @@index([module, type, createdAt])
   @@index([key])
+  @@index([ip])
   @@index([actorType, actorId])
   @@index([subjectType, subjectId])
 }

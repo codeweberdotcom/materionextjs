@@ -34,11 +34,17 @@ export function enrichEventInputFromRequest(
   const testRunId = request.headers.get('x-test-run-id') || undefined
   const testSuite = request.headers.get('x-test-suite') || undefined
 
+  const ip =
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    undefined
+
   return {
     ...input,
     environment: isTestRequest ? 'test' : (input.environment || 'production'),
     ...(testRunId && { testRunId }),
-    ...(testSuite && { testSuite })
+    ...(testSuite && { testSuite }),
+    ...(ip && !input.ip && { ip })
   }
 }
 

@@ -330,7 +330,8 @@ return {
 
     const where: Prisma.EventWhereInput = {
       metadata: {
-        contains: '"environment":"test"'
+        path: ['environment'],
+        equals: 'test'
       },
       createdAt: {
         lt: cutoffDate
@@ -386,7 +387,8 @@ return {
 
     const whereTestEvents: Prisma.EventWhereInput = {
       metadata: {
-        contains: '"environment":"test"'
+        path: ['environment'],
+        equals: 'test'
       }
     }
 

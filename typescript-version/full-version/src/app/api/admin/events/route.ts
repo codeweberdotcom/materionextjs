@@ -4,7 +4,7 @@ import { eventService , maskPayloadForSource } from '@/services/events'
 import { withApiHandler } from '@/lib/api/withApiHandler'
 import { checkPermission } from '@/utils/permissions/permissions'
 import logger from '@/lib/logger'
-import { markParsingError, markInvalidSeverity } from '@/lib/metrics/events'
+import { markInvalidSeverity } from '@/lib/metrics/events'
 import type { EventSeverity } from '@/services/events/EventService'
 
 const parseDateParam = (value: string | null) => {
@@ -47,36 +47,6 @@ const isEventSeverity = (value: string | null): value is EventSeverity => {
   return isValid
 }
 
-const safeParseJson = (
-  value: string | null | undefined,
-  context?: { field: 'payload' | 'metadata'; eventId?: string; source?: string }
-) => {
-  if (!value) {
-    return null
-  }
-
-  try {
-    return JSON.parse(value)
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error'
-    const valuePreview = value.length > 200 ? `${value.substring(0, 200)}...` : value
-
-    logger.warn('Failed to parse JSON in event data', {
-      error: errorMessage,
-      field: context?.field || 'unknown',
-      eventId: context?.eventId,
-      source: context?.source,
-      valuePreview,
-      valueLength: value.length
-    })
-
-    if (context?.field) {
-      markParsingError(context.field, context.source)
-    }
-
-    return null
-  }
-}
 
 export const GET = withApiHandler({
   handler: async ({ user, request }) => {
@@ -137,26 +107,14 @@ export const GET = withApiHandler({
     const canViewSensitive = checkPermission(user, 'events', 'view_sensitive')
 
     const items = result.items.map(event => {
-      const parsedPayload = safeParseJson(event.payload, {
-        field: 'payload',
-        eventId: event.id,
-        source: event.source
-      })
-
-      const parsedMetadata = safeParseJson(event.metadata, {
-        field: 'metadata',
-        eventId: event.id,
-        source: event.source
-      })
-
-      // Если нет права на просмотр чувствительных данных — применяем маскирование поверх
+      // payload and metadata are Json objects (not strings) after schema migration
       const maskedPayload = canViewSensitive
-        ? parsedPayload
-        : maskPayloadForSource(event.source, event.module, parsedPayload ?? {})
+        ? event.payload
+        : maskPayloadForSource(event.source, event.module, event.payload as Record<string, any> ?? {})
 
       const maskedMetadata = canViewSensitive
-        ? parsedMetadata
-        : maskPayloadForSource(event.source, event.module, parsedMetadata ?? {})
+        ? event.metadata
+        : maskPayloadForSource(event.source, event.module, event.metadata as Record<string, any> ?? {})
 
       return {
         ...event,

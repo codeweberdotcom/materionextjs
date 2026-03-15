@@ -48,6 +48,7 @@ export type RecordEventInput = {
   actor?: EventActor
   subject?: EventSubject
   key?: string | null
+  ip?: string
   payload?: Record<string, any>
   correlationId?: string | null
   metadata?: Record<string, any>
@@ -172,9 +173,6 @@ return null
 
     const maskedMetadataObj = maskPayloadForSource(source, moduleName, enrichedMetadata)
 
-    const payload = safeStringify(maskedPayloadObj)
-    const metadata = safeStringify(maskedMetadataObj)
-
     const data = {
       source,
       module: moduleName,
@@ -185,10 +183,11 @@ return null
       subjectType: input.subject?.type?.trim() || null,
       subjectId: input.subject?.id?.toString() ?? null,
       key: input.key?.toString() ?? null,
+      ip: input.ip ?? null,
       message,
-      payload,
+      payload: maskedPayloadObj,
       correlationId: input.correlationId ?? null,
-      metadata,
+      metadata: maskedMetadataObj,
       createdAt: new Date()
     }
 
@@ -259,7 +258,7 @@ return null
           OR: [
             { message: { contains: searchValue } },
             { key: { contains: searchValue } },
-            { payload: { contains: searchValue } }
+            { payload: { string_contains: searchValue } }
           ]
         })
       }
@@ -277,35 +276,21 @@ return null
     // Фильтрация по environment
     if (params.excludeTest !== undefined) {
       if (params.excludeTest) {
-        // Исключить тесты: (environment IS NULL OR environment != 'test')
-        // В Prisma для JSON полей используем contains для поиска
+        // Исключить тесты: environment != 'test'
         conditions.push({
-          OR: [
-            { metadata: null },
-            { metadata: { not: { contains: '"environment":"test"' } } }
-          ]
+          NOT: { metadata: { path: ['environment'], equals: 'test' } }
         })
       } else {
         // Только тесты
         conditions.push({
-          metadata: { contains: '"environment":"test"' }
+          metadata: { path: ['environment'], equals: 'test' }
         })
       }
     } else if (params.environment) {
       // Фильтр по конкретному environment
-      if (params.environment === 'test') {
-        conditions.push({
-          metadata: { contains: `"environment":"${params.environment}"` }
-        })
-      } else {
-        // Для production: (environment IS NULL OR environment = 'production')
-        conditions.push({
-          OR: [
-            { metadata: null },
-            { metadata: { contains: `"environment":"${params.environment}"` } }
-          ]
-        })
-      }
+      conditions.push({
+        metadata: { path: ['environment'], equals: params.environment }
+      })
     }
 
     const cursorPayload = decodeCursor(params.cursor)
@@ -346,19 +331,6 @@ return null
 }
 
 export const eventService = EventService.getInstance()
-const MAX_DATA_LENGTH = 10_000
-
-const safeStringify = (value: Record<string, any> | undefined): string => {
-  try {
-    const serialized = JSON.stringify(value ?? {})
-
-    return serialized.length > MAX_DATA_LENGTH ? serialized.slice(0, MAX_DATA_LENGTH) : serialized
-  } catch (error) {
-    logger.warn('Failed to stringify event payload', { error })
-
-    return '{}'
-  }
-}
 
 // ----------------------
 // Маскирование и утилиты
