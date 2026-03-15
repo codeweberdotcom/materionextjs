@@ -2,15 +2,15 @@
  * API: Media по ID
  * GET /api/admin/media/[id] - Получить медиа
  * PUT /api/admin/media/[id] - Обновить медиа
+ * PATCH /api/admin/media/[id] - Восстановить медиа из корзины
  * DELETE /api/admin/media/[id] - Удалить медиа
- * 
+ *
  * @module app/api/admin/media/[id]
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { getMediaService } from '@/services/media'
 import logger from '@/lib/logger'
@@ -19,13 +19,8 @@ import logger from '@/lib/logger'
  * GET /api/admin/media/[id]
  * Получить медиа по ID
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden' },
@@ -33,10 +28,10 @@ export async function GET(
       )
     }
 
-    const { id } = await params
+    const { id } = params
     const { searchParams } = new URL(request.url)
     const includeDeleted = searchParams.get('includeDeleted') === 'true'
-    
+
     const mediaService = getMediaService()
     const media = await mediaService.getById(id, includeDeleted)
 
@@ -67,29 +62,28 @@ export async function GET(
         const prefix = s3PublicUrlPrefix.endsWith('/') ? s3PublicUrlPrefix.slice(0, -1) : s3PublicUrlPrefix
         const key = s3Key.startsWith('/') ? s3Key.slice(1) : s3Key
 
-        
-return `${prefix}/${key}`
+        return `${prefix}/${key}`
       }
-      
+
       // 2. Локальный путь
       if (localPath) {
         let path = localPath.replace(/^public\//, '').replace(/^\//, '')
 
         while (path.startsWith('uploads/')) path = path.substring(8)
-        
-return `/uploads/${path}`
+
+        return `/uploads/${path}`
       }
-      
+
       // 3. Proxy URL (fallback)
       if (s3Key) {
-        return variantName 
+        return variantName
           ? `/api/admin/media/${id}/file?variant=${variantName}`
           : `/api/admin/media/${id}/file`
       }
-      
+
       return ''
     }
-    
+
     // URLs вариантов
     for (const name of Object.keys(variants)) {
       const variant = variants[name]
@@ -107,29 +101,15 @@ return `/uploads/${path}`
       media,
       urls,
     })
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/[id] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to fetch media' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * PUT /api/admin/media/[id]
  * Обновить медиа
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const PUT = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden' },
@@ -137,7 +117,7 @@ export async function PUT(
       )
     }
 
-    const { id } = await params
+    const { id } = params
     const body = await request.json()
 
     const mediaService = getMediaService()
@@ -168,29 +148,15 @@ export async function PUT(
       success: true,
       media: updated,
     })
-  } catch (error) {
-    logger.error('[API] PUT /api/admin/media/[id] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to update media' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * PATCH /api/admin/media/[id]
  * Восстановить медиа из корзины
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const PATCH = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden' },
@@ -198,9 +164,9 @@ export async function PATCH(
       )
     }
 
-    const { id } = await params
+    const { id } = params
     const body = await request.json()
-    
+
     // Проверяем действие
     if (body.action !== 'restore') {
       return NextResponse.json(
@@ -210,7 +176,7 @@ export async function PATCH(
     }
 
     const mediaService = getMediaService()
-    
+
     // Восстанавливаем из корзины
     const media = await mediaService.restore(id)
 
@@ -223,29 +189,15 @@ export async function PATCH(
       success: true,
       media,
     })
-  } catch (error) {
-    logger.error('[API] PATCH /api/admin/media/[id] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to restore media' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * DELETE /api/admin/media/[id]
  * Удалить медиа
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const DELETE = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden' },
@@ -253,7 +205,7 @@ export async function DELETE(
       )
     }
 
-    const { id } = await params
+    const { id } = params
     const { searchParams } = new URL(request.url)
     const hard = searchParams.get('hard') === 'true'
 
@@ -281,16 +233,5 @@ export async function DELETE(
       success: true,
       message: hard ? 'Media permanently deleted' : 'Media soft deleted',
     })
-  } catch (error) {
-    logger.error('[API] DELETE /api/admin/media/[id] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to delete media' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

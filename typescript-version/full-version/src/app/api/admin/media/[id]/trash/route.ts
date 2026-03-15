@@ -6,10 +6,9 @@ import path from 'path'
 
 import { Readable } from 'stream'
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 
@@ -19,18 +18,13 @@ import { prisma } from '@/libs/prisma'
  * Возвращает файл из корзины (storage/.trash) для просмотра в админке
  * Доступ только для администраторов
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { id } = await params
+    const { id } = params
     const { searchParams } = new URL(request.url)
     const variant = searchParams.get('variant') || 'original'
 
@@ -58,7 +52,7 @@ export async function GET(
 
     // Получаем размер файла
     const stats = await stat(filePath)
-    
+
     // Определяем MIME тип
     const ext = path.extname(filePath).toLowerCase()
 
@@ -86,13 +80,5 @@ export async function GET(
         'X-Trash-File': 'true',
       },
     })
-  } catch (error) {
-    console.error('[API] GET /api/admin/media/[id]/trash error:', error)
-    
-return NextResponse.json(
-      { error: 'Failed to serve trash file' },
-      { status: 500 }
-    )
   }
-}
-
+})

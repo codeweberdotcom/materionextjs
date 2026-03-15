@@ -7,22 +7,16 @@
  * @module app/api/admin/media/licenses/[id]/document
  */
 
-
 import { writeFile, unlink, mkdir, readFile } from 'fs/promises'
 import { existsSync } from 'fs'
 import path from 'path'
 
 import { NextResponse } from 'next/server'
-import type { NextRequest} from 'next/server';
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isAdminOrHigher } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
-
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
 
 // Разрешённые MIME типы для документов
 const ALLOWED_MIME_TYPES = [
@@ -38,14 +32,13 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
  * POST /api/admin/media/licenses/[id]/document
  * Загрузить документ лицензии
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
+export const POST = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
     if (!isAdminOrHigher(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+
+    const { id } = params
 
     const license = await prisma.mediaLicense.findUnique({ where: { id } })
 
@@ -129,30 +122,20 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       documentSize: updated.documentSize,
       documentMime: updated.documentMime,
     })
-  } catch (error) {
-    logger.error('[API] POST /api/admin/media/licenses/[id]/document failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to upload document' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * GET /api/admin/media/licenses/[id]/document
  * Скачать документ лицензии
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
     if (!isAdminOrHigher(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+
+    const { id } = params
 
     const license = await prisma.mediaLicense.findUnique({ where: { id } })
 
@@ -179,30 +162,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         'Content-Length': String(fileBuffer.length),
       },
     })
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/licenses/[id]/document failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to download document' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * DELETE /api/admin/media/licenses/[id]/document
  * Удалить документ лицензии
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
+export const DELETE = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
     if (!isAdminOrHigher(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+
+    const { id } = params
 
     const license = await prisma.mediaLicense.findUnique({ where: { id } })
 
@@ -238,15 +211,5 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    logger.error('[API] DELETE /api/admin/media/licenses/[id]/document failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to delete document' },
-      { status: 500 }
-    )
   }
-}
-
+})

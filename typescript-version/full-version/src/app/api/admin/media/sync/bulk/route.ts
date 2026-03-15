@@ -1,14 +1,13 @@
 /**
  * API: Bulk operations for Media Sync Jobs
  * DELETE /api/admin/media/sync/bulk - Delete multiple sync jobs
- * 
+ *
  * @module app/api/admin/media/sync/bulk
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
@@ -18,10 +17,8 @@ import { eventService } from '@/services/events'
  * DELETE /api/admin/media/sync/bulk
  * Delete multiple sync jobs
  */
-export async function DELETE(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const DELETE = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -33,10 +30,7 @@ export async function DELETE(request: NextRequest) {
     const { jobIds } = body as { jobIds: string[] }
 
     if (!jobIds || !Array.isArray(jobIds) || jobIds.length === 0) {
-      return NextResponse.json(
-        { error: 'jobIds array is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'jobIds array is required' }, { status: 400 })
     }
 
     // First, delete all child jobs (if any parent jobs are selected)
@@ -91,16 +85,5 @@ export async function DELETE(request: NextRequest) {
       deleted: deleteResult.count,
       requested: jobIds.length,
     })
-  } catch (error) {
-    logger.error('[API] DELETE /api/admin/media/sync/bulk failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to delete jobs' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

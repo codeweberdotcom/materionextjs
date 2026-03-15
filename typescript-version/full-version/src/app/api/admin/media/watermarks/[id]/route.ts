@@ -3,14 +3,13 @@
  * GET /api/admin/media/watermarks/[id] - Получить водяной знак
  * PUT /api/admin/media/watermarks/[id] - Обновить водяной знак
  * DELETE /api/admin/media/watermarks/[id] - Удалить водяной знак
- * 
+ *
  * @module app/api/admin/media/watermarks/[id]
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import type { WatermarkPosition } from '@/services/media';
 import { getWatermarkService } from '@/services/media'
@@ -21,13 +20,8 @@ import logger from '@/lib/logger'
  * GET /api/admin/media/watermarks/[id]
  * Получить водяной знак по ID
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -35,43 +29,26 @@ export async function GET(
       )
     }
 
-    const { id } = await params
+    const { id } = params
 
     const watermark = await prisma.watermark.findUnique({
       where: { id },
     })
 
     if (!watermark) {
-      return NextResponse.json(
-        { error: 'Watermark not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Watermark not found' }, { status: 404 })
     }
 
     return NextResponse.json({ watermark })
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/watermarks/[id] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to fetch watermark' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * PUT /api/admin/media/watermarks/[id]
  * Обновить водяной знак
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const PUT = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -79,7 +56,7 @@ export async function PUT(
       )
     }
 
-    const { id } = await params
+    const { id } = params
     const body = await request.json()
 
     const watermarkService = getWatermarkService()
@@ -105,29 +82,15 @@ export async function PUT(
       success: true,
       watermark,
     })
-  } catch (error) {
-    logger.error('[API] PUT /api/admin/media/watermarks/[id] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to update watermark' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * DELETE /api/admin/media/watermarks/[id]
  * Удалить водяной знак
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const DELETE = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -135,8 +98,7 @@ export async function DELETE(
       )
     }
 
-    const { id } = await params
-
+    const { id } = params
     const watermarkService = getWatermarkService()
 
     await watermarkService.deleteWatermark(id)
@@ -150,16 +112,5 @@ export async function DELETE(
       success: true,
       message: 'Watermark deleted',
     })
-  } catch (error) {
-    logger.error('[API] DELETE /api/admin/media/watermarks/[id] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to delete watermark' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

@@ -1,31 +1,24 @@
 /**
  * API: Media File - получение файла по ID
  * GET /api/admin/media/[id]/file - Получить файл (проксирование с S3 или локального)
- * 
+ *
  * @module app/api/admin/media/[id]/file
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { getStorageService } from '@/services/media'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
 
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
-
 /**
  * GET /api/admin/media/[id]/file
  * Получить файл (проксирование для избежания CORS проблем)
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -33,13 +26,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       )
     }
 
-    const { id } = await params
+    const { id } = params
     const { searchParams } = new URL(request.url)
     const variantName = searchParams.get('variant') || undefined
 
     // Получаем media из БД
     const media = await prisma.media.findUnique({ where: { id } })
-    
+
     if (!media) {
       return NextResponse.json(
         { error: 'Media not found' },
@@ -48,11 +41,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     const storageService = await getStorageService()
-    
+
     // Для вариантов создаём виртуальный Media объект
     let mediaToDownload = media
     let mimeType = media.mimeType
-    
+
     if (variantName && media.variants) {
       const variants = JSON.parse(media.variants)
       const variant = variants[variantName]
@@ -67,7 +60,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         mimeType = variant.mimeType || media.mimeType
       }
     }
-    
+
     if (!mediaToDownload.localPath && !mediaToDownload.s3Key) {
       return NextResponse.json(
         { error: 'File not found' },
@@ -77,10 +70,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Скачиваем файл
     const buffer = await storageService.download(mediaToDownload)
-    
+
     // Определяем Content-Type
     const contentType = mimeType || 'application/octet-stream'
-    
+
     // Возвращаем файл
     return new NextResponse(buffer, {
       headers: {
@@ -88,15 +81,5 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
     })
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/[id]/file failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to get file' },
-      { status: 500 }
-    )
   }
-}
-
+})

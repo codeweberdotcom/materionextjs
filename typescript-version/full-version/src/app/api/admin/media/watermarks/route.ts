@@ -2,14 +2,13 @@
  * API: Watermarks - управление водяными знаками
  * GET /api/admin/media/watermarks - Получить список водяных знаков
  * POST /api/admin/media/watermarks - Создать водяной знак
- * 
+ *
  * @module app/api/admin/media/watermarks
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import type { WatermarkPosition } from '@/services/media';
 import { getWatermarkService } from '@/services/media'
@@ -19,10 +18,8 @@ import logger from '@/lib/logger'
  * GET /api/admin/media/watermarks
  * Получить список водяных знаков
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -37,26 +34,15 @@ export async function GET(request: NextRequest) {
     const watermarks = await watermarkService.getAvailableWatermarks(entityType)
 
     return NextResponse.json({ watermarks })
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/watermarks failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to fetch watermarks' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * POST /api/admin/media/watermarks
  * Создать водяной знак
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -109,16 +95,5 @@ export async function POST(request: NextRequest) {
       success: true,
       watermark,
     })
-  } catch (error) {
-    logger.error('[API] POST /api/admin/media/watermarks failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to create watermark' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

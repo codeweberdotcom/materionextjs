@@ -1,14 +1,13 @@
 /**
  * API: Watermark Preview - превью с водяным знаком
  * GET /api/admin/media/watermarks/[id]/preview - Сгенерировать превью
- * 
+ *
  * @module app/api/admin/media/watermarks/[id]/preview
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import type { WatermarkPosition } from '@/services/media';
 import { getWatermarkService } from '@/services/media'
@@ -17,20 +16,15 @@ import logger from '@/lib/logger'
 /**
  * GET /api/admin/media/watermarks/[id]/preview
  * Сгенерировать превью с водяным знаком
- * 
+ *
  * Query params:
  * - mediaId: ID исходного изображения (обязательно)
  * - position: позиция водяного знака (опционально)
  * - opacity: прозрачность 0-1 (опционально)
  * - scale: масштаб 0-1 (опционально)
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -38,16 +32,13 @@ export async function GET(
       )
     }
 
-    const { id: watermarkId } = await params
+    const { id: watermarkId } = params
     const { searchParams } = new URL(request.url)
 
     const mediaId = searchParams.get('mediaId')
 
     if (!mediaId) {
-      return NextResponse.json(
-        { error: 'mediaId is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'mediaId is required' }, { status: 400 })
     }
 
     const position = searchParams.get('position') as WatermarkPosition | null
@@ -76,16 +67,5 @@ export async function GET(
         'Content-Length': previewBuffer.length.toString(),
       },
     })
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/watermarks/[id]/preview failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to generate preview' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

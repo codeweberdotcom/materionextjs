@@ -4,10 +4,9 @@
  * POST - создать новый bucket
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { S3Adapter } from '@/services/media/storage/S3Adapter'
 import { prisma } from '@/libs/prisma'
@@ -57,7 +56,7 @@ async function getS3ConfigFromService(serviceId: string) {
   const protocol = (service.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
 
   return {
-    endpoint: service.port 
+    endpoint: service.port
       ? `${protocol}://${service.host}:${service.port}`
       : `${protocol}://${service.host}`,
     accessKeyId: service.username,
@@ -70,13 +69,9 @@ async function getS3ConfigFromService(serviceId: string) {
 /**
  * GET /api/admin/media/s3/buckets
  * Получить список всех bucket'ов
- * Query params:
- *   - serviceId: ID сервиса из ServiceConfiguration (опционально)
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
     logger.debug('[S3 Buckets API] Auth check', {
       userId: user?.id,
       roleCode: user?.role?.code,
@@ -89,7 +84,7 @@ export async function GET(request: NextRequest) {
         userId: user?.id,
         roleCode: user?.role?.code,
       })
-      
+
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
         { status: 403 }
@@ -122,11 +117,11 @@ export async function GET(request: NextRequest) {
 
       if (metadata.bucket) {
         // Bucket is pre-configured - return only this bucket without ListBuckets call
-        logger.debug('[S3 Buckets API] Using pre-configured bucket from service', { 
-          serviceId, 
-          bucket: metadata.bucket 
+        logger.debug('[S3 Buckets API] Using pre-configured bucket from service', {
+          serviceId,
+          bucket: metadata.bucket
         })
-        
+
         return NextResponse.json({
           configured: true,
           buckets: [{ name: metadata.bucket }],
@@ -149,7 +144,7 @@ export async function GET(request: NextRequest) {
     } else {
       // Get config from ENV
       s3Config = getS3ConfigFromEnv()
-      
+
       if (!s3Config) {
         return NextResponse.json({
           configured: false,
@@ -185,24 +180,15 @@ export async function GET(request: NextRequest) {
         error: `Ошибка подключения к S3: ${error.message}`,
       })
     }
-  } catch (error: any) {
-    logger.error('[S3 Buckets API] Error', { error: error.message })
-
-    return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
-      { status: error.message?.includes('Unauthorized') ? 401 : 500 }
-    )
   }
-}
+})
 
 /**
  * POST /api/admin/media/s3/buckets
  * Создать новый bucket
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -214,10 +200,7 @@ export async function POST(request: NextRequest) {
     const { bucketName, serviceId } = body
 
     if (!bucketName || typeof bucketName !== 'string') {
-      return NextResponse.json(
-        { error: 'bucketName is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'bucketName is required' }, { status: 400 })
     }
 
     // Валидация имени bucket'а
@@ -225,8 +208,8 @@ export async function POST(request: NextRequest) {
 
     if (!bucketNameRegex.test(bucketName)) {
       return NextResponse.json(
-        { 
-          error: 'Некорректное имя bucket. Используйте строчные буквы, цифры, точки и дефисы. Длина 3-63 символа.' 
+        {
+          error: 'Некорректное имя bucket. Используйте строчные буквы, цифры, точки и дефисы. Длина 3-63 символа.'
         },
         { status: 400 }
       )
@@ -254,34 +237,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    try {
-      await S3Adapter.createBucketStatic(s3Config, bucketName)
+    await S3Adapter.createBucketStatic(s3Config, bucketName)
 
-      logger.info('[S3 Buckets API] Bucket created', { bucketName, serviceId })
+    logger.info('[S3 Buckets API] Bucket created', { bucketName, serviceId })
 
-      return NextResponse.json({
-        success: true,
-        bucketName,
-        message: `Bucket "${bucketName}" успешно создан`,
-      })
-    } catch (error: any) {
-      logger.error('[S3 Buckets API] Failed to create bucket', {
-        bucketName,
-        serviceId,
-        error: error.message,
-      })
-
-      return NextResponse.json(
-        { error: `Ошибка создания bucket: ${error.message}` },
-        { status: 500 }
-      )
-    }
-  } catch (error: any) {
-    logger.error('[S3 Buckets API] Error', { error: error.message })
-
-    return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
-      { status: error.message?.includes('Unauthorized') ? 401 : 500 }
-    )
+    return NextResponse.json({
+      success: true,
+      bucketName,
+      message: `Bucket "${bucketName}" успешно создан`,
+    })
   }
-}
+})

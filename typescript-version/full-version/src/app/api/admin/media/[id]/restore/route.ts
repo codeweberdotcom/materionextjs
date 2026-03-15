@@ -1,14 +1,13 @@
 /**
  * API: Media Restore
  * POST /api/admin/media/[id]/restore - Восстановить медиа из корзины
- * 
+ *
  * @module app/api/admin/media/[id]/restore
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isAdminOrHigher } from '@/utils/permissions/permissions'
 import { getMediaService } from '@/services/media'
 import logger from '@/lib/logger'
@@ -17,13 +16,8 @@ import logger from '@/lib/logger'
  * POST /api/admin/media/[id]/restore
  * Восстановить медиа из корзины
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const POST = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
     if (!isAdminOrHigher(user)) {
       return NextResponse.json(
         { error: 'Forbidden' },
@@ -31,9 +25,9 @@ export async function POST(
       )
     }
 
-    const { id } = await params
+    const { id } = params
     const mediaService = getMediaService()
-    
+
     // Check if media exists and is deleted
     const media = await mediaService.getById(id, true) // includeDeleted = true
 
@@ -62,26 +56,5 @@ export async function POST(
       success: true,
       media: restored,
     })
-  } catch (error) {
-    logger.error('[API] POST /api/admin/media/[id]/restore failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to restore media' },
-      { status: 500 }
-    )
   }
-}
-
-
-
-
-
-
-
-
-
-
-
-
+})

@@ -3,14 +3,13 @@
  * GET /api/admin/media/settings - Получить все настройки
  * PUT /api/admin/media/settings - Обновить глобальные настройки
  * POST /api/admin/media/settings - Создать/обновить настройки для типа сущности
- * 
+ *
  * @module app/api/admin/media/settings
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import { IMAGE_PRESETS, DEFAULT_GLOBAL_SETTINGS } from '@/services/media'
@@ -21,10 +20,8 @@ import logger from '@/lib/logger'
  * GET /api/admin/media/settings
  * Получить все настройки
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -34,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     // Глобальные настройки
     let globalSettings = await prisma.mediaGlobalSettings.findFirst()
-    
+
     if (!globalSettings) {
       // Создаём дефолтные настройки
       globalSettings = await prisma.mediaGlobalSettings.create({
@@ -58,26 +55,15 @@ export async function GET(request: NextRequest) {
       availablePresets,
       defaultPresets: IMAGE_PRESETS,
     })
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/settings failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to fetch settings' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * PUT /api/admin/media/settings
  * Обновить глобальные настройки
  */
-export async function PUT(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const PUT = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -115,26 +101,15 @@ export async function PUT(request: NextRequest) {
       success: true,
       settings: globalSettings,
     })
-  } catch (error) {
-    logger.error('[API] PUT /api/admin/media/settings failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to update settings' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * POST /api/admin/media/settings
  * Создать или обновить настройки для типа сущности
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -146,10 +121,7 @@ export async function POST(request: NextRequest) {
     const { entityType, ...data } = body
 
     if (!entityType) {
-      return NextResponse.json(
-        { error: 'entityType is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'entityType is required' }, { status: 400 })
     }
 
     // Преобразуем variants в JSON если это массив
@@ -177,16 +149,5 @@ export async function POST(request: NextRequest) {
       success: true,
       settings,
     })
-  } catch (error) {
-    logger.error('[API] POST /api/admin/media/settings failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to save settings' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

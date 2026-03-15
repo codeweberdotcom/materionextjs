@@ -1,7 +1,7 @@
 /**
  * API: Orphan Files Statistics
  * GET /api/admin/media/orphans - Получить статистику сирот
- * 
+ *
  * @module api/admin/media/orphans
  */
 
@@ -9,13 +9,11 @@ import fs from 'fs/promises'
 
 import path from 'path'
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { z } from 'zod'
 
-
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
@@ -36,8 +34,7 @@ function formatBytes(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
 
-  
-return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
 /**
@@ -46,7 +43,7 @@ return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 async function getAllFiles(dirPath: string, arrayOfFiles: string[] = []): Promise<string[]> {
   try {
     const files = await fs.readdir(dirPath)
-    
+
     for (const file of files) {
       const fullPath = path.join(dirPath, file)
 
@@ -65,7 +62,7 @@ async function getAllFiles(dirPath: string, arrayOfFiles: string[] = []): Promis
   } catch {
     // Directory doesn't exist or can't be read
   }
-  
+
   return arrayOfFiles
 }
 
@@ -73,11 +70,8 @@ async function getAllFiles(dirPath: string, arrayOfFiles: string[] = []): Promis
  * GET /api/admin/media/orphans
  * Получить статистику сирот-файлов
  */
-export async function GET(request: NextRequest) {
-  try {
-    // Check auth
-    const { user } = await requireAuth(request)
-    
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -101,7 +95,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { includeList, limit } = queryResult.data
-    
+
     // 1. DB Orphans: Media records без entityId (не привязаны к сущности)
     const dbOrphans = await prisma.media.findMany({
       where: {
@@ -139,11 +133,11 @@ export async function GET(request: NextRequest) {
     const globalSettings = await prisma.mediaGlobalSettings.findFirst()
 
     const uploadsPath = path.join(
-      process.cwd(), 
-      'public', 
+      process.cwd(),
+      'public',
       globalSettings?.localUploadPath || '/uploads'
     )
-    
+
     let diskOrphanCount = 0
     let diskOrphanSize = 0
     const diskOrphanFiles: OrphanFile[] = []
@@ -151,13 +145,13 @@ export async function GET(request: NextRequest) {
     try {
       // Get all files from uploads directory
       const allDiskFiles = await getAllFiles(uploadsPath)
-      
+
       // Get all localPaths from DB (including variants)
       const allMedia = await prisma.media.findMany({
         where: { deletedAt: null },
         select: { localPath: true, variants: true },
       })
-      
+
       // Build set of known paths
       const knownPaths = new Set<string>()
 
@@ -182,7 +176,7 @@ export async function GET(request: NextRequest) {
           } catch {}
         }
       }
-      
+
       // Find disk orphans
       for (const filePath of allDiskFiles) {
         if (!knownPaths.has(filePath)) {
@@ -191,7 +185,7 @@ export async function GET(request: NextRequest) {
 
             diskOrphanCount++
             diskOrphanSize += stat.size
-            
+
             if (includeList === 'true' && diskOrphanFiles.length < limit) {
               diskOrphanFiles.push({
                 path: filePath,
@@ -233,22 +227,10 @@ export async function GET(request: NextRequest) {
         type: 'db_only' as const,
         createdAt: m.createdAt,
       }))
-      
+
       response.files = [...dbFiles, ...diskOrphanFiles].slice(0, limit)
     }
 
     return NextResponse.json(response)
-
-  } catch (error) {
-    logger.error('[OrphansAPI] Error getting orphan stats', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to get orphan stats' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

@@ -2,14 +2,13 @@
  * API: Sync Job по ID
  * GET /api/admin/media/sync/[jobId] - Получить статус задачи
  * DELETE /api/admin/media/sync/[jobId] - Отменить задачу
- * 
+ *
  * @module app/api/admin/media/sync/[jobId]
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { getMediaSyncService } from '@/services/media'
 import logger from '@/lib/logger'
@@ -18,13 +17,8 @@ import logger from '@/lib/logger'
  * GET /api/admin/media/sync/[jobId]
  * Получить статус задачи синхронизации
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ jobId: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler<unknown, { jobId: string }>({
+  handler: async ({ user, request, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -32,7 +26,7 @@ export async function GET(
       )
     }
 
-    const { jobId } = await params
+    const { jobId } = params
     const { searchParams } = new URL(request.url)
     const detailed = searchParams.get('detailed') === 'true'
 
@@ -42,49 +36,28 @@ export async function GET(
       const result = await syncService.getJobResults(jobId)
 
       if (!result) {
-        return NextResponse.json(
-          { error: 'Job not found' },
-          { status: 404 }
-        )
+        return NextResponse.json({ error: 'Job not found' }, { status: 404 })
       }
 
-      
-return NextResponse.json(result)
+      return NextResponse.json(result)
     }
 
     const progress = await syncService.getJobStatus(jobId)
 
     if (!progress) {
-      return NextResponse.json(
-        { error: 'Job not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 })
     }
 
     return NextResponse.json(progress)
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/sync/[jobId] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to fetch job status' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * DELETE /api/admin/media/sync/[jobId]
  * Отменить задачу синхронизации
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ jobId: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const DELETE = withApiHandler<unknown, { jobId: string }>({
+  handler: async ({ user, params }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -92,7 +65,7 @@ export async function DELETE(
       )
     }
 
-    const { jobId } = await params
+    const { jobId } = params
     const syncService = getMediaSyncService()
 
     await syncService.cancelJob(jobId)
@@ -106,16 +79,5 @@ export async function DELETE(
       success: true,
       message: 'Job cancelled',
     })
-  } catch (error) {
-    logger.error('[API] DELETE /api/admin/media/sync/[jobId] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to cancel job' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

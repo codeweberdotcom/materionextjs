@@ -3,10 +3,9 @@
  * POST - проверить доступность bucket'а
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { S3Adapter } from '@/services/media/storage/S3Adapter'
 import { prisma } from '@/libs/prisma'
@@ -56,7 +55,7 @@ async function getS3ConfigFromService(serviceId: string) {
   const protocol = (service.protocol || 'https').replace(/:\/\/$/, '').replace(/:$/, '')
 
   return {
-    endpoint: service.port 
+    endpoint: service.port
       ? `${protocol}://${service.host}:${service.port}`
       : `${protocol}://${service.host}`,
     accessKeyId: service.username,
@@ -69,14 +68,9 @@ async function getS3ConfigFromService(serviceId: string) {
 /**
  * POST /api/admin/media/s3/buckets/validate
  * Проверить существование и доступность bucket'а
- * Body:
- *   - bucketName: имя bucket
- *   - serviceId: ID сервиса (опционально)
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -88,10 +82,7 @@ export async function POST(request: NextRequest) {
     const { bucketName, serviceId } = body
 
     if (!bucketName || typeof bucketName !== 'string') {
-      return NextResponse.json(
-        { error: 'bucketName is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'bucketName is required' }, { status: 400 })
     }
 
     let s3Config
@@ -118,35 +109,14 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    try {
-      const result = await S3Adapter.validateBucketStatic(s3Config, bucketName)
+    const result = await S3Adapter.validateBucketStatic(s3Config, bucketName)
 
-      logger.debug('[S3 Validate API] Bucket validation', {
-        bucketName,
-        serviceId,
-        result,
-      })
+    logger.debug('[S3 Validate API] Bucket validation', {
+      bucketName,
+      serviceId,
+      result,
+    })
 
-      return NextResponse.json(result)
-    } catch (error: any) {
-      logger.error('[S3 Validate API] Validation failed', {
-        bucketName,
-        serviceId,
-        error: error.message,
-      })
-
-      return NextResponse.json({
-        exists: false,
-        accessible: false,
-        error: error.message,
-      })
-    }
-  } catch (error: any) {
-    logger.error('[S3 Validate API] Error', { error: error.message })
-
-    return NextResponse.json(
-      { error: error.message || 'Internal Server Error' },
-      { status: error.message?.includes('Unauthorized') ? 401 : 500 }
-    )
+    return NextResponse.json(result)
   }
-}
+})

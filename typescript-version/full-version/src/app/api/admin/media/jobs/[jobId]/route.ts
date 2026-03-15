@@ -1,38 +1,28 @@
 /**
  * API: Media Job Status - статус задачи обработки
  * GET /api/admin/media/jobs/[jobId] - Получить статус задачи
- * 
+ *
  * @module app/api/admin/media/jobs/[jobId]
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { mediaProcessingQueue, mediaSyncQueue } from '@/services/media'
 import logger from '@/lib/logger'
-
-interface RouteParams {
-  params: Promise<{ jobId: string }>
-}
 
 /**
  * GET /api/admin/media/jobs/[jobId]
  * Получить статус задачи
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler<unknown, { jobId: string }>({
+  handler: async ({ user, params }) => {
     if (!isSuperadmin(user)) {
-      return NextResponse.json(
-        { error: 'Forbidden' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { jobId } = await params
+    const { jobId } = params
 
     // Определяем тип очереди по префиксу
     const isSyncJob = jobId.startsWith('inmem_sync_') || jobId.includes('sync')
@@ -42,10 +32,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const job = (queue as any).queue?.getJob ? await (queue as any).queue.getJob(jobId) : null
 
     if (!job) {
-      return NextResponse.json(
-        { error: 'Job not found' },
-        { status: 404 }
-      )
+      return NextResponse.json({ error: 'Job not found' }, { status: 404 })
     }
 
     // Формируем ответ в зависимости от типа задачи
@@ -53,8 +40,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       // In-memory job
       const inMemoryJob = job as any
 
-      
-return NextResponse.json({
+      return NextResponse.json({
         jobId: inMemoryJob.id,
         status: inMemoryJob.status,
         progress: inMemoryJob.progress || 0,
@@ -79,15 +65,5 @@ return NextResponse.json({
       attemptsMade: bullJob.attemptsMade,
       queueType: 'bull',
     })
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/jobs/[jobId] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to fetch job status' },
-      { status: 500 }
-    )
   }
-}
-
+})

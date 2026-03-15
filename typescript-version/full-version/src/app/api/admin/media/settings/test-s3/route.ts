@@ -1,16 +1,15 @@
 /**
  * API: Test S3 Connection
  * POST /api/admin/media/settings/test-s3 - Проверить подключение к S3
- * 
+ *
  * @module app/api/admin/media/settings/test-s3
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { S3Client, ListBucketsCommand, HeadBucketCommand } from '@aws-sdk/client-s3'
+import { S3Client, HeadBucketCommand } from '@aws-sdk/client-s3'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import logger from '@/lib/logger'
 
@@ -18,10 +17,8 @@ import logger from '@/lib/logger'
  * POST /api/admin/media/settings/test-s3
  * Проверить подключение к S3
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -41,10 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Проверяем обязательные поля
     if (!bucket) {
-      return NextResponse.json(
-        { error: 'Bucket is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Bucket is required' }, { status: 400 })
     }
 
     // Используем переданные credentials или из ENV
@@ -112,36 +106,5 @@ export async function POST(request: NextRequest) {
       region: s3Config.region,
       endpoint: endpoint || 'AWS S3',
     })
-  } catch (error: any) {
-    logger.error('[API] S3 connection test failed', {
-      error: error.message || String(error),
-      code: error.code,
-      name: error.name,
-    })
-
-    // Более информативные сообщения об ошибках
-    let errorMessage = 'S3 connection failed'
-    let details = error.message
-
-    if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
-      errorMessage = 'Cannot connect to S3 endpoint'
-      details = 'Check your endpoint URL and network connectivity'
-    } else if (error.name === 'InvalidAccessKeyId') {
-      errorMessage = 'Invalid Access Key ID'
-      details = 'Check your AWS_ACCESS_KEY_ID'
-    } else if (error.name === 'SignatureDoesNotMatch') {
-      errorMessage = 'Invalid Secret Access Key'
-      details = 'Check your AWS_SECRET_ACCESS_KEY'
-    } else if (error.name === 'CredentialsError') {
-      errorMessage = 'Credentials error'
-      details = 'Check your AWS credentials configuration'
-    }
-
-    return NextResponse.json({
-      success: false,
-      error: errorMessage,
-      details,
-    })
   }
-}
-
+})

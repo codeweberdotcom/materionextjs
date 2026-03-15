@@ -6,10 +6,9 @@
  * @module app/api/admin/media/licenses
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isAdminOrHigher } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
@@ -28,10 +27,8 @@ const LICENSE_TYPES = [
  * GET /api/admin/media/licenses
  * Получить список лицензий с фильтрацией и пагинацией
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isAdminOrHigher(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -93,26 +90,15 @@ export async function GET(request: NextRequest) {
       limit,
       totalPages: Math.ceil(total / limit),
     })
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/licenses failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to fetch licenses' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * POST /api/admin/media/licenses
  * Создать новую лицензию
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isAdminOrHigher(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -128,17 +114,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (!body.licensorName?.trim()) {
-      return NextResponse.json(
-        { error: 'licensorName is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'licensorName is required' }, { status: 400 })
     }
 
     if (!body.licenseeName?.trim()) {
-      return NextResponse.json(
-        { error: 'licenseeName is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'licenseeName is required' }, { status: 400 })
     }
 
     // Создание лицензии
@@ -199,15 +179,5 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(result, { status: 201 })
-  } catch (error) {
-    logger.error('[API] POST /api/admin/media/licenses failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to create license' },
-      { status: 500 }
-    )
   }
-}
-
+})

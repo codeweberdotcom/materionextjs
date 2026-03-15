@@ -1,7 +1,8 @@
 /**
  * API: Media Scan - сканирование и импорт существующих файлов
  * POST /api/admin/media/scan - Сканировать и импортировать файлы
- * 
+ * GET /api/admin/media/scan - Получить статистику файлов для сканирования
+ *
  * @module app/api/admin/media/scan
  */
 
@@ -9,11 +10,9 @@ import { existsSync, readdirSync, statSync } from 'fs'
 
 import path from 'path'
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isAdminOrHigher } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
@@ -34,8 +33,7 @@ function getEntityTypeFromPath(filePath: string): string {
   if (filePath.includes('/listings/')) return 'listing_image'
   if (filePath.includes('/watermarks/')) return 'watermark'
   if (filePath.includes('/documents/')) return 'document'
-  
-return 'other'
+  return 'other'
 }
 
 // Получение MIME типа по расширению
@@ -52,30 +50,28 @@ function getMimeType(filename: string): string {
     '.ico': 'image/x-icon',
   }
 
-  
-return mimeTypes[ext] || 'application/octet-stream'
+  return mimeTypes[ext] || 'application/octet-stream'
 }
 
 // Генерация slug из filename
 function generateSlug(filename: string): string {
   const name = path.basename(filename, path.extname(filename))
 
-  
-return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 }
 
 // Рекурсивное сканирование директории
 function scanDirectory(dir: string, baseDir: string): string[] {
   const files: string[] = []
-  
+
   if (!existsSync(dir)) return files
-  
+
   const items = readdirSync(dir)
-  
+
   for (const item of items) {
     const fullPath = path.join(dir, item)
     const stat = statSync(fullPath)
-    
+
     if (stat.isDirectory()) {
       files.push(...scanDirectory(fullPath, baseDir))
     } else if (stat.isFile()) {
@@ -89,7 +85,7 @@ function scanDirectory(dir: string, baseDir: string): string[] {
       }
     }
   }
-  
+
   return files
 }
 
@@ -97,16 +93,11 @@ function scanDirectory(dir: string, baseDir: string): string[] {
  * POST /api/admin/media/scan
  * Сканировать и импортировать существующие файлы
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     // Только ADMIN и выше может сканировать
     if (!isAdminOrHigher(user)) {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
     }
 
     const body = await request.json().catch(() => ({}))
@@ -114,7 +105,7 @@ export async function POST(request: NextRequest) {
 
     const publicDir = path.join(process.cwd(), 'public')
     const scanDir = path.join(publicDir, directory)
-    
+
     if (!existsSync(scanDir)) {
       return NextResponse.json(
         { error: `Directory not found: ${directory}` },
@@ -201,36 +192,22 @@ export async function POST(request: NextRequest) {
       success: true,
       ...result,
     })
-  } catch (error) {
-    logger.error('[API] POST /api/admin/media/scan failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Scan failed' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * GET /api/admin/media/scan
  * Получить статистику файлов для сканирования
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
     if (!isAdminOrHigher(user)) {
-      return NextResponse.json(
-        { error: 'Forbidden: Admin access required' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'Forbidden: Admin access required' }, { status: 403 })
     }
 
     const publicDir = path.join(process.cwd(), 'public')
     const uploadsDir = path.join(publicDir, 'uploads')
-    
+
     // Сканируем файлы
     const files = scanDirectory(uploadsDir, publicDir)
 
@@ -246,7 +223,7 @@ export async function GET(request: NextRequest) {
 
     // Группируем по типу
     const byType: Record<string, { total: number; imported: number; pending: number }> = {}
-    
+
     for (const file of files) {
       const entityType = getEntityTypeFromPath(file)
 
@@ -269,15 +246,5 @@ export async function GET(request: NextRequest) {
       pendingImport: files.length - existingPaths.size,
       byType,
     })
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/scan failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to scan' },
-      { status: 500 }
-    )
   }
-}
-
+})

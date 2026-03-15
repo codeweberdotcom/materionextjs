@@ -2,20 +2,19 @@
  * API: Media Sync - синхронизация между хранилищами
  * POST /api/admin/media/sync - Создать задачу синхронизации
  * GET /api/admin/media/sync - Получить список задач
- * 
+ *
  * @module app/api/admin/media/sync
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import type { SyncScope, SyncOperation} from '@/services/media';
 import { getMediaSyncService, initializeMediaQueues, getStorageService } from '@/services/media'
 import logger from '@/lib/logger'
 
-type SyncAction = 
+type SyncAction =
   | 'upload_to_s3_with_delete'
   | 'upload_to_s3_keep_local'
   | 'download_from_s3'
@@ -29,10 +28,8 @@ type SyncAction =
  * POST /api/admin/media/sync
  * Создать задачу синхронизации
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     // Только SUPERADMIN может синхронизировать
     if (!isSuperadmin(user)) {
       return NextResponse.json(
@@ -52,17 +49,11 @@ export async function POST(request: NextRequest) {
     }
 
     if (!action) {
-      return NextResponse.json(
-        { error: 'action is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'action is required' }, { status: 400 })
     }
 
     if (!scope) {
-      return NextResponse.json(
-        { error: 'scope is required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'scope is required' }, { status: 400 })
     }
 
     if (scope === 'selected' && (!mediaIds || mediaIds.length === 0)) {
@@ -84,14 +75,14 @@ export async function POST(request: NextRequest) {
 
     // Проверяем S3 конфигурацию для операций с S3
     const s3RequiredActions = [
-      'upload_to_s3_with_delete', 
+      'upload_to_s3_with_delete',
       'upload_to_s3_keep_local',
       'download_from_s3',
       'download_from_s3_delete_s3',
       'delete_s3_only',
       'purge_s3',
     ]
-    
+
     if (s3RequiredActions.includes(action)) {
       const storageService = await getStorageService()
 
@@ -109,63 +100,41 @@ export async function POST(request: NextRequest) {
     switch (action) {
       case 'upload_to_s3_with_delete':
         job = await syncService.uploadToS3WithDelete({
-          scope,
-          entityType,
-          mediaIds,
-          overwrite,
-          createdBy: user.id,
+          scope, entityType, mediaIds, overwrite, createdBy: user.id,
         })
         break
 
       case 'upload_to_s3_keep_local':
         job = await syncService.uploadToS3KeepLocal({
-          scope,
-          entityType,
-          mediaIds,
-          overwrite,
-          createdBy: user.id,
+          scope, entityType, mediaIds, overwrite, createdBy: user.id,
         })
         break
 
       case 'download_from_s3':
         job = await syncService.downloadFromS3({
-          scope,
-          entityType,
-          mediaIds,
-          deleteFromS3: false,
-          createdBy: user.id,
+          scope, entityType, mediaIds, deleteFromS3: false, createdBy: user.id,
         })
         break
 
       case 'download_from_s3_delete_s3':
         job = await syncService.downloadFromS3({
-          scope,
-          entityType,
-          mediaIds,
-          deleteFromS3: true,
-          createdBy: user.id,
+          scope, entityType, mediaIds, deleteFromS3: true, createdBy: user.id,
         })
         break
 
       case 'delete_local_only':
         job = await syncService.deleteLocalOnly({
-          scope,
-          entityType,
-          mediaIds,
-          createdBy: user.id,
+          scope, entityType, mediaIds, createdBy: user.id,
         })
         break
 
       case 'delete_s3_only':
         job = await syncService.deleteS3Only({
-          scope,
-          entityType,
-          mediaIds,
-          createdBy: user.id,
+          scope, entityType, mediaIds, createdBy: user.id,
         })
         break
 
-      case 'purge_s3':
+      case 'purge_s3': {
         // Очистка всего S3 bucket (независимо от БД)
         const purgeResult = await syncService.purgeS3Bucket({ createdBy: user.id })
 
@@ -186,13 +155,12 @@ export async function POST(request: NextRequest) {
             errors: purgeResult.errors,
           },
         })
+      }
 
-      case 'verify_status':
+      case 'verify_status': {
         // Верификация не создаёт job, выполняется синхронно
         const verifyResult = await syncService.verifyStorageStatus({
-          scope,
-          entityType,
-          mediaIds,
+          scope, entityType, mediaIds,
         })
 
         logger.info('[API] Storage status verification completed', {
@@ -204,6 +172,7 @@ export async function POST(request: NextRequest) {
           success: true,
           verification: verifyResult,
         })
+      }
 
       default:
         return NextResponse.json(
@@ -228,26 +197,15 @@ export async function POST(request: NextRequest) {
         totalFiles: job.totalFiles,
       },
     })
-  } catch (error) {
-    logger.error('[API] POST /api/admin/media/sync failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to create sync job' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * GET /api/admin/media/sync
  * Получить список задач синхронизации
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!isSuperadmin(user)) {
       return NextResponse.json(
         { error: 'Forbidden: Superadmin access required' },
@@ -271,16 +229,5 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json(result)
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/sync failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to fetch sync jobs' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

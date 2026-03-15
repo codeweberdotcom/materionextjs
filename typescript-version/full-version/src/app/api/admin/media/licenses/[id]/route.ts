@@ -7,17 +7,12 @@
  * @module app/api/admin/media/licenses/[id]
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isAdminOrHigher } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
-
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
 
 const LICENSE_TYPES = [
   'royalty_free',
@@ -32,14 +27,13 @@ const LICENSE_TYPES = [
  * GET /api/admin/media/licenses/[id]
  * Получить лицензию по ID
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
     if (!isAdminOrHigher(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+
+    const { id } = params
 
     const license = await prisma.mediaLicense.findUnique({
       where: { id },
@@ -68,30 +62,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json(license)
-  } catch (error) {
-    logger.error('[API] GET /api/admin/media/licenses/[id] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to fetch license' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * PUT /api/admin/media/licenses/[id]
  * Обновить лицензию
  */
-export async function PUT(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
+export const PUT = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
     if (!isAdminOrHigher(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+
+    const { id } = params
 
     const existing = await prisma.mediaLicense.findUnique({ where: { id } })
 
@@ -103,10 +87,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Валидация
     if (body.licenseType && !LICENSE_TYPES.includes(body.licenseType)) {
-      return NextResponse.json(
-        { error: 'Invalid licenseType' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Invalid licenseType' }, { status: 400 })
     }
 
     // Обновление лицензии
@@ -178,30 +159,20 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     })
 
     return NextResponse.json(result)
-  } catch (error) {
-    logger.error('[API] PUT /api/admin/media/licenses/[id] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to update license' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * DELETE /api/admin/media/licenses/[id]
  * Удалить лицензию
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
+export const DELETE = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
     if (!isAdminOrHigher(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+
+    const { id } = params
 
     const existing = await prisma.mediaLicense.findUnique({ where: { id } })
 
@@ -218,15 +189,5 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    logger.error('[API] DELETE /api/admin/media/licenses/[id] failed', {
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to delete license' },
-      { status: 500 }
-    )
   }
-}
-
+})
