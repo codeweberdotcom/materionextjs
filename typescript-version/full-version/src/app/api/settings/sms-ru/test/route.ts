@@ -1,14 +1,10 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { z } from 'zod'
 
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission } from '@/utils/permissions/permissions'
-import { prisma } from '@/libs/prisma'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { smsRuSettingsService } from '@/services/settings/SMSRuSettingsService'
 import { SMSRuProvider } from '@/services/sms'
-import logger from '@/lib/logger'
 
 // Схема валидации для тестовой отправки
 const testSMSSchema = z.object({
@@ -17,39 +13,9 @@ const testSMSSchema = z.object({
 })
 
 // POST - Отправить тестовое SMS (admin only)
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check permissions
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    const hasPermission = checkPermission(currentUser.role, 'smtpManagement', 'update')
-
-    if (!hasPermission) {
-      return NextResponse.json(
-        { message: 'Forbidden: Insufficient permissions' },
-        { status: 403 }
-      )
-    }
-
+export const POST = withApiHandler({
+  permission: 'smtpManagement.update',
+  handler: async ({ request }) => {
     const body = await request.json()
 
     // Валидация
@@ -98,24 +64,7 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
-  } catch (error) {
-    logger.error('Error sending test SMS:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      file: 'src/app/api/settings/sms-ru/test/route.ts'
-    })
-
-    return NextResponse.json(
-      {
-        message: error instanceof Error ? error.message : 'Failed to send test SMS'
-      },
-      { status: 500 }
-    )
   }
-}
-
-
-
-
-
+})
 
 

@@ -1,8 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission } from '@/utils/permissions/permissions'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { telegramSettingsService } from '@/services/settings/TelegramSettingsService'
 import logger from '@/lib/logger'
 
@@ -10,17 +8,9 @@ import logger from '@/lib/logger'
  * GET /api/settings/telegram
  * Получить текущие настройки Telegram (admin only)
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user || !checkPermission(user, 'smtpManagement', 'read')) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const GET = withApiHandler({
+  permission: 'smtpManagement.read',
+  handler: async () => {
     const settings = await telegramSettingsService.getSettings()
 
     // Не возвращаем полный токен в ответе
@@ -32,34 +22,16 @@ export async function GET(request: NextRequest) {
       enabled: settings.enabled,
       updatedAt: settings.updatedAt
     })
-  } catch (error) {
-    logger.error('Error getting Telegram settings:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      file: 'src/app/api/settings/telegram/route.ts'
-    })
-
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * PUT /api/settings/telegram
  * Обновить настройки Telegram (admin only)
  */
-export async function PUT(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user || !checkPermission(user, 'smtpManagement', 'update')) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const PUT = withApiHandler({
+  permission: 'smtpManagement.update',
+  handler: async ({ request }) => {
     const body = await request.json()
     const { botToken, defaultChatId, channelId, channelEnabled, enabled } = body
 
@@ -125,16 +97,5 @@ export async function PUT(request: NextRequest) {
         updatedAt: updated.updatedAt
       }
     })
-  } catch (error) {
-    logger.error('Error updating Telegram settings:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      file: 'src/app/api/settings/telegram/route.ts'
-    })
-
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
+})

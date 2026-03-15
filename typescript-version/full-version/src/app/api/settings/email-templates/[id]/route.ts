@@ -1,8 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission } from '@/utils/permissions/permissions'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 
 type EmailTemplate = {
   id: string
@@ -177,23 +175,12 @@ const emailTemplates: EmailTemplate[] = [
   }
 ]
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user, session } = await requireAuth(request)
-
-    if (!session || !checkPermission(user, 'Email Templates', 'Write')) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const PUT = withApiHandler<unknown, { id: string }>({
+  permission: 'Email Templates.Write',
+  handler: async ({ request, params }) => {
     const body = (await request.json()) as UpdateTemplatePayload
     const { name, subject, content } = body
-    const { id: templateId } = await params
+    const { id: templateId } = params
 
     if (!name || !subject || !content) {
       return NextResponse.json(
@@ -222,31 +209,13 @@ export async function PUT(
     emailTemplates[templateIndex] = updatedTemplate
 
     return NextResponse.json(updatedTemplate)
-  } catch (error) {
-    console.error('Error updating email template:', error)
-    
-return NextResponse.json(
-      { message: 'Failed to update email template' },
-      { status: 500 }
-    )
   }
-}
+})
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user, session } = await requireAuth(request)
-
-    if (!session || !checkPermission(user, 'Email Templates', 'Write')) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const { id: templateId } = await params
+export const DELETE = withApiHandler<unknown, { id: string }>({
+  permission: 'Email Templates.Write',
+  handler: async ({ params }) => {
+    const { id: templateId } = params
 
     const templateIndex = emailTemplates.findIndex(t => t.id === templateId)
 
@@ -260,12 +229,5 @@ export async function DELETE(
     emailTemplates.splice(templateIndex, 1)
 
     return NextResponse.json({ message: 'Template deleted successfully' })
-  } catch (error) {
-    console.error('Error deleting email template:', error)
-    
-return NextResponse.json(
-      { message: 'Failed to delete email template' },
-      { status: 500 }
-    )
   }
-}
+})

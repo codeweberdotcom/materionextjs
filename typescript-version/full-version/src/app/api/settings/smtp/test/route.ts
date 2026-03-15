@@ -2,12 +2,10 @@ import fs from 'fs'
 
 import path from 'path'
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import logger from '@/lib/logger'
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission } from '@/utils/permissions/permissions'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { testSmtpConnection } from '@/utils/email'
 
 
@@ -19,17 +17,9 @@ type TestSmtpPayload = {
   encryption?: string
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user || !checkPermission(user, 'smtpManagement', 'update')) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const POST = withApiHandler({
+  permission: 'smtpManagement.update',
+  handler: async ({ request }) => {
     const body = (await request.json()) as TestSmtpPayload
     const { host, port, username, password, encryption } = body ?? {}
 
@@ -62,8 +52,8 @@ export async function POST(request: NextRequest) {
         logger.info('Testing with provided settings:', { ...testSettings, password: '***hidden***' })
       } catch (error) {
         logger.error('Error saving test settings:', { error: error, file: 'src/app/api/settings/smtp/test/route.ts' })
-        
-return NextResponse.json(
+
+        return NextResponse.json(
           {
             success: false,
             message: 'Failed to save test settings'
@@ -79,17 +69,5 @@ return NextResponse.json(
       success: result.success,
       message: result.message
     })
-  } catch (error) {
-    logger.error('SMTP test error:', { error: error, file: 'src/app/api/settings/smtp/test/route.ts' })
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      },
-      { status: 500 }
-    )
   }
-}
-
-
+})

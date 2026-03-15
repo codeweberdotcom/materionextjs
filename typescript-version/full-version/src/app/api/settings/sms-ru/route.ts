@@ -1,11 +1,8 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { z } from 'zod'
 
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission } from '@/utils/permissions/permissions'
-import { prisma } from '@/libs/prisma'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { smsRuSettingsService } from '@/services/settings/SMSRuSettingsService'
 import logger from '@/lib/logger'
 
@@ -17,39 +14,9 @@ const smsRuSettingsSchema = z.object({
 })
 
 // GET - Получить текущие настройки SMS.ru (admin only)
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check permissions
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    const hasPermission = checkPermission(currentUser.role, 'smtpManagement', 'read')
-
-    if (!hasPermission) {
-      return NextResponse.json(
-        { message: 'Forbidden: Insufficient permissions' },
-        { status: 403 }
-      )
-    }
-
+export const GET = withApiHandler({
+  permission: 'smtpManagement.read',
+  handler: async () => {
     const settings = await smsRuSettingsService.getSettings()
 
     // Не возвращаем полный API ключ в ответе
@@ -59,53 +26,13 @@ export async function GET(request: NextRequest) {
       testMode: settings.testMode,
       updatedAt: settings.updatedAt
     })
-  } catch (error) {
-    logger.error('Error getting SMS.ru settings:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      file: 'src/app/api/settings/sms-ru/route.ts'
-    })
-
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // PUT - Обновить настройки SMS.ru (admin only)
-export async function PUT(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check permissions
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    const hasPermission = checkPermission(currentUser.role, 'smtpManagement', 'update')
-
-    if (!hasPermission) {
-      return NextResponse.json(
-        { message: 'Forbidden: Insufficient permissions' },
-        { status: 403 }
-      )
-    }
-
+export const PUT = withApiHandler({
+  permission: 'smtpManagement.update',
+  handler: async ({ request }) => {
     const body = await request.json()
 
     // Валидация
@@ -140,22 +67,7 @@ export async function PUT(request: NextRequest) {
         updatedAt: updated.updatedAt
       }
     })
-  } catch (error) {
-    logger.error('Error updating SMS.ru settings:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      file: 'src/app/api/settings/sms-ru/route.ts'
-    })
-
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
-
-
-
-
+})
 
 

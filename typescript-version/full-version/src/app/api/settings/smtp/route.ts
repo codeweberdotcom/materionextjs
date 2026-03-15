@@ -2,15 +2,10 @@ import fs from 'fs'
 
 import path from 'path'
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-
 import logger from '@/lib/logger'
-
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission } from '@/utils/permissions/permissions'
-import { testSmtpConnection } from '@/utils/email'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 
 // Simple settings storage (in production, use database)
 const SETTINGS_FILE = path.join(process.cwd(), 'smtp-settings.json')
@@ -30,8 +25,7 @@ const isSmtpSettings = (data: unknown): data is SmtpSettingsPayload => {
   if (typeof data !== 'object' || data === null) return false
   const obj = data as Record<string, unknown>
 
-  
-return (
+  return (
     typeof obj.host === 'string' &&
     typeof obj.port === 'string' &&
     typeof obj.username === 'string' &&
@@ -76,17 +70,9 @@ const saveStoredSettings = (settings: SmtpSettingsPayload) => {
   }
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user || !checkPermission(user, 'smtpManagement', 'update')) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const POST = withApiHandler({
+  permission: 'smtpManagement.update',
+  handler: async ({ request }) => {
     const body = await request.json()
     const { host, port, username, password, encryption, fromEmail, fromName } = body as Partial<SmtpSettingsPayload>
 
@@ -121,28 +107,12 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ message: 'SMTP settings saved successfully' })
-  } catch (error) {
-    logger.error('Error saving SMTP settings:', { error: error, file: 'src/app/api/settings/smtp/route.ts' })
-    
-return NextResponse.json(
-      { message: 'Failed to save SMTP settings' },
-      { status: 500 }
-    )
   }
-}
+})
 
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user || !checkPermission(user, 'smtpManagement', 'read')) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-
+export const GET = withApiHandler({
+  permission: 'smtpManagement.read',
+  handler: async () => {
     // Try to get stored settings first, then fall back to environment variables
     const storedSettings = getStoredSettings()
 
@@ -162,14 +132,5 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json(settings)
-  } catch (error) {
-    logger.error('Error fetching SMTP settings:', { error: error, file: 'src/app/api/settings/smtp/route.ts' })
-    
-return NextResponse.json(
-      { message: 'Failed to fetch SMTP settings' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

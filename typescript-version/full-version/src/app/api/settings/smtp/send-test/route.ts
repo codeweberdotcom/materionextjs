@@ -2,12 +2,10 @@ import fs from 'fs'
 
 import path from 'path'
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import logger from '@/lib/logger'
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission } from '@/utils/permissions/permissions'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { sendEmail } from '@/utils/email'
 
 
@@ -22,17 +20,9 @@ type SendTestPayload = {
   recipientEmail?: string
 }
 
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user || !checkPermission(user, 'smtpManagement', 'update')) {
-      return NextResponse.json(
-        { success: false, message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const POST = withApiHandler({
+  permission: 'smtpManagement.update',
+  handler: async ({ request }) => {
     const body = (await request.json()) as SendTestPayload
     const { host, port, username, password, encryption, fromEmail, fromName, recipientEmail } = body ?? {}
 
@@ -147,17 +137,5 @@ Sent at: ${new Date().toLocaleString()}
         { status: 500 }
       )
     }
-  } catch (error) {
-    logger.error('SMTP send test error:', { error: error, file: 'src/app/api/settings/smtp/send-test/route.ts' })
-
-    return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown error occurred'
-      },
-      { status: 500 }
-    )
   }
-}
-
-
+})

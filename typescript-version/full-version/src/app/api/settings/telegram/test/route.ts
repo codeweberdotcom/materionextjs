@@ -1,26 +1,15 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission } from '@/utils/permissions/permissions'
-import { telegramSettingsService } from '@/services/settings/TelegramSettingsService'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import logger from '@/lib/logger'
 
 /**
  * POST /api/settings/telegram/test
  * Тестировать подключение к Telegram Bot API (admin only)
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user || !checkPermission(user, 'smtpManagement', 'update')) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const POST = withApiHandler({
+  permission: 'smtpManagement.update',
+  handler: async ({ request }) => {
     const body = await request.json()
     const { botToken, chatId } = body
 
@@ -41,19 +30,18 @@ export async function POST(request: NextRequest) {
     try {
       // Проверяем, что бот существует и токен валиден
       const botInfoResponse = await fetch(`https://api.telegram.org/bot${botToken}/getMe`)
-      
+
       if (!botInfoResponse.ok) {
         const errorData = await botInfoResponse.json()
 
-        
-return NextResponse.json({
+        return NextResponse.json({
           success: false,
           message: errorData.description || 'Invalid bot token'
         })
       }
 
       const botInfo = await botInfoResponse.json()
-      
+
       // Отправляем тестовое сообщение
       const sendMessageResponse = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
         method: 'POST',
@@ -69,8 +57,7 @@ return NextResponse.json({
       if (!sendMessageResponse.ok) {
         const errorData = await sendMessageResponse.json()
 
-        
-return NextResponse.json({
+        return NextResponse.json({
           success: false,
           message: errorData.description || 'Failed to send test message'
         })
@@ -96,22 +83,5 @@ return NextResponse.json({
         message: error instanceof Error ? error.message : 'Failed to test Telegram connection'
       })
     }
-  } catch (error) {
-    logger.error('Error in Telegram test endpoint:', {
-      error: error instanceof Error ? error.message : 'Unknown error',
-      file: 'src/app/api/settings/telegram/test/route.ts'
-    })
-
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
-
-
-
-
-
-
+})

@@ -1,9 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission } from '@/utils/permissions/permissions'
-import { prisma } from '@/libs/prisma'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { registrationSettingsService } from '@/services/settings/RegistrationSettingsService'
 import {
   registrationSettingsSchema,
@@ -13,38 +10,9 @@ import {
 import logger from '@/lib/logger'
 
 // GET - Получить текущие настройки регистрации (admin only)
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check permissions
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    // Check if user has permission to read settings
-    if (!checkPermission(currentUser, 'settings', 'read')) {
-      return NextResponse.json(
-        { message: 'Permission denied: settings read required' },
-        { status: 403 }
-      )
-    }
-
+export const GET = withApiHandler({
+  permission: 'settings.read',
+  handler: async () => {
     const settings = await registrationSettingsService.getSettings()
 
     return NextResponse.json({
@@ -57,49 +25,13 @@ export async function GET(request: NextRequest) {
       createdAt: settings.createdAt,
       updatedAt: settings.updatedAt
     })
-  } catch (error) {
-    logger.error('Error fetching registration settings:', { error, file: 'src/app/api/settings/registration/route.ts' })
-    
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // PUT - Обновить настройки регистрации (admin only)
-export async function PUT(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check permissions
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
-      )
-    }
-
-    // Check if user has permission to update settings
-    if (!checkPermission(currentUser, 'settings', 'update')) {
-      return NextResponse.json(
-        { message: 'Permission denied: settings update required' },
-        { status: 403 }
-      )
-    }
-
+export const PUT = withApiHandler({
+  permission: 'settings.update',
+  handler: async ({ user, request }) => {
     // Validate request body
     const body = await request.json()
     const validationResult = updateRegistrationSettingsSchema.safeParse(body)
@@ -137,11 +69,11 @@ export async function PUT(request: NextRequest) {
     // Update settings
     const updatedSettings = await registrationSettingsService.updateSettings(
       fullValidationResult.data,
-      currentUser.id
+      user.id
     )
 
     logger.info('Registration settings updated:', {
-      updatedBy: currentUser.id,
+      updatedBy: user.id,
       settings: {
         registrationMode: updatedSettings.registrationMode,
         requirePhoneVerification: updatedSettings.requirePhoneVerification,
@@ -162,13 +94,5 @@ export async function PUT(request: NextRequest) {
       updatedAt: updatedSettings.updatedAt,
       message: 'Registration settings updated successfully'
     })
-  } catch (error) {
-    logger.error('Error updating registration settings:', { error, file: 'src/app/api/settings/registration/route.ts' })
-    
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
+})

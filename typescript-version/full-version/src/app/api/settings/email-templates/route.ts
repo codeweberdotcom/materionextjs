@@ -1,8 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import { checkPermission } from '@/utils/permissions/permissions'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 
 type EmailTemplate = {
   id: string
@@ -32,7 +30,7 @@ const emailTemplates: EmailTemplate[] = [
 
         {{#if user.premium}}
           <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <h3>рџЋ‰ Premium Account Activated!</h3>
+            <h3>🎉 Premium Account Activated!</h3>
             <p>You have access to all premium features.</p>
           </div>
         {{else}}
@@ -86,7 +84,7 @@ const emailTemplates: EmailTemplate[] = [
         {{#ifCond attempts ">" 3}}
           <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0;">
             <p style="color: #856404; margin: 0;">
-              вљ пёЏ Multiple reset attempts detected. If this wasn't you, please contact support.
+              ⚠️ Multiple reset attempts detected. If this wasn't you, please contact support.
             </p>
           </div>
         {{/ifCond}}
@@ -105,7 +103,7 @@ const emailTemplates: EmailTemplate[] = [
 
         <p style="color: #666; font-size: 12px;">
           This email was sent to {{email}} on {{formatDate (now) "short"}}<br>
-          В© {{year}} Your Company. All rights reserved.
+          © {{year}} Your Company. All rights reserved.
         </p>
       </div>
     `,
@@ -123,7 +121,7 @@ const emailTemplates: EmailTemplate[] = [
         <p>Dear {{customer.name}},</p>
 
         <div style="background: #d4edda; border: 1px solid #c3e6cb; padding: 15px; border-radius: 5px; margin: 20px 0;">
-          <h3 style="color: #155724; margin-top: 0;">вњ… Order #{{order.id}} Confirmed</h3>
+          <h3 style="color: #155724; margin-top: 0;">✅ Order #{{order.id}} Confirmed</h3>
           <p style="margin-bottom: 0;">Total: <strong>$\{{order.total}}</strong></p>
         </div>
 
@@ -178,41 +176,17 @@ const emailTemplates: EmailTemplate[] = [
   }
 ]
 
-export async function GET(request: NextRequest) {
-  try {
-    const { user, session } = await requireAuth(request)
-
-    if (!session || !checkPermission(user, 'Email Templates', 'Read')) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-
-return NextResponse.json(emailTemplates)
-  } catch (error) {
-    console.error('Error fetching email templates:', error)
-
-return NextResponse.json(
-      { message: 'Failed to fetch email templates' },
-      { status: 500 }
-    )
+export const GET = withApiHandler({
+  permission: 'Email Templates.Read',
+  handler: async () => {
+    return NextResponse.json(emailTemplates)
   }
-}
+})
 
-export async function POST(req: NextRequest) {
-  try {
-    const { user, session } = await requireAuth(req)
-
-    if (!session || !checkPermission(user, 'Email Templates', 'Write')) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const body = (await req.json()) as Partial<CreateTemplatePayload>
+export const POST = withApiHandler({
+  permission: 'Email Templates.Write',
+  handler: async ({ request }) => {
+    const body = (await request.json()) as Partial<CreateTemplatePayload>
     const { name, subject, content } = body
 
     if (!name || !subject || !content) {
@@ -234,14 +208,5 @@ export async function POST(req: NextRequest) {
     emailTemplates.push(newTemplate)
 
     return NextResponse.json(newTemplate)
-  } catch (error) {
-    console.error('Error creating email template:', error)
-
-return NextResponse.json(
-      { message: 'Failed to create email template' },
-      { status: 500 }
-    )
   }
-}
-
-
+})
