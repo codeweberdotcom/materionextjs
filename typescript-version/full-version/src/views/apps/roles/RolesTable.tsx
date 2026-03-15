@@ -21,7 +21,7 @@ import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import Switch from '@mui/material/Switch'
 import { styled } from '@mui/material/styles'
-import TablePagination from '@mui/material/TablePagination'
+
 import type { TextFieldProps } from '@mui/material/TextField'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
@@ -34,7 +34,7 @@ import TableRow from '@mui/material/TableRow'
 import classnames from 'classnames'
 import { rankItem } from '@tanstack/match-sorter-utils'
 import Skeleton from '@mui/material/Skeleton'
-import {
+import type { ColumnDef, FilterFn ,
   createColumnHelper,
   flexRender,
   getCoreRowModel,
@@ -47,10 +47,11 @@ import {
   getSortedRowModel,
   type ColumnFiltersState,
   type Column
-} from '@tanstack/react-table'
-import type { ColumnDef, FilterFn } from '@tanstack/react-table'
+ } from '@tanstack/react-table';
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
 import { toast } from 'react-toastify'
+
+import LocalizedTablePagination from '@components/LocalizedTablePagination'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
@@ -457,6 +458,7 @@ return (
     if (resolvedOnline === undefined) {
       if (user.lastSeen) {
         const lastSeenDate = new Date(user.lastSeen as string)
+
         resolvedOnline = Date.now() - lastSeenDate.getTime() < 30_000
       } else {
         resolvedOnline = user.isOnline ?? false
@@ -720,22 +722,7 @@ return (
           )}
         </Table>
       </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[10, 25, 50]}
-        component='div'
-        className='border-bs'
-        count={table.getFilteredRowModel().rows.length}
-        rowsPerPage={table.getState().pagination.pageSize}
-        page={table.getState().pagination.pageIndex}
-        labelRowsPerPage={dictionary.navigation.rowsPerPage}
-        labelDisplayedRows={({ from, to, count }) =>
-          `${from}-${to} ${dictionary.navigation.of} ${count}`
-        }
-        onPageChange={(_, page) => {
-          table.setPageIndex(page)
-        }}
-        onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
-      />
+      <LocalizedTablePagination dictionary={dictionary} table={table} />
     </Card>
     <ConfirmationDialog
       open={deleteDialogOpen}
@@ -763,6 +750,7 @@ return (
 }
 
 export default RolesTable
+
 const ColumnFilter = ({
   column,
   placeholder,

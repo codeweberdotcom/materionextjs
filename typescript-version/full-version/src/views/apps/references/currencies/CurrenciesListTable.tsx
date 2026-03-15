@@ -17,7 +17,7 @@ import Chip from '@mui/material/Chip'
 import Checkbox from '@mui/material/Checkbox'
 import IconButton from '@mui/material/IconButton'
 import { styled } from '@mui/material/styles'
-import TablePagination from '@mui/material/TablePagination'
+
 import Switch from '@mui/material/Switch'
 import type { TextFieldProps } from '@mui/material/TextField'
 import Table from '@mui/material/Table'
@@ -46,6 +46,8 @@ import type { ColumnDef, FilterFn } from '@tanstack/react-table'
 import type { RankingInfo } from '@tanstack/match-sorter-utils'
 import { toast } from 'react-toastify'
 import Skeleton from '@mui/material/Skeleton'
+
+import LocalizedTablePagination from '@components/LocalizedTablePagination'
 
 // Type Imports
 import type { ThemeColor } from '@core/types'
@@ -259,7 +261,8 @@ const CurrenciesListTable = () => {
     if (!confirmed || !currencyToDelete) {
       setDeleteDialogOpen(false)
       setCurrencyToDelete(null)
-      return
+      
+return
     }
 
     try {
@@ -497,18 +500,7 @@ const CurrenciesListTable = () => {
           )}
         </Table>
       </TableContainer>
-      <TablePagination
-        rowsPerPageOptions={[10, 25, 50]}
-        component='div'
-        className='border-bs'
-        labelRowsPerPage={dictionary.navigation.rowsPerPage}
-        labelDisplayedRows={({ from, to, count }) => `${from}–${to} ${dictionary.navigation.of} ${count !== -1 ? count : `> ${to}`}`}
-        count={table.getFilteredRowModel().rows.length}
-        rowsPerPage={table.getState().pagination.pageSize}
-        page={table.getState().pagination.pageIndex}
-        onPageChange={(_, page) => table.setPageIndex(page)}
-        onRowsPerPageChange={e => table.setPageSize(Number(e.target.value))}
-      />
+      <LocalizedTablePagination dictionary={dictionary} table={table} />
       <AddCurrencyDialog
         open={addCurrencyOpen || !!editCurrency}
         handleClose={() => {
