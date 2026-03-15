@@ -1,22 +1,12 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { eventRetentionService } from '@/services/events/EventRetentionService'
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { checkPermission } from '@/utils/permissions/permissions'
-import logger from '@/lib/logger'
 
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const hasPermission = checkPermission(user, 'events', 'read')
-
-    if (!hasPermission) {
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
+    if (!checkPermission(user, 'events', 'read')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -53,45 +43,17 @@ export async function POST(request: NextRequest) {
         ...result
       })
     }
-  } catch (error) {
-    logger.error('Failed to run event retention', {
-      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
-    })
-
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const hasPermission = checkPermission(user, 'events', 'read')
-
-    if (!hasPermission) {
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
+    if (!checkPermission(user, 'events', 'read')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     const stats = await eventRetentionService.getStats()
 
     return NextResponse.json(stats)
-  } catch (error) {
-    logger.error('Failed to get event retention stats', {
-      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
-    })
-
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
-
-
-
-
-
-
-
-
+})

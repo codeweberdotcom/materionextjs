@@ -1,27 +1,15 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { userService } from '@/services/business/userService'
 
-export async function GET(request: NextRequest) {
-  try {
-    // Get current user session
-    const { user } = await requireAuth(request)
-
-    // Get current user
-    const currentUser = await userService.getUserByEmail(user.email)
-
-    if (!currentUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
     // Get all users except current user
     const users = await userService.getUsers({
       where: {
         id: {
-          not: currentUser.id
+          not: user.id
         }
       },
       select: {
@@ -38,9 +26,5 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json(users)
-  } catch (error) {
-    console.error('Error fetching users:', error)
-    
-return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
   }
-}
+})

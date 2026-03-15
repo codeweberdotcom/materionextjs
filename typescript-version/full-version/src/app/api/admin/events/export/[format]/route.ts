@@ -1,8 +1,7 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { eventService, maskPayloadForSource } from '@/services/events'
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { checkPermission } from '@/utils/permissions/permissions'
 import logger from '@/lib/logger'
 import { markParsingError, markInvalidSeverity } from '@/lib/metrics/events'
@@ -20,8 +19,7 @@ const parseDateParam = (value: string | null) => {
 
   const date = new Date(value)
 
-  
-return Number.isNaN(date.getTime()) ? undefined : date
+  return Number.isNaN(date.getTime()) ? undefined : date
 }
 
 const validSeverities: ReadonlySet<EventSeverity> = new Set(['info', 'warning', 'error', 'critical'])
@@ -30,9 +28,9 @@ const isEventSeverity = (value: string | null): value is EventSeverity => {
   if (!value) {
     return false
   }
-  
+
   const isValid = validSeverities.has(value as EventSeverity)
-  
+
   if (!isValid && value) {
     logger.warn('Invalid severity value encountered in export', {
       invalidValue: value,
@@ -40,7 +38,7 @@ const isEventSeverity = (value: string | null): value is EventSeverity => {
     })
     markInvalidSeverity(value)
   }
-  
+
   return isValid
 }
 
@@ -57,7 +55,7 @@ const safeParseJson = (
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error'
     const valuePreview = value.length > 200 ? `${value.substring(0, 200)}...` : value
-    
+
     logger.warn('Failed to parse JSON in event export', {
       error: errorMessage,
       field: context?.field || 'unknown',
@@ -66,11 +64,11 @@ const safeParseJson = (
       valuePreview,
       valueLength: value.length
     })
-    
+
     if (context?.field) {
       markParsingError(context.field, context.source)
     }
-    
+
     return null
   }
 }
@@ -80,8 +78,7 @@ const escapeCsvField = (field: string): string => {
     return `"${field.replace(/"/g, '""')}"`
   }
 
-  
-return field
+  return field
 }
 
 const generateCsv = (events: Array<Record<string, any>>): string => {
@@ -140,29 +137,17 @@ const generateJson = (events: Array<Record<string, any>>): string => {
   return JSON.stringify(events, null, 2)
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ format: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { format: formatParam } = await params
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const GET = withApiHandler<unknown, { format: string }>({
+  handler: async ({ user, request, params }) => {
+    const { format: formatParam } = params
 
     // Проверка прав на чтение событий
-    const hasReadPermission = checkPermission(user, 'events', 'read')
-
-    if (!hasReadPermission) {
+    if (!checkPermission(user, 'events', 'read')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
     // Проверка прав на экспорт
-    const hasExportPermission = checkPermission(user, 'events', 'export')
-
-    if (!hasExportPermission) {
+    if (!checkPermission(user, 'events', 'export')) {
       return NextResponse.json({ error: 'Forbidden: Export permission required' }, { status: 403 })
     }
 
@@ -175,7 +160,6 @@ export async function GET(
 
     const { searchParams } = new URL(request.url)
 
-    // Парсим фильтры из query параметров (те же, что в GET /api/admin/events)
     const source = searchParams.get('source') || undefined
     const moduleParam = searchParams.get('module') || undefined
     const type = searchParams.get('type') || undefined
@@ -189,7 +173,6 @@ export async function GET(
     const from = parseDateParam(searchParams.get('from'))
     const to = parseDateParam(searchParams.get('to'))
 
-    // Validate severity parameter and log if invalid
     const severity = isEventSeverity(severityParam) ? severityParam : undefined
 
     if (severityParam && !severity) {
@@ -199,8 +182,6 @@ export async function GET(
       })
     }
 
-    // Получаем все события с применением фильтров (без пагинации для экспорта)
-    // Используем большой лимит, но проверяем ограничение
     const result = await eventService.list({
       source,
       module: moduleParam,
@@ -245,7 +226,6 @@ export async function GET(
         source: event.source
       })
 
-      // Если нет права на просмотр чувствительных данных — применяем маскирование
       const maskedPayload = canViewSensitive
         ? parsedPayload
         : maskPayloadForSource(event.source, event.module, parsedPayload ?? {})
@@ -335,7 +315,6 @@ export async function GET(
       }))
     } catch (error) {
       logger.warn('Failed to record export event', { error })
-
       // Не прерываем экспорт из-за ошибки записи события
     }
 
@@ -348,45 +327,5 @@ export async function GET(
         'Content-Length': contentSize.toString()
       }
     })
-  } catch (error) {
-    const errorDetails = error instanceof Error 
-      ? {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          cause: error.cause
-        }
-      : { error: String(error) }
-
-    logger.error('Failed to export events', {
-      error: errorDetails,
-      url: request.url,
-      timestamp: new Date().toISOString()
-    })
-
-    // Return appropriate error response based on error type
-    if (error instanceof Error) {
-      // Database connection errors
-      if (error.message.includes('connect') || error.message.includes('timeout')) {
-        return NextResponse.json(
-          { error: 'Database connection error. Please try again later.' },
-          { status: 503 }
-        )
-      }
-      
-      // Permission/validation errors
-      if (error.message.includes('permission') || error.message.includes('access')) {
-        return NextResponse.json(
-          { error: 'Access denied' },
-          { status: 403 }
-        )
-      }
-    }
-
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
+})

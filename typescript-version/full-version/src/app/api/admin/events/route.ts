@@ -1,8 +1,7 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { eventService , maskPayloadForSource } from '@/services/events'
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { checkPermission } from '@/utils/permissions/permissions'
 import logger from '@/lib/logger'
 import { markParsingError, markInvalidSeverity } from '@/lib/metrics/events'
@@ -15,8 +14,7 @@ const parseDateParam = (value: string | null) => {
 
   const date = new Date(value)
 
-  
-return Number.isNaN(date.getTime()) ? undefined : date
+  return Number.isNaN(date.getTime()) ? undefined : date
 }
 
 const parseLimit = (value: string | null) => {
@@ -35,9 +33,9 @@ const isEventSeverity = (value: string | null): value is EventSeverity => {
   if (!value) {
     return false
   }
-  
+
   const isValid = validSeverities.has(value as EventSeverity)
-  
+
   if (!isValid && value) {
     logger.warn('Invalid severity value encountered', {
       invalidValue: value,
@@ -45,7 +43,7 @@ const isEventSeverity = (value: string | null): value is EventSeverity => {
     })
     markInvalidSeverity(value)
   }
-  
+
   return isValid
 }
 
@@ -62,7 +60,7 @@ const safeParseJson = (
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown parsing error'
     const valuePreview = value.length > 200 ? `${value.substring(0, 200)}...` : value
-    
+
     logger.warn('Failed to parse JSON in event data', {
       error: errorMessage,
       field: context?.field || 'unknown',
@@ -71,26 +69,18 @@ const safeParseJson = (
       valuePreview,
       valueLength: value.length
     })
-    
+
     if (context?.field) {
       markParsingError(context.field, context.source)
     }
-    
+
     return null
   }
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const hasPermission = checkPermission(user, 'events', 'read')
-
-    if (!hasPermission) {
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
+    if (!checkPermission(user, 'events', 'read')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -111,8 +101,8 @@ export async function GET(request: NextRequest) {
     const excludeTest = excludeTestParam === 'true' ? true : excludeTestParam === 'false' ? false : undefined
     const environmentParam = searchParams.get('environment')
 
-    const environment = environmentParam === 'test' || environmentParam === 'production' 
-      ? environmentParam as 'test' | 'production' 
+    const environment = environmentParam === 'test' || environmentParam === 'production'
+      ? environmentParam as 'test' | 'production'
       : undefined
 
     // Validate severity parameter and log if invalid
@@ -176,44 +166,5 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ items, nextCursor: result.nextCursor })
-  } catch (error) {
-    const errorDetails = error instanceof Error 
-      ? {
-          name: error.name,
-          message: error.message,
-          stack: error.stack,
-          cause: error.cause
-        }
-      : { error: String(error) }
-
-    logger.error('Failed to fetch events', {
-      error: errorDetails,
-      url: request.url,
-      timestamp: new Date().toISOString()
-    })
-
-    // Return appropriate error response based on error type
-    if (error instanceof Error) {
-      // Database connection errors
-      if (error.message.includes('connect') || error.message.includes('timeout')) {
-        return NextResponse.json(
-          { error: 'Database connection error. Please try again later.' },
-          { status: 503 }
-        )
-      }
-      
-      // Permission/validation errors
-      if (error.message.includes('permission') || error.message.includes('access')) {
-        return NextResponse.json(
-          { error: 'Access denied' },
-          { status: 403 }
-        )
-      }
-    }
-
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
