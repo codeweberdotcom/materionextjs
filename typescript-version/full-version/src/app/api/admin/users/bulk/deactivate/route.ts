@@ -1,44 +1,19 @@
 import crypto from 'crypto'
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { checkPermission } from '@/utils/permissions/permissions'
-import { prisma } from '@/libs/prisma'
 import { bulkOperationSchema, formatZodError } from '@/lib/validations/user-schemas'
 import { bulkOperationsService } from '@/services/bulk'
 import { userBulkDeactivateConfig } from '@/services/bulk/configs/userBulkConfig'
 import { getEnvironmentFromRequest } from '@/lib/metrics/helpers'
 
 // POST - Bulk deactivate users (admin only)
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser) {
-      return NextResponse.json(
-        { message: 'User not found' },
-        { status: 404 }
-      )
-    }
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     // Check permissions
-    if (!checkPermission(currentUser, userBulkDeactivateConfig.options.permissionModule, userBulkDeactivateConfig.options.permissionAction)) {
+    if (!checkPermission(user, userBulkDeactivateConfig.options.permissionModule, userBulkDeactivateConfig.options.permissionAction)) {
       return NextResponse.json(
         { message: 'Permission denied: userManagement update required' },
         { status: 403 }
@@ -61,10 +36,10 @@ export async function POST(request: NextRequest) {
     // Create context for bulk operation
     const context = {
       currentUser: {
-        id: currentUser.id,
-        email: currentUser.email!,
+        id: user.id,
+        email: user.email ?? '',
         role: {
-          name: currentUser.role.name
+          name: user.role?.name ?? ''
         }
       },
       correlationId: crypto.randomUUID()
@@ -99,12 +74,5 @@ export async function POST(request: NextRequest) {
       skipped: result.skippedCount,
       message: `Successfully deactivated ${result.affectedCount} user(s)`
     })
-  } catch (error) {
-    console.error('Error in bulk deactivate:', error)
-    
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})

@@ -1,23 +1,13 @@
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import { updateProfileSchema, formatZodError } from '@/lib/validations/user-schemas'
 
 // GET - Fetch current user profile data
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
     const userProfile = await prisma.user.findUnique({
       where: { id: user.id },
       include: {
@@ -65,30 +55,14 @@ export async function GET(request: NextRequest) {
       avatar: userProfile?.image || '',
       avatarColor: 'primary'
     })
-  } catch (error) {
-    console.error('Error fetching user profile:', error instanceof Error ? error.message : String(error))
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // PUT - Update current user profile data
-export async function PUT(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const PUT = withApiHandler({
+  handler: async ({ user, request }) => {
     const body = await request.json()
-    
+
     // Валидация данных
     const validationResult = updateProfileSchema.safeParse({
       name: body.name,
@@ -167,14 +141,5 @@ export async function PUT(request: NextRequest) {
       avatar: updatedUser.image || '',
       avatarColor: 'primary'
     })
-  } catch (error) {
-    console.error('Error updating user profile:', error instanceof Error ? error.message : String(error))
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

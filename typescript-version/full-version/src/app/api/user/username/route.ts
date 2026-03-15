@@ -1,15 +1,14 @@
 /**
  * API для управления username пользователя
- * 
+ *
  * GET /api/user/username - Получить информацию о username
  * PUT /api/user/username - Изменить username
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
-import { requireAuth } from '@/utils/auth/auth'
 import { slugService } from '@/services/slug'
 import { eventService } from '@/services/events'
 import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
@@ -17,10 +16,8 @@ import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 /**
  * GET - Получить информацию о username и возможности его смены
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
     const userData = await prisma.user.findUnique({
       where: { id: user.id },
       select: {
@@ -52,22 +49,14 @@ export async function GET(request: NextRequest) {
         changedAt: h.changedAt
       }))
     })
-  } catch (error) {
-    console.error('Error getting username info:', error)
-    
-return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * PUT - Изменить username
  */
-export async function PUT(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
+export const PUT = withApiHandler({
+  handler: async ({ user, request }) => {
     const body = await request.json()
     const { username: newUsername } = body
 
@@ -86,10 +75,10 @@ export async function PUT(request: NextRequest) {
 
     // Проверяем, изменился ли username
     if (userData?.username === newUsername) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         success: true,
         message: 'Username not changed (same value)',
-        username: newUsername 
+        username: newUsername
       })
     }
 
@@ -131,13 +120,5 @@ export async function PUT(request: NextRequest) {
       oldUsername: result.oldSlug,
       newUsername: result.newSlug
     })
-  } catch (error) {
-    console.error('Error changing username:', error)
-    
-return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
+})

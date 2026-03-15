@@ -4,26 +4,16 @@
  * DELETE /api/user/avatar - Удалить аватар
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import { getMediaService } from '@/services/media'
 import logger from '@/lib/logger'
 
 // POST - Upload avatar for current user
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     const formData = await request.formData()
     const file = formData.get('avatar') as File
 
@@ -61,9 +51,9 @@ export async function POST(request: NextRequest) {
         const mediaService = getMediaService()
 
         await mediaService.delete(currentUser.avatarMediaId, true) // hard delete
-        logger.info('[Avatar] Old avatar deleted', { 
-          userId: user.id, 
-          oldMediaId: currentUser.avatarMediaId 
+        logger.info('[Avatar] Old avatar deleted', {
+          userId: user.id,
+          oldMediaId: currentUser.avatarMediaId
         })
       } catch (error) {
         logger.warn('[Avatar] Failed to delete old avatar', {
@@ -97,15 +87,15 @@ export async function POST(request: NextRequest) {
     const globalSettings = await prisma.mediaGlobalSettings.findFirst()
     const s3Enabled = globalSettings?.s3Enabled ?? false
     const s3PublicUrlPrefix = globalSettings?.s3PublicUrlPrefix
-    
+
     let avatarUrl: string
     const variants = JSON.parse(result.media.variants || '{}')
     const mediumVariant = variants.medium
-    
+
     // Приоритет: S3 (если включен и файл там есть) > Локальный файл > API endpoint
     const s3Key = mediumVariant?.s3Key || result.media.s3Key
     const localPath = mediumVariant?.localPath || result.media.localPath
-    
+
     if (s3Enabled && s3PublicUrlPrefix && s3Key) {
       // Используем прямой S3 URL
       avatarUrl = `${s3PublicUrlPrefix}/${s3Key}`
@@ -146,30 +136,12 @@ export async function POST(request: NextRequest) {
       avatarUrl,
       mediaId: result.media.id,
     })
-  } catch (error) {
-    logger.error('[Avatar] Upload failed', {
-      error: error instanceof Error ? error.message : String(error)
-    })
-
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // DELETE - Remove avatar for current user
-export async function DELETE(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const DELETE = withApiHandler({
+  handler: async ({ user }) => {
     // Получаем текущего пользователя
     const currentUser = await prisma.user.findUnique({
       where: { id: user.id },
@@ -216,14 +188,5 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({
       message: 'Avatar removed'
     })
-  } catch (error) {
-    logger.error('[Avatar] Delete failed', {
-      error: error instanceof Error ? error.message : String(error)
-    })
-
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})

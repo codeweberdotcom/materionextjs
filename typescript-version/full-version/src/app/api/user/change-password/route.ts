@@ -1,30 +1,16 @@
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import bcrypt from 'bcryptjs'
 
-import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import { changePasswordSchema, formatZodError } from '@/lib/validations/user-schemas'
 
-
-
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     const body = await request.json()
-    
+
     // Валидация данных
     const validationResult = changePasswordSchema.safeParse({
       currentPassword: body.currentPassword,
@@ -77,14 +63,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: 'Password changed successfully'
     })
-  } catch (error) {
-    console.error('Error changing password:', error instanceof Error ? error.message : String(error))
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

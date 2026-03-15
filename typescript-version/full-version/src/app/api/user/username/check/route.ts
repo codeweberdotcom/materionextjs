@@ -1,22 +1,19 @@
 /**
  * API для проверки доступности username
- * 
+ *
  * GET /api/user/username/check?username=xxx - Проверить доступность
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { slugService } from '@/services/slug'
 
 /**
  * GET - Проверить доступность username
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-    
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
     const { searchParams } = new URL(request.url)
     const username = searchParams.get('username')
 
@@ -46,13 +43,5 @@ export async function GET(request: NextRequest) {
       valid: true,
       username
     })
-  } catch (error) {
-    console.error('Error checking username availability:', error)
-    
-return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
+})
