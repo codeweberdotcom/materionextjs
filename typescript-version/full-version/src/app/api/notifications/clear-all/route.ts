@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import { getSocketServer } from '@/lib/sockets'
 
@@ -24,14 +23,8 @@ const emitNotificationUpdate = (userId: string, notificationId: string, status: 
   namespace.to(`user_${userId}`).emit('notification-update', payload)
 }
 
-export async function DELETE(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const DELETE = withApiHandler({
+  handler: async ({ user }) => {
     const notificationsToArchive = await prisma.notification.findMany({
       where: {
         userId: user.id,
@@ -62,11 +55,5 @@ export async function DELETE(request: NextRequest) {
     })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Error clearing all notifications:', error)
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
-
-
+})

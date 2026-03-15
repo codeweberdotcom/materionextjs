@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import { getSocketServer } from '@/lib/sockets'
 import { parseNotificationMetadata, serializeNotificationMetadata } from '@/utils/notifications/metadata'
@@ -25,18 +24,9 @@ const emitNotificationEvent = (userId: string, event: string, payload: any) => {
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
-    const { user } = await requireAuth(request)
-
-    if (!user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const PATCH = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
+    const { id } = params
     const body = await request.json()
     const { status, metadata } = body
 
@@ -82,24 +72,12 @@ export async function PATCH(
     })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Error updating notification:', error)
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params
-    const { user } = await requireAuth(request)
-
-    if (!user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const DELETE = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
     const notification = await prisma.notification.findFirst({
       where: {
@@ -122,9 +100,5 @@ export async function DELETE(
     })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Error deleting notification:', error)
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
