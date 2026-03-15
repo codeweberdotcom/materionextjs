@@ -2,7 +2,7 @@
 
 Этот документ отслеживает статус всех ТЗ, планов, анализов и отчетов для быстрого понимания текущего состояния проекта.
 
-**Последнее обновление:** 2026-03-15 (интеграционный тест параллельных bulk-операций — 3 теста, без дедлоков)
+**Последнее обновление:** 2026-03-16 (Event schema: payload/metadata → Json/jsonb, добавлен ip, убрана ручная сериализация)
 
 ---
 
@@ -36,6 +36,7 @@
 
 ### Планы работ
 
+- [План: Улучшение схемы модели Event](plans/active/plan-events-schema-improvement-2026-03-15.md) ✅ (Завершено 2026-03-16 — payload/metadata→Json, ip поле, убрана ручная сериализация)
 - [План: Интеграционный тест параллельных bulk-операций](plans/active/plan-bulk-concurrent-integration-2026-03-15.md) ✅ (Завершено 2026-03-15 — 3 теста, без дедлоков)
 - [План: Тестовое покрытие Import/Bulk Operations](plans/active/plan-test-coverage-import-bulk-2026-03-15.md) ✅ (Завершено 2026-03-15 — +83 теста, 804 unit-тестов)
 - [План: withApiHandler — унификация API routes](plans/active/plan-api-handler-wrapper-2026-03-15.md) ✅ (Завершено 2026-03-15 — 183 routes мигрированы, 3 нестандартных оставлены)
@@ -68,6 +69,7 @@
 
 ### Анализы
 
+- [Анализ: Улучшение схемы и формата Event](analysis/architecture/analysis-events-schema-improvement-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Анализ: Параллельные bulk-операции — интеграционный тест](analysis/architecture/analysis-bulk-concurrent-integration-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Анализ: Тестовое покрытие Import/Bulk Operations](analysis/architecture/analysis-test-coverage-import-bulk-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Сводный анализ архитектуры (верифицированный)](analysis/architecture/analysis-consolidated-architecture-review-2026-03-15.md) ✅ (Завершен 2026-03-15 — ревизия 39 анализов, 12 удалено, 9 архивировано)
@@ -126,6 +128,7 @@
 
 ### Отчеты
 
+- [Отчёт: Улучшение схемы модели Event](reports/deployment/report-events-schema-improvement-2026-03-16.md) ✅ (Завершен 2026-03-16 — payload/metadata→Json, ip поле, убрана сериализация)
 - [Отчёт: Интеграционный тест параллельных bulk-операций](reports/testing/report-bulk-concurrent-integration-2026-03-15.md) ✅ (Завершен 2026-03-15 — 3 теста, без дедлоков)
 - [Отчёт: Тестовое покрытие Import/Bulk Operations](reports/testing/report-test-coverage-import-bulk-2026-03-15.md) ✅ (Завершен 2026-03-15 — +83 теста, 804 unit-тестов)
 - [Отчёт: References — расширение City, i18n таблиц, seed-данные](reports/improve/report-references-i18n-city-model-seed-2026-03-15.md) ✅ (Завершен 2026-03-15)
@@ -181,7 +184,7 @@
 
 ### По модулям
 - **Import/Export**: 2 плана, 1 отчет ✅
-- **Events**: 1 план (активный), 1 отчет, 1 анализ ✅
+- **Events**: 2 плана ✅, 2 отчёта ✅, 2 анализа ✅ (schema improvement завершено 2026-03-16)
 - **Rate Limits**: 3 исправления ✅
 - **User Operations**: 2 документации ✅
 - **User Module**: 1 план ⏳ (тестовое покрытие, ~95%)

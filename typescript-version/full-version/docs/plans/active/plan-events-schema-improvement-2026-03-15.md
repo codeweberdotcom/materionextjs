@@ -1,7 +1,7 @@
 # План: Улучшение схемы модели Event
 
 **Дата создания:** 2026-03-15
-**Статус:** Ожидает одобрения
+**Статус:** ✅ Завершено (2026-03-16)
 **Приоритет:** Высокий
 **Анализ:** [analysis-events-schema-improvement-2026-03-15.md](../../analysis/architecture/analysis-events-schema-improvement-2026-03-15.md)
 
