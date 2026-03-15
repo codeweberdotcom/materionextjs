@@ -29,12 +29,18 @@ import { checkPermission } from '@/utils/permissions/permissions'
   return res.json()
 } */
 
-const UserListApp = async () => {
+interface PageProps {
+  params: Promise<{ lang: string }>
+}
+
+const UserListApp = async ({ params }: PageProps) => {
+  const { lang } = await params
+
   // Check permissions
   const { user } = await requireAuth()
 
   if (!user || !checkPermission(user, 'userManagement', 'read')) {
-    redirect('/not-authorized')
+    redirect(`/${lang}/pages/misc/401-not-authorized`)
   }
 
   // Vars

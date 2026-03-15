@@ -7,7 +7,13 @@ import DocumentsVerification from '@views/apps/user/documents-verification'
 import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission, isSuperadmin } from '@/utils/permissions/permissions'
 
-const DocumentsVerificationPage = async () => {
+interface PageProps {
+  params: Promise<{ lang: string }>
+}
+
+const DocumentsVerificationPage = async ({ params }: PageProps) => {
+  const { lang } = await params
+
   // Check permissions on server side
   const { user } = await requireAuth()
 
@@ -16,7 +22,7 @@ const DocumentsVerificationPage = async () => {
   }
 
   if (!isSuperadmin(user) && !checkPermission(user, 'userManagement', 'read')) {
-    redirect('/not-authorized')
+    redirect(`/${lang}/pages/misc/401-not-authorized`)
   }
 
   return <DocumentsVerification />

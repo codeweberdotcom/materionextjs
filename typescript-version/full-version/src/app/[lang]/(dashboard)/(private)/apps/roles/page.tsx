@@ -35,7 +35,13 @@ import { prisma } from '@/libs/prisma'
   return res.json()
 } */
 
-const RolesApp = async () => {
+interface PageProps {
+  params: Promise<{ lang: string }>
+}
+
+const RolesApp = async ({ params }: PageProps) => {
+  const { lang } = await params
+
   // Check permissions on server side
   const { user } = await requireAuth()
 
@@ -61,7 +67,7 @@ const RolesApp = async () => {
   }
 
   if (!isSuperadmin(user) && !checkPermission(user, 'roleManagement', 'read')) {
-    redirect('/not-authorized')
+    redirect(`/${lang}/pages/misc/401-not-authorized`)
   }
 
   // Vars
