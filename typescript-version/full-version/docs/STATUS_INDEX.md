@@ -2,7 +2,7 @@
 
 Этот документ отслеживает статус всех ТЗ, планов, анализов и отчетов для быстрого понимания текущего состояния проекта.
 
-**Последнее обновление:** 2026-03-16 (Добавление недостающего event logging — анализ 30 операций, план по фазам)
+**Последнее обновление:** 2026-03-16 (Grafana rate-limit dashboard v3 — $module фильтр, Events by Module, Block Rate %)
 
 ---
 
@@ -104,6 +104,8 @@
 - [План исправления Redis connection race condition](plans/completed/plan-fix-redis-connection-race-2025-11-23.md) ✅
 - [План миграции Tailwind CSS → MUI](plans/roadmap/tailwind-to-mui-migration-plan.md) ⚠️ (В roadmap - миграция не требуется, Tailwind часть оригинального шаблона)
 - [План: useFormMedia - хук для форм объявлений](plans/roadmap/plan-use-form-media-hook-2025-11-28.md) 📋 (В roadmap - ожидает готовности UI)
+- [Roadmap: Интеграция RulesEngine с RateLimitService](plans/roadmap/plan-rules-engine-ratelimit-integration-roadmap.md) 📋 (В roadmap — связать два параллельных инструмента защиты через события)
+- [Roadmap: Верификация личности через внешних провайдеров](plans/roadmap/plan-identity-verification-providers-roadmap.md) 📋 (В roadmap — Госуслуги/Сбер ID/Яндекс ID для автоматической верификации документов)
 - [План: Bull Queue Docker Setup](plans/active/plan-bull-queue-docker-setup-2025-11-25.md) ✅ (Завершен 2025-11-25)
 - [План: S3/MinIO Docker Setup](plans/completed/plan-s3-minio-docker-setup-2025-11-26.md) ✅ (Завершен 2025-11-26)
 - [План улучшений модуля "Роли пользователей"](plans/completed/plan-roles-module-improvements-2025-01-24.md) ✅ (Завершён 2025-11-25)
@@ -187,7 +189,7 @@
 ### По модулям
 - **Import/Export**: 2 плана, 1 отчет ✅
 - **Events**: 2 плана ✅, 2 отчёта ✅, 2 анализа ✅ (schema improvement завершено 2026-03-16)
-- **Rate Limits**: 3 исправления ✅
+- **Rate Limits**: 3 исправления ✅, Grafana dashboard v3 ✅ ($module фильтр, Events by Module, Block Rate %)
 - **User Operations**: 2 документации ✅
 - **User Module**: 1 план ⏳ (тестовое покрытие, ~95%)
 - **Roles Management**: 2 анализа ✅, 2 плана ✅, 1 отчет ✅ (рефакторинг isAdmin завершён 2025-11-25)
