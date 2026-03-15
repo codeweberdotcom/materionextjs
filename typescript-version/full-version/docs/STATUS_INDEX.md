@@ -2,7 +2,7 @@
 
 Этот документ отслеживает статус всех ТЗ, планов, анализов и отчетов для быстрого понимания текущего состояния проекта.
 
-**Последнее обновление:** 2026-03-15 (References: расширение City, полная i18n таблиц, обновление seed)
+**Последнее обновление:** 2026-03-15 (References: рефакторинг bulk-операций — фабрика конфигов, хук, unified handler)
 
 ---
 
@@ -62,6 +62,8 @@
 - [План реализации модуля сценариев уведомлений](plans/active/plan-notification-scenarios-module-2025-01-24.md) ⏳ (Планируется, ~0%)
 
 ### Анализы
+
+- [Анализ: Рефакторинг bulk-операций справочников](analysis/architecture/analysis-bulk-references-refactoring-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Анализ: Прямой доступ к S3 в медиатеке](analysis/architecture/analysis-media-s3-direct-access-2025-12-01.md) ✅ (Завершен 2025-12-01)
 - [Анализ: Настройки синхронизации медиа с S3](analysis/architecture/analysis-media-s3-sync-settings-2025-11-30.md) ✅ (Завершен 2025-11-30)
 - [Анализ SQLite ограничений для миграции на PostgreSQL](analysis/architecture/analysis-sqlite-limitations-for-postgresql-migration-2025-11-28.md) ✅ (Завершен 2025-11-28)
@@ -82,6 +84,7 @@
 - Нет завершенных ТЗ
 
 ### Планы работ
+- [План: Рефакторинг bulk-операций справочников](plans/completed/plan-bulk-references-refactoring-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [План: Рефакторинг WebSocket на standalone архитектуру](plans/active/plan-websocket-standalone-refactor-2025-12-02.md) ✅ (Завершен 2025-12-03)
 - [План: Прямой доступ к S3 в медиатеке](plans/completed/plan-media-s3-direct-access-2025-12-01.md) ✅ (Завершен 2025-12-01)
 - [План реализации модуля лицензий медиа](plans/completed/plan-media-licenses-module-2025-11-26.md) ✅ (Завершен 2025-11-26)
