@@ -27,21 +27,21 @@
 
 ## Этапы реализации
 
-### Этап 1: Перевод на `withApiHandler` (A1, O3)
+### Этап 1: Рефакторинг `_bulk-handler.ts` — устранение дублирования (A1)
 
-**Цель:** Привести API routes к стандартному паттерну проекта
+**Цель:** Объединить `handleBulkUpdate` и `handleBulkDelete` (80% одинакового кода) в единую функцию `handleBulkOperation`
 
 **Задачи:**
 
-- [ ] Задача 1.1 — Рефакторинг `_bulk-handler.ts`: убрать auth/permissions/user lookup, оставить только бизнес-логику (context creation + вызов BulkOperationsService)
-- [ ] Задача 1.2 — Обновить 12 route-файлов: обернуть в `withApiHandler` с `permission`
+- [ ] Задача 1.1 — Создать единую функцию `handleBulkOperation(request, config, operationType: 'update' | 'delete', operationLabel)` которая содержит auth/validation/context один раз и вызывает нужный метод BulkOperationsService
+- [ ] Задача 1.2 — Обновить 12 route-файлов на вызов `handleBulkOperation`
 - [ ] Задача 1.3 — Проверить что API-контракт (request/response) не изменился
 
 **Критерии завершения:**
 
-- [ ] Все bulk routes используют `withApiHandler`
-- [ ] `_bulk-handler.ts` не содержит auth/permission логику
-- [ ] HTTP-метрики и rate-limiting подключены автоматически
+- [ ] `_bulk-handler.ts` содержит одну функцию вместо двух
+- [ ] Нет дублирования auth/validation/context кода
+- [ ] API-контракт не изменён
 
 **Файлы:**
 - `src/app/api/admin/references/_bulk-handler.ts`

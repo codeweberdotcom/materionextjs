@@ -1,279 +1,106 @@
 /**
  * Конфигурация bulk операций для справочников (Country, State, City, District)
+ * Использует фабричную функцию для устранения дублирования
  */
 
-import { prisma } from '@/libs/prisma'
 import type { BulkOperationConfig } from '../types'
 import type { Prisma } from '@prisma/client'
 
-// ==================== COUNTRY ====================
+interface ReferenceBulkConfigs {
+  activate: BulkOperationConfig
+  deactivate: BulkOperationConfig
+  delete: BulkOperationConfig
+}
 
-export const countryBulkActivateConfig: BulkOperationConfig = {
-  modelName: 'country',
-  idField: 'id',
-  options: {
-    permissionModule: 'countryManagement',
-    permissionAction: 'update',
+/**
+ * Фабрика для создания 3 bulk-конфигов (activate/deactivate/delete) для любого справочника
+ */
+function createReferenceBulkConfigs(
+  modelName: string,
+  permissionModule: string,
+  modulePlural: string,
+  prismaDelegate: (tx: Prisma.TransactionClient) => {
+    findMany: (args: { where: { id: { in: string[] } }; select: { id: true } }) => Promise<Array<{ id: string }>>
+    updateMany: (args: { where: { id: { in: string[] } }; data: { isActive: boolean } }) => Promise<{ count: number }>
+    deleteMany: (args: { where: { id: { in: string[] } } }) => Promise<{ count: number }>
+  }
+): ReferenceBulkConfigs {
+  const baseOptions = (action: string, permissionAction: string) => ({
+    permissionModule,
+    permissionAction,
     eventConfig: {
       source: 'references',
-      module: 'countries',
-      type: 'references.bulk_activate',
-      successType: 'references.bulk_activate_success',
-      getMessage: (count) => `Bulk activate completed: ${count} countries`
+      module: modulePlural,
+      type: `references.bulk_${action}`,
+      successType: `references.bulk_${action}_success`,
+      getMessage: (count: number) => `Bulk ${action} completed: ${count} ${modulePlural}`
     }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.country.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  updateOperation: async (ids: string[], _data: Record<string, unknown>, tx: Prisma.TransactionClient) => {
-    return tx.country.updateMany({ where: { id: { in: ids } }, data: { isActive: true } })
+  })
+
+  return {
+    activate: {
+      modelName,
+      idField: 'id',
+      options: baseOptions('activate', 'update'),
+      getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
+        return prismaDelegate(tx).findMany({ where: { id: { in: ids } }, select: { id: true } })
+      },
+      updateOperation: async (ids: string[], _data: Record<string, unknown>, tx: Prisma.TransactionClient) => {
+        return prismaDelegate(tx).updateMany({ where: { id: { in: ids } }, data: { isActive: true } })
+      }
+    },
+    deactivate: {
+      modelName,
+      idField: 'id',
+      options: baseOptions('deactivate', 'update'),
+      getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
+        return prismaDelegate(tx).findMany({ where: { id: { in: ids } }, select: { id: true } })
+      },
+      updateOperation: async (ids: string[], _data: Record<string, unknown>, tx: Prisma.TransactionClient) => {
+        return prismaDelegate(tx).updateMany({ where: { id: { in: ids } }, data: { isActive: false } })
+      }
+    },
+    delete: {
+      modelName,
+      idField: 'id',
+      options: baseOptions('delete', 'delete'),
+      getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
+        return prismaDelegate(tx).findMany({ where: { id: { in: ids } }, select: { id: true } })
+      },
+      deleteOperation: async (ids: string[], tx: Prisma.TransactionClient) => {
+        return prismaDelegate(tx).deleteMany({ where: { id: { in: ids } } })
+      }
+    }
   }
 }
 
-export const countryBulkDeactivateConfig: BulkOperationConfig = {
-  modelName: 'country',
-  idField: 'id',
-  options: {
-    permissionModule: 'countryManagement',
-    permissionAction: 'update',
-    eventConfig: {
-      source: 'references',
-      module: 'countries',
-      type: 'references.bulk_deactivate',
-      successType: 'references.bulk_deactivate_success',
-      getMessage: (count) => `Bulk deactivate completed: ${count} countries`
-    }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.country.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  updateOperation: async (ids: string[], _data: Record<string, unknown>, tx: Prisma.TransactionClient) => {
-    return tx.country.updateMany({ where: { id: { in: ids } }, data: { isActive: false } })
-  }
-}
+// Конфиги для всех справочников
+const countryConfigs = createReferenceBulkConfigs('country', 'countryManagement', 'countries', (tx) => tx.country)
+const stateConfigs = createReferenceBulkConfigs('state', 'stateManagement', 'states', (tx) => tx.state)
+const cityConfigs = createReferenceBulkConfigs('city', 'cityManagement', 'cities', (tx) => tx.city)
+const districtConfigs = createReferenceBulkConfigs('district', 'districtManagement', 'districts', (tx) => tx.district)
 
-export const countryBulkDeleteConfig: BulkOperationConfig = {
-  modelName: 'country',
-  idField: 'id',
-  options: {
-    permissionModule: 'countryManagement',
-    permissionAction: 'delete',
-    eventConfig: {
-      source: 'references',
-      module: 'countries',
-      type: 'references.bulk_delete',
-      successType: 'references.bulk_delete_success',
-      getMessage: (count) => `Bulk delete completed: ${count} countries`
-    }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.country.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  deleteOperation: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.country.deleteMany({ where: { id: { in: ids } } })
-  }
-}
+// Именованные экспорты для обратной совместимости с route-файлами
+export const countryBulkActivateConfig = countryConfigs.activate
+export const countryBulkDeactivateConfig = countryConfigs.deactivate
+export const countryBulkDeleteConfig = countryConfigs.delete
 
-// ==================== STATE ====================
+export const stateBulkActivateConfig = stateConfigs.activate
+export const stateBulkDeactivateConfig = stateConfigs.deactivate
+export const stateBulkDeleteConfig = stateConfigs.delete
 
-export const stateBulkActivateConfig: BulkOperationConfig = {
-  modelName: 'state',
-  idField: 'id',
-  options: {
-    permissionModule: 'stateManagement',
-    permissionAction: 'update',
-    eventConfig: {
-      source: 'references',
-      module: 'states',
-      type: 'references.bulk_activate',
-      successType: 'references.bulk_activate_success',
-      getMessage: (count) => `Bulk activate completed: ${count} states`
-    }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.state.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  updateOperation: async (ids: string[], _data: Record<string, unknown>, tx: Prisma.TransactionClient) => {
-    return tx.state.updateMany({ where: { id: { in: ids } }, data: { isActive: true } })
-  }
-}
+export const cityBulkActivateConfig = cityConfigs.activate
+export const cityBulkDeactivateConfig = cityConfigs.deactivate
+export const cityBulkDeleteConfig = cityConfigs.delete
 
-export const stateBulkDeactivateConfig: BulkOperationConfig = {
-  modelName: 'state',
-  idField: 'id',
-  options: {
-    permissionModule: 'stateManagement',
-    permissionAction: 'update',
-    eventConfig: {
-      source: 'references',
-      module: 'states',
-      type: 'references.bulk_deactivate',
-      successType: 'references.bulk_deactivate_success',
-      getMessage: (count) => `Bulk deactivate completed: ${count} states`
-    }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.state.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  updateOperation: async (ids: string[], _data: Record<string, unknown>, tx: Prisma.TransactionClient) => {
-    return tx.state.updateMany({ where: { id: { in: ids } }, data: { isActive: false } })
-  }
-}
+export const districtBulkActivateConfig = districtConfigs.activate
+export const districtBulkDeactivateConfig = districtConfigs.deactivate
+export const districtBulkDeleteConfig = districtConfigs.delete
 
-export const stateBulkDeleteConfig: BulkOperationConfig = {
-  modelName: 'state',
-  idField: 'id',
-  options: {
-    permissionModule: 'stateManagement',
-    permissionAction: 'delete',
-    eventConfig: {
-      source: 'references',
-      module: 'states',
-      type: 'references.bulk_delete',
-      successType: 'references.bulk_delete_success',
-      getMessage: (count) => `Bulk delete completed: ${count} states`
-    }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.state.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  deleteOperation: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.state.deleteMany({ where: { id: { in: ids } } })
-  }
-}
-
-// ==================== CITY ====================
-
-export const cityBulkActivateConfig: BulkOperationConfig = {
-  modelName: 'city',
-  idField: 'id',
-  options: {
-    permissionModule: 'cityManagement',
-    permissionAction: 'update',
-    eventConfig: {
-      source: 'references',
-      module: 'cities',
-      type: 'references.bulk_activate',
-      successType: 'references.bulk_activate_success',
-      getMessage: (count) => `Bulk activate completed: ${count} cities`
-    }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.city.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  updateOperation: async (ids: string[], _data: Record<string, unknown>, tx: Prisma.TransactionClient) => {
-    return tx.city.updateMany({ where: { id: { in: ids } }, data: { isActive: true } })
-  }
-}
-
-export const cityBulkDeactivateConfig: BulkOperationConfig = {
-  modelName: 'city',
-  idField: 'id',
-  options: {
-    permissionModule: 'cityManagement',
-    permissionAction: 'update',
-    eventConfig: {
-      source: 'references',
-      module: 'cities',
-      type: 'references.bulk_deactivate',
-      successType: 'references.bulk_deactivate_success',
-      getMessage: (count) => `Bulk deactivate completed: ${count} cities`
-    }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.city.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  updateOperation: async (ids: string[], _data: Record<string, unknown>, tx: Prisma.TransactionClient) => {
-    return tx.city.updateMany({ where: { id: { in: ids } }, data: { isActive: false } })
-  }
-}
-
-export const cityBulkDeleteConfig: BulkOperationConfig = {
-  modelName: 'city',
-  idField: 'id',
-  options: {
-    permissionModule: 'cityManagement',
-    permissionAction: 'delete',
-    eventConfig: {
-      source: 'references',
-      module: 'cities',
-      type: 'references.bulk_delete',
-      successType: 'references.bulk_delete_success',
-      getMessage: (count) => `Bulk delete completed: ${count} cities`
-    }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.city.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  deleteOperation: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.city.deleteMany({ where: { id: { in: ids } } })
-  }
-}
-
-// ==================== DISTRICT ====================
-
-export const districtBulkActivateConfig: BulkOperationConfig = {
-  modelName: 'district',
-  idField: 'id',
-  options: {
-    permissionModule: 'districtManagement',
-    permissionAction: 'update',
-    eventConfig: {
-      source: 'references',
-      module: 'districts',
-      type: 'references.bulk_activate',
-      successType: 'references.bulk_activate_success',
-      getMessage: (count) => `Bulk activate completed: ${count} districts`
-    }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.district.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  updateOperation: async (ids: string[], _data: Record<string, unknown>, tx: Prisma.TransactionClient) => {
-    return tx.district.updateMany({ where: { id: { in: ids } }, data: { isActive: true } })
-  }
-}
-
-export const districtBulkDeactivateConfig: BulkOperationConfig = {
-  modelName: 'district',
-  idField: 'id',
-  options: {
-    permissionModule: 'districtManagement',
-    permissionAction: 'update',
-    eventConfig: {
-      source: 'references',
-      module: 'districts',
-      type: 'references.bulk_deactivate',
-      successType: 'references.bulk_deactivate_success',
-      getMessage: (count) => `Bulk deactivate completed: ${count} districts`
-    }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.district.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  updateOperation: async (ids: string[], _data: Record<string, unknown>, tx: Prisma.TransactionClient) => {
-    return tx.district.updateMany({ where: { id: { in: ids } }, data: { isActive: false } })
-  }
-}
-
-export const districtBulkDeleteConfig: BulkOperationConfig = {
-  modelName: 'district',
-  idField: 'id',
-  options: {
-    permissionModule: 'districtManagement',
-    permissionAction: 'delete',
-    eventConfig: {
-      source: 'references',
-      module: 'districts',
-      type: 'references.bulk_delete',
-      successType: 'references.bulk_delete_success',
-      getMessage: (count) => `Bulk delete completed: ${count} districts`
-    }
-  },
-  getRecords: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.district.findMany({ where: { id: { in: ids } }, select: { id: true } })
-  },
-  deleteOperation: async (ids: string[], tx: Prisma.TransactionClient) => {
-    return tx.district.deleteMany({ where: { id: { in: ids } } })
-  }
+// Реестр конфигов по entity name (для динамического route)
+export const referenceBulkConfigRegistry: Record<string, ReferenceBulkConfigs> = {
+  countries: countryConfigs,
+  states: stateConfigs,
+  cities: cityConfigs,
+  districts: districtConfigs
 }
