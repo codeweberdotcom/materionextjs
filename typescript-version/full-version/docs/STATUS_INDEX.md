@@ -2,7 +2,7 @@
 
 Этот документ отслеживает статус всех ТЗ, планов, анализов и отчетов для быстрого понимания текущего состояния проекта.
 
-**Последнее обновление:** 2026-03-15 (withApiHandler миграция — Этапы 1+2 завершены, 183 API routes мигрированы)
+**Последнее обновление:** 2026-03-15 (тестовое покрытие Import/Bulk — +83 теста, итого 804 unit-тестов)
 
 ---
 
@@ -36,6 +36,7 @@
 
 ### Планы работ
 
+- [План: Тестовое покрытие Import/Bulk Operations](plans/active/plan-test-coverage-import-bulk-2026-03-15.md) ✅ (Завершено 2026-03-15 — +83 теста, 804 unit-тестов)
 - [План: withApiHandler — унификация API routes](plans/active/plan-api-handler-wrapper-2026-03-15.md) ✅ (Завершено 2026-03-15 — 183 routes мигрированы, 3 нестандартных оставлены)
 - [План: Динамическая система языков (i18n)](plans/active/plan-i18n-dynamic-languages-2026-03-14.md) ✅ (Завершено 2026-03-14)
 - [План: Рефакторинг WebSocket на standalone архитектуру](plans/active/plan-websocket-standalone-refactor-2025-12-02.md) ✅ (Завершено 2025-12-03)
@@ -66,6 +67,7 @@
 
 ### Анализы
 
+- [Анализ: Тестовое покрытие Import/Bulk Operations](analysis/architecture/analysis-test-coverage-import-bulk-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Сводный анализ архитектуры (верифицированный)](analysis/architecture/analysis-consolidated-architecture-review-2026-03-15.md) ✅ (Завершен 2026-03-15 — ревизия 39 анализов, 12 удалено, 9 архивировано)
 - [Анализ: Рефакторинг bulk-операций справочников](analysis/architecture/analysis-bulk-references-refactoring-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Анализ: Прямой доступ к S3 в медиатеке](analysis/architecture/analysis-media-s3-direct-access-2025-12-01.md) ⏳ (Требует перепроверки)
@@ -121,6 +123,8 @@
 - [План: Расширение метрик и дашбордов Grafana](plans/active/plan-grafana-dashboards-extension-2025-11-26.md) ✅ (завершён)
 
 ### Отчеты
+
+- [Отчёт: Тестовое покрытие Import/Bulk Operations](reports/testing/report-test-coverage-import-bulk-2026-03-15.md) ✅ (Завершен 2026-03-15 — +83 теста, 804 unit-тестов)
 - [Отчёт: References — расширение City, i18n таблиц, seed-данные](reports/improve/report-references-i18n-city-model-seed-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Отчёт: References — двусторонняя связь район-город, UX диалогов](reports/improve/report-references-districts-city-relation-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Отчёт: Динамическая система языков (i18n)](reports/improve/report-i18n-dynamic-languages-2026-03-14.md) ✅ (Завершен 2026-03-14)
