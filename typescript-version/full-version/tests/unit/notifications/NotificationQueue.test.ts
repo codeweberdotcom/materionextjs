@@ -41,6 +41,39 @@ vi.mock('@/lib/logger', () => ({
   }
 }))
 
+vi.mock('@/lib/config', () => ({
+  serviceConfigResolver: {
+    getConfig: vi.fn().mockImplementation(async (serviceName: string) => {
+      if (serviceName === 'redis') {
+        const url = process.env.REDIS_URL
+        if (url) {
+          return { url, host: 'localhost', port: 6379, source: 'env' }
+        }
+        return { url: null, host: 'localhost', port: 6379, source: 'default' }
+      }
+      return { url: null, source: 'default' }
+    })
+  }
+}))
+
+vi.mock('@/lib/metrics/notifications', () => ({
+  markJobAdded: vi.fn(),
+  markJobProcessed: vi.fn(),
+  markQueueError: vi.fn(),
+  startJobTimer: vi.fn(),
+  setQueueSize: vi.fn(),
+  markQueueSwitch: vi.fn(),
+  markNotificationSent: vi.fn(),
+  markRetryAttempt: vi.fn()
+}))
+
+vi.mock('@sentry/nextjs', () => ({
+  captureException: vi.fn()
+}))
+
+// Утилита для ожидания завершения всех pending микрозадач
+const flushPromises = () => new Promise(resolve => setTimeout(resolve, 0))
+
 describe('NotificationQueue', () => {
   let NotificationQueue: any
   let originalEnv: string | undefined
@@ -124,13 +157,14 @@ describe('NotificationQueue', () => {
       vi.resetModules()
       const module = await import('@/services/notifications/NotificationQueue')
       NotificationQueue = module.NotificationQueue
+      // Ждём завершения асинхронной инициализации очереди (fire-and-forget)
+      await flushPromises()
     })
 
     it('должен инициализировать Bull очередь когда REDIS_URL задан', async () => {
       const Bull = (await import('bull')).default
-      const queue = (NotificationQueue as any).getInstance()
-      
-      // Bull должен быть вызван с правильными параметрами
+
+      // Bull должен быть вызван с правильными параметрами во время инициализации модуля
       expect(Bull).toHaveBeenCalledWith('notifications', 'redis://localhost:6379', expect.any(Object))
     })
 

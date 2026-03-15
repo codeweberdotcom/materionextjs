@@ -20,12 +20,12 @@ describe('registration-schemas', () => {
       expect(result.success).toBe(true)
     })
 
-    it('should reject missing name', () => {
+    it('should accept missing name (name is optional)', () => {
       const result = emailRegistrationSchema.safeParse({
         email: 'john@example.com',
         password: 'securepassword123'
       })
-      expect(result.success).toBe(false)
+      expect(result.success).toBe(true)
     })
 
     it('should reject invalid email', () => {
@@ -55,17 +55,14 @@ describe('registration-schemas', () => {
       expect(result.success).toBe(false)
     })
 
-    it('should accept optional phone', () => {
+    it('should reject phone field (email schema excludes phone)', () => {
       const result = emailRegistrationSchema.safeParse({
         name: 'John Doe',
         email: 'john@example.com',
         password: 'securepassword123',
         phone: '+79991234567'
       })
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.phone).toBe('+79991234567')
-      }
+      expect(result.success).toBe(false)
     })
   })
 
@@ -105,17 +102,14 @@ describe('registration-schemas', () => {
       expect(result.success).toBe(true)
     })
 
-    it('should accept optional email', () => {
+    it('should reject email field (phone schema excludes email)', () => {
       const result = phoneRegistrationSchema.safeParse({
         name: 'John Doe',
         phone: '+79991234567',
         password: 'securepassword123',
         email: 'john@example.com'
       })
-      expect(result.success).toBe(true)
-      if (result.success) {
-        expect(result.data.email).toBe('john@example.com')
-      }
+      expect(result.success).toBe(false)
     })
   })
 

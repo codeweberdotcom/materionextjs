@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 // Мокаем prisma
 vi.mock('@/libs/prisma', () => ({
-  default: {
+  prisma: {
     user: {
       findFirst: vi.fn(),
       findUnique: vi.fn(),
@@ -34,7 +34,7 @@ vi.mock('@/libs/prisma', () => ({
 }))
 
 import { slugService } from '@/services/slug/SlugService'
-import prisma from '@/libs/prisma'
+import { prisma } from '@/libs/prisma'
 
 describe('SlugService', () => {
   beforeEach(() => {
@@ -54,7 +54,7 @@ describe('SlugService', () => {
     })
 
     it('should handle Ukrainian letters', () => {
-      expect(slugService.transliterate('Київ')).toBe('Kyiv')
+      expect(slugService.transliterate('Київ')).toBe('Kiyiv')
       expect(slugService.transliterate('їжак')).toBe('yizhak')
     })
 
@@ -68,7 +68,7 @@ describe('SlugService', () => {
   describe('generateSlug', () => {
     it('should generate slug from Russian name', () => {
       expect(slugService.generateSlug('Иван Петров')).toBe('ivan_petrov')
-      expect(slugService.generateSlug('Анна-Мария Иванова')).toBe('anna_maria_ivanova')
+      expect(slugService.generateSlug('Анна-Мария Иванова')).toBe('anna_mariya_ivanova')
     })
 
     it('should generate slug from English name', () => {

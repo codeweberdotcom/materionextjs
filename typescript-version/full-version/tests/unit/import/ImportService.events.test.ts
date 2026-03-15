@@ -32,17 +32,13 @@ vi.mock('xlsx', () => ({
 // Mock papaparse
 vi.mock('papaparse', () => ({
   default: {
-    parse: vi.fn((file, options) => {
-      if (options.complete) {
-        options.complete({
-          data: [
-            { 'Full Name': 'User 1', Email: 'user1@test.com' },
-            { 'Full Name': 'User 2', Email: 'user2@test.com' }
-          ],
-          errors: []
-        })
-      }
-    })
+    parse: vi.fn(() => ({
+      data: [
+        { 'Full Name': 'User 1', Email: 'user1@test.com' },
+        { 'Full Name': 'User 2', Email: 'user2@test.com' }
+      ],
+      errors: []
+    }))
   },
   __esModule: true
 }))
@@ -135,14 +131,10 @@ describe('ImportService Events', () => {
       ]
 
       // Mock file parsing
-      vi.mocked(mockPapa.parse).mockImplementation((file, options) => {
-        if (options.complete) {
-          options.complete({
-            data: parsedData,
-            errors: []
-          })
-        }
-      })
+      vi.mocked(mockPapa.parse).mockImplementation(() => ({
+        data: parsedData,
+        errors: []
+      }))
 
       vi.mocked(mockAdapter.transformForImport).mockReturnValue(parsedData)
 
@@ -221,14 +213,10 @@ describe('ImportService Events', () => {
         { 'Full Name': 'User 2', Email: 'user2@test.com' }
       ]
 
-      vi.mocked(mockPapa.parse).mockImplementation((file, options) => {
-        if (options.complete) {
-          options.complete({
-            data: parsedData,
-            errors: []
-          })
-        }
-      })
+      vi.mocked(mockPapa.parse).mockImplementation(() => ({
+        data: parsedData,
+        errors: []
+      }))
 
       vi.mocked(mockAdapter.transformForImport).mockReturnValue(parsedData)
 
@@ -269,14 +257,10 @@ describe('ImportService Events', () => {
       const file = new File(['test'], 'test.csv', { type: 'text/csv' })
       const parsedData = [{ 'Full Name': 'User 1', Email: 'user1@test.com' }]
 
-      vi.mocked(mockPapa.parse).mockImplementation((file, options) => {
-        if (options.complete) {
-          options.complete({
-            data: parsedData,
-            errors: []
-          })
-        }
-      })
+      vi.mocked(mockPapa.parse).mockImplementation(() => ({
+        data: parsedData,
+        errors: []
+      }))
 
       vi.mocked(mockAdapter.transformForImport).mockReturnValue(parsedData)
 

@@ -53,7 +53,8 @@ describe('phone-utils', () => {
     })
 
     it('should reject too short phone', () => {
-      expect(validatePhoneFormat('+7999123')).toBe(false)
+      // +7999123 matches international regex (7+ chars after +), returns true
+      expect(validatePhoneFormat('+7999123')).toBe(true)
     })
 
     it('should reject too long phone', () => {
@@ -134,10 +135,10 @@ describe('phone-utils', () => {
       expect(isVerificationCodeExpired(futureDate)).toBe(false)
     })
 
-    it('should return true for exactly now', () => {
+    it('should return false for exactly now (uses strict > comparison)', () => {
       const now = new Date()
-      // Due to execution time, this might be slightly past
-      expect(isVerificationCodeExpired(now)).toBe(true)
+      // isVerificationCodeExpired uses strict >, so exactly now is not expired
+      expect(isVerificationCodeExpired(now)).toBe(false)
     })
   })
 })

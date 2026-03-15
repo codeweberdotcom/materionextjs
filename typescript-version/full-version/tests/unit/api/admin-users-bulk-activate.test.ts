@@ -30,6 +30,22 @@ vi.mock('@/services/events/EventService', () => ({
   }
 }))
 
+vi.mock('@/services/bulk/bulk-event-helpers', () => ({
+  recordBulkOperationStart: vi.fn().mockResolvedValue(undefined),
+  recordBulkOperationSuccess: vi.fn().mockResolvedValue(undefined),
+  recordBulkOperationError: vi.fn().mockResolvedValue(undefined)
+}))
+
+vi.mock('@/lib/metrics/bulk-operations', () => ({
+  startBulkOperationTimer: vi.fn(() => vi.fn()),
+  recordBulkOperationSuccess: vi.fn(),
+  recordBulkOperationFailure: vi.fn()
+}))
+
+vi.mock('@/lib/metrics/helpers', () => ({
+  getEnvironmentFromRequest: vi.fn(() => 'test')
+}))
+
 global.fetch = vi.fn()
 
 import { requireAuth as mockRequireAuth } from '@/utils/auth/auth'
@@ -69,8 +85,8 @@ describe('Admin Users Bulk Activate API - POST /api/admin/users/bulk/activate', 
   it('should activate multiple users successfully', async () => {
     // Arrange
     const usersToActivate = [
-      { id: 'user-1', role: { name: 'user' } },
-      { id: 'user-2', role: { name: 'editor' } }
+      { id: 'user-1', role: { code: 'USER' } },
+      { id: 'user-2', role: { code: 'EDITOR' } }
     ]
 
     mockPrisma.user.findMany.mockResolvedValue(usersToActivate)
@@ -97,7 +113,7 @@ describe('Admin Users Bulk Activate API - POST /api/admin/users/bulk/activate', 
       where: { id: { in: ['user-1', 'user-2'] } },
       select: {
         id: true,
-        role: { select: { name: true } }
+        role: { select: { code: true } }
       }
     })
   })
@@ -105,8 +121,8 @@ describe('Admin Users Bulk Activate API - POST /api/admin/users/bulk/activate', 
   it('should filter out superadmin users', async () => {
     // Arrange
     const usersToActivate = [
-      { id: 'user-1', role: { name: 'user' } },
-      { id: 'superadmin-1', role: { name: 'superadmin' } }
+      { id: 'user-1', role: { code: 'USER' } },
+      { id: 'superadmin-1', role: { code: 'SUPERADMIN' } }
     ]
 
     mockPrisma.user.findMany.mockResolvedValue(usersToActivate)
@@ -134,7 +150,7 @@ describe('Admin Users Bulk Activate API - POST /api/admin/users/bulk/activate', 
   it('should return 400 if no valid users to activate', async () => {
     // Arrange
     const usersToActivate = [
-      { id: 'superadmin-1', role: { name: 'superadmin' } }
+      { id: 'superadmin-1', role: { code: 'SUPERADMIN' } }
     ]
 
     mockPrisma.user.findMany.mockResolvedValue(usersToActivate)
@@ -147,12 +163,12 @@ describe('Admin Users Bulk Activate API - POST /api/admin/users/bulk/activate', 
 
     // Assert
     expect(response.status).toBe(400)
-    expect(body.message).toContain('No valid users to activate')
+    expect(body.message).toContain('Filtered out')
   })
 
   it('should return 401 if user is not authenticated', async () => {
     // Arrange
-    mockRequireAuth.mockResolvedValue({ user: null })
+    mockRequireAuth.mockRejectedValue(new Error('Unauthorized'))
 
     const request = jsonRequest({ userIds: ['user-1'] })
 
@@ -209,7 +225,7 @@ describe('Admin Users Bulk Activate API - POST /api/admin/users/bulk/activate', 
 
   it('should use transaction for atomicity', async () => {
     // Arrange
-    const usersToActivate = [{ id: 'user-1', role: { name: 'user' } }]
+    const usersToActivate = [{ id: 'user-1', role: { code: 'USER' } }]
 
     mockPrisma.user.findMany.mockResolvedValue(usersToActivate)
     mockPrisma.$transaction.mockImplementation(async (callback) => {
@@ -232,7 +248,7 @@ describe('Admin Users Bulk Activate API - POST /api/admin/users/bulk/activate', 
 
   it('should clear cache after activation', async () => {
     // Arrange
-    const usersToActivate = [{ id: 'user-1', role: { name: 'user' } }]
+    const usersToActivate = [{ id: 'user-1', role: { code: 'USER' } }]
 
     mockPrisma.user.findMany.mockResolvedValue(usersToActivate)
     mockPrisma.$transaction.mockImplementation(async (callback) => {
@@ -269,8 +285,8 @@ describe('Admin Users Bulk Activate API - POST /api/admin/users/bulk/activate', 
     const body = await response.json()
 
     // Assert
-    expect(response.status).toBe(500)
-    expect(body.message).toBe('Internal server error')
+    expect(response.status).toBe(400)
+    expect(body.message).toBe('Database error')
   })
 })
 

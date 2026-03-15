@@ -292,7 +292,7 @@ describe('MediaSyncService', () => {
       ] as any)
       vi.mocked(prisma.mediaSyncJob.create).mockResolvedValue({
         id: 'job-1',
-        operation: 'upload_to_s3',
+        operation: 'upload_to_s3_keep_local',
       } as any)
 
       const service = new MediaSyncService()
@@ -303,7 +303,7 @@ describe('MediaSyncService', () => {
       expect(prisma.mediaSyncJob.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            operation: 'upload_to_s3',
+            operation: 'upload_to_s3_keep_local',
           }),
         })
       )

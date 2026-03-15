@@ -82,8 +82,8 @@ describe('ResilientRateLimitStore', () => {
 
     expect(primary.consume).toHaveBeenCalledTimes(1)
     expect(fallback.consume).not.toHaveBeenCalled()
-    expect(markBackendActive).toHaveBeenCalledWith('redis')
-    expect(startConsumeDurationTimer).toHaveBeenCalledWith({ backend: 'redis', module: 'chat', mode: 'enforce' })
+    expect(markBackendActive).toHaveBeenCalledWith('redis', 'production')
+    expect(startConsumeDurationTimer).toHaveBeenCalledWith({ backend: 'redis', module: 'chat', mode: 'enforce', environment: 'production' })
   })
 
   it('falls back to prisma store after redis failure and retries after interval', async () => {
@@ -99,8 +99,8 @@ describe('ResilientRateLimitStore', () => {
 
     expect(primary.consume).toHaveBeenCalledTimes(1)
     expect(fallback.consume).toHaveBeenCalledTimes(1)
-    expect(recordRedisFailure).toHaveBeenCalled()
-    expect(recordBackendSwitch).toHaveBeenCalledWith('redis', 'prisma')
+    expect(recordRedisFailure).toHaveBeenCalledWith('production')
+    expect(recordBackendSwitch).toHaveBeenCalledWith('redis', 'prisma', 'production')
 
     fakeNow = 1_000
     await store.consume(createParams())
@@ -111,7 +111,7 @@ describe('ResilientRateLimitStore', () => {
     primary.consume.mockResolvedValueOnce(successResult)
     await store.consume(createParams())
     expect(primary.consume).toHaveBeenCalledTimes(2)
-    expect(recordBackendSwitch).toHaveBeenCalledWith('prisma', 'redis')
+    expect(recordBackendSwitch).toHaveBeenCalledWith('prisma', 'redis', 'production')
     expect(recordFallbackDuration).toHaveBeenCalled()
   })
 })

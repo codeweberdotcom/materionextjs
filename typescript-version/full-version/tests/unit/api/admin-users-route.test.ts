@@ -30,6 +30,14 @@ vi.mock('fs/promises', () => ({
   writeFile: vi.fn().mockResolvedValue(undefined)
 }))
 
+const mockUpload = vi.fn()
+
+vi.mock('@/services/media', () => ({
+  getMediaService: vi.fn(() => ({
+    upload: mockUpload
+  }))
+}))
+
 vi.mock('bcryptjs', () => ({
   default: {
     hash: vi.fn((password: string) => Promise.resolve(`hashed_${password}`))
@@ -186,13 +194,21 @@ describe('Admin Users API - POST /api/admin/users', () => {
     }
 
     mockPrisma.user.create.mockResolvedValue(createdUser)
+    mockUpload.mockResolvedValue({
+      success: true,
+      media: {
+        id: 'media-1',
+        localPath: 'public/uploads/avatars/avatar.jpg',
+        s3Key: null,
+        variants: '{}'
+      }
+    })
 
     const request = formDataRequest(userData)
     const response = await POST(request)
 
     expect(response.status).toBe(200)
-    const { writeFile } = await import('fs/promises')
-    expect(writeFile).toHaveBeenCalled()
+    expect(mockUpload).toHaveBeenCalled()
   })
 
   it('denies access without permission', async () => {
@@ -429,6 +445,9 @@ describe('Admin Users API - GET /api/admin/users', () => {
   })
 
   it('includes online status from presence service', async () => {
+    // Clear the module-level cache so we get a fresh DB fetch (not cached data from prior tests)
+    await GET(jsonRequest('http://localhost/api/admin/users', 'GET', { clearCache: 'true' }))
+
     mockGetOnlineUsers.mockResolvedValue({
       'user-1': { isOnline: true, lastSeen: new Date() }
     })

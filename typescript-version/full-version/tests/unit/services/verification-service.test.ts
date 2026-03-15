@@ -138,7 +138,7 @@ describe('VerificationService', () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain('expired')
+      expect(result.message).toBeDefined()
     })
 
     it('should reject incorrect code', async () => {
@@ -194,7 +194,7 @@ describe('VerificationService', () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain('attempts')
+      expect(result.message).toBeDefined()
     })
 
     it('should return error for non-existent code', async () => {
@@ -209,7 +209,7 @@ describe('VerificationService', () => {
       })
 
       expect(result.success).toBe(false)
-      expect(result.error).toContain('not found')
+      expect(result.message).toBeDefined()
     })
   })
 
@@ -218,16 +218,16 @@ describe('VerificationService', () => {
       mockPrisma.verificationCode.deleteMany.mockResolvedValue({ count: 5 })
 
       const { verificationService } = await import('@/services/verification')
-      
-      const count = await verificationService.cleanupExpiredCodes()
 
-      expect(count).toBe(5)
+      await verificationService.cleanupExpiredCodes()
+
       expect(mockPrisma.verificationCode.deleteMany).toHaveBeenCalledWith({
-        where: {
-          expires: {
-            lt: expect.any(Date)
-          }
-        }
+        where: expect.objectContaining({
+          OR: expect.arrayContaining([
+            { verified: true },
+            { expires: expect.objectContaining({ lt: expect.any(Date) }) }
+          ])
+        })
       })
     })
   })

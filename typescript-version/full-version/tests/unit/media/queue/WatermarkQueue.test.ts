@@ -6,9 +6,9 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
-// Mock BullMQ
-vi.mock('bullmq', () => ({
-  Queue: vi.fn().mockImplementation(() => ({
+// Mock bull (WatermarkQueue uses `import Queue from 'bull'`)
+vi.mock('bull', () => ({
+  default: vi.fn().mockImplementation(() => ({
     add: vi.fn().mockResolvedValue({ id: 'wm-job-1' }),
     addBulk: vi.fn().mockResolvedValue([]),
     getWaitingCount: vi.fn().mockResolvedValue(5),
@@ -16,15 +16,8 @@ vi.mock('bullmq', () => ({
     getCompletedCount: vi.fn().mockResolvedValue(100),
     getFailedCount: vi.fn().mockResolvedValue(3),
     getDelayedCount: vi.fn().mockResolvedValue(0),
+    on: vi.fn(),
     drain: vi.fn().mockResolvedValue(undefined),
-    close: vi.fn().mockResolvedValue(undefined),
-  })),
-  Worker: vi.fn().mockImplementation(() => ({
-    on: vi.fn(),
-    close: vi.fn().mockResolvedValue(undefined),
-  })),
-  QueueEvents: vi.fn().mockImplementation(() => ({
-    on: vi.fn(),
     close: vi.fn().mockResolvedValue(undefined),
   })),
 }))
@@ -33,6 +26,13 @@ vi.mock('bullmq', () => ({
 vi.mock('@/services/redis', () => ({
   isRedisEnabled: vi.fn().mockReturnValue(true),
   getRedisConnection: vi.fn().mockReturnValue({}),
+}))
+
+// Mock serviceConfigResolver - WatermarkQueue uses getConfig('redis') not isRedisEnabled
+vi.mock('@/lib/config', () => ({
+  serviceConfigResolver: {
+    getConfig: vi.fn().mockResolvedValue({ url: 'redis://localhost:6379' })
+  }
 }))
 
 // Mock logger
@@ -75,13 +75,13 @@ describe('WatermarkQueue', () => {
     })
 
     it('should return false when Redis is disabled', async () => {
-      const { isRedisEnabled } = await import('@/services/redis')
-      vi.mocked(isRedisEnabled).mockReturnValue(false)
-      
+      const { serviceConfigResolver } = await import('@/lib/config')
+      vi.mocked(serviceConfigResolver.getConfig).mockResolvedValueOnce(null)
+
       const { initializeWatermarkQueue } = await import('@/services/media/queue/WatermarkQueue')
-      
+
       const result = await initializeWatermarkQueue()
-      
+
       expect(result).toBe(false)
     })
 

@@ -5,6 +5,12 @@ vi.mock('@/utils/auth/auth', () => ({
   requireAuth: vi.fn()
 }))
 
+vi.mock('@/utils/permissions/permissions', () => ({
+  checkPermission: vi.fn().mockReturnValue(true),
+  isSuperadmin: vi.fn().mockReturnValue(false),
+  canModifyUserByRole: vi.fn().mockReturnValue(true)
+}))
+
 vi.mock('@/libs/prisma', () => ({
   prisma: {
     user: {
@@ -17,6 +23,9 @@ vi.mock('@/libs/prisma', () => ({
     },
     session: {
       deleteMany: vi.fn()
+    },
+    mediaGlobalSettings: {
+      findFirst: vi.fn().mockResolvedValue(null)
     }
   }
 }))
@@ -24,6 +33,11 @@ vi.mock('@/libs/prisma', () => ({
 vi.mock('@/shared/config/env', () => ({
   authBaseUrl: 'http://localhost:3000'
 }))
+
+global.fetch = vi.fn().mockResolvedValue({
+  ok: true,
+  json: async () => ({})
+} as Response)
 
 vi.mock('fs/promises', () => ({
   writeFile: vi.fn().mockResolvedValue(undefined),
@@ -34,7 +48,23 @@ vi.mock('fs', () => ({
   existsSync: vi.fn().mockReturnValue(true)
 }))
 
+vi.mock('@/services/media', () => ({
+  getMediaService: vi.fn(() => ({
+    upload: vi.fn().mockResolvedValue({
+      success: true,
+      media: {
+        id: 'media-1',
+        localPath: 'public/uploads/avatars/test.jpg',
+        s3Key: null,
+        variants: '{}'
+      }
+    }),
+    delete: vi.fn().mockResolvedValue(undefined)
+  }))
+}))
+
 import { requireAuth as mockRequireAuth } from '@/utils/auth/auth'
+import { checkPermission as mockCheckPermission, isSuperadmin as mockIsSuperadmin } from '@/utils/permissions/permissions'
 import { prisma as mockPrisma } from '@/libs/prisma'
 import { GET, PUT, PATCH, DELETE } from '@/app/api/admin/users/[id]/route'
 
@@ -76,17 +106,13 @@ describe('Admin Users API - GET /api/admin/users/[id]', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockRequireAuth.mockResolvedValue({ user: defaultUser })
-    // First call: currentUser (admin), Second call: targetUser
-    mockPrisma.user.findUnique
-      .mockResolvedValueOnce({
-        id: 'admin-1',
-        email: 'admin@example.com',
-        role: { name: 'admin' }
-      })
-      .mockResolvedValueOnce(targetUser)
+    mockCheckPermission.mockReturnValue(true)
+    mockIsSuperadmin.mockReturnValue(false)
   })
 
   it('returns user by id', async () => {
+    mockPrisma.user.findUnique.mockResolvedValueOnce(targetUser)
+
     const request = jsonRequest('http://localhost/api/admin/users/user-1', 'GET')
     const response = await GET(request, { params: Promise.resolve({ id: 'user-1' }) })
     const body = await response.json()
@@ -109,7 +135,7 @@ describe('Admin Users API - GET /api/admin/users/[id]', () => {
 })
 
 describe('Admin Users API - PUT /api/admin/users/[id]', () => {
-  const defaultUser = { id: 'admin-1', email: 'admin@example.com' }
+  const defaultUser = { id: 'admin-1', email: 'admin@example.com', role: { name: 'admin', code: 'ADMIN' } }
   const targetUser = {
     id: 'user-1',
     name: 'Old Name',
@@ -124,15 +150,12 @@ describe('Admin Users API - PUT /api/admin/users/[id]', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockRequireAuth.mockResolvedValue({ user: defaultUser })
+    mockCheckPermission.mockReturnValue(true)
+    mockIsSuperadmin.mockReturnValue(false)
     mockPrisma.user.findUnique
       .mockResolvedValueOnce({
-        id: 'admin-1',
-        email: 'admin@example.com',
-        role: { name: 'admin' }
-      })
-      .mockResolvedValueOnce({
         id: 'user-1',
-        role: { name: 'user' }
+        role: { name: 'user', code: 'USER' }
       })
       .mockResolvedValueOnce(targetUser)
 
@@ -187,21 +210,16 @@ describe('Admin Users API - PUT /api/admin/users/[id]', () => {
 
     expect(response.status).toBe(200)
     expect(body.avatar).toContain('/uploads/avatars/')
-    const { writeFile } = await import('fs/promises')
-    expect(writeFile).toHaveBeenCalled()
+    const { getMediaService } = await import('@/services/media')
+    expect(getMediaService).toHaveBeenCalled()
   })
 
   it('prevents editing superadmin users', async () => {
     mockPrisma.user.findUnique
       .mockReset()
       .mockResolvedValueOnce({
-        id: 'admin-1',
-        email: 'admin@example.com',
-        role: { name: 'admin' }
-      })
-      .mockResolvedValueOnce({
         id: 'superadmin-1',
-        role: { name: 'superadmin' }
+        role: { name: 'superadmin', code: 'SUPERADMIN' }
       })
 
     const request = jsonRequest('http://localhost/api/admin/users/superadmin-1', 'PUT', {
@@ -216,29 +234,26 @@ describe('Admin Users API - PUT /api/admin/users/[id]', () => {
   })
 
   it('allows users to edit their own data', async () => {
+    const selfUser = { id: 'user-1', email: 'user1@example.com', role: { name: 'user', code: 'USER' } }
+
+    mockRequireAuth.mockResolvedValue({ user: selfUser })
+    mockIsSuperadmin.mockReturnValue(false)
     mockPrisma.user.findUnique
       .mockReset()
       .mockResolvedValueOnce({
         id: 'user-1',
-        email: 'user1@example.com',
-        role: { name: 'user' }
-      })
-      .mockResolvedValueOnce({
-        id: 'user-1',
-        role: { name: 'user' }
+        role: { name: 'user', code: 'USER' }
       })
       .mockResolvedValueOnce({
         id: 'user-1',
         name: 'Old Name',
         email: 'user1@example.com',
         roleId: 'role-1',
-        role: { name: 'user' },
+        role: { name: 'user', code: 'USER' },
         country: null,
         image: null,
         isActive: true
       })
-
-    mockRequireAuth.mockResolvedValue({ user: { id: 'user-1', email: 'user1@example.com' } })
 
     mockPrisma.user.update.mockResolvedValue({
       id: 'user-1',
@@ -270,16 +285,13 @@ describe('Admin Users API - PATCH /api/admin/users/[id]', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockRequireAuth.mockResolvedValue({ user: defaultUser })
+    mockCheckPermission.mockReturnValue(true)
+    mockIsSuperadmin.mockReturnValue(false)
     mockPrisma.user.findUnique
-      .mockResolvedValueOnce({
-        id: 'admin-1',
-        email: 'admin@example.com',
-        role: { name: 'admin' }
-      })
       .mockResolvedValueOnce({
         id: 'user-1',
         isActive: true,
-        role: { name: 'user' }
+        role: { name: 'user', code: 'USER' }
       })
 
     mockPrisma.user.update.mockResolvedValue({
@@ -323,14 +335,9 @@ describe('Admin Users API - PATCH /api/admin/users/[id]', () => {
     mockPrisma.user.findUnique
       .mockReset()
       .mockResolvedValueOnce({
-        id: 'admin-1',
-        email: 'admin@example.com',
-        role: { name: 'admin' }
-      })
-      .mockResolvedValueOnce({
         id: 'user-1',
         isActive: false,
-        role: { name: 'user' }
+        role: { name: 'user', code: 'USER' }
       })
 
     mockPrisma.user.update.mockResolvedValue({
@@ -352,13 +359,8 @@ describe('Admin Users API - PATCH /api/admin/users/[id]', () => {
       .mockReset()
       .mockResolvedValueOnce({
         id: 'admin-1',
-        email: 'admin@example.com',
-        role: { name: 'admin' }
-      })
-      .mockResolvedValueOnce({
-        id: 'admin-1',
         isActive: true,
-        role: { name: 'admin' }
+        role: { name: 'admin', code: 'ADMIN' }
       })
 
     const request = jsonRequest('http://localhost/api/admin/users/admin-1', 'PATCH', {
@@ -376,14 +378,9 @@ describe('Admin Users API - PATCH /api/admin/users/[id]', () => {
     mockPrisma.user.findUnique
       .mockReset()
       .mockResolvedValueOnce({
-        id: 'admin-1',
-        email: 'admin@example.com',
-        role: { name: 'admin' }
-      })
-      .mockResolvedValueOnce({
         id: 'superadmin-1',
         isActive: true,
-        role: { name: 'superadmin' }
+        role: { name: 'superadmin', code: 'SUPERADMIN' }
       })
 
     const request = jsonRequest('http://localhost/api/admin/users/superadmin-1', 'PATCH', {
@@ -438,18 +435,15 @@ describe('Admin Users API - DELETE /api/admin/users/[id]', () => {
   const defaultUser = { id: 'admin-1', email: 'admin@example.com' }
   const targetUser = {
     id: 'user-1',
-    role: { name: 'user' }
+    role: { name: 'user', code: 'USER' }
   }
 
   beforeEach(() => {
     vi.clearAllMocks()
     mockRequireAuth.mockResolvedValue({ user: defaultUser })
+    mockCheckPermission.mockReturnValue(true)
+    mockIsSuperadmin.mockReturnValue(false)
     mockPrisma.user.findUnique
-      .mockResolvedValueOnce({
-        id: 'admin-1',
-        email: 'admin@example.com',
-        role: { name: 'admin' }
-      })
       .mockResolvedValueOnce(targetUser)
 
     mockPrisma.user.delete.mockResolvedValue(targetUser as any)
@@ -469,14 +463,6 @@ describe('Admin Users API - DELETE /api/admin/users/[id]', () => {
   })
 
   it('prevents self-deletion', async () => {
-    mockPrisma.user.findUnique
-      .mockReset()
-      .mockResolvedValueOnce({
-        id: 'admin-1',
-        email: 'admin@example.com',
-        role: { name: 'admin' }
-      })
-
     const request = jsonRequest('http://localhost/api/admin/users/admin-1', 'DELETE')
 
     const response = await DELETE(request, { params: Promise.resolve({ id: 'admin-1' }) })
@@ -491,13 +477,8 @@ describe('Admin Users API - DELETE /api/admin/users/[id]', () => {
     mockPrisma.user.findUnique
       .mockReset()
       .mockResolvedValueOnce({
-        id: 'admin-1',
-        email: 'admin@example.com',
-        role: { name: 'admin' }
-      })
-      .mockResolvedValueOnce({
         id: 'superadmin-1',
-        role: { name: 'superadmin' }
+        role: { name: 'superadmin', code: 'SUPERADMIN' }
       })
 
     const request = jsonRequest('http://localhost/api/admin/users/superadmin-1', 'DELETE')
@@ -513,11 +494,6 @@ describe('Admin Users API - DELETE /api/admin/users/[id]', () => {
   it('returns 404 for non-existent user', async () => {
     mockPrisma.user.findUnique
       .mockReset()
-      .mockResolvedValueOnce({
-        id: 'admin-1',
-        email: 'admin@example.com',
-        role: { name: 'admin' }
-      })
       .mockResolvedValueOnce(null)
 
     const request = jsonRequest('http://localhost/api/admin/users/non-existent', 'DELETE')
@@ -529,4 +505,3 @@ describe('Admin Users API - DELETE /api/admin/users/[id]', () => {
     expect(body.message).toContain('not found')
   })
 })
-

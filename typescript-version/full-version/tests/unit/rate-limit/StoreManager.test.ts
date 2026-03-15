@@ -37,16 +37,16 @@ describe('StoreManager', () => {
   })
 
   describe('getStore', () => {
-    it('returns the current store', () => {
-      const store = service.getStore()
+    it('returns the current store', async () => {
+      const store = await service.getStore()
       expect(store).toBe(mockStore)
     })
   })
 
   describe('switchToFallback', () => {
-    it('does nothing if no fallback store is set', () => {
+    it('does nothing if no fallback store is set', async () => {
       service.switchToFallback()
-      expect(service.getStore()).toBe(mockStore)
+      expect(await service.getStore()).toBe(mockStore)
     })
 
     // TODO: Add test for fallback store switching when implemented

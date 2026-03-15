@@ -18,18 +18,14 @@ vi.mock('xlsx', () => ({
 
 // Mock papaparse
 const mockPapa = {
-  parse: vi.fn((file, options) => {
-    if (options.complete) {
-      options.complete({
-        data: [
-          { 'Full Name': 'User 1', Email: 'user1@test.com' },
-          { 'Full Name': 'User 2', Email: 'invalid-email' },
-          { 'Full Name': 'User 3', Email: 'user3@test.com' }
-        ],
-        errors: []
-      })
-    }
-  })
+  parse: vi.fn(() => ({
+    data: [
+      { 'Full Name': 'User 1', Email: 'user1@test.com' },
+      { 'Full Name': 'User 2', Email: 'invalid-email' },
+      { 'Full Name': 'User 3', Email: 'user3@test.com' }
+    ],
+    errors: []
+  }))
 }
 
 vi.mock('papaparse', () => ({
@@ -130,12 +126,12 @@ describe('ImportPreviewService', () => {
     it('should limit preview rows', async () => {
       // Arrange
       const file = new File(['test'], 'test.csv', { type: 'text/csv' })
-      mockPapa.parse.mockImplementation((file, options) => {
+      mockPapa.parse.mockImplementation(() => {
         const data = Array.from({ length: 100 }, (_, i) => ({
           'Full Name': `User ${i}`,
           Email: `user${i}@test.com`
         }))
-        options.complete({ data, errors: [] })
+        return { data, errors: [] }
       })
       vi.mocked(mockAdapter.validateImportData).mockReturnValue([])
 
@@ -205,14 +201,12 @@ describe('ImportPreviewService', () => {
         errors: []
       })
       // Create data with 150 rows
-      mockPapa.parse.mockImplementation((file, options) => {
+      mockPapa.parse.mockImplementation(() => {
         const data = Array.from({ length: 150 }, (_, i) => ({
           'Full Name': `User ${i}`,
           Email: `user${i}@test.com`
         }))
-        if (options.complete) {
-          options.complete({ data, errors: [] })
-        }
+        return { data, errors: [] }
       })
       const validationErrors: ValidationError[] = Array.from({ length: 150 }, (_, i) => ({
         row: i + 1,
@@ -240,14 +234,12 @@ describe('ImportPreviewService', () => {
         errors: []
       })
       // Create data with 50 rows
-      mockPapa.parse.mockImplementation((file, options) => {
+      mockPapa.parse.mockImplementation(() => {
         const data = Array.from({ length: 50 }, (_, i) => ({
           'Full Name': `User ${i}`,
           Email: `user${i}@test.com`
         }))
-        if (options.complete) {
-          options.complete({ data, errors: [] })
-        }
+        return { data, errors: [] }
       })
       const validationErrors: ValidationError[] = Array.from({ length: 50 }, (_, i) => ({
         row: i + 1,

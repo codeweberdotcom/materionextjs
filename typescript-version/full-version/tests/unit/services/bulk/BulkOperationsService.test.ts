@@ -79,6 +79,13 @@ describe('BulkOperationsService', () => {
       updateOperation: vi.fn()
     }
 
+    beforeEach(() => {
+      // Reset optional properties that tests may have set on the shared mockConfig
+      delete (mockConfig.options as any).filterIds
+      delete (mockConfig.options as any).beforeOperation
+      mockConfig.updateOperation = vi.fn()
+    })
+
     it('should successfully update multiple items', async () => {
       // Arrange
       const ids = ['id-1', 'id-2']

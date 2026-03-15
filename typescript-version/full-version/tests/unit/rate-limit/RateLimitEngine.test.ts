@@ -110,6 +110,7 @@ describe('RateLimitEngine', () => {
         ipPrefix: null,
         hashVersion: 1,
         debugEmail: null,
+        environment: 'production',
         recordEvent: expect.any(Function)
       })
     })
@@ -165,6 +166,7 @@ describe('RateLimitEngine', () => {
         ipPrefix: '192.168.1.0/24',
         hashVersion: 1,
         debugEmail: 'debug@example.com',
+        environment: 'production',
         recordEvent: expect.any(Function)
       })
     })

@@ -24,16 +24,16 @@ export const userBulkActivateConfig: BulkOperationConfig = {
         where: { id: { in: ids } },
         select: {
           id: true,
-          role: { select: { name: true } }
+          role: { select: { code: true } }
         }
       })
-      
+
       // Исключаем superadmin
       return users
         .filter(u => (u.role as any)?.code !== 'SUPERADMIN')
         .map(u => u.id)
     },
-    
+
     eventConfig: {
       source: 'user_management',
       module: 'users',
@@ -80,21 +80,21 @@ export const userBulkDeactivateConfig: BulkOperationConfig = {
         where: { id: { in: ids } },
         select: {
           id: true,
-          role: { select: { name: true } }
+          role: { select: { code: true } }
         }
       })
-      
+
       // Исключаем superadmin и текущего пользователя
       return users
         .filter(u => {
           if ((u.role as any)?.code === 'SUPERADMIN') return false
           if (u.id === context.currentUser.id) return false
-          
-return true
+
+          return true
         })
         .map(u => u.id)
     },
-    
+
     beforeOperation: async (tx: Prisma.TransactionClient, ids: string[], context: BulkOperationContext) => {
       // Удаляем сессии при деактивации
       await tx.session.deleteMany({
@@ -148,21 +148,21 @@ export const userBulkDeleteConfig: BulkOperationConfig = {
         where: { id: { in: ids } },
         select: {
           id: true,
-          role: { select: { name: true } }
+          role: { select: { code: true } }
         }
       })
-      
+
       // Исключаем superadmin и текущего пользователя
       return users
         .filter(u => {
           if ((u.role as any)?.code === 'SUPERADMIN') return false
           if (u.id === context.currentUser.id) return false
-          
-return true
+
+          return true
         })
         .map(u => u.id)
     },
-    
+
     eventConfig: {
       source: 'user_management',
       module: 'users',

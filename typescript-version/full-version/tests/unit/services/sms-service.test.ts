@@ -2,194 +2,228 @@
  * Unit тесты для SMS-сервиса
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Mock node-sms-ru
+// Mock node-sms-ru - service uses named export { SMSRu }
 vi.mock('node-sms-ru', () => {
   return {
-    default: vi.fn().mockImplementation(() => ({
-      sms_send: vi.fn(),
-      sms_status: vi.fn(),
-      my_balance: vi.fn()
+    SMSRu: vi.fn().mockImplementation(() => ({
+      sendSms: vi.fn(),
+      getBalance: vi.fn()
     }))
   }
 })
 
-// Mock fs
-vi.mock('fs/promises', () => ({
-  readFile: vi.fn(),
-  writeFile: vi.fn()
+// SMSRuSettingsService uses `import fs from 'fs'` (sync methods only)
+vi.mock('fs', () => {
+  const existsSyncFn = vi.fn()
+  const readFileSyncFn = vi.fn()
+  const writeFileSyncFn = vi.fn()
+  const mkdirSyncFn = vi.fn()
+
+  return {
+    default: {
+      existsSync: existsSyncFn,
+      readFileSync: readFileSyncFn,
+      writeFileSync: writeFileSyncFn,
+      mkdirSync: mkdirSyncFn
+    },
+    existsSync: existsSyncFn,
+    readFileSync: readFileSyncFn,
+    writeFileSync: writeFileSyncFn,
+    mkdirSync: mkdirSyncFn
+  }
+})
+
+// Mock path (used in SMSRuSettingsService)
+vi.mock('path', async () => {
+  const actual = await vi.importActual<typeof import('path')>('path')
+
+  return {
+    default: actual,
+    ...actual
+  }
+})
+
+// Mock logger
+vi.mock('@/lib/logger', () => ({
+  default: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn()
+  }
 }))
 
-vi.mock('fs', () => ({
-  existsSync: vi.fn()
-}))
-
-describe('SMSService', () => {
+describe('SMSRuProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Reset module cache to get fresh instance
     vi.resetModules()
   })
 
-  afterEach(() => {
-    vi.resetAllMocks()
-  })
-
-  describe('sendSms', () => {
-    it('should send SMS successfully', async () => {
-      const SMSru = (await import('node-sms-ru')).default
+  describe('sendCode', () => {
+    it('should send SMS code successfully', async () => {
+      const { SMSRu } = await import('node-sms-ru')
       const mockInstance = {
-        sms_send: vi.fn().mockResolvedValue({
+        sendSms: vi.fn().mockResolvedValue({
           status: 'OK',
-          sms: { '+79991234567': { status: 'OK', sms_id: '123' } }
+          sms: { '+79991234567': { status: 'OK', sms_id: '123', cost: '1.00' } }
         })
       }
-      ;(SMSru as any).mockImplementation(() => mockInstance)
+      ;(SMSRu as any).mockImplementation(() => mockInstance)
 
       const { SMSRuProvider } = await import('@/services/sms/providers/SMSRuProvider')
-      const provider = new SMSRuProvider('test-api-key')
-      
-      const result = await provider.sendSms({
-        to: '+79991234567',
-        msg: 'Ваш код: 123456'
-      })
+      const provider = new SMSRuProvider({ apiKey: 'test-api-key', testMode: false })
+
+      const result = await provider.sendCode('+79991234567', '123456')
 
       expect(result.success).toBe(true)
-      expect(mockInstance.sms_send).toHaveBeenCalled()
+      expect(mockInstance.sendSms).toHaveBeenCalled()
+    })
+
+    it('should return test result in test mode', async () => {
+      const { SMSRu } = await import('node-sms-ru')
+      const mockInstance = {
+        sendSms: vi.fn()
+      }
+      ;(SMSRu as any).mockImplementation(() => mockInstance)
+
+      const { SMSRuProvider } = await import('@/services/sms/providers/SMSRuProvider')
+      const provider = new SMSRuProvider({ apiKey: 'test-api-key', testMode: true })
+
+      const result = await provider.sendCode('+79991234567', '123456')
+
+      expect(result.success).toBe(true)
+      expect(result.message).toContain('test mode')
+      // Should NOT call real SMS API in test mode
+      expect(mockInstance.sendSms).not.toHaveBeenCalled()
     })
 
     it('should handle SMS send failure', async () => {
-      const SMSru = (await import('node-sms-ru')).default
+      const { SMSRu } = await import('node-sms-ru')
       const mockInstance = {
-        sms_send: vi.fn().mockRejectedValue(new Error('Network error'))
+        sendSms: vi.fn().mockRejectedValue(new Error('Network error'))
       }
-      ;(SMSru as any).mockImplementation(() => mockInstance)
+      ;(SMSRu as any).mockImplementation(() => mockInstance)
 
       const { SMSRuProvider } = await import('@/services/sms/providers/SMSRuProvider')
-      const provider = new SMSRuProvider('test-api-key')
-      
-      const result = await provider.sendSms({
-        to: '+79991234567',
-        msg: 'Ваш код: 123456'
-      })
+      const provider = new SMSRuProvider({ apiKey: 'test-api-key', testMode: false })
+
+      const result = await provider.sendCode('+79991234567', '123456')
 
       expect(result.success).toBe(false)
       expect(result.error).toBeDefined()
     })
 
-    it('should normalize phone number before sending', async () => {
-      const SMSru = (await import('node-sms-ru')).default
+    it('should handle SMS.ru API error status', async () => {
+      const { SMSRu } = await import('node-sms-ru')
       const mockInstance = {
-        sms_send: vi.fn().mockResolvedValue({
-          status: 'OK',
-          sms: { '79991234567': { status: 'OK', sms_id: '123' } }
+        sendSms: vi.fn().mockResolvedValue({
+          status: 'ERROR',
+          status_text: 'Invalid API key'
         })
       }
-      ;(SMSru as any).mockImplementation(() => mockInstance)
+      ;(SMSRu as any).mockImplementation(() => mockInstance)
 
       const { SMSRuProvider } = await import('@/services/sms/providers/SMSRuProvider')
-      const provider = new SMSRuProvider('test-api-key')
-      
-      await provider.sendSms({
-        to: '89991234567', // 8 prefix
-        msg: 'Test message'
-      })
+      const provider = new SMSRuProvider({ apiKey: 'bad-key', testMode: false })
 
-      // Should be called with normalized number
-      expect(mockInstance.sms_send).toHaveBeenCalled()
-    })
-  })
+      const result = await provider.sendCode('+79991234567', '123456')
 
-  describe('checkSmsStatuses', () => {
-    it('should check SMS status successfully', async () => {
-      const SMSru = (await import('node-sms-ru')).default
-      const mockInstance = {
-        sms_status: vi.fn().mockResolvedValue({
-          status: 'OK',
-          sms: { '123': { status: 'delivered' } }
-        })
-      }
-      ;(SMSru as any).mockImplementation(() => mockInstance)
-
-      const { SMSRuProvider } = await import('@/services/sms/providers/SMSRuProvider')
-      const provider = new SMSRuProvider('test-api-key')
-      
-      const result = await provider.checkSmsStatuses(['123'])
-
-      expect(result.success).toBe(true)
-      expect(mockInstance.sms_status).toHaveBeenCalledWith(['123'])
+      expect(result.success).toBe(false)
+      expect(result.error).toBeDefined()
     })
   })
 
   describe('getBalance', () => {
-    it('should get balance successfully', async () => {
-      const SMSru = (await import('node-sms-ru')).default
+    it('should return balance number successfully', async () => {
+      const { SMSRu } = await import('node-sms-ru')
       const mockInstance = {
-        my_balance: vi.fn().mockResolvedValue({
+        getBalance: vi.fn().mockResolvedValue({
           status: 'OK',
           balance: '100.50'
         })
       }
-      ;(SMSru as any).mockImplementation(() => mockInstance)
+      ;(SMSRu as any).mockImplementation(() => mockInstance)
 
       const { SMSRuProvider } = await import('@/services/sms/providers/SMSRuProvider')
-      const provider = new SMSRuProvider('test-api-key')
-      
-      const result = await provider.getBalance()
+      const provider = new SMSRuProvider({ apiKey: 'test-api-key', testMode: false })
 
-      expect(result.success).toBe(true)
-      expect(result.balance).toBe(100.5)
+      const balance = await provider.getBalance()
+
+      expect(typeof balance).toBe('number')
+      expect(balance).toBe(100.5)
     })
 
-    it('should handle balance check failure', async () => {
-      const SMSru = (await import('node-sms-ru')).default
+    it('should return test balance in test mode', async () => {
+      const { SMSRu } = await import('node-sms-ru')
       const mockInstance = {
-        my_balance: vi.fn().mockRejectedValue(new Error('API error'))
+        getBalance: vi.fn()
       }
-      ;(SMSru as any).mockImplementation(() => mockInstance)
+      ;(SMSRu as any).mockImplementation(() => mockInstance)
 
       const { SMSRuProvider } = await import('@/services/sms/providers/SMSRuProvider')
-      const provider = new SMSRuProvider('test-api-key')
-      
-      const result = await provider.getBalance()
+      const provider = new SMSRuProvider({ apiKey: 'test-api-key', testMode: true })
 
-      expect(result.success).toBe(false)
+      const balance = await provider.getBalance()
+
+      expect(balance).toBe(100.0)
+      expect(mockInstance.getBalance).not.toHaveBeenCalled()
+    })
+
+    it('should throw on balance check failure', async () => {
+      const { SMSRu } = await import('node-sms-ru')
+      const mockInstance = {
+        getBalance: vi.fn().mockRejectedValue(new Error('API error'))
+      }
+      ;(SMSRu as any).mockImplementation(() => mockInstance)
+
+      const { SMSRuProvider } = await import('@/services/sms/providers/SMSRuProvider')
+      const provider = new SMSRuProvider({ apiKey: 'test-api-key', testMode: false })
+
+      await expect(provider.getBalance()).rejects.toThrow('API error')
     })
   })
 
-  describe('testConnection', () => {
-    it('should test connection by checking balance', async () => {
-      const SMSru = (await import('node-sms-ru')).default
-      const mockInstance = {
-        my_balance: vi.fn().mockResolvedValue({
-          status: 'OK',
-          balance: '50.00'
-        })
-      }
-      ;(SMSru as any).mockImplementation(() => mockInstance)
+  describe('validatePhone', () => {
+    it('should validate Russian phone number', async () => {
+      const { SMSRu } = await import('node-sms-ru')
+      ;(SMSRu as any).mockImplementation(() => ({}))
 
       const { SMSRuProvider } = await import('@/services/sms/providers/SMSRuProvider')
-      const provider = new SMSRuProvider('test-api-key')
-      
-      const result = await provider.testConnection()
+      const provider = new SMSRuProvider({ apiKey: 'test-api-key' })
 
-      expect(result.success).toBe(true)
+      expect(provider.validatePhone('+79991234567')).toBe(true)
     })
 
-    it('should return false for failed connection', async () => {
-      const SMSru = (await import('node-sms-ru')).default
-      const mockInstance = {
-        my_balance: vi.fn().mockRejectedValue(new Error('Connection failed'))
-      }
-      ;(SMSru as any).mockImplementation(() => mockInstance)
+    it('should reject non-Russian phone number', async () => {
+      const { SMSRu } = await import('node-sms-ru')
+      ;(SMSRu as any).mockImplementation(() => ({}))
 
       const { SMSRuProvider } = await import('@/services/sms/providers/SMSRuProvider')
-      const provider = new SMSRuProvider('test-api-key')
-      
-      const result = await provider.testConnection()
+      const provider = new SMSRuProvider({ apiKey: 'test-api-key' })
 
-      expect(result.success).toBe(false)
+      expect(provider.validatePhone('+19991234567')).toBe(false)
+    })
+  })
+
+  describe('sendTest', () => {
+    it('should send test SMS successfully', async () => {
+      const { SMSRu } = await import('node-sms-ru')
+      const mockInstance = {
+        sendSms: vi.fn().mockResolvedValue({
+          status: 'OK',
+          sms: { '+79991234567': { status: 'OK', sms_id: '456', cost: '0.50' } }
+        })
+      }
+      ;(SMSRu as any).mockImplementation(() => mockInstance)
+
+      const { SMSRuProvider } = await import('@/services/sms/providers/SMSRuProvider')
+      const provider = new SMSRuProvider({ apiKey: 'test-api-key', testMode: false })
+
+      const result = await provider.sendTest('+79991234567', 'Test message')
+
+      expect(result.success).toBe(true)
     })
   })
 })
@@ -202,33 +236,30 @@ describe('SMSRuSettingsService', () => {
 
   describe('getSettings', () => {
     it('should return default settings if file not found', async () => {
-      const { existsSync } = await import('fs')
-      ;(existsSync as any).mockReturnValue(false)
+      const fs = await import('fs')
+      ;(fs.existsSync as any).mockReturnValue(false)
 
-      // Import fresh instance
-      vi.resetModules()
       const { smsRuSettingsService } = await import('@/services/settings/SMSRuSettingsService')
-      
+
       const settings = await smsRuSettingsService.getSettings()
 
       expect(settings).toBeDefined()
-      expect(settings.testMode).toBeDefined()
+      expect(typeof settings.testMode).toBe('boolean')
     })
 
     it('should read settings from file', async () => {
-      const { existsSync } = await import('fs')
-      const { readFile } = await import('fs/promises')
-      
-      ;(existsSync as any).mockReturnValue(true)
-      ;(readFile as any).mockResolvedValue(JSON.stringify({
-        apiKey: 'saved-api-key',
-        sender: 'MySender',
-        testMode: false
-      }))
+      const fs = await import('fs')
+      ;(fs.existsSync as any).mockReturnValue(true)
+      ;(fs.readFileSync as any).mockReturnValue(
+        JSON.stringify({
+          apiKey: 'saved-api-key',
+          sender: 'MySender',
+          testMode: false
+        })
+      )
 
-      vi.resetModules()
       const { smsRuSettingsService } = await import('@/services/settings/SMSRuSettingsService')
-      
+
       const settings = await smsRuSettingsService.getSettings()
 
       expect(settings.sender).toBe('MySender')
@@ -237,24 +268,20 @@ describe('SMSRuSettingsService', () => {
 
   describe('updateSettings', () => {
     it('should save settings to file', async () => {
-      const { writeFile } = await import('fs/promises')
-      ;(writeFile as any).mockResolvedValue(undefined)
+      const fs = await import('fs')
+      ;(fs.existsSync as any).mockReturnValue(false)
+      ;(fs.writeFileSync as any).mockReturnValue(undefined)
+      ;(fs.mkdirSync as any).mockReturnValue(undefined)
 
-      vi.resetModules()
       const { smsRuSettingsService } = await import('@/services/settings/SMSRuSettingsService')
-      
+
       await smsRuSettingsService.updateSettings({
         apiKey: 'new-api-key',
         sender: 'NewSender',
         testMode: true
       })
 
-      expect(writeFile).toHaveBeenCalled()
+      expect(fs.writeFileSync).toHaveBeenCalled()
     })
   })
 })
-
-
-
-
-

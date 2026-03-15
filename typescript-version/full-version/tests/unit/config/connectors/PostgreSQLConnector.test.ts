@@ -19,7 +19,8 @@ vi.mock('pg', () => {
 
 // Mock encryption
 vi.mock('@/lib/config/encryption', () => ({
-  decrypt: vi.fn((value: string) => value.replace('encrypted:', ''))
+  decrypt: vi.fn((value: string) => value.replace('encrypted:', '')),
+  safeDecrypt: vi.fn((value: string) => value.replace('encrypted:', ''))
 }))
 
 // Mock logger
@@ -33,9 +34,10 @@ vi.mock('@/lib/logger', () => ({
 }))
 
 import { Client } from 'pg'
-import { decrypt } from '@/lib/config/encryption'
+import { decrypt, safeDecrypt } from '@/lib/config/encryption'
 
 const mockDecrypt = decrypt as vi.MockedFunction<typeof decrypt>
+const mockSafeDecrypt = safeDecrypt as vi.MockedFunction<typeof safeDecrypt>
 const MockClient = Client as any
 
 describe('PostgreSQLConnector', () => {
@@ -93,6 +95,13 @@ describe('PostgreSQLConnector', () => {
       return value
     })
 
+    mockSafeDecrypt.mockImplementation((value: string) => {
+      if (value.startsWith('encrypted:')) {
+        return value.replace('encrypted:', '')
+      }
+      return value
+    })
+
     connector = new PostgreSQLConnector(mockConfig)
   })
 
@@ -106,7 +115,7 @@ describe('PostgreSQLConnector', () => {
       expect(result.details).toBeDefined()
       expect(result.details?.database).toBe('testdb')
       expect(result.details?.user).toBe('postgres')
-      expect(result.details?.size).toBe('10 MB')
+      expect(result.details?.databaseSize).toBe('10 MB')
 
       expect(mockClientInstance.connect).toHaveBeenCalledTimes(1)
       expect(mockClientInstance.query).toHaveBeenCalledTimes(3)
@@ -129,7 +138,7 @@ describe('PostgreSQLConnector', () => {
       const connectorWithPassword = new PostgreSQLConnector(mockConfig)
       await connectorWithPassword.testConnection()
 
-      expect(mockDecrypt).toHaveBeenCalledWith('encrypted:secret123')
+      expect(mockSafeDecrypt).toHaveBeenCalledWith('encrypted:secret123')
       expect(MockClient).toHaveBeenCalledWith(
         expect.objectContaining({
           password: 'secret123'
@@ -223,6 +232,8 @@ describe('PostgreSQLConnector', () => {
     })
 
     it('should handle missing version in query result', async () => {
+      // Reset the queue set in beforeEach so only these responses apply
+      mockClientInstance.query.mockReset()
       mockClientInstance.query
         .mockResolvedValueOnce({ rows: [{ version: 'Unknown version' }] })
         .mockResolvedValueOnce({ rows: [{}] })
@@ -236,28 +247,29 @@ describe('PostgreSQLConnector', () => {
   })
 
   describe('getClient', () => {
-    it('should create and return PostgreSQL client', () => {
+    it('should return null when no client initialized', () => {
+      // getClient() returns this.client which starts as null
       const client = connector.getClient()
 
-      expect(client).toBe(mockClientInstance)
-      expect(MockClient).toHaveBeenCalled()
+      expect(client).toBeNull()
     })
 
-    it('should return same client on multiple calls', () => {
+    it('should return null on multiple calls without initialization', () => {
       const client1 = connector.getClient()
       const client2 = connector.getClient()
 
-      expect(client1).toBe(client2)
-      expect(MockClient).toHaveBeenCalledTimes(1)
+      expect(client1).toBeNull()
+      expect(client2).toBeNull()
+      // MockClient is NOT called by getClient() — only by testConnection()
+      expect(MockClient).not.toHaveBeenCalled()
     })
   })
 
   describe('disconnect', () => {
-    it('should disconnect client', async () => {
-      connector.getClient()
+    it('should handle disconnect when client is null (not initialized)', async () => {
       await connector.disconnect()
 
-      expect(mockClientInstance.end).toHaveBeenCalled()
+      expect(mockClientInstance.end).not.toHaveBeenCalled()
     })
 
     it('should handle disconnect when client is null', async () => {

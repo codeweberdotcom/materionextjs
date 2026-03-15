@@ -2,7 +2,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { UserAdapter } from '@/services/adapters/UserAdapter'
 import type { UsersType } from '@/types/apps/userTypes'
 
-// Mock fetch
+// Mock fetch (used by client-side path)
 global.fetch = vi.fn()
 
 // Mock logger
@@ -16,6 +16,24 @@ vi.mock('@/lib/logger', () => ({
   }
 }))
 
+// Mock Prisma with named export — UserAdapter lazily imports '@/libs/prisma'
+// and uses prisma.user.findMany, prisma.role.findFirst, prisma.user.create, etc.
+vi.mock('@/libs/prisma', () => ({
+  prisma: {
+    user: {
+      findMany: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      upsert: vi.fn()
+    },
+    role: {
+      findFirst: vi.fn()
+    }
+  }
+}))
+
+import { prisma } from '@/libs/prisma'
+
 describe('UserAdapter', () => {
   let adapter: UserAdapter
 
@@ -26,82 +44,83 @@ describe('UserAdapter', () => {
 
   describe('getDataForExport', () => {
     it('should fetch users data successfully', async () => {
-      // Arrange
-      const mockUsers: UsersType[] = [
+      // Arrange — on server (Node.js), getDataForExport uses prisma.user.findMany directly
+      const mockPrismaUsers = [
         {
           id: '1',
-          fullName: 'User 1',
+          name: 'User 1',
           username: 'user1',
           email: 'user1@test.com',
-          role: 'admin',
+          role: { name: 'admin' },
           status: 'active',
-          isActive: true
-        } as UsersType
+          image: null,
+          createdAt: new Date('2024-01-01')
+        }
       ]
-
-      vi.mocked(fetch).mockResolvedValue({
-        ok: true,
-        json: async () => mockUsers
-      } as Response)
-
-      // Act
-      const result = await adapter.getDataForExport()
-
-      // Assert
-      expect(result).toEqual(mockUsers)
-      expect(fetch).toHaveBeenCalledWith(
-        '/api/admin/users',
-        expect.objectContaining({
-          credentials: 'include'
-        })
-      )
-    })
-
-    it('should fetch users with filters', async () => {
-      // Arrange
-      const filters = { status: 'active', role: 'admin' }
-      const mockUsers: UsersType[] = []
-
-      vi.mocked(fetch).mockResolvedValue({
-        ok: true,
-        json: async () => mockUsers
-      } as Response)
-
-      // Act
-      await adapter.getDataForExport(filters)
-
-      // Assert
-      expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('status=active'),
-        expect.any(Object)
-      )
-    })
-
-    it('should handle API error', async () => {
-      // Arrange
-      vi.mocked(fetch).mockResolvedValue({
-        ok: false,
-        statusText: 'Internal Server Error',
-        text: async () => 'Error message'
-      } as Response)
-
-      // Act & Assert
-      await expect(adapter.getDataForExport()).rejects.toThrow('Failed to fetch users')
-    })
-
-    it('should handle non-array response', async () => {
-      // Arrange
-      vi.mocked(fetch).mockResolvedValue({
-        ok: true,
-        json: async () => ({ data: [{ id: '1' }] })
-      } as Response)
+      vi.mocked(prisma.user.findMany).mockResolvedValue(mockPrismaUsers as any)
 
       // Act
       const result = await adapter.getDataForExport()
 
       // Assert
       expect(Array.isArray(result)).toBe(true)
-      expect(result).toEqual([{ id: '1' }])
+      expect(result.length).toBe(1)
+      expect(result[0].fullName).toBe('User 1')
+      expect(result[0].email).toBe('user1@test.com')
+      expect(result[0].role).toBe('admin')
+      expect(prisma.user.findMany).toHaveBeenCalled()
+    })
+
+    it('should fetch users with filters', async () => {
+      // Arrange
+      const filters = { status: 'active', role: 'admin' }
+      const mockPrismaUsers = [
+        {
+          id: '2',
+          name: 'Admin User',
+          username: 'adminuser',
+          email: 'admin@test.com',
+          role: { name: 'admin' },
+          status: 'active',
+          image: null,
+          createdAt: new Date('2024-01-01')
+        }
+      ]
+      vi.mocked(prisma.user.findMany).mockResolvedValue(mockPrismaUsers as any)
+
+      // Act
+      const result = await adapter.getDataForExport(filters)
+
+      // Assert
+      expect(Array.isArray(result)).toBe(true)
+      expect(prisma.user.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: 'active',
+            role: { code: 'ADMIN' }
+          })
+        })
+      )
+    })
+
+    it('should handle API error', async () => {
+      // Arrange — prisma throws an error
+      vi.mocked(prisma.user.findMany).mockRejectedValue(new Error('DB connection failed'))
+
+      // Act & Assert
+      await expect(adapter.getDataForExport()).rejects.toThrow('Failed to fetch users')
+    })
+
+    it('should handle empty result', async () => {
+      // Arrange
+      vi.mocked(prisma.user.findMany).mockResolvedValue([])
+
+      // Act
+      const result = await adapter.getDataForExport()
+
+      // Assert
+      expect(Array.isArray(result)).toBe(true)
+      expect(result).toEqual([])
     })
   })
 
@@ -408,6 +427,9 @@ describe('UserAdapter', () => {
   })
 
   describe('saveImportedData', () => {
+    // NOTE: saveImportedData uses Prisma directly on server (Node.js env).
+    // It calls prisma.role.findFirst to resolve the role, then creates/updates/upserts.
+
     it('should save data in create mode', async () => {
       // Arrange
       const data = [
@@ -420,11 +442,9 @@ describe('UserAdapter', () => {
           isActive: true
         }
       ]
-
-      vi.mocked(fetch).mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: '1' })
-      } as Response)
+      const mockRole = { id: 'role-1', name: 'admin', code: 'ADMIN' }
+      vi.mocked(prisma.role.findFirst).mockResolvedValue(mockRole as any)
+      vi.mocked(prisma.user.create).mockResolvedValue({ id: 'user-1' } as any)
 
       // Act
       const result = await adapter.saveImportedData(data, 'create')
@@ -432,10 +452,13 @@ describe('UserAdapter', () => {
       // Assert
       expect(result.successCount).toBe(1)
       expect(result.errorCount).toBe(0)
-      expect(fetch).toHaveBeenCalledWith(
-        '/api/admin/users',
+      expect(prisma.role.findFirst).toHaveBeenCalled()
+      expect(prisma.user.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'POST'
+          data: expect.objectContaining({
+            email: 'user1@test.com',
+            roleId: 'role-1'
+          })
         })
       )
     })
@@ -451,21 +474,18 @@ describe('UserAdapter', () => {
           isActive: true
         }
       ]
-
-      vi.mocked(fetch).mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: '1' })
-      } as Response)
+      const mockRole = { id: 'role-1', name: 'admin', code: 'ADMIN' }
+      vi.mocked(prisma.role.findFirst).mockResolvedValue(mockRole as any)
+      vi.mocked(prisma.user.update).mockResolvedValue({ id: 'user-1' } as any)
 
       // Act
       const result = await adapter.saveImportedData(data, 'update')
 
       // Assert
       expect(result.successCount).toBe(1)
-      expect(fetch).toHaveBeenCalledWith(
-        '/api/admin/users/update-by-email',
+      expect(prisma.user.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'PATCH'
+          where: { email: 'user1@test.com' }
         })
       )
     })
@@ -481,21 +501,18 @@ describe('UserAdapter', () => {
           isActive: true
         }
       ]
-
-      vi.mocked(fetch).mockResolvedValue({
-        ok: true,
-        json: async () => ({ id: '1' })
-      } as Response)
+      const mockRole = { id: 'role-1', name: 'admin', code: 'ADMIN' }
+      vi.mocked(prisma.role.findFirst).mockResolvedValue(mockRole as any)
+      vi.mocked(prisma.user.upsert).mockResolvedValue({ id: 'user-1' } as any)
 
       // Act
       const result = await adapter.saveImportedData(data, 'upsert')
 
       // Assert
       expect(result.successCount).toBe(1)
-      expect(fetch).toHaveBeenCalledWith(
-        '/api/admin/users/upsert',
+      expect(prisma.user.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          method: 'POST'
+          where: { email: 'user1@test.com' }
         })
       )
     })
@@ -518,16 +535,11 @@ describe('UserAdapter', () => {
           isActive: true
         }
       ]
-
-      vi.mocked(fetch)
-        .mockResolvedValueOnce({
-          ok: true,
-          json: async () => ({ id: '1' })
-        } as Response)
-        .mockResolvedValueOnce({
-          ok: false,
-          json: async () => ({ message: 'Error' })
-        } as Response)
+      const mockRole = { id: 'role-1', name: 'admin', code: 'ADMIN' }
+      vi.mocked(prisma.role.findFirst).mockResolvedValue(mockRole as any)
+      vi.mocked(prisma.user.create)
+        .mockResolvedValueOnce({ id: 'user-1' } as any)
+        .mockRejectedValueOnce(new Error('Unique constraint failed on email'))
 
       // Act
       const result = await adapter.saveImportedData(data, 'create')
@@ -538,12 +550,3 @@ describe('UserAdapter', () => {
     })
   })
 })
-
-
-
-
-
-
-
-
-

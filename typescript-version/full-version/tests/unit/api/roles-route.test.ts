@@ -7,6 +7,24 @@ vi.mock('@/utils/auth/auth', () => ({
   requireAuth: vi.fn()
 }))
 
+vi.mock('@/utils/permissions/permissions', () => ({
+  checkPermission: vi.fn().mockReturnValue(true),
+  isSuperadmin: vi.fn().mockReturnValue(false),
+  canModifyUserByRole: vi.fn().mockReturnValue(true)
+}))
+
+vi.mock('@/utils/formatting/string', () => ({
+  canModifyRoleByObject: vi.fn().mockReturnValue(true)
+}))
+
+vi.mock('@/shared/config/protected-roles', () => ({
+  isSystemRole: vi.fn().mockReturnValue(false)
+}))
+
+vi.mock('@/services/events/event-helpers', () => ({
+  enrichEventInputFromRequest: vi.fn((request, input) => input)
+}))
+
 vi.mock('@/libs/prisma', () => ({
   prisma: {
     user: {
@@ -49,6 +67,9 @@ vi.mock('@/lib/metrics/roles', () => ({
 }))
 
 import { requireAuth as mockRequireAuth } from '@/utils/auth/auth'
+import { checkPermission as mockCheckPermission, isSuperadmin as mockIsSuperadmin } from '@/utils/permissions/permissions'
+import { canModifyRoleByObject as mockCanModifyRoleByObject } from '@/utils/formatting/string'
+import { isSystemRole as mockIsSystemRole } from '@/shared/config/protected-roles'
 import { prisma as mockPrisma } from '@/libs/prisma'
 import { eventService as mockEventService } from '@/services/events/EventService'
 import { PUT, DELETE } from '@/app/api/admin/roles/[id]/route'
@@ -63,7 +84,11 @@ const jsonRequest = (url: string, method: string, body: unknown) =>
   })
 
 describe('Admin Roles API routes', () => {
-  const defaultUser = { id: 'user-1', email: 'admin@example.com' }
+  const defaultUser = {
+    id: 'user-1',
+    email: 'admin@example.com',
+    role: { name: 'admin', code: 'ADMIN', level: 10 }
+  }
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -75,6 +100,10 @@ describe('Admin Roles API routes', () => {
       cacheStore.clear.mockClear()
     }
     mockRequireAuth.mockResolvedValue({ user: defaultUser })
+    mockCheckPermission.mockReturnValue(true)
+    mockIsSuperadmin.mockReturnValue(false)
+    mockCanModifyRoleByObject.mockReturnValue(true)
+    mockIsSystemRole.mockReturnValue(false)
     // admin role with full roleManagement permissions
     mockPrisma.user.findUnique.mockResolvedValue({
       id: 'user-1',
@@ -97,6 +126,7 @@ describe('Admin Roles API routes', () => {
   })
 
   it('denies role update when hierarchy rules are violated', async () => {
+    mockCanModifyRoleByObject.mockReturnValue(false)
     mockPrisma.role.findUnique.mockResolvedValue({
       id: 'role-1',
       name: 'superadmin',
@@ -129,7 +159,7 @@ describe('Admin Roles API routes', () => {
   })
 
   it('prevents deleting protected roles', async () => {
-    // Use a protected role that admin can delete by hierarchy (e.g., moderator)
+    mockIsSystemRole.mockReturnValue(true)
     mockPrisma.role.findUnique.mockResolvedValue({
       id: 'role-2',
       name: 'moderator',
@@ -147,4 +177,3 @@ describe('Admin Roles API routes', () => {
     expect(mockPrisma.role.delete).not.toHaveBeenCalled()
   })
 })
-

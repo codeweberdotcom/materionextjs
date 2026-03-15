@@ -5,7 +5,11 @@ let metricsModule: typeof import('@/lib/metrics/database') | null = null
 
 if (typeof window === 'undefined') {
   // Dynamic import for server-only metrics
-  metricsModule = require('@/lib/metrics/database')
+  try {
+    metricsModule = require('@/lib/metrics/database')
+  } catch {
+    // Metrics not available in test environment (CJS cannot resolve path aliases)
+  }
 }
 
 const globalForPrisma = globalThis as typeof globalThis & {

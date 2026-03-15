@@ -120,22 +120,9 @@ describe('ServiceConfigResolver', () => {
     })
 
     it('should ignore disabled admin config', async () => {
-      const mockDisabledConfig = {
-        id: '1',
-        name: 'redis' as ServiceName,
-        host: 'redis.example.com',
-        port: 6380,
-        protocol: 'redis://',
-        username: null,
-        password: null,
-        token: null,
-        tlsEnabled: false,
-        enabled: false, // Disabled
-        basePath: '',
-        metadata: null
-      }
-
-      mockPrisma.serviceConfiguration.findFirst.mockResolvedValue(mockDisabledConfig)
+      // Source queries DB with enabled: true in WHERE clause.
+      // A disabled config would not be returned by DB, so mock returns null.
+      mockPrisma.serviceConfiguration.findFirst.mockResolvedValue(null)
       process.env.REDIS_URL = 'redis://redis.env.com:6379'
 
       const config = await serviceConfigResolver.getConfig('redis')

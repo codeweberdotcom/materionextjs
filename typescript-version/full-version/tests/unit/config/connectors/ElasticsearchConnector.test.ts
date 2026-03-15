@@ -24,7 +24,8 @@ vi.mock('@elastic/elasticsearch', () => {
 
 // Mock encryption
 vi.mock('@/lib/config/encryption', () => ({
-  decrypt: vi.fn((value: string) => value.replace('encrypted:', ''))
+  decrypt: vi.fn((value: string) => value.replace('encrypted:', '')),
+  safeDecrypt: vi.fn((value: string) => value.replace('encrypted:', ''))
 }))
 
 // Mock logger
@@ -38,9 +39,10 @@ vi.mock('@/lib/logger', () => ({
 }))
 
 import { Client } from '@elastic/elasticsearch'
-import { decrypt } from '@/lib/config/encryption'
+import { decrypt, safeDecrypt } from '@/lib/config/encryption'
 
 const mockDecrypt = decrypt as vi.MockedFunction<typeof decrypt>
+const mockSafeDecrypt = safeDecrypt as vi.MockedFunction<typeof safeDecrypt>
 const MockClient = Client as any
 
 describe('ElasticsearchConnector', () => {
@@ -104,6 +106,13 @@ describe('ElasticsearchConnector', () => {
     }
 
     mockDecrypt.mockImplementation((value: string) => {
+      if (value.startsWith('encrypted:')) {
+        return value.replace('encrypted:', '')
+      }
+      return value
+    })
+
+    mockSafeDecrypt.mockImplementation((value: string) => {
       if (value.startsWith('encrypted:')) {
         return value.replace('encrypted:', '')
       }
@@ -198,7 +207,7 @@ describe('ElasticsearchConnector', () => {
       const connectorWithAuth = new ElasticsearchConnector(mockConfig)
       await connectorWithAuth.testConnection()
 
-      expect(mockDecrypt).toHaveBeenCalledWith('encrypted:secret123')
+      expect(mockSafeDecrypt).toHaveBeenCalledWith('encrypted:secret123')
       expect(MockClient).toHaveBeenCalledWith(
         expect.objectContaining({
           auth: {
@@ -218,7 +227,7 @@ describe('ElasticsearchConnector', () => {
       const connectorWithApiKey = new ElasticsearchConnector(mockConfig)
       await connectorWithApiKey.testConnection()
 
-      expect(mockDecrypt).toHaveBeenCalledWith('encrypted:api-key-value')
+      expect(mockSafeDecrypt).toHaveBeenCalledWith('encrypted:api-key-value')
       expect(MockClient).toHaveBeenCalledWith(
         expect.objectContaining({
           auth: {
@@ -237,7 +246,7 @@ describe('ElasticsearchConnector', () => {
       const connectorWithToken = new ElasticsearchConnector(mockConfig)
       await connectorWithToken.testConnection()
 
-      expect(mockDecrypt).toHaveBeenCalledWith('encrypted:bearer-token')
+      expect(mockSafeDecrypt).toHaveBeenCalledWith('encrypted:bearer-token')
       expect(MockClient).toHaveBeenCalledWith(
         expect.objectContaining({
           auth: {
@@ -269,7 +278,7 @@ describe('ElasticsearchConnector', () => {
       const connectorWithCert = new ElasticsearchConnector(mockConfig)
       await connectorWithCert.testConnection()
 
-      expect(mockDecrypt).toHaveBeenCalledWith('encrypted:ca-cert-content')
+      expect(mockSafeDecrypt).toHaveBeenCalledWith('encrypted:ca-cert-content')
       expect(MockClient).toHaveBeenCalledWith(
         expect.objectContaining({
           tls: {

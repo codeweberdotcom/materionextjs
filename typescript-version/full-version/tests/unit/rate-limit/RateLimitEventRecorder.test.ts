@@ -54,6 +54,7 @@ describe('RateLimitEventRecorder', () => {
         actor: { type: 'user', id: 'user-123' },
         subject: { type: 'rate_limit', id: 'user-123' },
         key: 'user-123',
+        environment: 'production',
         payload: {
           module: 'auth',
           key: 'user-123',
@@ -111,6 +112,7 @@ describe('RateLimitEventRecorder', () => {
         actor: undefined,
         subject: { type: 'rate_limit', id: 'user-456' },
         key: 'user-456',
+        environment: 'production',
         payload: expect.objectContaining({
           eventType: 'block',
           count: 6,
@@ -152,6 +154,7 @@ describe('RateLimitEventRecorder', () => {
         actor: undefined,
         subject: { type: 'rate_limit', id: 'ip-192.168.1.1' },
         key: 'ip-192.168.1.1',
+        environment: 'production',
         payload: expect.objectContaining({
           ipAddress: '192.168.***.***',
           module: 'chat',
@@ -193,6 +196,7 @@ describe('RateLimitEventRecorder', () => {
         actor: { type: 'user', id: 'user-123' },
         subject: { type: 'rate_limit', id: 'debug-key' },
         key: 'debug-key',
+        environment: 'production',
         payload: expect.any(Object)
       })
     })

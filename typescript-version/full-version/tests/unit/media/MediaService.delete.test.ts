@@ -16,6 +16,7 @@ vi.mock('@/libs/prisma', () => ({
   prisma: {
     media: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
       findMany: vi.fn(),
@@ -37,6 +38,9 @@ vi.mock('@/services/media/storage', () => ({
     upload: vi.fn(),
     download: vi.fn(),
     getUrl: vi.fn(),
+    moveToTrash: vi.fn().mockResolvedValue({ trashPath: '/trash/media-1/', trashVariants: {} }),
+    deleteFromTrash: vi.fn().mockResolvedValue(undefined),
+    restoreFromTrash: vi.fn().mockImplementation((media: any) => Promise.resolve({ ...media, deletedAt: null })),
   }),
 }))
 
@@ -66,10 +70,13 @@ vi.mock('@/services/media/presets', () => ({
 }))
 
 // Mock EventService
+const mockEventServiceInstance = {
+  record: vi.fn().mockResolvedValue(null),
+}
+
 vi.mock('@/services/events', () => ({
-  getEventService: vi.fn().mockReturnValue({
-    record: vi.fn().mockResolvedValue(null),
-  }),
+  eventService: mockEventServiceInstance,
+  getEventService: vi.fn().mockReturnValue(mockEventServiceInstance),
 }))
 
 // Mock logger
@@ -109,10 +116,12 @@ describe('MediaService - Delete Operations', () => {
       const service = new MediaService()
       await service.delete('media-1', false)
 
-      expect(prisma.media.update).toHaveBeenCalledWith({
-        where: { id: 'media-1' },
-        data: { deletedAt: expect.any(Date) },
-      })
+      expect(prisma.media.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: 'media-1' },
+          data: expect.objectContaining({ deletedAt: expect.any(Date) }),
+        })
+      )
       expect(prisma.media.delete).not.toHaveBeenCalled()
     })
 
@@ -142,7 +151,7 @@ describe('MediaService - Delete Operations', () => {
         expect.objectContaining({
           type: 'media.soft_deleted',
           severity: 'info',
-          entityId: 'media-1',
+          subject: expect.objectContaining({ id: 'media-1' }),
         })
       )
     })
@@ -166,7 +175,7 @@ describe('MediaService - Delete Operations', () => {
       const { prisma } = await import('@/libs/prisma')
       const { getStorageService } = await import('@/services/media/storage')
       const { MediaService } = await import('@/services/media/MediaService')
-      
+
       const mockMedia = {
         id: 'media-1',
         filename: 'test.jpg',
@@ -174,9 +183,11 @@ describe('MediaService - Delete Operations', () => {
         storageStatus: 'synced',
         localPath: '/uploads/test.jpg',
         s3Key: 'media/test.jpg',
+        deletedAt: null,
+        trashMetadata: null,
       }
 
-      vi.mocked(prisma.media.findUnique).mockResolvedValue(mockMedia as any)
+      vi.mocked(prisma.media.findFirst).mockResolvedValue(mockMedia as any)
       
       const mockStorage = await getStorageService()
 
@@ -195,15 +206,17 @@ describe('MediaService - Delete Operations', () => {
       const { prisma } = await import('@/libs/prisma')
       const { getEventService } = await import('@/services/events')
       const { MediaService } = await import('@/services/media/MediaService')
-      
+
       const mockMedia = {
         id: 'media-1',
         filename: 'test.jpg',
         entityType: 'listing_image',
         storageStatus: 'local_only',
+        deletedAt: null,
+        trashMetadata: null,
       }
 
-      vi.mocked(prisma.media.findUnique).mockResolvedValue(mockMedia as any)
+      vi.mocked(prisma.media.findFirst).mockResolvedValue(mockMedia as any)
 
       const service = new MediaService()
       await service.delete('media-1', true)
@@ -213,7 +226,7 @@ describe('MediaService - Delete Operations', () => {
         expect.objectContaining({
           type: 'media.hard_deleted',
           severity: 'warning',
-          entityId: 'media-1',
+          subject: expect.objectContaining({ id: 'media-1' }),
         })
       )
     })
@@ -223,14 +236,16 @@ describe('MediaService - Delete Operations', () => {
     it('should set deletedAt to null', async () => {
       const { prisma } = await import('@/libs/prisma')
       const { MediaService } = await import('@/services/media/MediaService')
-      
+
       const mockMedia = {
         id: 'media-1',
         filename: 'test.jpg',
         entityType: 'listing_image',
         deletedAt: new Date(),
+        trashMetadata: JSON.stringify({ trashPath: '/trash/media-1/', originalPath: '/uploads/test.jpg', originalS3Key: null, trashVariants: {}, originalVariants: {}, originalS3Variants: {} }),
       }
 
+      vi.mocked(prisma.media.findFirst).mockResolvedValue(mockMedia as any)
       vi.mocked(prisma.media.update).mockResolvedValue({
         ...mockMedia,
         deletedAt: null,
@@ -250,14 +265,16 @@ describe('MediaService - Delete Operations', () => {
       const { prisma } = await import('@/libs/prisma')
       const { getEventService } = await import('@/services/events')
       const { MediaService } = await import('@/services/media/MediaService')
-      
+
       const mockMedia = {
         id: 'media-1',
         filename: 'restored.jpg',
         entityType: 'listing_image',
         deletedAt: null,
+        trashMetadata: JSON.stringify({ trashPath: '/trash/media-1/', originalPath: '/uploads/restored.jpg', originalS3Key: null, trashVariants: {}, originalVariants: {}, originalS3Variants: {} }),
       }
 
+      vi.mocked(prisma.media.findFirst).mockResolvedValue(mockMedia as any)
       vi.mocked(prisma.media.update).mockResolvedValue(mockMedia as any)
 
       const service = new MediaService()
@@ -268,7 +285,7 @@ describe('MediaService - Delete Operations', () => {
         expect.objectContaining({
           type: 'media.restored',
           severity: 'info',
-          entityId: 'media-1',
+          subject: expect.objectContaining({ id: 'media-1' }),
           message: expect.stringContaining('restored.jpg'),
         })
       )
@@ -300,7 +317,7 @@ describe('MediaService - Delete Operations', () => {
       const eventService = getEventService()
       expect(eventService.record).toHaveBeenCalledWith(
         expect.objectContaining({
-          details: expect.objectContaining({
+          payload: expect.objectContaining({
             filename: 'important-photo.jpg',
             entityType: 'company_photo',
             storageStatus: 'synced',
@@ -313,15 +330,17 @@ describe('MediaService - Delete Operations', () => {
       const { prisma } = await import('@/libs/prisma')
       const { getEventService } = await import('@/services/events')
       const { MediaService } = await import('@/services/media/MediaService')
-      
+
       const mockMedia = {
         id: 'media-1',
         filename: 'delete-me.jpg',
         entityType: 'listing_image',
         storageStatus: 'local_only',
+        deletedAt: null,
+        trashMetadata: null,
       }
 
-      vi.mocked(prisma.media.findUnique).mockResolvedValue(mockMedia as any)
+      vi.mocked(prisma.media.findFirst).mockResolvedValue(mockMedia as any)
 
       const service = new MediaService()
       await service.delete('media-1', true)
@@ -329,7 +348,7 @@ describe('MediaService - Delete Operations', () => {
       const eventService = getEventService()
       expect(eventService.record).toHaveBeenCalledWith(
         expect.objectContaining({
-          details: expect.objectContaining({
+          payload: expect.objectContaining({
             entityType: 'listing_image',
           }),
         })

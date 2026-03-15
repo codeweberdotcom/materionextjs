@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 // Mock prisma
-vi.mock('@/lib/prisma', () => ({
-  default: {
+vi.mock('@/libs/prisma', () => ({
+  prisma: {
     businessRule: {
       findMany: vi.fn(),
       findUnique: vi.fn(),
@@ -20,11 +20,12 @@ vi.mock('@/lib/prisma', () => ({
 // Mock EventService
 vi.mock('@/services/events/EventService', () => ({
   eventService: {
+    record: vi.fn(),
     emit: vi.fn()
   }
 }))
 
-import prisma from '@/lib/prisma'
+import { prisma } from '@/libs/prisma'
 import { RulesService } from '@/services/rules/RulesService'
 import { eventService } from '@/services/events/EventService'
 import type { CreateRuleInput } from '@/services/rules/types'
@@ -84,7 +85,7 @@ describe('RulesService', () => {
           enabled: input.enabled
         })
       })
-      expect(eventService.emit).toHaveBeenCalledWith(
+      expect(eventService.record).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'rule.created'
         })
@@ -130,7 +131,7 @@ describe('RulesService', () => {
           priority: 20
         })
       })
-      expect(eventService.emit).toHaveBeenCalledWith(
+      expect(eventService.record).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'rule.updated'
         })
@@ -172,7 +173,7 @@ describe('RulesService', () => {
       expect(prisma.businessRule.delete).toHaveBeenCalledWith({
         where: { id: 'rule-1' }
       })
-      expect(eventService.emit).toHaveBeenCalledWith(
+      expect(eventService.record).toHaveBeenCalledWith(
         expect.objectContaining({
           type: 'rule.deleted',
           severity: 'warning'

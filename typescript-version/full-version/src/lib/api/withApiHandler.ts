@@ -92,7 +92,7 @@ export function withApiHandler<TBody = unknown, TParams = Record<string, string>
       }
 
       // 4. Resolve params
-      const params = (context.params ? await context.params : {}) as TParams
+      const params = (context?.params ? await context.params : {}) as TParams
 
       // 5. Бизнес-логика
       return await options.handler({ user, request, body, params })
