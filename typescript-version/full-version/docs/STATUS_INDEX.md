@@ -2,7 +2,7 @@
 
 Этот документ отслеживает статус всех ТЗ, планов, анализов и отчетов для быстрого понимания текущего состояния проекта.
 
-**Последнее обновление:** 2026-03-15 (References: рефакторинг bulk-операций — фабрика конфигов, хук, unified handler)
+**Последнее обновление:** 2026-03-15 (Сводный анализ архитектуры — ревизия 39 анализов + верификация кода)
 
 ---
 
@@ -63,18 +63,14 @@
 
 ### Анализы
 
+- [Сводный анализ архитектуры (верифицированный)](analysis/architecture/analysis-consolidated-architecture-review-2026-03-15.md) ✅ (Завершен 2026-03-15 — ревизия 39 анализов, 12 удалено, 9 архивировано)
 - [Анализ: Рефакторинг bulk-операций справочников](analysis/architecture/analysis-bulk-references-refactoring-2026-03-15.md) ✅ (Завершен 2026-03-15)
-- [Анализ: Прямой доступ к S3 в медиатеке](analysis/architecture/analysis-media-s3-direct-access-2025-12-01.md) ✅ (Завершен 2025-12-01)
-- [Анализ: Настройки синхронизации медиа с S3](analysis/architecture/analysis-media-s3-sync-settings-2025-11-30.md) ✅ (Завершен 2025-11-30)
-- [Анализ SQLite ограничений для миграции на PostgreSQL](analysis/architecture/analysis-sqlite-limitations-for-postgresql-migration-2025-11-28.md) ✅ (Завершен 2025-11-28)
-- [Анализ S3/MinIO Docker Setup](analysis/architecture/analysis-s3-minio-docker-setup-2025-11-26.md) ✅ (Завершен 2025-11-26)
-- [Анализ бага eventService.emit](analysis/architecture/analysis-s3-eventservice-bug-2025-11-27.md) ✅ (Завершен 2025-11-27, исправлено)
-- [Анализ интеграции Bull Queue с Media](analysis/architecture/analysis-media-bull-queue-integration-2025-11-26.md) ✅ (Завершен 2025-11-26)
-- [Анализ модуля лицензий медиа](analysis/architecture/analysis-media-licenses-module-2025-11-26.md) ✅ (Завершен 2025-11-26)
-- [Анализ модуля массовых операций](analysis/architecture/analysis-bulk-operations-module-2025-11-24.md) ⏳ (Завершен, ожидает реализации)
-- [Анализ рефакторинга регистрации пользователей](analysis/architecture/analysis-user-registration-refactoring-2025-11-24.md) ⏳ (Завершен, ожидает реализации)
-- [Анализ модуля сценариев уведомлений](analysis/architecture/analysis-notification-scenarios-module-2025-01-24.md) ✅ (Завершен, план создан, реализация начата)
-- [Анализ мониторинга уведомлений](analysis/architecture/analysis-notification-module-monitoring-2025-11-25.md) ✅ (Завершен, реализован)
+- [Анализ: Прямой доступ к S3 в медиатеке](analysis/architecture/analysis-media-s3-direct-access-2025-12-01.md) ⏳ (Требует перепроверки)
+- [Анализ: Настройки синхронизации медиа с S3](analysis/architecture/analysis-media-s3-sync-settings-2025-11-30.md) ⏳ (Требует перепроверки)
+- [Анализ SQLite ограничений для миграции на PostgreSQL](analysis/architecture/analysis-sqlite-limitations-for-postgresql-migration-2025-11-28.md) ⏳ (Roadmap)
+- [Анализ модуля массовых операций](analysis/architecture/analysis-bulk-operations-module-2025-11-24.md) ⏳ (Частично реализовано)
+- [Анализ рефакторинга регистрации пользователей](analysis/architecture/analysis-user-registration-refactoring-2025-11-24.md) ⏳ (Roadmap — бизнес-решение)
+- [Анализ модуля сценариев уведомлений](analysis/architecture/analysis-notification-scenarios-module-2025-01-24.md) ⏳ (Roadmap — бизнес-решение)
 
 ---
 
@@ -107,26 +103,15 @@
 ### Анализы
 
 - [Анализ: Динамическая система языков (i18n)](analysis/i18n-dynamic-languages-analysis-2026-03-14.md) ✅ (2026-03-14)
-- [Анализ: Рефакторинг WebSocket на standalone архитектуру](analysis/architecture/analysis-websocket-standalone-refactor-2025-12-02.md) ✅ (2025-12-03)
 - [Анализ Socket.IO архитектуры](analysis/socket-io-analysis.md) ✅ (Обновлён 2025-12-03)
-- [Анализ использования Tailwind CSS в шаблоне Materio](analysis/architecture/tailwind-usage-analysis.md) ✅
-- [Анализ компонентов Tailwind](analysis/architecture/tailwind-components-analysis.md) ✅
-- [Детальный анализ модуля Chat](analysis/architecture/CHAT_MODULE_DETAILED_ANALYSIS.md) ✅
-- [Рекомендации по архитектуре Chat (Junie)](analysis/architecture/analysis-architecture-junie-recommendations.md) ✅
-- [Рекомендации по типам (Junie)](analysis/architecture/junie_type_recomendation.md) ✅
+- [Рекомендации по типам (Junie)](analysis/architecture/junie_type_recomendation.md) ✅ (203 `as any` — подтверждено)
 - [Анализ модуля Импорта/Экспорта](analysis/architecture/analysis-import-export-module-2025-01-24.md) ✅
 - [Анализ модуля Event](analysis/architecture/analysis-event-module-2025-01-24.md) ✅
-- [Анализ проблемы: Race condition при подключении к Redis](analysis/architecture/analysis-redis-connection-race-condition-2025-11-23.md) ✅
 - [Анализ модуля "Роли пользователей"](analysis/architecture/analysis-roles-module-2025-01-24.md) ✅
-- [Анализ: Рефакторинг ролей для переименования](analysis/architecture/analysis-roles-renaming-refactoring-2025-11-25.md) ✅ (новый)
-- [Валидационный анализ модуля пользователей](analysis/architecture/analysis-user-module-validation-2025-11-24.md) ✅
-- [Анализ модуля массовых операций](analysis/architecture/analysis-bulk-operations-module-2025-11-24.md) ✅
-- [Анализ рефакторинга регистрации пользователей](analysis/architecture/analysis-user-registration-refactoring-2025-11-24.md) ✅
 - [Анализ модуля Email Templates](analysis/email-templates-module-analysis.md) ✅
-- [Анализ: Bull Queue Docker Setup](analysis/architecture/analysis-bull-queue-docker-setup-2025-11-25.md) ✅
-- [Анализ: Модуль конфигурации внешних сервисов](analysis/architecture/analysis-service-configuration-module-2025-11-25.md) ✅ (новый)
-- [Анализ: Grafana Dashboard для Bull/Notifications](analysis/monitoring/analysis-bull-grafana-dashboard-2025-11-26.md) ✅ (завершён)
-- [Анализ: Недостающие метрики и дашборды Grafana](analysis/monitoring/analysis-missing-grafana-dashboards-2025-11-26.md) ✅ (завершён)
+- [Анализ: Grafana Dashboard для Bull/Notifications](analysis/monitoring/analysis-bull-grafana-dashboard-2025-11-26.md) ✅
+- [Анализ: Недостающие метрики и дашборды Grafana](analysis/monitoring/analysis-missing-grafana-dashboards-2025-11-26.md) ✅
+- 9 архивированных анализов в [analysis/architecture/archived/](analysis/architecture/archived/) (реализованы)
 
 ### Планы (активные)
 
