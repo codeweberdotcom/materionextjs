@@ -37,7 +37,7 @@
 ### Планы работ
 
 - [План: Улучшение схемы модели Event](plans/active/plan-events-schema-improvement-2026-03-15.md) ✅ (Завершено 2026-03-16 — payload/metadata→Json, ip поле, убрана ручная сериализация)
-- [План: Добавление недостающего event logging](plans/active/plan-missing-event-logging-2026-03-16.md) ⏳ (В работе — 30 операций, 5 фаз, ожидает одобрения)
+- [План: Добавление недостающего event logging](plans/active/plan-missing-event-logging-2026-03-16.md) ✅ (Завершено 2026-03-16 — 30 операций в 24 файлах, 5 фаз)
 - [Анализ: Незалогированные операции в системе событий](analysis/architecture/analysis-missing-event-logging-2026-03-16.md) ✅ (Завершён — 30 операций в 22 файлах по 4 приоритетам)
 - [План: Интеграционный тест параллельных bulk-операций](plans/active/plan-bulk-concurrent-integration-2026-03-15.md) ✅ (Завершено 2026-03-15 — 3 теста, без дедлоков)
 - [План: Тестовое покрытие Import/Bulk Operations](plans/active/plan-test-coverage-import-bulk-2026-03-15.md) ✅ (Завершено 2026-03-15 — +83 теста, 804 unit-тестов)
