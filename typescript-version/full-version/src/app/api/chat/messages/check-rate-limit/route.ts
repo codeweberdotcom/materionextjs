@@ -1,27 +1,18 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { rateLimitService } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
 import { getEnvironmentFromRequest } from '@/lib/metrics/helpers'
 
 const CHAT_MODULE = 'chat-messages'
 
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     const body = await request.json()
     const { userId } = body
 
-    logger.info('рџ”Ќ [API DEBUG] Check rate limit request:', { userId })
+    logger.info('📝 [API DEBUG] Check rate limit request:', { userId })
 
     if (!userId) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 })
@@ -37,7 +28,7 @@ export async function POST(request: NextRequest) {
       environment
     })
 
-    logger.info('рџ“Љ [API DEBUG] Rate limit result:', {
+    logger.info('📊 [API DEBUG] Rate limit result:', {
       allowed: rateLimitResult.allowed,
       remaining: rateLimitResult.remaining,
       resetTime: rateLimitResult.resetTime,
@@ -92,8 +83,8 @@ export async function POST(request: NextRequest) {
         const resetTimeMs = rateLimitResult.resetTime
 
         logger.info('⚠️ [API DEBUG] Monitor mode — returning warning only', { warningRemaining, resetTimeMs })
-        
-return NextResponse.json({
+
+        return NextResponse.json({
           allowed: true,
           remaining: null,
           resetTime: resetTimeMs,
@@ -112,11 +103,11 @@ return NextResponse.json({
         blockMs,
         simulatedBlockEnd
       })
-      
-return respondWithBlock(rateLimitResult.blockedUntil ?? simulatedBlockEnd)
+
+      return respondWithBlock(rateLimitResult.blockedUntil ?? simulatedBlockEnd)
     }
 
-    logger.info('вњ… [API DEBUG] Rate limit check passed')
+    logger.info('✅ [API DEBUG] Rate limit check passed')
 
     return NextResponse.json({
       allowed: true,
@@ -130,9 +121,5 @@ return respondWithBlock(rateLimitResult.blockedUntil ?? simulatedBlockEnd)
           }
         : null
     })
-  } catch (error) {
-    logger.error('вќЊ [API DEBUG] Error in rate limit check:', { error: error, file: 'src/app/api/chat/messages/check-rate-limit/route.ts' })
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

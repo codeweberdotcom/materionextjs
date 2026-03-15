@@ -1,7 +1,6 @@
-import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import { rateLimitService } from '@/lib/rate-limit'
 import type { ChatMessage } from '@/lib/sockets/types/chat'
@@ -10,14 +9,8 @@ import { getRequestIp } from '@/utils/http/get-request-ip'
 const DEFAULT_LIMIT = 30
 const MAX_LIMIT = 30
 
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
     const { searchParams } = new URL(request.url)
     const roomId = searchParams.get('roomId')
 
@@ -83,21 +76,11 @@ export async function GET(request: NextRequest) {
       })),
       nextCursor
     })
-  } catch (error) {
-    console.error('[api/chat/messages] GET error', error)
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     const clientIp = getRequestIp(request)
 
     const rateLimitResult = await rateLimitService.checkLimit(user.id, 'chat-messages', {
@@ -115,8 +98,7 @@ export async function POST(request: NextRequest) {
         Math.ceil((blockedUntilMs - Date.now()) / 1000)
       )
 
-      
-return NextResponse.json(
+      return NextResponse.json(
         {
           error: 'Rate limit exceeded',
           blockedUntilMs,
@@ -203,9 +185,5 @@ return NextResponse.json(
         resetTime: rateLimitResult.resetTime
       }
     })
-  } catch (error) {
-    console.error('[api/chat/messages] POST error', error)
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

@@ -1,13 +1,10 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
     // Get user's chat rooms
     const userRooms = await prisma.chatRoom.findMany({
       where: {
@@ -58,11 +55,5 @@ export async function GET(request: NextRequest) {
       unreadByContact,
       userStatuses
     })
-  } catch (error) {
-    console.error('❌ [API] Ошибка получения непрочитанных сообщений по контактам:', error instanceof Error ? error.message : error)
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
-
-
+})

@@ -1,18 +1,10 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { lucia } from '@/libs/lucia'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 
-export async function GET(request: NextRequest) {
-  try {
-    const sessionId = lucia.readSessionCookie(request.headers.get('cookie') ?? '')
-    const { session, user } = await lucia.validateSession(sessionId || '')
-
-    if (!session || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
     const userId = user.id
 
     // Count unread messages for the current user
@@ -34,11 +26,5 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json({ count: unreadCount })
-  } catch (error) {
-    console.error('Error fetching unread messages count:', error)
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
-
-
+})

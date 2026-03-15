@@ -1,21 +1,11 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
 
-
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     const { roomId } = await request.json()
 
     if (!roomId) {
@@ -36,18 +26,11 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    logger.info(`рџ“– Marked ${result.count} messages as read in room ${roomId}`)
+    logger.info(`📖 Marked ${result.count} messages as read in room ${roomId}`)
 
     return NextResponse.json({
       success: true,
       updatedCount: result.count
     })
-
-  } catch (error) {
-    logger.error('Error marking messages as read:', { error: error, file: 'src/app/api/chat/messages/read/route.ts' })
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
-
-
+})

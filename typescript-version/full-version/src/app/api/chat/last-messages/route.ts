@@ -1,18 +1,10 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
-import { rateLimitService } from '@/lib/rate-limit'
 
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
     // Get user's chat rooms
     const userRooms = await prisma.chatRoom.findMany({
       where: {
@@ -38,7 +30,7 @@ export async function GET(request: NextRequest) {
       })
 
       if (message) {
-        // РћРїСЂРµРґРµР»СЏРµРј РїРѕР»СѓС‡Р°С‚РµР»СЏ: РґСЂСѓРіРѕР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ РІ РєРѕРјРЅР°С‚Рµ
+        // Определяем получателя: другой пользователь в комнате
         const receiverId = room.user1Id === message.senderId ? room.user2Id : room.user1Id
 
         lastMessages.push({
@@ -52,7 +44,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Р•СЃР»Рё СЃРѕРѕР±С‰РµРЅРёР№ РЅРµС‚, СЃРѕР·РґР°РµРј РїСѓСЃС‚С‹Рµ Р·Р°РїРёСЃРё РґР»СЏ РєРѕРјРЅР°С‚ СЃ РґСЂСѓРіРёРјРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏРјРё
+    // Если сообщений нет, создаём пустые записи для комнат с другими пользователями
     if (lastMessages.length === 0) {
       for (const room of userRooms) {
         const otherUserId = room.user1Id === user.id ? room.user2Id : room.user1Id
@@ -60,8 +52,8 @@ export async function GET(request: NextRequest) {
         lastMessages.push({
           id: `empty-${room.id}`,
           content: '',
-          senderId: otherUserId, // РћС‚РїСЂР°РІРёС‚РµР»СЊ - РґСЂСѓРіРѕР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ
-          receiverId: user.id, // РџРѕР»СѓС‡Р°С‚РµР»СЊ - С‚РµРєСѓС‰РёР№ РїРѕР»СЊР·РѕРІР°С‚РµР»СЊ
+          senderId: otherUserId, // Отправитель - другой пользователь
+          receiverId: user.id, // Получатель - текущий пользователь
           roomId: room.id,
           createdAt: room.createdAt.toISOString()
         })
@@ -69,11 +61,5 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(lastMessages)
-  } catch (error) {
-    console.error('вќЊ [API] РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ РїРѕСЃР»РµРґРЅРёС… СЃРѕРѕР±С‰РµРЅРёР№:', error)
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
-
-
+})
