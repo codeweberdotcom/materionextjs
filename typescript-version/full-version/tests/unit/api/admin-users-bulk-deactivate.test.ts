@@ -261,6 +261,54 @@ describe('Admin Users Bulk Deactivate API - POST /api/admin/users/bulk/deactivat
     expect(mockPrisma.$transaction).toHaveBeenCalled()
   })
 
+  it('should return 400 when beforeOperation (session.deleteMany) throws', async () => {
+    // Arrange — session.deleteMany throws inside transaction → transaction fails
+    const usersToDeactivate = [{ id: 'user-1', role: { code: 'USER' } }]
+
+    mockPrisma.user.findMany.mockResolvedValue(usersToDeactivate)
+    mockPrisma.$transaction.mockImplementation(async (callback) => {
+      const tx = {
+        user: { updateMany: vi.fn().mockResolvedValue({ count: 0 }) },
+        session: { deleteMany: vi.fn().mockRejectedValue(new Error('Session delete failed')) }
+      }
+      return callback(tx)
+    })
+
+    const request = jsonRequest({ userIds: ['user-1'] })
+
+    // Act
+    const response = await POST(request)
+    const body = await response.json()
+
+    // Assert — BulkOperationsService catches the error and returns success:false
+    expect(response.status).toBe(400)
+    expect(body.success).toBe(false)
+  })
+
+  it('should return 400 when updateOperation fails after beforeOperation succeeds', async () => {
+    // Arrange — session.deleteMany (beforeOperation) succeeds, user.updateMany fails
+    const usersToDeactivate = [{ id: 'user-1', role: { code: 'USER' } }]
+
+    mockPrisma.user.findMany.mockResolvedValue(usersToDeactivate)
+    mockPrisma.$transaction.mockImplementation(async (callback) => {
+      const tx = {
+        user: { updateMany: vi.fn().mockRejectedValue(new Error('DB constraint violation')) },
+        session: { deleteMany: vi.fn().mockResolvedValue({ count: 1 }) }
+      }
+      return callback(tx)
+    })
+
+    const request = jsonRequest({ userIds: ['user-1'] })
+
+    // Act
+    const response = await POST(request)
+    const body = await response.json()
+
+    // Assert — transaction rolled back, bulk operation fails
+    expect(response.status).toBe(400)
+    expect(body.success).toBe(false)
+  })
+
   it('should clear cache after deactivation', async () => {
     // Arrange
     const usersToDeactivate = [{ id: 'user-1', role: { code: 'USER' } }]
