@@ -1,22 +1,13 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isAdminByCode, isSuperadmin } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
 
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const hasPermission = isSuperadmin(user) || isAdminByCode(user)
-
-    if (!hasPermission) {
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
+    if (!isSuperadmin(user) && !isAdminByCode(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -114,32 +105,34 @@ export async function POST(request: NextRequest) {
         ? durationMinutes * 60_000
         : undefined
 
-    const block = await rateLimitService.createManualBlock({
-      module,
-      reason: reason.trim(),
-      blockedBy: user.id,
-      userId: normalizedTargetType === 'user' ? trimmedUserId : undefined,
-      email: normalizedTargetType === 'email' ? trimmedEmail : undefined,
-      mailDomain: normalizedTargetType === 'domain' ? trimmedDomain : undefined,
-      ipAddress: normalizedTargetType === 'ip' ? trimmedIp : undefined,
-      notes: typeof notes === 'string' && notes.trim() ? notes.trim() : undefined,
-      durationMs: duration,
-      overwrite: overwrite === true
-    })
+    try {
+      const block = await rateLimitService.createManualBlock({
+        module,
+        reason: reason.trim(),
+        blockedBy: user.id,
+        userId: normalizedTargetType === 'user' ? trimmedUserId : undefined,
+        email: normalizedTargetType === 'email' ? trimmedEmail : undefined,
+        mailDomain: normalizedTargetType === 'domain' ? trimmedDomain : undefined,
+        ipAddress: normalizedTargetType === 'ip' ? trimmedIp : undefined,
+        notes: typeof notes === 'string' && notes.trim() ? notes.trim() : undefined,
+        durationMs: duration,
+        overwrite: overwrite === true
+      })
 
-    return NextResponse.json({ success: true, block })
-  } catch (error) {
-    if (error instanceof Error && (error as any).code === 'BLOCK_EXISTS') {
-      return NextResponse.json({ error: 'Block already exists for this target', code: 'block_exists' }, { status: 409 })
+      return NextResponse.json({ success: true, block })
+    } catch (error) {
+      if (error instanceof Error && (error as any).code === 'BLOCK_EXISTS') {
+        return NextResponse.json({ error: 'Block already exists for this target', code: 'block_exists' }, { status: 409 })
+      }
+
+      logger.error('Error creating manual block', {
+        error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
+      })
+
+      return NextResponse.json(
+        { error: error instanceof Error ? error.message : 'Internal server error' },
+        { status: 500 }
+      )
     }
-
-    logger.error('Error creating manual block', {
-      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
-    })
-    
-return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})

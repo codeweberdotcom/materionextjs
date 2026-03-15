@@ -1,30 +1,14 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRoleRecord } from '@/types/prisma'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isAdminByCode, isSuperadmin } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
-import logger from '@/lib/logger'
 
-interface RouteParams {
-  params: Promise<{
-    id: string
-  }>
-}
+export const DELETE = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const hasPermission = isSuperadmin(user) || isAdminByCode(user)
-
-    if (!hasPermission) {
+    if (!isSuperadmin(user) && !isAdminByCode(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -39,11 +23,5 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    logger.error('Error deactivating manual block', {
-      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
-    })
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

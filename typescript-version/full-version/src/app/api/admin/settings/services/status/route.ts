@@ -1,15 +1,15 @@
 /**
  * API для получения статуса всех сервисов
- * 
+ *
  * GET /api/admin/settings/services/status - Получить статус всех сервисов
- * 
+ *
  * @module app/api/admin/settings/services/status
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
+import { isSuperadmin, isAdminByCode } from '@/utils/permissions/permissions'
 import { serviceConfigResolver } from '@/lib/config'
 import logger from '@/lib/logger'
 
@@ -17,19 +17,9 @@ import logger from '@/lib/logger'
  * GET /api/admin/settings/services/status
  * Получить статус всех сервисов (источник конфигурации)
  */
-export async function GET(request: NextRequest) {
-  try {
-    // Проверяем авторизацию
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Проверяем права доступа
-    const userRole = user.role?.code?.toUpperCase()
-
-    if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
+    if (!isSuperadmin(user) && !isAdminByCode(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -44,18 +34,5 @@ export async function GET(request: NextRequest) {
       success: true,
       data: status
     })
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    logger.error('[API:Services] Failed to get services status', {
-      error: error instanceof Error ? error.message : String(error)
-    })
-
-    return NextResponse.json(
-      { error: 'Внутренняя ошибка сервера' },
-      { status: 500 }
-    )
   }
-}
+})

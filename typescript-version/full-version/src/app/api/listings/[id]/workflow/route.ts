@@ -5,31 +5,20 @@
  * POST /api/listings/[id]/workflow - Выполнить переход
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { listingWorkflowService } from '@/services/workflows/ListingWorkflowService'
 import { listingStateLabels, listingEventLabels } from '@/services/workflows/machines/ListingMachine'
-
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
 
 /**
  * GET /api/listings/[id]/workflow
  *
  * Получить состояние workflow объявления
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.id) {
-      return NextResponse.json({ error: 'Требуется авторизация' }, { status: 401 })
-    }
-
-    const { id: listingId } = await params
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id: listingId } = params
     const userRole = user.role?.code
 
     const workflowState = await listingWorkflowService.getWorkflowState(
@@ -53,15 +42,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     return NextResponse.json(response)
-  } catch (error) {
-    console.error('[API] GET /api/listings/[id]/workflow error:', error)
-
-    return NextResponse.json(
-      { error: 'Внутренняя ошибка сервера' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * POST /api/listings/[id]/workflow
@@ -75,15 +57,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
  *   metadata?: object   // Дополнительные данные
  * }
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.id) {
-      return NextResponse.json({ error: 'Требуется авторизация' }, { status: 401 })
-    }
-
-    const { id: listingId } = await params
+export const POST = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
+    const { id: listingId } = params
     const body = await request.json()
     const { event, reason, metadata } = body
 
@@ -156,15 +132,5 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       eventLabel: listingEventLabels[event],
       listing: result.listing
     })
-  } catch (error) {
-    console.error('[API] POST /api/listings/[id]/workflow error:', error)
-
-    return NextResponse.json(
-      { error: 'Внутренняя ошибка сервера' },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})

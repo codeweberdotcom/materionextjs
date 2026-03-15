@@ -1,23 +1,14 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin, isAdminByCode } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 import type { RateLimitStats } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
 
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const hasPermission = isSuperadmin(user) || isAdminByCode(user)
-
-    if (!hasPermission) {
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
+    if (!isSuperadmin(user) && !isAdminByCode(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -97,26 +88,12 @@ export async function GET(request: NextRequest) {
       configs,
       stats: filteredStats
     })
-  } catch (error) {
-    logger.error('Error fetching rate limits', {
-      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
-    })
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function PUT(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const hasPermission = isSuperadmin(user) || isAdminByCode(user)
-
-    if (!hasPermission) {
+export const PUT = withApiHandler({
+  handler: async ({ user, request }) => {
+    if (!isSuperadmin(user) && !isAdminByCode(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -237,26 +214,12 @@ export async function PUT(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    logger.error('Error updating rate limits', {
-      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
-    })
-    
-return NextResponse.json({ error: error instanceof Error ? error.message : 'Internal server error' }, { status: 500 })
   }
-}
+})
 
-export async function DELETE(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const hasPermission = isSuperadmin(user) || isAdminByCode(user)
-
-    if (!hasPermission) {
+export const DELETE = withApiHandler({
+  handler: async ({ user, request }) => {
+    if (!isSuperadmin(user) && !isAdminByCode(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -271,11 +234,5 @@ export async function DELETE(request: NextRequest) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    logger.error('Error resetting rate limits', {
-      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
-    })
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

@@ -1,17 +1,17 @@
 /**
  * API endpoint для парсинга веб-сайтов
- * 
+ *
  * POST /api/admin/tools/web-scraper
- * 
+ *
  * @module app/api/admin/tools/web-scraper
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import { z } from 'zod'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
+import { isSuperadmin, isAdminByCode } from '@/utils/permissions/permissions'
 import { getWebScraperService } from '@/services/web-scraper'
 import type { ScrapeOptions } from '@/services/web-scraper/types'
 
@@ -30,7 +30,7 @@ const scrapeRequestSchema = z.object({
 
 /**
  * POST - Парсинг веб-сайта
- * 
+ *
  * Request body:
  * {
  *   "url": "https://example.com",
@@ -41,26 +41,10 @@ const scrapeRequestSchema = z.object({
  *   }
  * }
  */
-export async function POST(request: NextRequest) {
-  try {
-    // Проверка авторизации
-    let user
-
-    try {
-      const auth = await requireAuth(request)
-
-      user = auth.user
-    } catch {
-      return NextResponse.json(
-        { success: false, error: 'Требуется авторизация' },
-        { status: 401 }
-      )
-    }
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     // Проверка роли (только ADMIN и SUPERADMIN)
-    const roleCode = user?.role?.code
-
-    if (!roleCode || !['SUPERADMIN', 'ADMIN'].includes(roleCode)) {
+    if (!isSuperadmin(user) && !isAdminByCode(user)) {
       return NextResponse.json(
         { success: false, error: 'Недостаточно прав. Требуется роль ADMIN.' },
         { status: 403 }
@@ -70,13 +54,13 @@ export async function POST(request: NextRequest) {
     // Парсинг и валидация тела запроса
     const body = await request.json()
     const validationResult = scrapeRequestSchema.safeParse(body)
-    
+
     if (!validationResult.success) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Ошибка валидации', 
-          details: validationResult.error.errors 
+        {
+          success: false,
+          error: 'Ошибка валидации',
+          details: validationResult.error.errors
         },
         { status: 400 }
       )
@@ -90,10 +74,10 @@ export async function POST(request: NextRequest) {
 
     if (!result.success) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: result.error,
-          duration: result.duration 
+          duration: result.duration
         },
         { status: 422 }
       )
@@ -109,34 +93,14 @@ export async function POST(request: NextRequest) {
         hasRawData: !!result.rawMarkdown
       }
     })
-  } catch (error) {
-    console.error('[WebScraper API] Error:', error)
-    
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Внутренняя ошибка сервера' 
-      },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * GET - Проверка доступности сервиса
  */
-export async function GET(request: NextRequest) {
-  try {
-    // Проверка авторизации
-    try {
-      await requireAuth(request)
-    } catch {
-      return NextResponse.json(
-        { success: false, error: 'Требуется авторизация' },
-        { status: 401 }
-      )
-    }
-
+export const GET = withApiHandler({
+  handler: async () => {
     const scraperService = getWebScraperService()
     const health = await scraperService.checkHealth()
 
@@ -148,14 +112,5 @@ export async function GET(request: NextRequest) {
         error: health.error
       }
     })
-  } catch (error) {
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Ошибка проверки' 
-      },
-      { status: 500 }
-    )
   }
-}
-
+})

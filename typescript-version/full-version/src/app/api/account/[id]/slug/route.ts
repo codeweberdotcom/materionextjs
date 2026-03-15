@@ -1,30 +1,24 @@
 /**
  * API для управления slug аккаунта (компании)
- * 
+ *
  * GET /api/account/[id]/slug - Получить информацию о slug
  * PUT /api/account/[id]/slug - Изменить slug
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
-import { requireAuth } from '@/utils/auth/auth'
 import { slugService } from '@/services/slug'
 import { eventService } from '@/services/events'
 import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
-
 /**
  * GET - Получить информацию о slug и возможности его смены
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id: accountId } = await params
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id: accountId } = params
 
     // Проверяем доступ к аккаунту
     const account = await prisma.userAccount.findFirst({
@@ -76,23 +70,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         changedAt: h.changedAt
       }))
     })
-  } catch (error) {
-    console.error('Error getting account slug info:', error)
-    
-return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * PUT - Изменить slug аккаунта
  */
-export async function PUT(request: NextRequest, { params }: RouteParams) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id: accountId } = await params
+export const PUT = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
+    const { id: accountId } = params
     const body = await request.json()
     const { slug: newSlug } = body
 
@@ -112,9 +98,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
           { ownerId: user.id }
         ]
       },
-      select: { 
+      select: {
         id: true,
-        slug: true, 
+        slug: true,
         name: true,
         userId: true,
         ownerId: true
@@ -130,10 +116,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Проверяем, изменился ли slug
     if (account.slug === newSlug) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         success: true,
         message: 'Slug not changed (same value)',
-        slug: newSlug 
+        slug: newSlug
       })
     }
 
@@ -177,13 +163,5 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       oldSlug: result.oldSlug,
       newSlug: result.newSlug
     })
-  } catch (error) {
-    console.error('Error changing account slug:', error)
-    
-return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
+})

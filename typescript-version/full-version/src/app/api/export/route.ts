@@ -1,32 +1,24 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { exportService } from '@/services/export/ExportService'
-import type { ExportFormat} from '@/types/export-import';
-import { generateFileName } from '@/types/export-import'
+import type { ExportFormat } from '@/types/export-import'
 import logger from '@/lib/logger'
 
 /**
  * POST /api/export
  * Export data to file - returns file directly for download
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     const body = await request.json()
 
-    const { 
-      entityType, 
-      format = 'xlsx', 
-      filters, 
-      selectedIds, 
-      includeHeaders = true 
+    const {
+      entityType,
+      format = 'xlsx',
+      filters,
+      selectedIds,
+      includeHeaders = true
     } = body
 
     if (!entityType) {
@@ -54,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Return file as base64 for client to create Blob
     const base64 = Buffer.from(result.buffer).toString('base64')
-    
+
     return NextResponse.json({
       success: true,
       filename: result.filename,
@@ -63,17 +55,8 @@ export async function POST(request: NextRequest) {
       base64,
       mimeType: getMimeType(format)
     })
-  } catch (error) {
-    logger.error('[API:Export] Export failed', {
-      error: error instanceof Error ? error.message : String(error)
-    })
-
-    return NextResponse.json(
-      { success: false, error: 'Export failed' },
-      { status: 500 }
-    )
   }
-}
+})
 
 function getMimeType(format: string): string {
   switch (format) {
@@ -87,4 +70,3 @@ function getMimeType(format: string): string {
       return 'application/octet-stream'
   }
 }
-

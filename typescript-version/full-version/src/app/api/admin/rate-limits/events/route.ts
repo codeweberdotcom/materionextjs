@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isAdminByCode, isSuperadmin } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
@@ -13,21 +12,12 @@ const parseDateParam = (value: string | null) => {
 
   const date = new Date(value)
 
-  
-return Number.isNaN(date.getTime()) ? undefined : date
+  return Number.isNaN(date.getTime()) ? undefined : date
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const hasPermission = isSuperadmin(user) || isAdminByCode(user)
-
-    if (!hasPermission) {
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
+    if (!isSuperadmin(user) && !isAdminByCode(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -60,11 +50,5 @@ export async function GET(request: NextRequest) {
     }, isSuperAdminFlag) // Pass superadmin flag
 
     return NextResponse.json(result)
-  } catch (error) {
-    logger.error('Error fetching rate limit events', {
-      error: error instanceof Error ? { name: error.name, message: error.message, stack: error.stack } : error
-    })
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})

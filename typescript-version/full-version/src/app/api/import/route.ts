@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { importService } from '@/services/import/ImportService'
 import { importAdapterFactory } from '@/services/import/ImportAdapterFactory'
 import logger from '@/lib/logger'
@@ -10,14 +9,8 @@ import logger from '@/lib/logger'
  * POST /api/import
  * Import data from file
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     const formData = await request.formData()
     const file = formData.get('file') as File
     const entityType = formData.get('entityType') as string
@@ -57,30 +50,15 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(result)
-  } catch (error) {
-    logger.error('[API:Import] Import failed', {
-      error: error instanceof Error ? error.message : String(error)
-    })
-
-    return NextResponse.json(
-      { error: 'Import failed' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * GET /api/import/fields
  * Get import fields for entity type
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const GET = withApiHandler({
+  handler: async ({ request }) => {
     const { searchParams } = new URL(request.url)
     const entityType = searchParams.get('entityType')
 
@@ -92,26 +70,16 @@ export async function GET(request: NextRequest) {
     }
 
     const adapter = importAdapterFactory.getAdapter(entityType)
-    
+
     // Serialize importFields, converting RegExp to string
     const importFields = (adapter?.importFields || []).map(field => ({
       ...field,
       pattern: field.pattern instanceof RegExp ? field.pattern.source : field.pattern
     }))
-    
+
     return NextResponse.json({
       importFields,
       entityType
     })
-  } catch (error) {
-    logger.error('[API:Import] Get fields failed', {
-      error: error instanceof Error ? error.message : String(error)
-    })
-
-    return NextResponse.json(
-      { error: 'Failed to get import fields' },
-      { status: 500 }
-    )
   }
-}
-
+})

@@ -1,28 +1,17 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
-import { scenarioEngine } from '@/services/notifications/scenarios'
 import logger from '@/lib/logger'
 
 /**
  * POST /api/admin/notifications/executions/[id]/retry
  * Повторить выполнение сценария
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const POST = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
     if (!checkPermission(user, 'notificationScenarios', 'update')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -88,22 +77,22 @@ export async function POST(
           try {
             // Здесь должна быть логика выполнения действия
             // Для простоты просто логируем
-            logger.info('[Retry] Executing action', { 
+            logger.info('[Retry] Executing action', {
               executionId: newExecution.id,
-              action 
+              action
             })
             results.push({ success: true, action })
           } catch (error) {
-            results.push({ 
-              success: false, 
-              action, 
-              error: error instanceof Error ? error.message : String(error) 
+            results.push({
+              success: false,
+              action,
+              error: error instanceof Error ? error.message : String(error)
             })
           }
         }
 
         const allSuccessful = results.every(r => r.success)
-        
+
         await prisma.notificationExecution.update({
           where: { id: newExecution.id },
           data: {
@@ -141,16 +130,5 @@ export async function POST(
         originalId: id
       }
     })
-  } catch (error) {
-    logger.error('[API:NotificationExecution] Failed to retry', {
-      error: error instanceof Error ? error.message : String(error),
-      executionId: id
-    })
-    
-return NextResponse.json(
-      { error: 'Failed to retry execution' },
-      { status: 500 }
-    )
   }
-}
-
+})

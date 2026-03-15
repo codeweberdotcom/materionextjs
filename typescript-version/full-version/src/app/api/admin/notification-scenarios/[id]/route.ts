@@ -1,30 +1,18 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { scenarioService } from '@/services/notifications/scenarios'
 import type { NotificationScenarioConfig } from '@/services/notifications/scenarios/types'
-import logger from '@/lib/logger'
 
 /**
  * GET /api/admin/notification-scenarios/[id]
  * Получить сценарий по ID
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  
-  try {
-    const { user } = await requireAuth(request)
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Проверка прав доступа
     if (!checkPermission(user, 'notificationScenarios', 'read')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -36,37 +24,17 @@ export async function GET(
     }
 
     return NextResponse.json({ scenario })
-  } catch (error) {
-    logger.error('[API:NotificationScenarios] Failed to get scenario', {
-      error: error instanceof Error ? error.message : String(error),
-      scenarioId: id
-    })
-    
-return NextResponse.json(
-      { error: 'Failed to get scenario' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * PUT /api/admin/notification-scenarios/[id]
  * Обновить сценарий
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  
-  try {
-    const { user } = await requireAuth(request)
+export const PUT = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
+    const { id } = params
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Проверка прав доступа
     if (!checkPermission(user, 'notificationScenarios', 'update')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -75,37 +43,17 @@ export async function PUT(
     const scenario = await scenarioService.update(id, body)
 
     return NextResponse.json({ scenario })
-  } catch (error) {
-    logger.error('[API:NotificationScenarios] Failed to update scenario', {
-      error: error instanceof Error ? error.message : String(error),
-      scenarioId: id
-    })
-    
-return NextResponse.json(
-      { error: 'Failed to update scenario' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * DELETE /api/admin/notification-scenarios/[id]
  * Удалить сценарий
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  
-  try {
-    const { user } = await requireAuth(request)
+export const DELETE = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Проверка прав доступа
     if (!checkPermission(user, 'notificationScenarios', 'delete')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -113,18 +61,5 @@ export async function DELETE(
     await scenarioService.delete(id)
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    logger.error('[API:NotificationScenarios] Failed to delete scenario', {
-      error: error instanceof Error ? error.message : String(error),
-      scenarioId: id
-    })
-    
-return NextResponse.json(
-      { error: 'Failed to delete scenario' },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})

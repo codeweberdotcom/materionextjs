@@ -1,15 +1,14 @@
 /**
  * Admin API для настроек slug системы
- * 
+ *
  * GET /api/admin/settings/slug - Получить настройки
  * PUT /api/admin/settings/slug - Обновить настройки
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
-import { requireAuth } from '@/utils/auth/auth'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { eventService } from '@/services/events'
 import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
@@ -26,14 +25,9 @@ const DEFAULT_SETTINGS = {
 /**
  * GET - Получить настройки slug
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    // Проверяем права администратора
-    const hasPermission = await checkPermission(user, 'settings', 'read')
-
-    if (!hasPermission) {
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
+    if (!checkPermission(user, 'settings', 'read')) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -41,7 +35,7 @@ export async function GET(request: NextRequest) {
     }
 
     const settings = await prisma.slugSettings.findFirst()
-    
+
     if (!settings) {
       return NextResponse.json(DEFAULT_SETTINGS)
     }
@@ -54,27 +48,15 @@ export async function GET(request: NextRequest) {
       allowAdminOverride: settings.allowAdminOverride,
       updatedAt: settings.updatedAt
     })
-  } catch (error) {
-    console.error('Error getting slug settings:', error)
-    
-return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * PUT - Обновить настройки slug
  */
-export async function PUT(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    // Проверяем права администратора
-    const hasPermission = await checkPermission(user, 'settings', 'edit')
-
-    if (!hasPermission) {
+export const PUT = withApiHandler({
+  handler: async ({ user, request }) => {
+    if (!checkPermission(user, 'settings', 'edit')) {
       return NextResponse.json(
         { error: 'Access denied' },
         { status: 403 }
@@ -201,13 +183,5 @@ export async function PUT(request: NextRequest) {
         updatedAt: settings.updatedAt
       }
     })
-  } catch (error) {
-    console.error('Error updating slug settings:', error)
-    
-return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
+})

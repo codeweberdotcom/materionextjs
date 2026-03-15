@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
 
 import type { Locale } from '@configs/i18n'
 import type { VerticalMenuDataType } from '@/types/menuTypes'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { getDictionary } from '@/utils/formatting/getDictionary'
 import menuData from '@/data/navigation/verticalMenuData'
 import logger from '@/lib/logger'
 import { hasMenuChildren } from '@/utils/menu/shared'
-import { problemJson } from '@/shared/http/problem-details'
 
 const serializeMenuItem = (item: VerticalMenuDataType): VerticalMenuDataType => {
   const serializedItem: VerticalMenuDataType = { ...item }
@@ -31,19 +29,9 @@ const serializeMenuItem = (item: VerticalMenuDataType): VerticalMenuDataType => 
   return serializedItem
 }
 
-export const GET = async (request: NextRequest) => {
-  logger.info('=== API MENU GET REQUEST STARTED ===')
-
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return problemJson({
-        status: 401,
-        title: 'Unauthorized',
-        detail: 'User session not found'
-      })
-    }
+export const GET = withApiHandler({
+  handler: async ({ request }) => {
+    logger.info('=== API MENU GET REQUEST STARTED ===')
 
     const url = new URL(request.url)
     const locale = (url.searchParams.get('locale') ?? 'en') as Locale
@@ -54,16 +42,5 @@ export const GET = async (request: NextRequest) => {
     logger.info('API MENU: Final filtered menu length:', filteredMenuData.length)
 
     return NextResponse.json({ menu: filteredMenuData })
-  } catch (error) {
-    logger.error('Error fetching menu', { error })
-
-    return problemJson({
-      status: 500,
-      title: 'Internal Server Error',
-      detail: 'Unable to build navigation menu',
-      type: 'https://materio.dev/problems/menu-fetch-failed'
-    })
   }
-}
-
-
+})

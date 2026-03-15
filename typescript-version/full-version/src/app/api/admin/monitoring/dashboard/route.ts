@@ -2,12 +2,11 @@ import * as os from 'os'
 
 import * as process from 'process'
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
 import Redis from 'ioredis'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import { metricsRegistry } from '@/lib/metrics/registry'
 import { httpRequestDuration } from '@/lib/metrics'
@@ -43,7 +42,7 @@ const getRedisClient = async () => {
     lazyConnect: true,
     maxRetriesPerRequest: 1
   })
-  
+
 return cachedRedisClient
 }
 
@@ -88,7 +87,7 @@ async function checkRedisConnection(): Promise<{ status: 'up' | 'down'; latency?
       }
     }
 
-    
+
 return { status: 'down' }
   } catch (error) {
     return { status: 'down' }
@@ -100,17 +99,17 @@ async function checkSocketIOStatus(): Promise<boolean> {
   try {
     const wsPort = process.env.WEBSOCKET_PORT || '3001'
     const healthUrl = `http://localhost:${wsPort}/health`
-    
+
     const response = await fetch(healthUrl, {
       method: 'GET',
       signal: AbortSignal.timeout(5000) // 5 sec timeout
     })
-    
+
     if (!response.ok) return false
-    
+
     const data = await response.json()
 
-    
+
 return data.status === 'ok'
   } catch (error) {
     return false
@@ -190,7 +189,7 @@ async function getDatabaseMetrics() {
 
     try {
       const result = await prisma.$queryRaw<[{ count: bigint }]>`
-        SELECT count(*) as count FROM pg_stat_activity 
+        SELECT count(*) as count FROM pg_stat_activity
         WHERE datname = current_database()
       `
 
@@ -199,7 +198,7 @@ async function getDatabaseMetrics() {
       // Fallback если нет доступа к pg_stat_activity
       activeConnections = 1
     }
-    
+
     return {
       status: 'up',
       latency,
@@ -213,30 +212,11 @@ async function getDatabaseMetrics() {
   }
 }
 
-export async function GET(request: NextRequest) {
-  const startTime = Date.now()
-  const pathname = request.nextUrl.pathname
-  const method = request.method
-  
-  try {
-    // Проверка аутентификации
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      const duration = (Date.now() - startTime) / 1000
-      const environment = process.env.NODE_ENV || 'development'
-
-      try {
-        httpRequestDuration
-          .labels(method, pathname, '401', environment)
-          .observe(duration)
-      } catch (error) {
-        logger.warn('[monitoring] Failed to record metric', { error })
-      }
-
-      
-return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
+    const startTime = Date.now()
+    const pathname = request.nextUrl.pathname
+    const method = request.method
 
     // Проверка прав (можно добавить специальное право для мониторинга)
     // Пока проверяем что пользователь авторизован
@@ -255,12 +235,12 @@ return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const redisStatus = await checkRedisConnection()
     const socketIOStatus = await checkSocketIOStatus()
 
-    const allServicesUp = 
-      databaseStatus.status === 'up' && 
-      redisStatus.status === 'up' && 
+    const allServicesUp =
+      databaseStatus.status === 'up' &&
+      redisStatus.status === 'up' &&
       socketIOStatus
 
-    const systemStatus = allServicesUp ? 'healthy' : 
+    const systemStatus = allServicesUp ? 'healthy' :
                         (databaseStatus.status === 'down' ? 'unhealthy' : 'degraded')
 
     // 2. Получаем метрики из Prometheus
@@ -271,14 +251,14 @@ return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       const metricsText = await metricsRegistry.metrics()
 
       metricsData = parsePrometheusMetrics(metricsText)
-      
+
       // Логируем для отладки
       const httpMetrics = Object.keys(metricsData).filter(k => k.includes('http_request'))
 
-      const httpMetricsLines = metricsText.split('\n').filter(line => 
+      const httpMetricsLines = metricsText.split('\n').filter(line =>
         line.includes('http_request_duration_seconds') && !line.startsWith('#')
       )
-      
+
       logger.info('[monitoring] Metrics parsed', {
         httpRequestCount: metricsData['http_request_duration_seconds_count'],
         httpRequestSum: metricsData['http_request_duration_seconds_sum'],
@@ -298,12 +278,12 @@ return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // 3.5. Получаем реальное количество Socket.IO соединений
     let websocketActiveConnections = metricsData['websocket_active_connections'] || 0
-    
+
     logger.info('[monitoring] WebSocket connections check', {
       fromPrometheus: metricsData['websocket_active_connections'],
       currentValue: websocketActiveConnections
     })
-    
+
     // Всегда пытаемся получить реальное значение из Socket.IO (более актуальное)
     try {
       const { getSocketServer, getTotalConnections } = await import('@/lib/sockets')
@@ -312,27 +292,27 @@ return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
       if (io) {
         // Используем функцию для подсчета всех соединений во всех namespaces
         const realConnections = getTotalConnections()
-        
+
         // Также обновляем метрику Prometheus для синхронизации
         if (realConnections !== websocketActiveConnections) {
           const { websocketConnections } = await import('@/lib/metrics')
 
           websocketConnections.set(
-            { environment: process.env.NODE_ENV || 'development' }, 
+            { environment: process.env.NODE_ENV || 'development' },
             realConnections
           )
         }
-        
+
         websocketActiveConnections = realConnections
-        
+
         // Подсчет по namespaces для детального логирования
         const connectionsByNamespace: Record<string, number> = {}
 
         io._nsps.forEach((nsp, name) => {
           connectionsByNamespace[name] = nsp.sockets.size
         })
-        
-        logger.info('[monitoring] Using Socket.IO real connections', { 
+
+        logger.info('[monitoring] Using Socket.IO real connections', {
           connections: realConnections,
           connectionsByNamespace,
           fromPrometheus: metricsData['websocket_active_connections'],
@@ -347,28 +327,28 @@ return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         })
       }
     } catch (error) {
-      logger.warn('[monitoring] Failed to get Socket.IO connections', { 
+      logger.warn('[monitoring] Failed to get Socket.IO connections', {
         error: error instanceof Error ? error.message : error,
         stack: error instanceof Error ? error.stack : undefined
       })
     }
-    
-    logger.info('[monitoring] Final WebSocket connections', { 
-      websocketActiveConnections 
+
+    logger.info('[monitoring] Final WebSocket connections', {
+      websocketActiveConnections
     })
 
     // 4. Агрегируем ключевые метрики
     // Для Histogram метрик Prometheus создает суффиксы _count и _sum
     const httpRequestCount = metricsData['http_request_duration_seconds_count'] || 0
     const httpRequestSum = metricsData['http_request_duration_seconds_sum'] || 0
-    
+
     logger.info('[monitoring] Key metrics calculation', {
       httpRequestCount,
       httpRequestSum,
       calculatedAvgResponseTime: httpRequestCount > 0 ? (httpRequestSum / httpRequestCount) * 1000 : 0,
       allMetricKeys: Object.keys(metricsData).filter(k => k.includes('http_request'))
     })
-    
+
     const keyMetrics = {
       http: {
         requestRate: httpRequestCount,
@@ -406,7 +386,7 @@ return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     // 6. Критические алерты
     const alerts: Array<{ type: string; severity: 'critical' | 'warning'; message: string }> = []
-    
+
     if (databaseStatus.status === 'down') {
       alerts.push({
         type: 'database',
@@ -458,8 +438,8 @@ return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         .observe(duration)
       logger.debug('[monitoring] Metric recorded', { method, pathname, duration, status: '200' })
     } catch (error) {
-      logger.warn('[monitoring] Failed to record metric', { 
-        error: error instanceof Error ? error.message : error 
+      logger.warn('[monitoring] Failed to record metric', {
+        error: error instanceof Error ? error.message : error
       })
     }
 
@@ -506,18 +486,5 @@ return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
       })()
     })
-
-  } catch (error) {
-    logger.error('[monitoring] Dashboard data fetch failed', {
-      error: error instanceof Error ? error.message : error,
-      file: 'src/app/api/admin/monitoring/dashboard/route.ts'
-    })
-
-    return NextResponse.json({
-      status: 'error',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
   }
-}
-
+})

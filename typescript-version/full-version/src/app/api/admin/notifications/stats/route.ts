@@ -1,23 +1,15 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
-import logger from '@/lib/logger'
 
 /**
  * GET /api/admin/notifications/stats
  * Получить статистику уведомлений за период
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
+export const GET = withApiHandler({
+  handler: async ({ user, request }) => {
     if (!checkPermission(user, 'notificationScenarios', 'read')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
@@ -152,15 +144,5 @@ export async function GET(request: NextRequest) {
       topScenarios: topScenariosWithNames,
       channelStats
     })
-  } catch (error) {
-    logger.error('[API:NotificationStats] Failed to get stats', {
-      error: error instanceof Error ? error.message : String(error)
-    })
-    
-return NextResponse.json(
-      { error: 'Failed to get stats' },
-      { status: 500 }
-    )
   }
-}
-
+})

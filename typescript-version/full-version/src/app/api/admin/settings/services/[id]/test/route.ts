@@ -1,44 +1,30 @@
 /**
  * API для тестирования подключения к сервису
- * 
+ *
  * POST /api/admin/settings/services/[id]/test - Тестировать подключение
- * 
+ *
  * @module app/api/admin/settings/services/[id]/test
  */
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
+import { isSuperadmin, isAdminByCode } from '@/utils/permissions/permissions'
 import { serviceConfigurationService } from '@/modules/settings/services'
 import { eventService } from '@/services/events/EventService'
 import logger from '@/lib/logger'
-
-interface RouteParams {
-  params: Promise<{ id: string }>
-}
 
 /**
  * POST /api/admin/settings/services/[id]/test
  * Тестировать подключение к сервису
  */
-export async function POST(request: NextRequest, { params }: RouteParams) {
-  try {
-    // Проверяем авторизацию
-    const { user } = await requireAuth(request)
+export const POST = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    // Проверяем права доступа
-    const userRole = user.role?.code?.toUpperCase()
-
-    if (!['SUPERADMIN', 'ADMIN'].includes(userRole || '')) {
+    if (!isSuperadmin(user) && !isAdminByCode(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
-
-    const { id } = await params
 
     // Получаем информацию о сервисе
     const service = await serviceConfigurationService.getById(id)
@@ -96,25 +82,5 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         serviceType: service.type
       }
     })
-  } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { id } = await params
-
-    logger.error('[API:Services] Failed to test connection', {
-      id,
-      error: error instanceof Error ? error.message : String(error)
-    })
-
-    if (error instanceof Error && error.message === 'Конфигурация не найдена') {
-      return NextResponse.json({ error: error.message }, { status: 404 })
-    }
-
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Внутренняя ошибка сервера' },
-      { status: 500 }
-    )
   }
-}
+})

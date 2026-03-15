@@ -1,27 +1,16 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { checkPermission } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
-import logger from '@/lib/logger'
 
 /**
  * GET /api/admin/notifications/executions/[id]
  * Получить детали выполнения
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params
-  
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
     if (!checkPermission(user, 'notificationScenarios', 'read')) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
@@ -31,9 +20,9 @@ export async function GET(
       where: { id },
       include: {
         scenario: {
-          select: { 
-            id: true, 
-            name: true, 
+          select: {
+            id: true,
+            name: true,
             description: true,
             trigger: true,
             actions: true
@@ -85,16 +74,5 @@ export async function GET(
         scheduledAt: execution.scheduledAt
       }
     })
-  } catch (error) {
-    logger.error('[API:NotificationExecution] Failed to get execution', {
-      error: error instanceof Error ? error.message : String(error),
-      executionId: id
-    })
-    
-return NextResponse.json(
-      { error: 'Failed to get execution' },
-      { status: 500 }
-    )
   }
-}
-
+})

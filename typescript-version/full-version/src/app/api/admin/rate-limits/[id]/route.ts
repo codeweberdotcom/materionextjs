@@ -1,22 +1,14 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isAdminByCode, isSuperadmin } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 
-export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-    
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export const DELETE = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
-    const hasPermission = isSuperadmin(user) || isAdminByCode(user)
-
-    if (!hasPermission) {
+    if (!isSuperadmin(user) && !isAdminByCode(user)) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
@@ -31,9 +23,5 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     }
 
     return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Error clearing rate limit state:', error)
-    
-return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
+})
