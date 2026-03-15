@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 
+import { useParams } from 'next/navigation'
+
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -15,6 +17,7 @@ import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Autocomplete from '@mui/material/Autocomplete'
 import Chip from '@mui/material/Chip'
+import CircularProgress from '@mui/material/CircularProgress'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
@@ -50,6 +53,7 @@ type AddStateDialogProps = {
 const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: AddStateDialogProps) => {
   // Hooks
   const dictionary = useTranslation()
+  const { lang: locale } = useParams()
 
   const [formData, setFormData] = useState({
     name: '',
@@ -60,13 +64,16 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
 
   const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [cities, setCities] = useState<City[]>([])
+  const [citiesLoading, setCitiesLoading] = useState(false)
 
   const isEditMode = !!editState
 
   useEffect(() => {
     const fetchCities = async () => {
+      setCitiesLoading(true)
+
       try {
-        const response = await fetch('/api/cities')
+        const response = await fetch(`/api/cities?locale=${locale}`)
 
         if (response.ok) {
           const data = await response.json()
@@ -75,6 +82,8 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
         }
       } catch (error) {
         console.error('Error fetching cities:', error)
+      } finally {
+        setCitiesLoading(false)
       }
     }
 
@@ -182,6 +191,9 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
                 multiple
                 id='cities-autocomplete'
                 options={cities}
+                loading={citiesLoading}
+                loadingText={dictionary.navigation.loading}
+                disabled={citiesLoading}
                 getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
                 value={cities.filter(city => formData.cities.includes(city.id))}
                 onChange={(event, newValue) => {
@@ -195,6 +207,17 @@ const AddStateDialog = ({ open, handleClose, onSubmit, editState, onUpdate }: Ad
                     {...params}
                     label={dictionary.navigation.cities}
                     placeholder={dictionary.navigation.searchCity}
+                    slotProps={{
+                      input: {
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {citiesLoading ? <CircularProgress color='inherit' size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        )
+                      }
+                    }}
                   />
                 )}
                 renderTags={(value, getTagProps) =>

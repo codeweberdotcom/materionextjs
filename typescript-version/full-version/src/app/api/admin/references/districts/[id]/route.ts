@@ -103,7 +103,7 @@ export async function PUT(
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
 
-    const { name, code, isActive } = body
+    const { name, code, cityId, isActive } = body
 
     if (!name || !code) {
       return NextResponse.json(
@@ -118,8 +118,10 @@ export async function PUT(
       data: {
         name,
         code,
-        isActive
-      }
+        isActive,
+        cityId: cityId !== undefined ? (cityId || null) : undefined
+      },
+      include: { city: { select: { id: true, name: true, code: true } } }
     })
 
     return NextResponse.json(updatedDistrict)

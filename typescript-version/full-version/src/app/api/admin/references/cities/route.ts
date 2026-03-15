@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
 
-    const { name, code, districts = [], isActive = true } = body
+    const { name, code, type = 'city', latitude, longitude, fiasId, oktmo, districts = [], isActive = true } = body
 
     if (!name || !code) {
       return NextResponse.json(
@@ -94,6 +94,11 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         code,
+        type,
+        ...(latitude != null && { latitude: parseFloat(latitude) }),
+        ...(longitude != null && { longitude: parseFloat(longitude) }),
+        ...(fiasId && { fiasId }),
+        ...(oktmo && { oktmo }),
         isActive,
         districts: districts.length > 0 ? {
           connect: districts.map((districtId: string) => ({ id: districtId }))

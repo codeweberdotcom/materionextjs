@@ -142,7 +142,7 @@ const LanguagesListTable = () => {
         }
       } catch (error) {
         console.error('Error fetching languages:', error)
-        toast.error('Failed to load languages')
+        toast.error(dictionary.navigation.failedToLoadLanguages)
       } finally {
         setLoading(false)
       }
@@ -261,15 +261,15 @@ const LanguagesListTable = () => {
         setData(updatedData)
         setFilteredData(updatedData)
         setAddLanguageOpen(false)
-        toast.success('Language added successfully!')
+        toast.success(dictionary.navigation.languageAddedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to add language')
+        toast.error(error.message || dictionary.navigation.failedToAddLanguage)
       }
     } catch (error) {
       console.error('Error adding language:', error)
-      toast.error('Failed to add language')
+      toast.error(dictionary.navigation.failedToAddLanguage)
     }
   }
 
@@ -291,15 +291,15 @@ const LanguagesListTable = () => {
         setFilteredData(updatedData)
         setEditLanguageOpen(false)
         setEditingLanguage(null)
-        toast.success('Language updated successfully!')
+        toast.success(dictionary.navigation.languageUpdatedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to update language')
+        toast.error(error.message || dictionary.navigation.failedToUpdateLanguage)
       }
     } catch (error) {
       console.error('Error updating language:', error)
-      toast.error('Failed to update language')
+      toast.error(dictionary.navigation.failedToUpdateLanguage)
     }
   }
 
@@ -318,15 +318,19 @@ const LanguagesListTable = () => {
 
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success(`Language ${updatedLanguage.isActive ? 'activated' : 'deactivated'} successfully!`)
+        toast.success(updatedLanguage.isActive ? dictionary.navigation.languageActivatedSuccess : dictionary.navigation.languageDeactivatedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to toggle language status')
+        if (response.status === 400) {
+          toast.error(dictionary.navigation.cannotDeactivateLastLanguage)
+        } else {
+          toast.error(error.message || dictionary.navigation.failedToToggleLanguageStatus)
+        }
       }
     } catch (error) {
       console.error('Error toggling language status:', error)
-      toast.error('Failed to toggle language status')
+      toast.error(dictionary.navigation.failedToToggleLanguageStatus)
     }
   }
 
@@ -451,6 +455,8 @@ const LanguagesListTable = () => {
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
+          labelRowsPerPage={dictionary.navigation.rowsPerPage}
+          labelDisplayedRows={({ from, to, count }) => `${from}–${to} ${dictionary.navigation.of} ${count !== -1 ? count : `> ${to}`}`}
           count={table.getFilteredRowModel().rows.length}
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}

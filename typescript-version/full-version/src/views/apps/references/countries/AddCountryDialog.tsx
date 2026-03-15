@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+
+import { useParams } from 'next/navigation'
 
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
@@ -11,13 +13,22 @@ import TextField from '@mui/material/TextField'
 import Grid from '@mui/material/Grid2'
 import IconButton from '@mui/material/IconButton'
 import Chip from '@mui/material/Chip'
-import Box from '@mui/material/Box'
 import Autocomplete from '@mui/material/Autocomplete'
 import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
+import CircularProgress from '@mui/material/CircularProgress'
+import Typography from '@mui/material/Typography'
+
+import isoCountries from '@/data/iso-countries.json'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
+
+type IsoCountry = {
+  code: string
+  name: string
+  nativeName: string
+}
 
 type State = {
   id: string
@@ -45,11 +56,15 @@ type AddCountryDialogProps = {
   onSubmit: (data: { name: string; code: string; states: string[]; isActive: boolean }) => void
   editCountry?: Country | null
   onUpdate?: (data: { id: string; name: string; code: string; states: string[]; isActive: boolean }) => void
+  existingCodes?: string[]
 }
 
-const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }: AddCountryDialogProps) => {
+const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate, existingCodes = [] }: AddCountryDialogProps) => {
   // Hooks
   const dictionary = useTranslation()
+  const { lang: locale } = useParams()
+
+  const [selectedCountry, setSelectedCountry] = useState<IsoCountry | null>(null)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -59,13 +74,20 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
   })
 
   const [states, setStates] = useState<State[]>([])
+  const [statesLoading, setStatesLoading] = useState(false)
 
   const isEditMode = !!editCountry
 
+  const availableCountries = useMemo(() => {
+    return (isoCountries as IsoCountry[]).filter(c => !existingCodes.includes(c.code))
+  }, [existingCodes])
+
   useEffect(() => {
     const fetchStates = async () => {
+      setStatesLoading(true)
+
       try {
-        const response = await fetch('/api/states')
+        const response = await fetch(`/api/states?locale=${locale}`)
 
         if (response.ok) {
           const data = await response.json()
@@ -74,6 +96,8 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
         }
       } catch (error) {
         console.error('Error fetching states:', error)
+      } finally {
+        setStatesLoading(false)
       }
     }
 
@@ -88,13 +112,21 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
     if (isEditMode && onUpdate && editCountry) {
       onUpdate({ ...formData, id: editCountry.id })
     } else {
-      onSubmit(formData)
+      if (!selectedCountry) return
+
+      onSubmit({
+        name: selectedCountry.name,
+        code: selectedCountry.code,
+        states: formData.states,
+        isActive: formData.isActive
+      })
     }
 
-    handleClose()
+    handleCloseDialog()
   }
 
   const handleCloseDialog = () => {
+    setSelectedCountry(null)
     setFormData({ name: '', code: '', states: [], isActive: true })
     handleClose()
   }
@@ -109,6 +141,7 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
         isActive: editCountry.isActive
       })
     } else {
+      setSelectedCountry(null)
       setFormData({
         name: '',
         code: '',
@@ -127,31 +160,77 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
             <i className='ri-close-line text-textSecondary' />
           </IconButton>
           <Grid container spacing={4}>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label={dictionary.navigation.countryName}
-                placeholder='United States'
-                value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value })}
-                required
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label={dictionary.navigation.countryCode}
-                placeholder='US'
-                value={formData.code}
-                onChange={e => setFormData({ ...formData, code: e.target.value })}
-                required
-              />
-            </Grid>
+            {isEditMode ? (
+              <>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    label={dictionary.navigation.countryName}
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </Grid>
+                <Grid size={{ xs: 12 }}>
+                  <TextField
+                    fullWidth
+                    label={dictionary.navigation.countryCode}
+                    value={formData.code}
+                    onChange={e => setFormData({ ...formData, code: e.target.value })}
+                    required
+                  />
+                </Grid>
+              </>
+            ) : (
+              <>
+                <Grid size={{ xs: 12 }}>
+                  <Autocomplete
+                    options={availableCountries}
+                    value={selectedCountry}
+                    onChange={(_, value) => setSelectedCountry(value)}
+                    getOptionLabel={(option) => `${option.name} (${option.nativeName})`}
+                    renderOption={(props, option) => (
+                      <li {...props} key={option.code}>
+                        <div>
+                          <Typography variant='body1'>{option.name}</Typography>
+                          <Typography variant='caption' color='text.secondary'>
+                            {option.nativeName} — {option.code}
+                          </Typography>
+                        </div>
+                      </li>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={dictionary.navigation.selectCountry}
+                        placeholder={dictionary.navigation.searchByCountryName}
+                        required
+                      />
+                    )}
+                    isOptionEqualToValue={(option, value) => option.code === value.code}
+                    noOptionsText={dictionary.navigation.noCountriesAvailable}
+                  />
+                </Grid>
+                {selectedCountry && (
+                  <Grid size={{ xs: 12 }}>
+                    <div className='flex items-center gap-4 p-3 rounded bg-actionHover'>
+                      <div>
+                        <Typography variant='body2' color='text.secondary'>{dictionary.navigation.code}</Typography>
+                        <Typography variant='body1' fontWeight={500}>{selectedCountry.code}</Typography>
+                      </div>
+                    </div>
+                  </Grid>
+                )}
+              </>
+            )}
             <Grid size={{ xs: 12 }}>
               <Autocomplete
                 multiple
                 id='states-autocomplete'
                 options={states}
+                loading={statesLoading}
+                loadingText={dictionary.navigation.loading}
+                disabled={statesLoading}
                 getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
                 value={states.filter(state => formData.states.includes(state.id))}
                 onChange={(event, newValue) => {
@@ -164,18 +243,28 @@ const AddCountryDialog = ({ open, handleClose, onSubmit, editCountry, onUpdate }
                   <TextField
                     {...params}
                     label={dictionary.navigation.states}
-                    placeholder='Search and select states...'
+                    placeholder={dictionary.navigation.searchAndSelectStates}
+                    slotProps={{
+                      input: {
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {statesLoading ? <CircularProgress color='inherit' size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        )
+                      }
+                    }}
                   />
                 )}
                 renderTags={(value, getTagProps) =>
                   value.map((option, index) => {
-                    const { key, ...chipProps } = getTagProps({ index })
+                    const { key: tagKey, ...chipProps } = getTagProps({ index })
                     const state = states.find(s => s.id === (typeof option === 'string' ? option : option.id))
 
-                    
-return (
+                    return (
                       <Chip
-                        key={state?.id || index}
+                        key={tagKey}
                         label={state?.name || (typeof option === 'string' ? option : option.name)}
                         size='small'
                         {...chipProps}
@@ -183,16 +272,11 @@ return (
                     )
                   })
                 }
-                renderOption={(props, option) => {
-                  const { key, ...otherProps } = props
-
-                  
-return (
-                    <li key={option.id} {...otherProps}>
-                      {option.name}
-                    </li>
-                  )
-                }}
+                renderOption={(props, option) => (
+                  <li {...props} key={option.id}>
+                    {option.name}
+                  </li>
+                )}
                 filterSelectedOptions
                 fullWidth
               />
@@ -201,7 +285,7 @@ return (
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.isActive}
+                    checked={isEditMode ? formData.isActive : formData.isActive}
                     onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
                   />
                 }
@@ -214,7 +298,7 @@ return (
           <Button variant='outlined' onClick={handleCloseDialog}>
             {dictionary.navigation.cancel}
           </Button>
-          <Button variant='contained' type='submit'>
+          <Button variant='contained' type='submit' disabled={!isEditMode && !selectedCountry}>
             {isEditMode ? dictionary.navigation.updateCountry : dictionary.navigation.addCountry}
           </Button>
         </DialogActions>

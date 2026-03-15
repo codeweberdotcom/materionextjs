@@ -13,6 +13,8 @@ import IconButton from '@mui/material/IconButton'
 import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
 
+import { useTranslation } from '@/contexts/TranslationContext'
+
 type Language = {
   id: string
   name: string
@@ -28,6 +30,8 @@ type EditLanguageDialogProps = {
 }
 
 const EditLanguageDialog = ({ open, handleClose, language, onSubmit }: EditLanguageDialogProps) => {
+  const dictionary = useTranslation()
+
   const [formData, setFormData] = useState({
     name: '',
     code: '',
@@ -55,7 +59,7 @@ const EditLanguageDialog = ({ open, handleClose, language, onSubmit }: EditLangu
 
   return (
     <Dialog fullWidth open={open} onClose={handleCloseDialog} maxWidth='sm'>
-      <DialogTitle>Edit Language</DialogTitle>
+      <DialogTitle>{dictionary.navigation.editLanguage}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <IconButton onClick={handleCloseDialog} className='absolute block-start-4 inline-end-4'>
@@ -65,7 +69,7 @@ const EditLanguageDialog = ({ open, handleClose, language, onSubmit }: EditLangu
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='Language Name'
+                label={dictionary.navigation.language}
                 placeholder='English'
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -75,7 +79,7 @@ const EditLanguageDialog = ({ open, handleClose, language, onSubmit }: EditLangu
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
-                label='Language Code'
+                label={dictionary.navigation.code}
                 placeholder='en'
                 value={formData.code}
                 onChange={e => setFormData({ ...formData, code: e.target.value })}
@@ -90,17 +94,17 @@ const EditLanguageDialog = ({ open, handleClose, language, onSubmit }: EditLangu
                     onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
                   />
                 }
-                label={formData.isActive ? 'Active' : 'Inactive'}
+                label={formData.isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button variant='outlined' onClick={handleCloseDialog}>
-            Cancel
+            {dictionary.navigation.cancel}
           </Button>
           <Button variant='contained' type='submit'>
-            Save Changes
+            {dictionary.navigation.saveChanges}
           </Button>
         </DialogActions>
       </form>

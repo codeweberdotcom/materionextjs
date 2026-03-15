@@ -1,5 +1,20 @@
 [
   {
+    "code": "ar",
+    "name": "Ar",
+    "direction": "rtl"
+  },
+  {
+    "code": "en",
+    "name": "En",
+    "direction": "ltr"
+  },
+  {
+    "code": "fr",
+    "name": "Fr",
+    "direction": "ltr"
+  },
+  {
     "code": "ru",
     "name": "Ru",
     "direction": "ltr"

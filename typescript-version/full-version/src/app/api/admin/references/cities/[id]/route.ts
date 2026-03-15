@@ -101,7 +101,7 @@ export async function PUT(
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
 
-    const { name, code, districts = [], isActive } = body
+    const { name, code, type, latitude, longitude, fiasId, oktmo, districts = [], isActive } = body
 
     if (!name || !code) {
       return NextResponse.json(
@@ -116,6 +116,11 @@ export async function PUT(
       data: {
         name,
         code,
+        ...(type && { type }),
+        latitude: latitude != null ? parseFloat(latitude) : undefined,
+        longitude: longitude != null ? parseFloat(longitude) : undefined,
+        fiasId: fiasId !== undefined ? fiasId : undefined,
+        oktmo: oktmo !== undefined ? oktmo : undefined,
         isActive,
         districts: districts.length > 0 ? {
           set: districts.map((districtId: string) => ({ id: districtId }))

@@ -57,6 +57,9 @@ import AddCityDialog from './AddCityDialog'
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
 
+// Util Imports
+import { formatTranslation } from '@/utils/translations/pluralization'
+
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
 
@@ -73,6 +76,11 @@ type City = {
   id: string
   name: string
   code: string
+  type: string
+  latitude: number | null
+  longitude: number | null
+  fiasId: string | null
+  oktmo: string | null
   isActive: boolean
   districts?: Array<{
     id: string
@@ -145,7 +153,7 @@ const CitiesListTable = () => {
         }
       } catch (error) {
         console.error('Error fetching cities:', error)
-        toast.error('Failed to load cities')
+        toast.error(dictionary.navigation.failedToLoadCities)
       } finally {
         setLoading(false)
       }
@@ -185,6 +193,17 @@ const CitiesListTable = () => {
       header: dictionary.navigation.code,
       cell: ({ row }) => <Typography>{row.original.code}</Typography>
     }),
+    columnHelper.accessor('type', {
+      header: dictionary.navigation.type,
+      cell: ({ row }) => (
+        <Chip
+          variant='tonal'
+          label={dictionary.navigation.cityTypes?.[row.original.type] || row.original.type}
+          size='small'
+          color={row.original.type === 'city' ? 'primary' : 'info'}
+        />
+      )
+    }),
     columnHelper.accessor('isActive', {
       header: dictionary.navigation.status,
       cell: ({ row }) => (
@@ -206,7 +225,7 @@ const CitiesListTable = () => {
 return (
           <div className='flex items-center gap-2'>
             <Chip
-              label={`${districtsCount} ${dictionary.navigation.districts.toLowerCase()}`}
+              label={formatTranslation(dictionary.navigation.districtsCount, { count: districtsCount }, locale as string)}
               size='small'
               variant={districtsCount > 0 ? 'filled' : 'outlined'}
               color={districtsCount > 0 ? 'primary' : 'default'}
@@ -278,15 +297,15 @@ return (
 
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success('City deleted successfully!')
+        toast.success(dictionary.navigation.cityDeletedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to delete city')
+        toast.error(error.message || dictionary.navigation.failedToDeleteCity)
       }
     } catch (error) {
       console.error('Error deleting city:', error)
-      toast.error('Failed to delete city')
+      toast.error(dictionary.navigation.failedToDeleteCity)
     }
   }
 
@@ -309,15 +328,15 @@ return (
 
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success(`City ${updatedCity.isActive ? 'activated' : 'deactivated'} successfully!`)
+        toast.success(updatedCity.isActive ? dictionary.navigation.cityActivatedSuccess : dictionary.navigation.cityDeactivatedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to toggle city status')
+        toast.error(error.message || dictionary.navigation.failedToToggleCityStatus)
       }
     } catch (error) {
       console.error('Error toggling city status:', error)
-      toast.error('Failed to toggle city status')
+      toast.error(dictionary.navigation.failedToToggleCityStatus)
     }
   }
 
@@ -338,15 +357,15 @@ return (
         setData(updatedData)
         setFilteredData(updatedData)
         setAddCityOpen(false)
-        toast.success('City added successfully!')
+        toast.success(dictionary.navigation.cityAddedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to add city')
+        toast.error(error.message || dictionary.navigation.failedToAddCity)
       }
     } catch (error) {
       console.error('Error adding city:', error)
-      toast.error('Failed to add city')
+      toast.error(dictionary.navigation.failedToAddCity)
     }
   }
 
@@ -370,15 +389,15 @@ return (
         setData(updatedData)
         setFilteredData(updatedData)
         setEditCity(null)
-        toast.success('City updated successfully!')
+        toast.success(dictionary.navigation.cityUpdatedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to update city')
+        toast.error(error.message || dictionary.navigation.failedToUpdateCity)
       }
     } catch (error) {
       console.error('Error updating city:', error)
-      toast.error('Failed to update city')
+      toast.error(dictionary.navigation.failedToUpdateCity)
     }
   }
 
@@ -507,6 +526,8 @@ return (
         rowsPerPageOptions={[10, 25, 50]}
         component='div'
         className='border-bs'
+        labelRowsPerPage={dictionary.navigation.rowsPerPage}
+        labelDisplayedRows={({ from, to, count }) => `${from}–${to} ${dictionary.navigation.of} ${count !== -1 ? count : `> ${to}`}`}
         count={table.getFilteredRowModel().rows.length}
         rowsPerPage={table.getState().pagination.pageSize}
         page={table.getState().pagination.pageIndex}

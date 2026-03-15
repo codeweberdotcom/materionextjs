@@ -58,6 +58,9 @@ import ConfirmationDialog from '@components/dialogs/confirmation-dialog'
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
 
+// Util Imports
+import { formatTranslation } from '@/utils/translations/pluralization'
+
 // Hook Imports
 import { usePermissions } from '@/hooks/usePermissions'
 
@@ -161,7 +164,7 @@ const CountriesListTable = () => {
         }
       } catch (error) {
         console.error('Error fetching countries:', error)
-        toast.error('Failed to load countries')
+        toast.error(dictionary.navigation.failedToLoadCountries)
       } finally {
         setLoading(false)
       }
@@ -224,7 +227,7 @@ const CountriesListTable = () => {
  return (
               <div className='flex items-center gap-2'>
                 <Chip
-                  label={`${statesCount} ${dictionary.navigation.states.toLowerCase()}`}
+                  label={formatTranslation(dictionary.navigation.statesCount, { count: statesCount }, locale as string)}
                   size='small'
                   variant={statesCount > 0 ? 'filled' : 'outlined'}
                   color={statesCount > 0 ? 'primary' : 'default'}
@@ -318,15 +321,15 @@ const CountriesListTable = () => {
 
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success('Country deleted ' + dictionary.navigation.successfully)
+        toast.success(dictionary.navigation.countryDeletedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to delete country')
+        toast.error(error.message || dictionary.navigation.failedToDeleteCountry)
       }
     } catch (error) {
       console.error('Error deleting country:', error)
-      toast.error('Failed to delete country')
+      toast.error(dictionary.navigation.failedToDeleteCountry)
     } finally {
       setDeleteDialogOpen(false)
       setCountryToDelete(null)
@@ -359,15 +362,15 @@ const CountriesListTable = () => {
         setData(updatedData)
         setFilteredData(updatedData)
         setEditCountry(null)
-        toast.success('Country updated ' + dictionary.navigation.successfully)
+        toast.success(dictionary.navigation.countryUpdatedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to update country')
+        toast.error(error.message || dictionary.navigation.failedToUpdateCountry)
       }
     } catch (error) {
       console.error('Error updating country:', error)
-      toast.error('Failed to update country')
+      toast.error(dictionary.navigation.failedToUpdateCountry)
     }
   }
 
@@ -386,15 +389,15 @@ const CountriesListTable = () => {
 
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success(`Country ${updatedCountry.isActive ? 'activated' : 'deactivated'} ${dictionary.navigation.successfully}`)
+        toast.success(updatedCountry.isActive ? dictionary.navigation.countryActivatedSuccess : dictionary.navigation.countryDeactivatedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to toggle country status')
+        toast.error(error.message || dictionary.navigation.failedToToggleCountryStatus)
       }
     } catch (error) {
       console.error('Error toggling country status:', error)
-      toast.error('Failed to toggle country status')
+      toast.error(dictionary.navigation.failedToToggleCountryStatus)
     }
   }
 
@@ -415,15 +418,15 @@ const CountriesListTable = () => {
         setData(updatedData)
         setFilteredData(updatedData)
         setAddCountryOpen(false)
-        toast.success('Country added ' + dictionary.navigation.successfully)
+        toast.success(dictionary.navigation.countryAddedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to add country')
+        toast.error(error.message || dictionary.navigation.failedToAddCountry)
       }
     } catch (error) {
       console.error('Error adding country:', error)
-      toast.error('Failed to add country')
+      toast.error(dictionary.navigation.failedToAddCountry)
     }
   }
 
@@ -557,6 +560,8 @@ const CountriesListTable = () => {
           rowsPerPageOptions={[10, 25, 50]}
           component='div'
           className='border-bs'
+          labelRowsPerPage={dictionary.navigation.rowsPerPage}
+          labelDisplayedRows={({ from, to, count }) => `${from}–${to} ${dictionary.navigation.of} ${count !== -1 ? count : `> ${to}`}`}
           count={table.getFilteredRowModel().rows.length}
           rowsPerPage={table.getState().pagination.pageSize}
           page={table.getState().pagination.pageIndex}
@@ -573,6 +578,7 @@ const CountriesListTable = () => {
         onSubmit={handleAddCountry}
         editCountry={editCountry}
         onUpdate={handleUpdateCountry}
+        existingCodes={data.map(c => c.code)}
       />
       <ConfirmationDialog
         open={deleteDialogOpen}

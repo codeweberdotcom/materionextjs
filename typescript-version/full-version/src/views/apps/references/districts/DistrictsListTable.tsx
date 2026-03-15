@@ -80,6 +80,12 @@ type District = {
   name: string
   code: string
   isActive: boolean
+  cityId?: string | null
+  city?: {
+    id: string
+    name: string
+    code: string
+  } | null
 }
 
 const fuzzyFilter: FilterFn<District> = (row, columnId, value, addMeta) => {
@@ -151,7 +157,7 @@ const DistrictsListTable = () => {
         }
       } catch (error) {
         console.error('Error fetching districts:', error)
-        toast.error('Failed to load districts')
+        toast.error(dictionary.navigation.failedToLoadDistricts)
       } finally {
         setLoading(false)
       }
@@ -193,6 +199,22 @@ const DistrictsListTable = () => {
           header: dictionary.navigation.code,
           cell: ({ row }) => <Typography>{row.original.code}</Typography>
         }),
+        {
+          id: 'city',
+          header: dictionary.navigation.city,
+          cell: ({ row }: { row: any }) => (
+            row.original.city ? (
+              <Chip
+                variant='tonal'
+                label={row.original.city.name}
+                size='small'
+                color='primary'
+              />
+            ) : (
+              <Typography color='text.disabled'>—</Typography>
+            )
+          )
+        },
         columnHelper.accessor('isActive', {
           header: dictionary.navigation.status,
           cell: ({ row }) => (
@@ -282,15 +304,15 @@ const DistrictsListTable = () => {
 
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success('District deleted successfully!')
+        toast.success(dictionary.navigation.districtDeletedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to delete district')
+        toast.error(error.message || dictionary.navigation.failedToDeleteDistrict)
       }
     } catch (error) {
       console.error('Error deleting district:', error)
-      toast.error('Failed to delete district')
+      toast.error(dictionary.navigation.failedToDeleteDistrict)
     }
   }
 
@@ -313,19 +335,19 @@ const DistrictsListTable = () => {
 
         setData(updatedData)
         setFilteredData(updatedData)
-        toast.success(`District ${updatedDistrict.isActive ? 'activated' : 'deactivated'} successfully!`)
+        toast.success(updatedDistrict.isActive ? dictionary.navigation.districtActivatedSuccess : dictionary.navigation.districtDeactivatedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to toggle district status')
+        toast.error(error.message || dictionary.navigation.failedToToggleDistrictStatus)
       }
     } catch (error) {
       console.error('Error toggling district status:', error)
-      toast.error('Failed to toggle district status')
+      toast.error(dictionary.navigation.failedToToggleDistrictStatus)
     }
   }
 
-  const handleAddDistrict = async (districtData: { name: string; code: string; isActive: boolean }) => {
+  const handleAddDistrict = async (districtData: { name: string; code: string; cityId: string | null; isActive: boolean }) => {
     try {
       const response = await fetch('/api/admin/references/districts', {
         method: 'POST',
@@ -342,19 +364,19 @@ const DistrictsListTable = () => {
         setData(updatedData)
         setFilteredData(updatedData)
         setAddDistrictOpen(false)
-        toast.success('District added successfully!')
+        toast.success(dictionary.navigation.districtAddedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to add district')
+        toast.error(error.message || dictionary.navigation.failedToAddDistrict)
       }
     } catch (error) {
       console.error('Error adding district:', error)
-      toast.error('Failed to add district')
+      toast.error(dictionary.navigation.failedToAddDistrict)
     }
   }
 
-  const handleUpdateDistrict = async (districtData: { id: string; name: string; code: string; isActive: boolean }) => {
+  const handleUpdateDistrict = async (districtData: { id: string; name: string; code: string; cityId: string | null; isActive: boolean }) => {
     try {
       const response = await fetch(`/api/admin/references/districts/${districtData.id}`, {
         method: 'PUT',
@@ -374,15 +396,15 @@ const DistrictsListTable = () => {
         setData(updatedData)
         setFilteredData(updatedData)
         setEditDistrict(null)
-        toast.success('District updated successfully!')
+        toast.success(dictionary.navigation.districtUpdatedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to update district')
+        toast.error(error.message || dictionary.navigation.failedToUpdateDistrict)
       }
     } catch (error) {
       console.error('Error updating district:', error)
-      toast.error('Failed to update district')
+      toast.error(dictionary.navigation.failedToUpdateDistrict)
     }
   }
 
@@ -406,6 +428,7 @@ const DistrictsListTable = () => {
                 <TableCell><Skeleton width={20} height={20} /></TableCell>
                 <TableCell><Skeleton width={120} height={20} /></TableCell>
                 <TableCell><Skeleton width={80} height={20} /></TableCell>
+                <TableCell><Skeleton width={100} height={20} /></TableCell>
                 <TableCell><Skeleton width={70} height={20} /></TableCell>
                 <TableCell><Skeleton width={60} height={20} /></TableCell>
               </TableRow>
@@ -416,6 +439,7 @@ const DistrictsListTable = () => {
                   <TableCell><Skeleton width={20} height={20} /></TableCell>
                   <TableCell><Skeleton width={120} height={16} /></TableCell>
                   <TableCell><Skeleton width={80} height={16} /></TableCell>
+                  <TableCell><Skeleton width={100} height={24} /></TableCell>
                   <TableCell><Skeleton width={70} height={24} /></TableCell>
                   <TableCell>
                     <div className='flex items-center gap-2'>
@@ -511,6 +535,8 @@ const DistrictsListTable = () => {
         rowsPerPageOptions={[10, 25, 50]}
         component='div'
         className='border-bs'
+        labelRowsPerPage={dictionary.navigation.rowsPerPage}
+        labelDisplayedRows={({ from, to, count }) => `${from}–${to} ${dictionary.navigation.of} ${count !== -1 ? count : `> ${to}`}`}
         count={table.getFilteredRowModel().rows.length}
         rowsPerPage={table.getState().pagination.pageSize}
         page={table.getState().pagination.pageIndex}

@@ -501,6 +501,8 @@ const CurrenciesListTable = () => {
         rowsPerPageOptions={[10, 25, 50]}
         component='div'
         className='border-bs'
+        labelRowsPerPage={dictionary.navigation.rowsPerPage}
+        labelDisplayedRows={({ from, to, count }) => `${from}–${to} ${dictionary.navigation.of} ${count !== -1 ? count : `> ${to}`}`}
         count={table.getFilteredRowModel().rows.length}
         rowsPerPage={table.getState().pagination.pageSize}
         page={table.getState().pagination.pageIndex}

@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     // Fetch districts from database
     const districts = await prisma.district.findMany({
       where: { isActive: true },
+      include: { city: { select: { id: true, name: true, code: true } } },
       orderBy: { name: 'asc' }
     })
 
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
     }
 
-    const { name, code, isActive = true } = body
+    const { name, code, cityId, isActive = true } = body
 
     if (!name || !code) {
       return NextResponse.json(
@@ -95,8 +96,10 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         code,
-        isActive
-      }
+        isActive,
+        ...(cityId && { cityId })
+      },
+      include: { city: { select: { id: true, name: true, code: true } } }
     })
 
     return NextResponse.json(newDistrict)

@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 
+import { useParams } from 'next/navigation'
+
 import Dialog from '@mui/material/Dialog'
 import DialogTitle from '@mui/material/DialogTitle'
 import DialogContent from '@mui/material/DialogContent'
@@ -14,6 +16,8 @@ import Autocomplete from '@mui/material/Autocomplete'
 import Switch from '@mui/material/Switch'
 import FormControlLabel from '@mui/material/FormControlLabel'
 import Chip from '@mui/material/Chip'
+import MenuItem from '@mui/material/MenuItem'
+import CircularProgress from '@mui/material/CircularProgress'
 
 // Context Imports
 import { useTranslation } from '@/contexts/TranslationContext'
@@ -35,6 +39,11 @@ type City = {
   id: string
   name: string
   code: string
+  type: string
+  latitude: number | null
+  longitude: number | null
+  fiasId: string | null
+  oktmo: string | null
   isActive: boolean
   districts?: Array<{
     id: string
@@ -47,30 +56,39 @@ type City = {
 type AddCityDialogProps = {
   open: boolean
   handleClose: () => void
-  onSubmit: (data: { name: string; code: string; districts: string[]; isActive: boolean }) => void
+  onSubmit: (data: { name: string; code: string; type: string; latitude: string; longitude: string; fiasId: string; oktmo: string; districts: string[]; isActive: boolean }) => void
   editCity?: City | null
-  onUpdate?: (data: { id: string; name: string; code: string; districts: string[]; isActive: boolean }) => void
+  onUpdate?: (data: { id: string; name: string; code: string; type: string; latitude: string; longitude: string; fiasId: string; oktmo: string; districts: string[]; isActive: boolean }) => void
 }
 
 const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddCityDialogProps) => {
   const dictionary = useTranslation()
+  const { lang: locale } = useParams()
 
   const [formData, setFormData] = useState({
     name: '',
     code: '',
+    type: 'city',
+    latitude: '',
+    longitude: '',
+    fiasId: '',
+    oktmo: '',
     districts: [] as string[],
     isActive: true
   })
 
   const [errors, setErrors] = useState<{[key: string]: string}>({})
   const [districts, setDistricts] = useState<District[]>([])
+  const [districtsLoading, setDistrictsLoading] = useState(false)
 
   const isEditMode = !!editCity
 
   useEffect(() => {
     const fetchDistricts = async () => {
+      setDistrictsLoading(true)
+
       try {
-        const response = await fetch('/api/districts')
+        const response = await fetch(`/api/districts?locale=${locale}`)
 
         if (response.ok) {
           const data = await response.json()
@@ -79,6 +97,8 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
         }
       } catch (error) {
         console.error('Error fetching districts:', error)
+      } finally {
+        setDistrictsLoading(false)
       }
     }
 
@@ -93,6 +113,11 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
       setFormData({
         name: editCity.name,
         code: editCity.code,
+        type: editCity.type || 'city',
+        latitude: editCity.latitude != null ? String(editCity.latitude) : '',
+        longitude: editCity.longitude != null ? String(editCity.longitude) : '',
+        fiasId: editCity.fiasId || '',
+        oktmo: editCity.oktmo || '',
         districts: editCity.districts ? editCity.districts.map(d => d.id) : [],
         isActive: editCity.isActive
       })
@@ -100,6 +125,11 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
       setFormData({
         name: '',
         code: '',
+        type: 'city',
+        latitude: '',
+        longitude: '',
+        fiasId: '',
+        oktmo: '',
         districts: [],
         isActive: true
       })
@@ -137,7 +167,7 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
   }
 
   const handleCloseDialog = () => {
-    setFormData({ name: '', code: '', districts: [], isActive: true })
+    setFormData({ name: '', code: '', type: 'city', latitude: '', longitude: '', fiasId: '', oktmo: '', districts: [], isActive: true })
     handleClose()
   }
 
@@ -188,10 +218,68 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
               />
             </Grid>
             <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                select
+                label={dictionary.navigation.type}
+                value={formData.type}
+                onChange={e => setFormData({ ...formData, type: e.target.value })}
+              >
+                {['city', 'town', 'urban_settlement', 'village'].map(t => (
+                  <MenuItem key={t} value={t}>
+                    {dictionary.navigation.cityTypes?.[t] || t}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <TextField
+                fullWidth
+                label={dictionary.navigation.latitude}
+                placeholder='48.0159'
+                value={formData.latitude}
+                onChange={e => setFormData({ ...formData, latitude: e.target.value })}
+                type='number'
+                inputProps={{ step: 'any' }}
+              />
+            </Grid>
+            <Grid size={{ xs: 6 }}>
+              <TextField
+                fullWidth
+                label={dictionary.navigation.longitude}
+                placeholder='37.8029'
+                value={formData.longitude}
+                onChange={e => setFormData({ ...formData, longitude: e.target.value })}
+                type='number'
+                inputProps={{ step: 'any' }}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                label='ФИАС ID'
+                placeholder='xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
+                value={formData.fiasId}
+                onChange={e => setFormData({ ...formData, fiasId: e.target.value })}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                fullWidth
+                label='ОКТМО'
+                placeholder='94701000001'
+                value={formData.oktmo}
+                onChange={e => setFormData({ ...formData, oktmo: e.target.value })}
+              />
+            </Grid>
+            <Grid size={{ xs: 12 }}>
               <Autocomplete
                 multiple
                 id='districts-autocomplete'
                 options={districts}
+                loading={districtsLoading}
+                loadingText={dictionary.navigation.loading}
+                disabled={districtsLoading}
                 getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
                 value={districts.filter(district => formData.districts.includes(district.id))}
                 onChange={(event, newValue) => {
@@ -200,11 +288,23 @@ const AddCityDialog = ({ open, handleClose, onSubmit, editCity, onUpdate }: AddC
                     districts: newValue.map(district => typeof district === 'string' ? district : district.id)
                   })
                 }}
+                loadingText={dictionary.navigation.loading}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label={dictionary.navigation.districts}
-                    placeholder='Search and select districts...'
+                    placeholder={dictionary.navigation.searchDistrict}
+                    slotProps={{
+                      input: {
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            {districtsLoading ? <CircularProgress color='inherit' size={20} /> : null}
+                            {params.InputProps.endAdornment}
+                          </>
+                        )
+                      }
+                    }}
                   />
                 )}
                 renderTags={(value, getTagProps) =>

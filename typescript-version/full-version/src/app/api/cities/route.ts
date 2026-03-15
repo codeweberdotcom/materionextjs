@@ -7,11 +7,15 @@ import type { Locale } from '@configs/i18n'
 export async function GET(request: NextRequest) {
   try {
     const locale = (request.nextUrl.searchParams.get('locale') || 'en') as Locale
+    const type = request.nextUrl.searchParams.get('type')
     const dictionary = await getDictionary(locale)
     const cityNames = dictionary?.references?.cities || {}
 
     const cities = await prisma.city.findMany({
-      where: { isActive: true },
+      where: {
+        isActive: true,
+        ...(type && { type })
+      },
       orderBy: { name: 'asc' },
       include: {
         districts: {

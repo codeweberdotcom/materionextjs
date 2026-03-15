@@ -430,6 +430,9 @@ async function main() {
     })
   }
 
+  // Find Russia to link states
+  const russia = await prisma.country.findUnique({ where: { code: 'RU' } })
+
   // Add states - Russian states data
   const statesData = [
     {"code": "AD", "name": "Republic of Adygea"},
@@ -532,7 +535,8 @@ async function main() {
       data: {
         name: stateData.name,
         code: stateData.code,
-        isActive: true
+        isActive: true,
+        ...(russia && { countryId: russia.id })
       }
     })
     console.log(`✅ Created state: ${stateData.name} (${stateData.code})`)
@@ -540,44 +544,222 @@ async function main() {
 
   console.log(`🎉 Successfully seeded ${statesData.length} states!`)
 
-  // Add cities
+  // Add cities - Russian cities linked to states by stateCode
   const citiesData = [
-    { name: "Los Angeles", code: "LA", countryCode: "US" },
-    { name: "San Francisco", code: "SF", countryCode: "US" },
-    { name: "Houston", code: "HOU", countryCode: "US" },
-    { name: "Dallas", code: "DAL", countryCode: "US" },
-    { name: "Miami", code: "MIA", countryCode: "US" },
-    { name: "Orlando", code: "ORL", countryCode: "US" },
-    { name: "New York City", code: "NYC", countryCode: "US" },
-    { name: "Buffalo", code: "BUF", countryCode: "US" },
-    { name: "London", code: "LON", countryCode: "GB" },
-    { name: "Manchester", code: "MAN", countryCode: "GB" },
-    { name: "Edinburgh", code: "EDI", countryCode: "GB" },
-    { name: "Glasgow", code: "GLA", countryCode: "GB" },
-    { name: "Cardiff", code: "CAR", countryCode: "GB" },
-    { name: "Cologne", code: "CGN", countryCode: "DE" },
-    { name: "Dusseldorf", code: "DUS", countryCode: "DE" },
-    { name: "Munich", code: "MUC", countryCode: "DE" },
-    { name: "Nuremberg", code: "NUE", countryCode: "DE" },
-    { name: "Berlin", code: "BER", countryCode: "DE" }
+    // Республики
+    { name: "Maykop", code: "MKP", stateCode: "AD" },
+    { name: "Ufa", code: "UFA", stateCode: "BA" },
+    { name: "Sterlitamak", code: "STR", stateCode: "BA" },
+    { name: "Neftekamsk", code: "NFK", stateCode: "BA" },
+    { name: "Ulan-Ude", code: "UUD", stateCode: "BU" },
+    { name: "Gorno-Altaysk", code: "GAL", stateCode: "AL" },
+    { name: "Makhachkala", code: "MKL", stateCode: "DA" },
+    { name: "Derbent", code: "DRB", stateCode: "DA" },
+    { name: "Khasavyurt", code: "KHV", stateCode: "DA" },
+    { name: "Magas", code: "MGS", stateCode: "IN" },
+    { name: "Nalchik", code: "NAL", stateCode: "KB" },
+    { name: "Elista", code: "ELS", stateCode: "KL" },
+    { name: "Cherkessk", code: "CKS", stateCode: "KC" },
+    { name: "Petrozavodsk", code: "PZK", stateCode: "KR" },
+    { name: "Syktyvkar", code: "SYK", stateCode: "KO" },
+    { name: "Yoshkar-Ola", code: "YOL", stateCode: "ME" },
+    { name: "Saransk", code: "SRN", stateCode: "MO" },
+    { name: "Yakutsk", code: "YKS", stateCode: "SA" },
+    { name: "Vladikavkaz", code: "VLK", stateCode: "SE" },
+    { name: "Kazan", code: "KZN", stateCode: "TA" },
+    { name: "Naberezhnye Chelny", code: "NCH", stateCode: "TA" },
+    { name: "Kyzyl", code: "KYZ", stateCode: "TY" },
+    { name: "Izhevsk", code: "IJK", stateCode: "UD" },
+    { name: "Abakan", code: "ABK", stateCode: "KK" },
+    { name: "Grozny", code: "GRZ", stateCode: "CE" },
+    { name: "Cheboksary", code: "CHB", stateCode: "CU" },
+    { name: "Simferopol", code: "SIP", stateCode: "CR" },
+    { name: "Sevastopol", code: "SVS", stateCode: "SEV" },
+    // Края
+    { name: "Barnaul", code: "BRN", stateCode: "ALT" },
+    { name: "Biysk", code: "BIS", stateCode: "ALT" },
+    { name: "Chita", code: "CHT", stateCode: "ZAB" },
+    { name: "Petropavlovsk-Kamchatsky", code: "PKC", stateCode: "KAM" },
+    { name: "Krasnodar", code: "KRR", stateCode: "KDA" },
+    { name: "Sochi", code: "SOC", stateCode: "KDA" },
+    { name: "Novorossiysk", code: "NOR", stateCode: "KDA" },
+    { name: "Krasnoyarsk", code: "KRS2", stateCode: "KYA" },
+    { name: "Norilsk", code: "NOK", stateCode: "KYA" },
+    { name: "Perm", code: "PRM", stateCode: "PER" },
+    { name: "Vladivostok", code: "VVO", stateCode: "PRI" },
+    { name: "Nakhodka", code: "NKD", stateCode: "PRI" },
+    { name: "Stavropol", code: "STV", stateCode: "STA" },
+    { name: "Pyatigorsk", code: "PTG", stateCode: "STA" },
+    { name: "Khabarovsk", code: "KHB", stateCode: "KHA" },
+    { name: "Komsomolsk-on-Amur", code: "KMA", stateCode: "KHA" },
+    // Области
+    { name: "Blagoveshchensk", code: "BLG", stateCode: "AMU" },
+    { name: "Arkhangelsk", code: "AKH", stateCode: "ARK" },
+    { name: "Astrakhan", code: "ASR", stateCode: "AST" },
+    { name: "Belgorod", code: "BGD", stateCode: "BEL" },
+    { name: "Bryansk", code: "BRK", stateCode: "BRY" },
+    { name: "Vladimir", code: "VLD", stateCode: "VLA" },
+    { name: "Volgograd", code: "VOG", stateCode: "VGG" },
+    { name: "Volzhsky", code: "VLZ", stateCode: "VGG" },
+    { name: "Vologda", code: "VGD", stateCode: "VLG" },
+    { name: "Cherepovets", code: "CRP", stateCode: "VLG" },
+    { name: "Voronezh", code: "VRN", stateCode: "VOR" },
+    { name: "Ivanovo", code: "IVN", stateCode: "IVA" },
+    { name: "Irkutsk", code: "IKT", stateCode: "IRK" },
+    { name: "Bratsk", code: "BRT", stateCode: "IRK" },
+    { name: "Kaliningrad", code: "KLD", stateCode: "KGD" },
+    { name: "Kaluga", code: "KLG", stateCode: "KLU" },
+    { name: "Kemerovo", code: "KMR", stateCode: "KEM" },
+    { name: "Novokuznetsk", code: "NVK", stateCode: "KEM" },
+    { name: "Kirov", code: "KIV", stateCode: "KIR" },
+    { name: "Kostroma", code: "KST", stateCode: "KOS" },
+    { name: "Kurgan", code: "KRG", stateCode: "KGN" },
+    { name: "Kursk", code: "KSK", stateCode: "KRS" },
+    { name: "Saint Petersburg", code: "SPB", stateCode: "SPE" },
+    { name: "Lipetsk", code: "LPK", stateCode: "LIP" },
+    { name: "Magadan", code: "MGD", stateCode: "MAG" },
+    { name: "Moscow", code: "MSK", stateCode: "MOW" },
+    { name: "Zelenograd", code: "ZLG", stateCode: "MOW" },
+    { name: "Murmansk", code: "MRM", stateCode: "MUR" },
+    { name: "Nizhny Novgorod", code: "NNV", stateCode: "NIZ" },
+    { name: "Arzamas", code: "ARZ", stateCode: "NIZ" },
+    { name: "Veliky Novgorod", code: "VNO", stateCode: "NGR" },
+    { name: "Novosibirsk", code: "NVS2", stateCode: "NVS" },
+    { name: "Omsk", code: "OMS2", stateCode: "OMS" },
+    { name: "Orenburg", code: "ORB", stateCode: "ORE" },
+    { name: "Orsk", code: "OSK", stateCode: "ORE" },
+    { name: "Oryol", code: "ORL2", stateCode: "ORL" },
+    { name: "Penza", code: "PNZ2", stateCode: "PNZ" },
+    { name: "Pskov", code: "PSK2", stateCode: "PSK" },
+    { name: "Rostov-on-Don", code: "ROV", stateCode: "ROS" },
+    { name: "Taganrog", code: "TGN", stateCode: "ROS" },
+    { name: "Ryazan", code: "RZN", stateCode: "RYA" },
+    { name: "Samara", code: "SMR", stateCode: "SAM" },
+    { name: "Tolyatti", code: "TLT", stateCode: "SAM" },
+    { name: "Saratov", code: "SRT", stateCode: "SAR" },
+    { name: "Engels", code: "ENG", stateCode: "SAR" },
+    { name: "Yuzhno-Sakhalinsk", code: "YSK", stateCode: "SAK" },
+    { name: "Yekaterinburg", code: "EKB", stateCode: "SVE" },
+    { name: "Nizhny Tagil", code: "NTG", stateCode: "SVE" },
+    { name: "Smolensk", code: "SML", stateCode: "SMO" },
+    { name: "Tambov", code: "TMB", stateCode: "TAM" },
+    { name: "Tver", code: "TVR", stateCode: "TVE" },
+    { name: "Tomsk", code: "TMK", stateCode: "TOM" },
+    { name: "Tula", code: "TUL2", stateCode: "TUL" },
+    { name: "Tyumen", code: "TMN", stateCode: "TYU" },
+    { name: "Ulyanovsk", code: "ULN", stateCode: "ULY" },
+    { name: "Chelyabinsk", code: "CHK", stateCode: "CHE" },
+    { name: "Magnitogorsk", code: "MGT", stateCode: "CHE" },
+    { name: "Yaroslavl", code: "YRS", stateCode: "YAR" },
+    { name: "Rybinsk", code: "RBN", stateCode: "YAR" },
+    // Автономные округа
+    { name: "Naryan-Mar", code: "NRM", stateCode: "NEN" },
+    { name: "Khanty-Mansiysk", code: "KHM2", stateCode: "KHM" },
+    { name: "Surgut", code: "SRG", stateCode: "KHM" },
+    { name: "Nizhnevartovsk", code: "NJV", stateCode: "KHM" },
+    { name: "Anadyr", code: "AND", stateCode: "CHU" },
+    { name: "Salekhard", code: "SLH", stateCode: "YAN" },
+    { name: "Noyabrsk", code: "NYB", stateCode: "YAN" },
+    // Донецкая Народная Республика — города
+    { name: "Donetsk", code: "DON", stateCode: "DN" },
+    { name: "Mariupol", code: "MRP", stateCode: "DN" },
+    { name: "Makiivka", code: "MKV", stateCode: "DN" },
+    { name: "Horlivka", code: "HRL", stateCode: "DN" },
+    { name: "Kramatorsk", code: "KRM", stateCode: "DN" },
+    { name: "Sloviansk", code: "SLV", stateCode: "DN" },
+    { name: "Yenakiieve", code: "YNK", stateCode: "DN" },
+    { name: "Kostiantynivka", code: "KSN", stateCode: "DN" },
+    { name: "Druzhkivka", code: "DRZ", stateCode: "DN" },
+    { name: "Pokrovsk", code: "PKR", stateCode: "DN" },
+    { name: "Bakhmut", code: "BKM", stateCode: "DN" },
+    { name: "Toretsk", code: "TRT", stateCode: "DN" },
+    { name: "Shakhtarsk", code: "SHK", stateCode: "DN" },
+    { name: "Khartsyzsk", code: "KHR", stateCode: "DN" },
+    { name: "Snizhne", code: "SNZ", stateCode: "DN" },
+    { name: "Avdiivka", code: "AVD", stateCode: "DN" },
+    { name: "Torez", code: "TRZ", stateCode: "DN" },
+    // Донецкая Народная Республика — малые города (town)
+    { name: "Debaltseve", code: "DBL", stateCode: "DN", type: "town" },
+    { name: "Volnovakha", code: "VNV", stateCode: "DN", type: "town" },
+    { name: "Zuhres", code: "ZGR", stateCode: "DN", type: "town" },
+    { name: "Ilovaisk", code: "ILV", stateCode: "DN", type: "town" },
+    { name: "Kirovske", code: "KRV", stateCode: "DN", type: "town" },
+    { name: "Dokuchaevsk", code: "DKC", stateCode: "DN", type: "town" },
+    { name: "Yasynuvata", code: "YSN", stateCode: "DN", type: "town" },
+    { name: "Novoazovsk", code: "NVA", stateCode: "DN", type: "town" },
+    { name: "Komsomolske", code: "KMS", stateCode: "DN", type: "town" },
+    { name: "Amvrosiivka", code: "AMV", stateCode: "DN", type: "town" }
   ]
 
+  // Build stateCode -> stateId map
+  const allStates = await prisma.state.findMany()
+  const stateMap = new Map(allStates.map(s => [s.code, s.id]))
+
+  // Clear existing cities
+  await prisma.city.deleteMany({})
+  console.log('🗑️  Cleared existing cities')
+
   for (const city of citiesData) {
-    await prisma.city.upsert({
-      where: {
-        name_id: {
-          name: city.name,
-          id: "city_" + city.code
-        }
-      },
-      update: {},
-      create: {
+    const stateId = stateMap.get(city.stateCode) || null
+
+    await prisma.city.create({
+      data: {
         name: city.name,
         code: city.code,
-        isActive: true
+        type: (city as any).type || 'city',
+        isActive: true,
+        ...(stateId && { stateId })
       }
     })
   }
+
+  console.log(`🎉 Successfully seeded ${citiesData.length} cities!`)
+
+  // Seed districts for Donetsk and Mariupol
+  const allCities = await prisma.city.findMany()
+  const cityMap = new Map(allCities.map(c => [c.code, c.id]))
+
+  const districtsData = [
+    // Районы Донецка
+    { name: "Voroshylovsky", code: "DON-VOR", cityCode: "DON" },
+    { name: "Budionnovsky", code: "DON-BUD", cityCode: "DON" },
+    { name: "Kalininsky", code: "DON-KAL", cityCode: "DON" },
+    { name: "Kievsky", code: "DON-KIE", cityCode: "DON" },
+    { name: "Kirovsky", code: "DON-KIR", cityCode: "DON" },
+    { name: "Kuibyshevsky", code: "DON-KUI", cityCode: "DON" },
+    { name: "Leninsky", code: "DON-LEN", cityCode: "DON" },
+    { name: "Petrovsky", code: "DON-PET", cityCode: "DON" },
+    { name: "Proletarsky", code: "DON-PRO", cityCode: "DON" },
+    // Районы Мариуполя
+    { name: "Zhovtnevy", code: "MRP-ZHO", cityCode: "MRP" },
+    { name: "Illichivsky", code: "MRP-ILL", cityCode: "MRP" },
+    { name: "Ordzhonikidzevsky", code: "MRP-ORD", cityCode: "MRP" },
+    { name: "Primorsky", code: "MRP-PRI", cityCode: "MRP" },
+    // Районы Макеевки
+    { name: "Horniatsky", code: "MKV-HOR", cityCode: "MKV" },
+    { name: "Kirovsky", code: "MKV-KIR", cityCode: "MKV" },
+    { name: "Sovetsky", code: "MKV-SOV", cityCode: "MKV" },
+    { name: "Tsentralno-Gorodskoy", code: "MKV-TSG", cityCode: "MKV" },
+    { name: "Chervonohvardiysky", code: "MKV-CHR", cityCode: "MKV" }
+  ]
+
+  await prisma.district.deleteMany({})
+  console.log('🗑️  Cleared existing districts')
+
+  for (const district of districtsData) {
+    const cityId = cityMap.get(district.cityCode) || null
+
+    await prisma.district.create({
+      data: {
+        name: district.name,
+        code: district.code,
+        isActive: true,
+        ...(cityId && { cityId })
+      }
+    })
+  }
+
+  console.log(`🎉 Successfully seeded ${districtsData.length} districts!`)
 
   // Create email templates
   const welcomeTemplate = await prisma.emailTemplate.upsert({

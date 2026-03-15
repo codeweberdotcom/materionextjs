@@ -180,6 +180,11 @@ model City {
   id        String   @id @default(cuid())
   name      String
   code      String
+  type      String   @default("city") // city, town, urban_settlement, village
+  latitude  Float?
+  longitude Float?
+  fiasId    String?  // GUID из ГАР/ФИАС
+  oktmo     String?  // код ОКТМО (8-11 цифр)
   stateId   String?
   state     State?   @relation(fields: [stateId], references: [id], onDelete: Cascade)
   isActive  Boolean  @default(true)

@@ -2,7 +2,7 @@
 
 Этот документ отслеживает статус всех ТЗ, планов, анализов и отчетов для быстрого понимания текущего состояния проекта.
 
-**Последнее обновление:** 2026-03-14 (Динамическая система языков i18n)
+**Последнее обновление:** 2026-03-15 (References: расширение City, полная i18n таблиц, обновление seed)
 
 ---
 
@@ -130,6 +130,8 @@
 - [План: Расширение метрик и дашбордов Grafana](plans/active/plan-grafana-dashboards-extension-2025-11-26.md) ✅ (завершён)
 
 ### Отчеты
+- [Отчёт: References — расширение City, i18n таблиц, seed-данные](reports/improve/report-references-i18n-city-model-seed-2026-03-15.md) ✅ (Завершен 2026-03-15)
+- [Отчёт: References — двусторонняя связь район-город, UX диалогов](reports/improve/report-references-districts-city-relation-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Отчёт: Динамическая система языков (i18n)](reports/improve/report-i18n-dynamic-languages-2026-03-14.md) ✅ (Завершен 2026-03-14)
 - [Отчёт: Рефакторинг WebSocket на standalone](reports/deployment/report-websocket-standalone-2025-12-03.md) ✅ (Завершен 2025-12-03)
 - [Отчёт: Обновление .env и удаление SQLite](reports/migrations/report-env-configuration-update-2025-11-28.md) ✅ (Завершен 2025-11-28)

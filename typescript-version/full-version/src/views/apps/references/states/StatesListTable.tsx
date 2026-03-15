@@ -62,6 +62,7 @@ import { usePermissions } from '@/hooks/usePermissions'
 
 // Util Imports
 import { checkPermission } from '@/utils/permissions/permissions'
+import { formatTranslation } from '@/utils/translations/pluralization'
 
 // Style Imports
 import tableStyles from '@core/styles/table.module.css'
@@ -158,7 +159,7 @@ const StatesListTable = () => {
         }
       } catch (error) {
         console.error('Error fetching states:', error)
-        toast.error('Failed to load states')
+        toast.error(dictionary.navigation.failedToLoadStates)
       } finally {
         setLoading(false)
       }
@@ -221,7 +222,7 @@ const StatesListTable = () => {
  return (
               <div className='flex items-center gap-2'>
                 <Chip
-                  label={`${citiesCount} ${dictionary.navigation.cities}`}
+                  label={formatTranslation(dictionary.navigation.citiesCount, { count: citiesCount }, locale as string)}
                   size='small'
                   variant={citiesCount > 0 ? 'filled' : 'outlined'}
                   color={citiesCount > 0 ? 'primary' : 'default'}
@@ -294,7 +295,7 @@ const StatesListTable = () => {
   })
 
   const handleDeleteState = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete state "${name}"?`)) {
+    if (!confirm(dictionary.navigation.deleteStateConfirm.replace('${name}', name))) {
       return
     }
 
@@ -314,15 +315,15 @@ const StatesListTable = () => {
           setFilteredData(states)
         }
 
-        toast.success('State deleted successfully!')
+        toast.success(dictionary.navigation.stateDeletedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to delete state')
+        toast.error(error.message || dictionary.navigation.failedToDeleteState)
       }
     } catch (error) {
       console.error('Error deleting state:', error)
-      toast.error('Failed to delete state')
+      toast.error(dictionary.navigation.failedToDeleteState)
     }
   }
 
@@ -352,15 +353,15 @@ const StatesListTable = () => {
         }
 
         setEditState(null)
-        toast.success('State updated successfully!')
+        toast.success(dictionary.navigation.stateUpdatedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to update state')
+        toast.error(error.message || dictionary.navigation.failedToUpdateState)
       }
     } catch (error) {
       console.error('Error updating state:', error)
-      toast.error('Failed to update state')
+      toast.error(dictionary.navigation.failedToUpdateState)
     }
   }
 
@@ -381,15 +382,15 @@ const StatesListTable = () => {
           setFilteredData(states)
         }
 
-        toast.success('State status updated successfully!')
+        toast.success(dictionary.navigation.stateActivatedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to toggle state status')
+        toast.error(error.message || dictionary.navigation.failedToToggleStateStatus)
       }
     } catch (error) {
       console.error('Error toggling state status:', error)
-      toast.error('Failed to toggle state status')
+      toast.error(dictionary.navigation.failedToToggleStateStatus)
     }
   }
 
@@ -415,15 +416,15 @@ const StatesListTable = () => {
         }
 
         setAddStateOpen(false)
-        toast.success('State added successfully!')
+        toast.success(dictionary.navigation.stateAddedSuccess)
       } else {
         const error = await response.json()
 
-        toast.error(error.message || 'Failed to add state')
+        toast.error(error.message || dictionary.navigation.failedToAddState)
       }
     } catch (error) {
       console.error('Error adding state:', error)
-      toast.error('Failed to add state')
+      toast.error(dictionary.navigation.failedToAddState)
     }
   }
 
@@ -557,6 +558,8 @@ const StatesListTable = () => {
         rowsPerPageOptions={[10, 25, 50]}
         component='div'
         className='border-bs'
+        labelRowsPerPage={dictionary.navigation.rowsPerPage}
+        labelDisplayedRows={({ from, to, count }) => `${from}–${to} ${dictionary.navigation.of} ${count !== -1 ? count : `> ${to}`}`}
         count={table.getFilteredRowModel().rows.length}
         rowsPerPage={table.getState().pagination.pageSize}
         page={table.getState().pagination.pageIndex}

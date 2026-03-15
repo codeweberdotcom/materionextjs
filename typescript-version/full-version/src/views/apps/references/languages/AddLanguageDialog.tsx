@@ -18,6 +18,8 @@ import Chip from '@mui/material/Chip'
 
 import isoLanguages from '@/data/iso-languages.json'
 
+import { useTranslation } from '@/contexts/TranslationContext'
+
 type IsoLanguage = {
   code: string
   name: string
@@ -33,6 +35,7 @@ type AddLanguageDialogProps = {
 }
 
 const AddLanguageDialog = ({ open, handleClose, onSubmit, existingCodes = [] }: AddLanguageDialogProps) => {
+  const dictionary = useTranslation()
   const [selectedLanguage, setSelectedLanguage] = useState<IsoLanguage | null>(null)
   const [isActive, setIsActive] = useState(true)
 
@@ -64,7 +67,7 @@ const AddLanguageDialog = ({ open, handleClose, onSubmit, existingCodes = [] }: 
 
   return (
     <Dialog fullWidth open={open} onClose={handleCloseDialog} maxWidth='sm'>
-      <DialogTitle>Add New Language</DialogTitle>
+      <DialogTitle>{dictionary.navigation.addNewLanguage}</DialogTitle>
       <form onSubmit={handleSubmit}>
         <DialogContent>
           <IconButton onClick={handleCloseDialog} className='absolute block-start-4 inline-end-4'>
@@ -95,26 +98,26 @@ const AddLanguageDialog = ({ open, handleClose, onSubmit, existingCodes = [] }: 
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label='Select Language'
-                    placeholder='Search by name...'
+                    label={dictionary.navigation.selectLanguage}
+                    placeholder={dictionary.navigation.searchByName}
                     required
                   />
                 )}
                 isOptionEqualToValue={(option, value) => option.code === value.code}
-                noOptionsText='No languages available'
+                noOptionsText={dictionary.navigation.noLanguagesAvailable}
               />
             </Grid>
             {selectedLanguage && (
               <Grid size={{ xs: 12 }}>
                 <div className='flex items-center gap-4 p-3 rounded bg-actionHover'>
                   <div>
-                    <Typography variant='body2' color='text.secondary'>Code</Typography>
+                    <Typography variant='body2' color='text.secondary'>{dictionary.navigation.code}</Typography>
                     <Typography variant='body1' fontWeight={500}>{selectedLanguage.code}</Typography>
                   </div>
                   <div>
-                    <Typography variant='body2' color='text.secondary'>Direction</Typography>
+                    <Typography variant='body2' color='text.secondary'>{dictionary.navigation.direction}</Typography>
                     <Typography variant='body1' fontWeight={500}>
-                      {selectedLanguage.direction === 'rtl' ? 'Right-to-Left (RTL)' : 'Left-to-Right (LTR)'}
+                      {selectedLanguage.direction === 'rtl' ? dictionary.navigation.directionRtl : dictionary.navigation.directionLtr}
                     </Typography>
                   </div>
                 </div>
@@ -128,17 +131,17 @@ const AddLanguageDialog = ({ open, handleClose, onSubmit, existingCodes = [] }: 
                     onChange={e => setIsActive(e.target.checked)}
                   />
                 }
-                label={isActive ? 'Active' : 'Inactive'}
+                label={isActive ? dictionary.navigation.active : dictionary.navigation.inactive}
               />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
           <Button variant='outlined' onClick={handleCloseDialog}>
-            Cancel
+            {dictionary.navigation.cancel}
           </Button>
           <Button variant='contained' type='submit' disabled={!selectedLanguage}>
-            Add Language
+            {dictionary.navigation.addLanguage}
           </Button>
         </DialogActions>
       </form>
