@@ -1,41 +1,17 @@
-
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
+import { withApiHandler } from '@/lib/api'
 
 // GET - Get a single state (admin only)
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const GET = withApiHandler({
+  handler: async ({ user, params }) => {
+    if (!user.role || user.role.name !== 'admin') {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
+    const stateId = params.id
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const { id: stateId } = await params
-
-    // Fetch the state
     const state = await prisma.state.findUnique({
       where: { id: stateId },
       include: { cities: true }
@@ -49,50 +25,19 @@ export async function GET(
     }
 
     return NextResponse.json(state)
-  } catch (error) {
-    console.error('Error fetching state:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // PATCH - Toggle state status (admin only)
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const PATCH = withApiHandler({
+  handler: async ({ user, params }) => {
+    if (!user.role || user.role.name !== 'admin') {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
+    const stateId = params.id
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const { id: stateId } = await params
-
-    // Find current state status
-    const currentState = await prisma.state.findUnique({
-      where: { id: stateId }
-    })
+    const currentState = await prisma.state.findUnique({ where: { id: stateId } })
 
     if (!currentState) {
       return NextResponse.json(
@@ -101,62 +46,24 @@ export async function PATCH(
       )
     }
 
-    // Toggle the status
     const updatedState = await prisma.state.update({
       where: { id: stateId },
-      data: {
-        isActive: !currentState.isActive
-      }
+      data: { isActive: !currentState.isActive }
     })
 
     return NextResponse.json(updatedState)
-  } catch (error) {
-    console.error('Error toggling state status:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // PUT - Update state (admin only)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const PUT = withApiHandler({
+  handler: async ({ user, request, params }) => {
+    if (!user.role || user.role.name !== 'admin') {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const { id: stateId } = await params
-    let body
-
-    try {
-      body = await request.json()
-    } catch (error) {
-      return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
-    }
-
+    const stateId = params.id
+    const body = await request.json()
     const { name, code, cities, isActive } = body
 
     if (!name || !code) {
@@ -166,41 +73,26 @@ export async function PUT(
       )
     }
 
-    // Update the state
     const updatedState = await prisma.state.update({
       where: { id: stateId },
-      data: {
-        name,
-        code,
-        isActive
-      }
+      data: { name, code, isActive }
     })
 
-    // Handle cities update
     if (cities !== undefined) {
-      // Get current cities for the state
-      const currentCities = await prisma.city.findMany({
-        where: { stateId: stateId }
-      })
-
+      const currentCities = await prisma.city.findMany({ where: { stateId } })
       const currentCityIds: string[] = currentCities.map((c: any) => c.id)
       const newCityIds: string[] = cities
 
-      // Cities to connect
       const toConnect = newCityIds.filter((id: string) => !currentCityIds.includes(id))
-
-      // Cities to disconnect
       const toDisconnect = currentCityIds.filter((id: string) => !newCityIds.includes(id))
 
-      // Connect new cities
       if (toConnect.length > 0) {
         await prisma.city.updateMany({
           where: { id: { in: toConnect } },
-          data: { stateId: stateId }
+          data: { stateId }
         })
       }
 
-      // Disconnect old cities
       if (toDisconnect.length > 0) {
         await prisma.city.updateMany({
           where: { id: { in: toDisconnect } },
@@ -210,51 +102,20 @@ export async function PUT(
     }
 
     return NextResponse.json(updatedState)
-  } catch (error) {
-    console.error('Error updating state:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // DELETE - Delete state (admin only)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const DELETE = withApiHandler({
+  handler: async ({ user, params }) => {
+    if (!user.role || user.role.name !== 'admin') {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
+    const stateId = params.id
 
-    if (!currentUser || currentUser.role?.name !== 'admin') {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const { id: stateId } = await params
-
-    // Find and delete the state from database
     try {
-      const deletedState = await prisma.state.delete({
-        where: { id: stateId }
-      })
+      const deletedState = await prisma.state.delete({ where: { id: stateId } })
 
       return NextResponse.json({
         message: 'State deleted successfully',
@@ -270,12 +131,5 @@ export async function DELETE(
 
       throw error
     }
-  } catch (error) {
-    console.error('Error deleting state:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})

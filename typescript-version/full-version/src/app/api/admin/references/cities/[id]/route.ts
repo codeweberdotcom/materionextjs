@@ -1,44 +1,18 @@
-
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
+import { withApiHandler } from '@/lib/api'
 
 // PATCH - Toggle city status (admin only)
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const PATCH = withApiHandler({
+  handler: async ({ user, params }) => {
+    if (!user.role || !['admin', 'superadmin'].includes(user.role.name)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
+    const cityId = params.id
 
-    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const { id: cityId } = await params
-
-    // Find current city status
-    const currentCity = await prisma.city.findUnique({
-      where: { id: cityId }
-    })
+    const currentCity = await prisma.city.findUnique({ where: { id: cityId } })
 
     if (!currentCity) {
       return NextResponse.json(
@@ -47,62 +21,24 @@ export async function PATCH(
       )
     }
 
-    // Toggle the status
     const updatedCity = await prisma.city.update({
       where: { id: cityId },
-      data: {
-        isActive: !currentCity.isActive
-      }
+      data: { isActive: !currentCity.isActive }
     })
 
     return NextResponse.json(updatedCity)
-  } catch (error) {
-    console.error('Error toggling city status:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // PUT - Update city (admin only)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const PUT = withApiHandler({
+  handler: async ({ user, request, params }) => {
+    if (!user.role || !['admin', 'superadmin'].includes(user.role.name)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const { id: cityId } = await params
-    let body
-
-    try {
-      body = await request.json()
-    } catch (error) {
-      return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
-    }
-
+    const cityId = params.id
+    const body = await request.json()
     const { name, code, type, latitude, longitude, fiasId, oktmo, districts = [], isActive } = body
 
     if (!name || !code) {
@@ -112,7 +48,6 @@ export async function PUT(
       )
     }
 
-    // Update the city
     const updatedCity = await prisma.city.update({
       where: { id: cityId },
       data: {
@@ -130,57 +65,24 @@ export async function PUT(
           set: []
         }
       },
-      include: {
-        districts: true
-      }
+      include: { districts: true }
     })
 
     return NextResponse.json(updatedCity)
-  } catch (error) {
-    console.error('Error updating city:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // DELETE - Delete city (admin only)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const DELETE = withApiHandler({
+  handler: async ({ user, params }) => {
+    if (!user.role || !['admin', 'superadmin'].includes(user.role.name)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
+    const cityId = params.id
 
-    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const { id: cityId } = await params
-
-    // Find and delete the city from database
     try {
-      const deletedCity = await prisma.city.delete({
-        where: { id: cityId }
-      })
+      const deletedCity = await prisma.city.delete({ where: { id: cityId } })
 
       return NextResponse.json({
         message: 'City deleted successfully',
@@ -196,12 +98,5 @@ export async function DELETE(
 
       throw error
     }
-  } catch (error) {
-    console.error('Error deleting city:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})

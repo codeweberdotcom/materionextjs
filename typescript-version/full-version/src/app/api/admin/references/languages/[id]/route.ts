@@ -1,12 +1,10 @@
-
 import fs from 'fs'
 import path from 'path'
 
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
 import { prisma } from '@/libs/prisma'
+import { withApiHandler } from '@/lib/api'
 
 /** Update languages.json from current DB state */
 async function updateLanguagesJson() {
@@ -27,39 +25,15 @@ async function updateLanguagesJson() {
 }
 
 // PATCH - Toggle language status (admin only)
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const PATCH = withApiHandler({
+  handler: async ({ user, params }) => {
+    if (!user.role || !['admin', 'superadmin'].includes(user.role.name)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
+    const languageId = params.id
 
-    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const { id: languageId } = await params
-
-    // Find current language status
-    const currentLanguage = await prisma.language.findUnique({
-      where: { id: languageId }
-    })
+    const currentLanguage = await prisma.language.findUnique({ where: { id: languageId } })
 
     if (!currentLanguage) {
       return NextResponse.json(
@@ -68,7 +42,6 @@ export async function PATCH(
       )
     }
 
-    // Protection: prevent deactivating the last active language
     if (currentLanguage.isActive) {
       const activeCount = await prisma.language.count({ where: { isActive: true } })
 
@@ -80,44 +53,21 @@ export async function PATCH(
       }
     }
 
-    // Toggle the status
     const updatedLanguage = await prisma.language.update({
       where: { id: languageId },
-      data: {
-        isActive: !currentLanguage.isActive
-      }
+      data: { isActive: !currentLanguage.isActive }
     })
 
-    // Update languages.json
     await updateLanguagesJson()
 
     return NextResponse.json(updatedLanguage)
-  } catch (error) {
-    console.error('Error toggling language status:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // PUT - Update language (admin only)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const { id: languageId } = await params
+export const PUT = withApiHandler({
+  handler: async ({ request, params }) => {
+    const languageId = params.id
     const body = await request.json()
     const { name, code, direction, isActive } = body
 
@@ -135,7 +85,6 @@ export async function PUT(
       )
     }
 
-    // Find and update the language in database
     try {
       const updatedLanguage = await prisma.language.update({
         where: { id: languageId },
@@ -147,7 +96,6 @@ export async function PUT(
         }
       })
 
-      // Update languages.json
       await updateLanguagesJson()
 
       return NextResponse.json(updatedLanguage)
@@ -161,21 +109,15 @@ export async function PUT(
 
       throw error
     }
-  } catch (error) {
-    console.error('Error updating language:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // DELETE - Disabled. Use PATCH to deactivate instead.
-// Deleting a language would orphan translation files and DB records.
-export async function DELETE() {
-  return NextResponse.json(
-    { message: 'Deleting languages is not allowed. Use deactivation instead.' },
-    { status: 403 }
-  )
-}
+export const DELETE = withApiHandler({
+  handler: async () => {
+    return NextResponse.json(
+      { message: 'Deleting languages is not allowed. Use deactivation instead.' },
+      { status: 403 }
+    )
+  }
+})

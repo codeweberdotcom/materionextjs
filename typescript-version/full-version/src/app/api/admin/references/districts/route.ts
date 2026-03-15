@@ -1,39 +1,15 @@
-
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-
 import { prisma } from '@/libs/prisma'
+import { withApiHandler } from '@/lib/api'
 
 // GET - Get all districts (admin only)
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
+    if (!user.role || !['admin', 'superadmin'].includes(user.role.name)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    // Fetch districts from database
     const districts = await prisma.district.findMany({
       where: { isActive: true },
       include: { city: { select: { id: true, name: true, code: true } } },
@@ -41,49 +17,17 @@ export async function GET(request: NextRequest) {
     })
 
     return NextResponse.json(districts)
-  } catch (error) {
-    console.error('Error fetching districts:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // POST - Create new district (admin only)
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
+    if (!user.role || !['admin', 'superadmin'].includes(user.role.name)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    let body
-
-    try {
-      body = await request.json()
-    } catch (error) {
-      return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
-    }
-
+    const body = await request.json()
     const { name, code, cityId, isActive = true } = body
 
     if (!name || !code) {
@@ -93,7 +37,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create new district in database
     const newDistrict = await prisma.district.create({
       data: {
         name,
@@ -105,14 +48,5 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(newDistrict)
-  } catch (error) {
-    console.error('Error creating district:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

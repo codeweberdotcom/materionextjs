@@ -1,78 +1,29 @@
-
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-
 import { prisma } from '@/libs/prisma'
+import { withApiHandler } from '@/lib/api'
 
 // GET - Get all currencies (admin only)
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
+    if (!user.role || !['admin', 'superadmin'].includes(user.role.name)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    // Fetch currencies from database
     const currencies = await prisma.currency.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' }
     })
 
     return NextResponse.json(currencies)
-  } catch (error) {
-    console.error('Error fetching currencies:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // POST - Create new currency (admin only)
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
+    if (!user.role || !['admin', 'superadmin'].includes(user.role.name)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
     const body = await request.json()
@@ -85,25 +36,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create new currency in database
     const newCurrency = await prisma.currency.create({
-      data: {
-        name,
-        code,
-        symbol,
-        isActive
-      }
+      data: { name, code, symbol, isActive }
     })
 
     return NextResponse.json(newCurrency)
-  } catch (error) {
-    console.error('Error creating currency:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

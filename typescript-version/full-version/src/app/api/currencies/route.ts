@@ -1,25 +1,16 @@
-
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
+import { withPublicHandler } from '@/lib/api'
 
 // GET - Get all active currencies (public access)
-export async function GET() {
-  try {
+export const GET = withPublicHandler({
+  handler: async () => {
     const currencies = await prisma.currency.findMany({
       where: { isActive: true },
       orderBy: { name: 'asc' }
     })
 
     return NextResponse.json(currencies)
-  } catch (error) {
-    console.error('Error fetching currencies:', error)
-    
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
-
-
+})

@@ -1,46 +1,18 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
-import type { UserWithRole } from '@/utils/permissions/permissions'
-
-
 import { prisma } from '@/libs/prisma'
+import { withApiHandler } from '@/lib/api'
 
 // PATCH - Toggle district status (admin only)
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const PATCH = withApiHandler({
+  handler: async ({ user, params }) => {
+    if (!user.role || !['admin', 'superadmin'].includes(user.role.name)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
+    const districtId = params.id
 
-    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const { id: districtId } = await params
-
-    // Find current district status
-    const currentDistrict = await prisma.district.findUnique({
-      where: { id: districtId }
-    })
+    const currentDistrict = await prisma.district.findUnique({ where: { id: districtId } })
 
     if (!currentDistrict) {
       return NextResponse.json(
@@ -49,62 +21,24 @@ export async function PATCH(
       )
     }
 
-    // Toggle the status
     const updatedDistrict = await prisma.district.update({
       where: { id: districtId },
-      data: {
-        isActive: !currentDistrict.isActive
-      }
+      data: { isActive: !currentDistrict.isActive }
     })
 
     return NextResponse.json(updatedDistrict)
-  } catch (error) {
-    console.error('Error toggling district status:', error)
-
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // PUT - Update district (admin only)
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const PUT = withApiHandler({
+  handler: async ({ user, request, params }) => {
+    if (!user.role || !['admin', 'superadmin'].includes(user.role.name)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
-
-    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const { id: districtId } = await params
-    let body
-
-    try {
-      body = await request.json()
-    } catch (error) {
-      return NextResponse.json({ message: 'Invalid JSON' }, { status: 400 })
-    }
-
+    const districtId = params.id
+    const body = await request.json()
     const { name, code, cityId, isActive } = body
 
     if (!name || !code) {
@@ -114,7 +48,6 @@ export async function PUT(
       )
     }
 
-    // Update the district
     const updatedDistrict = await prisma.district.update({
       where: { id: districtId },
       data: {
@@ -127,51 +60,20 @@ export async function PUT(
     })
 
     return NextResponse.json(updatedDistrict)
-  } catch (error) {
-    console.error('Error updating district:', error)
-
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
 
 // DELETE - Delete district (admin only)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.email) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
+export const DELETE = withApiHandler({
+  handler: async ({ user, params }) => {
+    if (!user.role || !['admin', 'superadmin'].includes(user.role.name)) {
+      return NextResponse.json({ message: 'Admin access required' }, { status: 403 })
     }
 
-    // Check if user is admin
-    const currentUser = await prisma.user.findUnique({
-      where: { email: user.email },
-      include: { role: true }
-    })
+    const districtId = params.id
 
-    if (!currentUser || !['admin', 'superadmin'].includes(currentUser.role?.name || '')) {
-      return NextResponse.json(
-        { message: 'Admin access required' },
-        { status: 403 }
-      )
-    }
-
-    const { id: districtId } = await params
-
-    // Find and delete the district from database
     try {
-      const deletedDistrict = await prisma.district.delete({
-        where: { id: districtId }
-      })
+      const deletedDistrict = await prisma.district.delete({ where: { id: districtId } })
 
       return NextResponse.json({
         message: 'District deleted successfully',
@@ -187,12 +89,5 @@ export async function DELETE(
 
       throw error
     }
-  } catch (error) {
-    console.error('Error deleting district:', error)
-
-return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    )
   }
-}
+})
