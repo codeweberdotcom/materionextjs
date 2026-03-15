@@ -5,6 +5,8 @@ import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
 import { withApiHandler } from '@/lib/api'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 /** Update languages.json from current DB state */
 async function updateLanguagesJson() {
@@ -79,6 +81,17 @@ export const POST = withApiHandler({
 
       ensureDictionaryFile(code)
       await updateLanguagesJson()
+
+      await eventService.record(enrichEventInputFromRequest(request, {
+        source: 'admin',
+        module: 'references',
+        type: 'references.language_created',
+        severity: 'info',
+        message: `Language created: ${code}`,
+        actor: { type: 'user', id: user.id },
+        subject: { type: 'language', id: newLanguage.id },
+        payload: { name, code, direction }
+      }))
 
       return NextResponse.json(newLanguage)
     } catch (error: any) {

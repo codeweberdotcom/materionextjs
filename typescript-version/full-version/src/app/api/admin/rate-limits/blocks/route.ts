@@ -4,6 +4,8 @@ import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isAdminByCode, isSuperadmin } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 export const POST = withApiHandler({
   handler: async ({ user, request }) => {
@@ -118,6 +120,17 @@ export const POST = withApiHandler({
         durationMs: duration,
         overwrite: overwrite === true
       })
+
+      await eventService.record(enrichEventInputFromRequest(request, {
+        source: 'admin',
+        module: 'rate-limits',
+        type: 'rate_limit.block_created',
+        severity: 'warning',
+        message: `Manual rate limit block created: ${module} / ${normalizedTargetType}`,
+        actor: { type: 'user', id: user.id },
+        subject: { type: 'rate-limit-block', id: block.id },
+        payload: { module, targetType: normalizedTargetType, reason: reason.trim(), durationMinutes }
+      }))
 
       return NextResponse.json({ success: true, block })
     } catch (error) {

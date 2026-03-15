@@ -8,6 +8,8 @@ import { bulkOperationSchema, formatZodError } from '@/lib/validations/user-sche
 import { bulkOperationsService } from '@/services/bulk'
 import { userBulkActivateConfig } from '@/services/bulk/configs/userBulkConfig'
 import { getEnvironmentFromRequest } from '@/lib/metrics/helpers'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 // POST - Bulk activate users (admin only)
 export const POST = withApiHandler({
@@ -67,6 +69,17 @@ export const POST = withApiHandler({
         { status: 400 }
       )
     }
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'users',
+      type: 'admin.bulk_activate',
+      severity: 'info',
+      message: `Admin bulk activated ${result.affectedCount} user(s)`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'users', id: 'bulk' },
+      payload: { userIds, activated: result.affectedCount, skipped: result.skippedCount }
+    }))
 
     return NextResponse.json({
       success: true,

@@ -14,6 +14,8 @@ import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { getMediaService } from '@/services/media'
 import logger from '@/lib/logger'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 /**
  * GET /api/admin/media/[id]
@@ -144,6 +146,17 @@ export const PUT = withApiHandler<unknown, { id: string }>({
       updatedBy: user.id,
     })
 
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'media',
+      module: 'media',
+      type: 'media.metadata_updated',
+      severity: 'info',
+      message: `Media metadata updated: ${id}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'media', id },
+      payload: { fields: Object.keys(body).filter(k => body[k] !== undefined) }
+    }))
+
     return NextResponse.json({
       success: true,
       media: updated,
@@ -184,6 +197,16 @@ export const PATCH = withApiHandler<unknown, { id: string }>({
       mediaId: id,
       restoredBy: user.id,
     })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'media',
+      module: 'media',
+      type: 'media.file_restored',
+      severity: 'info',
+      message: `Media file restored from trash: ${id}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'media', id }
+    }))
 
     return NextResponse.json({
       success: true,
@@ -228,6 +251,17 @@ export const DELETE = withApiHandler<unknown, { id: string }>({
       hard,
       deletedBy: user.id,
     })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'media',
+      module: 'media',
+      type: 'media.file_deleted',
+      severity: 'warning',
+      message: `Media file ${hard ? 'permanently deleted' : 'soft deleted'}: ${id}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'media', id },
+      payload: { hard, entityType: media.entityType, filename: media.filename }
+    }))
 
     return NextResponse.json({
       success: true,

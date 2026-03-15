@@ -4,6 +4,8 @@ import { withApiHandler } from '@/lib/api/withApiHandler'
 import { exportService } from '@/services/export/ExportService'
 import type { ExportFormat } from '@/types/export-import'
 import logger from '@/lib/logger'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 /**
  * POST /api/export
@@ -46,6 +48,17 @@ export const POST = withApiHandler({
 
     // Return file as base64 for client to create Blob
     const base64 = Buffer.from(result.buffer).toString('base64')
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'data',
+      module: 'export',
+      type: 'data.exported',
+      severity: 'info',
+      message: `Exported ${result.recordCount} ${entityType} records as ${format}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'export', id: entityType },
+      payload: { entityType, format, recordCount: result.recordCount, filename: result.filename }
+    }))
 
     return NextResponse.json({
       success: true,

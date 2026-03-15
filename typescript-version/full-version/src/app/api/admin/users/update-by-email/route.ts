@@ -7,6 +7,8 @@ import { prisma } from '@/libs/prisma'
 import { isSuperadmin } from '@/utils/permissions/permissions'
 import { authBaseUrl } from '@/shared/config/env'
 import { updateUserByEmailSchema, formatZodError } from '@/lib/validations/user-schemas'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 const buildUserResponse = (user: any) => ({
   id: user.id,
@@ -138,6 +140,18 @@ export const PATCH = withApiHandler({
     }
 
     await clearUsersCache()
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'users',
+      type: 'admin.user_updated_by_email',
+      severity: 'warning',
+      message: `Admin updated user by email: ${updatedUser.email}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'user', id: updatedUser.id },
+      key: updatedUser.email,
+      payload: { fields: Object.keys(updates).filter(k => k !== 'password'), passwordChanged: !!updates.password }
+    }))
 
     return NextResponse.json(buildUserResponse(updatedUser))
   }

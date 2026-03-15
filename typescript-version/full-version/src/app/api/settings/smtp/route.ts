@@ -6,6 +6,8 @@ import { NextResponse } from 'next/server'
 
 import logger from '@/lib/logger'
 import { withApiHandler } from '@/lib/api/withApiHandler'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 // Simple settings storage (in production, use database)
 const SETTINGS_FILE = path.join(process.cwd(), 'smtp-settings.json')
@@ -72,7 +74,7 @@ const saveStoredSettings = (settings: SmtpSettingsPayload) => {
 
 export const POST = withApiHandler({
   permission: 'smtpManagement.update',
-  handler: async ({ request }) => {
+  handler: async ({ user, request }) => {
     const body = await request.json()
     const { host, port, username, password, encryption, fromEmail, fromName } = body as Partial<SmtpSettingsPayload>
 
@@ -105,6 +107,17 @@ export const POST = withApiHandler({
       ...settingsToSave,
       password: password ? '***provided***' : 'missing'
     })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'settings',
+      type: 'smtp.config_saved',
+      severity: 'info',
+      message: 'SMTP configuration saved',
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'settings', id: 'smtp' },
+      payload: { host, port, fromEmail, encryption }
+    }))
 
     return NextResponse.json({ message: 'SMTP settings saved successfully' })
   }

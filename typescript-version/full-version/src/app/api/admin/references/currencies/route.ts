@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
 import { withApiHandler } from '@/lib/api'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 // GET - Get all currencies (admin only)
 export const GET = withApiHandler({
@@ -39,6 +41,17 @@ export const POST = withApiHandler({
     const newCurrency = await prisma.currency.create({
       data: { name, code, symbol, isActive }
     })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'references',
+      type: 'references.currency_created',
+      severity: 'info',
+      message: `Currency created: ${code}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'currency', id: newCurrency.id },
+      payload: { name, code, symbol }
+    }))
 
     return NextResponse.json(newCurrency)
   }

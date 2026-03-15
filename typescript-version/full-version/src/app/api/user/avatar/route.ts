@@ -10,6 +10,8 @@ import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import { getMediaService } from '@/services/media'
 import logger from '@/lib/logger'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 // POST - Upload avatar for current user
 export const POST = withApiHandler({
@@ -131,6 +133,16 @@ export const POST = withApiHandler({
       avatarUrl,
     })
 
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'user',
+      module: 'profile',
+      type: 'user.avatar_uploaded',
+      severity: 'info',
+      message: 'User uploaded avatar',
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'media', id: result.media.id }
+    }))
+
     return NextResponse.json({
       message: 'Avatar uploaded successfully',
       avatarUrl,
@@ -141,7 +153,7 @@ export const POST = withApiHandler({
 
 // DELETE - Remove avatar for current user
 export const DELETE = withApiHandler({
-  handler: async ({ user }) => {
+  handler: async ({ user, request }) => {
     // Получаем текущего пользователя
     const currentUser = await prisma.user.findUnique({
       where: { id: user.id },
@@ -184,6 +196,16 @@ export const DELETE = withApiHandler({
     })
 
     logger.info('[Avatar] Avatar removed', { userId: user.id })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'user',
+      module: 'profile',
+      type: 'user.avatar_deleted',
+      severity: 'info',
+      message: 'User removed avatar',
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'user', id: user.id }
+    }))
 
     return NextResponse.json({
       message: 'Avatar removed'

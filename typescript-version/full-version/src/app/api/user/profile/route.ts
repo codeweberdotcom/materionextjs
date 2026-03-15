@@ -4,6 +4,8 @@ import { NextResponse } from 'next/server'
 import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import { updateProfileSchema, formatZodError } from '@/lib/validations/user-schemas'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 // GET - Fetch current user profile data
 export const GET = withApiHandler({
@@ -124,6 +126,17 @@ export const PUT = withApiHandler({
       default:
         uiRole = 'subscriber'
     }
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'user',
+      module: 'profile',
+      type: 'user.profile_updated',
+      severity: 'info',
+      message: 'User updated own profile',
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'user', id: user.id },
+      key: updatedUser.email
+    }))
 
     return NextResponse.json({
       id: updatedUser.id,

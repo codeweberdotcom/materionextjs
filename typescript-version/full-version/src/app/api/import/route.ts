@@ -4,6 +4,8 @@ import { withApiHandler } from '@/lib/api/withApiHandler'
 import { importService } from '@/services/import/ImportService'
 import { importAdapterFactory } from '@/services/import/ImportAdapterFactory'
 import logger from '@/lib/logger'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 /**
  * POST /api/import
@@ -48,6 +50,23 @@ export const POST = withApiHandler({
       rowUpdates,
       actorId: user.id
     })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'data',
+      module: 'import',
+      type: 'data.imported',
+      severity: 'info',
+      message: `Imported ${entityType}: ${result.successCount} success, ${result.errorCount} errors`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'import', id: entityType },
+      payload: {
+        entityType,
+        mode,
+        successCount: result.successCount,
+        errorCount: result.errorCount,
+        totalProcessed: result.totalProcessed
+      }
+    }))
 
     return NextResponse.json(result)
   }

@@ -5,6 +5,8 @@ import { isSuperadmin, isAdminByCode } from '@/utils/permissions/permissions'
 import { rateLimitService } from '@/lib/rate-limit'
 import type { RateLimitStats } from '@/lib/rate-limit'
 import logger from '@/lib/logger'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 export const GET = withApiHandler({
   handler: async ({ user, request }) => {
@@ -213,6 +215,17 @@ export const PUT = withApiHandler({
       await rateLimitService.resetLimits(undefined, module)
     }
 
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'rate-limits',
+      type: 'rate_limit.config_updated',
+      severity: 'warning',
+      message: `Rate limit config updated for module: ${module}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'rate-limit', id: module },
+      payload: { module, changes: updatePayload }
+    }))
+
     return NextResponse.json({ success: true })
   }
 })
@@ -232,6 +245,17 @@ export const DELETE = withApiHandler({
     if (!success) {
       return NextResponse.json({ error: 'Failed to reset limits' }, { status: 500 })
     }
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'rate-limits',
+      type: 'rate_limit.state_reset',
+      severity: 'info',
+      message: `Rate limit state reset: module=${moduleName || 'all'}, key=${key || 'all'}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'rate-limit', id: moduleName || 'all' },
+      payload: { module: moduleName, key }
+    }))
 
     return NextResponse.json({ success: true })
   }

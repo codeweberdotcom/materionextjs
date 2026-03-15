@@ -14,6 +14,8 @@ import {
 } from '@/lib/validations/user-schemas'
 import { getMediaService } from '@/services/media'
 import logger from '@/lib/logger'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 // Кеш для пользователей (простая in-memory кеш)
 let usersCache: any[] | null = null
@@ -31,7 +33,7 @@ const generateTemporaryPassword = () => {
 // POST - Create new user (admin only)
 export const POST = withApiHandler({
   permission: 'Users.Create',
-  handler: async ({ request }) => {
+  handler: async ({ user, request }) => {
     const formData = await request.formData()
     const avatar = formData.get('avatar') as File | null
     const providedPassword = formData.get('password') as string | null
@@ -201,6 +203,18 @@ export const POST = withApiHandler({
         usersCache = null
         usersCacheTimestamp = 0
 
+        await eventService.record(enrichEventInputFromRequest(request, {
+          source: 'admin',
+          module: 'users',
+          type: 'admin.user_created',
+          severity: 'info',
+          message: `Admin created user: ${newUser.email}`,
+          actor: { type: 'user', id: user.id },
+          subject: { type: 'user', id: newUser.id },
+          key: newUser.email,
+          payload: { email: newUser.email, role: newUser.role?.name, hasAvatar: true }
+        }))
+
         return NextResponse.json({
           ...transformedUser,
           ...(validatedData.password ? {} : { temporaryPassword: plainPassword })
@@ -251,6 +265,18 @@ export const POST = withApiHandler({
     // Очищаем кеш после создания нового пользователя
     usersCache = null
     usersCacheTimestamp = 0
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'users',
+      type: 'admin.user_created',
+      severity: 'info',
+      message: `Admin created user: ${newUser.email}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'user', id: newUser.id },
+      key: newUser.email,
+      payload: { email: newUser.email, role: newUser.role?.name, hasAvatar: false }
+    }))
 
     return NextResponse.json({
       ...transformedUser,

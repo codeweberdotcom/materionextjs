@@ -13,6 +13,8 @@ import { isAdminOrHigher } from '@/utils/permissions/permissions'
 import type { MediaEntityType } from '@/services/media';
 import { getMediaService } from '@/services/media'
 import logger from '@/lib/logger'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 /**
  * GET /api/admin/media
@@ -107,6 +109,17 @@ export const POST = withApiHandler({
       entityType,
       uploadedBy: user.id,
     })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'media',
+      module: 'media',
+      type: 'media.file_uploaded',
+      severity: 'info',
+      message: `Media file uploaded: ${file.name}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'media', id: result.media?.id },
+      payload: { filename: file.name, entityType, entityId, mediaId: result.media?.id }
+    }))
 
     return NextResponse.json({
       success: true,

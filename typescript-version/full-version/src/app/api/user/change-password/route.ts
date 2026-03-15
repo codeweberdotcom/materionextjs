@@ -6,6 +6,8 @@ import bcrypt from 'bcryptjs'
 import { withApiHandler } from '@/lib/api/withApiHandler'
 import { prisma } from '@/libs/prisma'
 import { changePasswordSchema, formatZodError } from '@/lib/validations/user-schemas'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 export const POST = withApiHandler({
   handler: async ({ user, request }) => {
@@ -59,6 +61,17 @@ export const POST = withApiHandler({
         password: hashedNewPassword
       }
     })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'auth',
+      module: 'auth',
+      type: 'auth.password_changed',
+      severity: 'warning',
+      message: 'User changed own password',
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'user', id: user.id },
+      key: user.email
+    }))
 
     return NextResponse.json({
       message: 'Password changed successfully'

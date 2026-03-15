@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { eventRetentionService } from '@/services/events/EventRetentionService'
 import { withApiHandler } from '@/lib/api/withApiHandler'
 import { checkPermission } from '@/utils/permissions/permissions'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 export const POST = withApiHandler({
   handler: async ({ user, request }) => {
@@ -28,6 +30,19 @@ export const POST = withApiHandler({
       // Clean specific source
       const result = await eventRetentionService.cleanSource(source, dryRun)
 
+      if (!dryRun) {
+        await eventService.record(enrichEventInputFromRequest(request, {
+          source: 'admin',
+          module: 'events',
+          type: 'events.retention_triggered',
+          severity: 'warning',
+          message: `Event retention cleanup triggered for source: ${source}`,
+          actor: { type: 'user', id: user.id },
+          subject: { type: 'events', id: source },
+          payload: { source, dryRun, result }
+        }))
+      }
+
       return NextResponse.json({
         success: true,
         dryRun,
@@ -36,6 +51,19 @@ export const POST = withApiHandler({
     } else {
       // Clean all sources
       const result = await eventRetentionService.cleanAll(dryRun)
+
+      if (!dryRun) {
+        await eventService.record(enrichEventInputFromRequest(request, {
+          source: 'admin',
+          module: 'events',
+          type: 'events.retention_triggered',
+          severity: 'warning',
+          message: 'Event retention cleanup triggered for all sources',
+          actor: { type: 'user', id: user.id },
+          subject: { type: 'events', id: 'all' },
+          payload: { source: 'all', dryRun, totalDeleted: result.totalDeleted }
+        }))
+      }
 
       return NextResponse.json({
         success: true,

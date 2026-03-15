@@ -13,6 +13,8 @@ import {
 } from '@/lib/validations/user-schemas'
 import { getMediaService } from '@/services/media'
 import logger from '@/lib/logger'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 // GET - Get user by id (admin only)
 export const GET = withApiHandler<unknown, { id: string }>({
@@ -285,6 +287,18 @@ export const PUT = withApiHandler<unknown, { id: string }>({
     // Use database role name directly
     const uiRole = updatedUser.role?.name || 'subscriber'
 
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'users',
+      type: 'admin.user_updated',
+      severity: 'info',
+      message: `Admin updated user: ${updatedUser.email}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'user', id: updatedUser.id },
+      key: updatedUser.email,
+      payload: { fields: Object.keys(updateData) }
+    }))
+
     // Очищаем кеш после обновления пользователя
     try {
       await fetch(`${authBaseUrl}/api/admin/users?clearCache=true`, {
@@ -397,6 +411,17 @@ export const PATCH = withApiHandler<unknown, { id: string }>({
     // Use database role name directly
     const uiRole = updatedUser.role?.name || 'subscriber'
 
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'users',
+      type: nextStatus ? 'admin.user_activated' : 'admin.user_deactivated',
+      severity: 'info',
+      message: `Admin ${nextStatus ? 'activated' : 'deactivated'} user: ${updatedUser.email}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'user', id: updatedUser.id },
+      key: updatedUser.email
+    }))
+
     // Clear cached list to prevent stale data
     try {
       await fetch(`${authBaseUrl}/api/admin/users?clearCache=true`, {
@@ -430,7 +455,7 @@ export const PATCH = withApiHandler<unknown, { id: string }>({
 // DELETE - Delete user (admin only)
 export const DELETE = withApiHandler<unknown, { id: string }>({
   permission: 'userManagement.delete',
-  handler: async ({ user, params }) => {
+  handler: async ({ user, request, params }) => {
     const { id: userId } = params
 
     // Prevent admin from deleting themselves
@@ -474,6 +499,17 @@ export const DELETE = withApiHandler<unknown, { id: string }>({
     await prisma.user.delete({
       where: { id: userId }
     })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'users',
+      type: 'admin.user_deleted',
+      severity: 'warning',
+      message: `Admin deleted user: ${userId}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'user', id: userId },
+      payload: { role: userToDelete.role?.name }
+    }))
 
     // Очищаем кеш после удаления пользователя
     try {

@@ -12,6 +12,8 @@ import { withApiHandler } from '@/lib/api/withApiHandler'
 import { isAdminOrHigher } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import logger from '@/lib/logger'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 // Типы лицензий
 const LICENSE_TYPES = [
@@ -177,6 +179,17 @@ export const POST = withApiHandler({
       licenseType: license.licenseType,
       userId: user.id,
     })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'media',
+      type: 'references.license_created',
+      severity: 'info',
+      message: `Media license created: ${license.licenseType}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'license', id: license.id },
+      payload: { licenseType: license.licenseType, licensorName: license.licensorName }
+    }))
 
     return NextResponse.json(result, { status: 201 })
   }

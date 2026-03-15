@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 
 import { prisma } from '@/libs/prisma'
 import { withApiHandler } from '@/lib/api'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 // GET - Get all countries (admin only)
 export const GET = withApiHandler({
@@ -19,7 +21,7 @@ export const GET = withApiHandler({
 // POST - Create new country (admin only)
 export const POST = withApiHandler({
   permission: 'countryManagement.create',
-  handler: async ({ request }) => {
+  handler: async ({ user, request }) => {
     const body = await request.json()
     const { name, code, states, isActive = true } = body
 
@@ -49,6 +51,17 @@ export const POST = withApiHandler({
       where: { id: newCountry.id },
       include: { states: true }
     })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'references',
+      type: 'references.country_created',
+      severity: 'info',
+      message: `Country created: ${code}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'country', id: newCountry.id },
+      payload: { name, code }
+    }))
 
     return NextResponse.json(updatedCountry)
   }

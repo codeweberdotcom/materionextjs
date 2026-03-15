@@ -7,6 +7,8 @@ import { prisma } from '@/libs/prisma'
 import { getSocketServer } from '@/lib/sockets'
 import { parseNotificationMetadata, serializeNotificationMetadata } from '@/utils/notifications/metadata'
 import type { NotificationMetadata } from '@/lib/sockets/types/notifications'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 type ApiNotification = {
   id: string
@@ -125,6 +127,17 @@ export const POST = withApiHandler({
     const payload = toApiNotification(notification)
 
     emitNotificationEvent(user.id, 'newNotification', payload)
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'user',
+      module: 'notifications',
+      type: 'notifications.created',
+      severity: 'info',
+      message: `Notification created: ${title}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'notification', id: notification.id },
+      payload: { type: notification.type }
+    }))
 
     return NextResponse.json({
       notification: payload

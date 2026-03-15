@@ -7,6 +7,8 @@ import { NextResponse } from 'next/server'
 import logger from '@/lib/logger'
 import { withApiHandler } from '@/lib/api/withApiHandler'
 import { testSmtpConnection } from '@/utils/email'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 
 
 type TestSmtpPayload = {
@@ -19,7 +21,7 @@ type TestSmtpPayload = {
 
 export const POST = withApiHandler({
   permission: 'smtpManagement.update',
-  handler: async ({ request }) => {
+  handler: async ({ user, request }) => {
     const body = (await request.json()) as TestSmtpPayload
     const { host, port, username, password, encryption } = body ?? {}
 
@@ -64,6 +66,17 @@ export const POST = withApiHandler({
     }
 
     const result = await testSmtpConnection()
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'settings',
+      type: 'smtp.connection_tested',
+      severity: result.success ? 'info' : 'warning',
+      message: `SMTP connection test: ${result.success ? 'success' : 'failed'}`,
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'settings', id: 'smtp' },
+      payload: { success: result.success, host }
+    }))
 
     return NextResponse.json({
       success: result.success,
