@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { accountService } from '@/services/accounts'
 import { createAccountSchema } from '@/lib/validations/account-schemas'
 import { formatZodError } from '@/lib/validations/user-schemas'
@@ -11,51 +10,23 @@ import { eventService } from '@/services/events/EventService'
  * GET /api/accounts
  * Получить список всех аккаунтов пользователя
  */
-export async function GET(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const GET = withApiHandler({
+  handler: async ({ user }) => {
     const accounts = await accountService.getUserAccounts(user.id)
 
     return NextResponse.json({
       success: true,
       data: accounts
     })
-  } catch (error) {
-    console.error('[GET /api/accounts] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * POST /api/accounts
  * Создать новый аккаунт
  */
-export async function POST(request: NextRequest) {
-  try {
-    const { user } = await requireAuth(request)
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
+export const POST = withApiHandler({
+  handler: async ({ user, request }) => {
     const body = await request.json()
     const validationResult = createAccountSchema.safeParse(body)
 
@@ -98,18 +69,5 @@ export async function POST(request: NextRequest) {
       data: account,
       message: 'Account created successfully'
     }, { status: 201 })
-  } catch (error) {
-    console.error('[POST /api/accounts] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})

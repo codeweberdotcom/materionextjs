@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { accountManagerService } from '@/services/accounts'
 import { updateManagerPermissionsSchema } from '@/lib/validations/account-schemas'
 import { formatZodError } from '@/lib/validations/user-schemas'
@@ -11,20 +10,9 @@ import { eventService } from '@/services/events/EventService'
  * PUT /api/accounts/[id]/managers/[managerId]
  * Обновить права менеджера
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; managerId: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id, managerId } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const PUT = withApiHandler<unknown, { id: string; managerId: string }>({
+  handler: async ({ user, request, params }) => {
+    const { id, managerId } = params
 
     const body = await request.json()
     const validationResult = updateManagerPermissionsSchema.safeParse(body)
@@ -68,37 +56,16 @@ export async function PUT(
       data: manager,
       message: 'Manager permissions updated successfully'
     })
-  } catch (error) {
-    console.error('[PUT /api/accounts/[id]/managers/[managerId]] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * DELETE /api/accounts/[id]/managers/[managerId]
  * Отозвать права менеджера
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string; managerId: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id, managerId } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const DELETE = withApiHandler<unknown, { id: string; managerId: string }>({
+  handler: async ({ user, params }) => {
+    const { id, managerId } = params
 
     await accountManagerService.revokeManager(
       id,
@@ -125,18 +92,5 @@ export async function DELETE(
       success: true,
       message: 'Manager revoked successfully'
     })
-  } catch (error) {
-    console.error('[DELETE /api/accounts/[id]/managers/[managerId]] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})

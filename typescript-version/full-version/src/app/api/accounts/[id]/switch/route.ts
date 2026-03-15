@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { accountService, accountAccessService } from '@/services/accounts'
 import { eventService } from '@/services/events/EventService'
 
@@ -9,20 +8,9 @@ import { eventService } from '@/services/events/EventService'
  * POST /api/accounts/[id]/switch
  * Переключиться на аккаунт (установить как текущий)
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const POST = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
     // Проверяем доступ к аккаунту
     const hasAccess = await accountAccessService.canAccessAccount(user.id, id)
@@ -69,18 +57,5 @@ export async function POST(
       data: account,
       message: 'Account switched successfully'
     })
-  } catch (error) {
-    console.error('[POST /api/accounts/[id]/switch] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})

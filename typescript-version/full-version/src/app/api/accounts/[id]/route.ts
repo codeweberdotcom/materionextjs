@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { accountService } from '@/services/accounts'
 import { updateAccountSchema } from '@/lib/validations/account-schemas'
 import { formatZodError } from '@/lib/validations/user-schemas'
@@ -11,20 +10,9 @@ import { eventService } from '@/services/events/EventService'
  * GET /api/accounts/[id]
  * Получить аккаунт по ID
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
     const account = await accountService.getAccountById(id, user.id)
 
@@ -42,37 +30,16 @@ export async function GET(
       success: true,
       data: account
     })
-  } catch (error) {
-    console.error('[GET /api/accounts/[id]] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * PUT /api/accounts/[id]
  * Обновить аккаунт
  */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const PUT = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
+    const { id } = params
 
     const body = await request.json()
     const validationResult = updateAccountSchema.safeParse(body)
@@ -109,41 +76,20 @@ export async function PUT(
       data: account,
       message: 'Account updated successfully'
     })
-  } catch (error) {
-    console.error('[PUT /api/accounts/[id]] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * DELETE /api/accounts/[id]
  * Удалить аккаунт
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const DELETE = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
     // Получаем аккаунт перед удалением для логирования
     const account = await accountService.getAccountById(id, user.id)
-    
+
     if (!account) {
       return NextResponse.json(
         {
@@ -171,18 +117,5 @@ export async function DELETE(
       success: true,
       message: 'Account deleted successfully'
     })
-  } catch (error) {
-    console.error('[DELETE /api/accounts/[id]] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})

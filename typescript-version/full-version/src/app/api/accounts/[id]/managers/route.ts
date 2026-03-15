@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { accountManagerService } from '@/services/accounts'
 import { assignManagerSchema } from '@/lib/validations/account-schemas'
 import { formatZodError } from '@/lib/validations/user-schemas'
@@ -11,20 +10,9 @@ import { eventService } from '@/services/events/EventService'
  * GET /api/accounts/[id]/managers
  * Получить список менеджеров аккаунта
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
     const managers = await accountManagerService.getAccountManagers(id, user.id)
 
@@ -32,37 +20,16 @@ export async function GET(
       success: true,
       data: managers
     })
-  } catch (error) {
-    console.error('[GET /api/accounts/[id]/managers] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * POST /api/accounts/[id]/managers
  * Назначить менеджера для аккаунта
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const POST = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
+    const { id } = params
 
     const body = await request.json()
     const validationResult = assignManagerSchema.safeParse(body)
@@ -107,18 +74,5 @@ export async function POST(
       data: manager,
       message: 'Manager assigned successfully'
     }, { status: 201 })
-  } catch (error) {
-    console.error('[POST /api/accounts/[id]/managers] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})

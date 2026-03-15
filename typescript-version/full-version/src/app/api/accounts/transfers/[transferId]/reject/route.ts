@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { accountTransferService } from '@/services/accounts'
 import { rejectTransferSchema } from '@/lib/validations/account-schemas'
 import { formatZodError } from '@/lib/validations/user-schemas'
@@ -11,20 +10,9 @@ import { eventService } from '@/services/events/EventService'
  * POST /api/accounts/transfers/[transferId]/reject
  * Отклонить запрос на передачу аккаунта
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ transferId: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { transferId } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const POST = withApiHandler<unknown, { transferId: string }>({
+  handler: async ({ user, request, params }) => {
+    const { transferId } = params
 
     const body = await request.json().catch(() => ({}))
     const validationResult = rejectTransferSchema.safeParse(body)
@@ -67,18 +55,5 @@ export async function POST(
       data: transfer,
       message: 'Transfer rejected successfully'
     })
-  } catch (error) {
-    console.error('[POST /api/accounts/transfers/[transferId]/reject] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})

@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { accountTransferService } from '@/services/accounts'
 import { transferAccountSchema } from '@/lib/validations/account-schemas'
 import { formatZodError } from '@/lib/validations/user-schemas'
@@ -11,20 +10,9 @@ import { eventService } from '@/services/events/EventService'
  * POST /api/accounts/[id]/transfer
  * Запросить передачу аккаунта другому пользователю
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const POST = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, request, params }) => {
+    const { id } = params
 
     const body = await request.json()
     const validationResult = transferAccountSchema.safeParse(body)
@@ -68,37 +56,16 @@ export async function POST(
       data: transfer,
       message: 'Transfer request created successfully'
     }, { status: 201 })
-  } catch (error) {
-    console.error('[POST /api/accounts/[id]/transfer] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
+})
 
 /**
  * GET /api/accounts/[id]/transfer
  * Получить статус передачи аккаунта
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { id } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const GET = withApiHandler<unknown, { id: string }>({
+  handler: async ({ user, params }) => {
+    const { id } = params
 
     // Получаем запросы на передачу для пользователя
     const transfers = await accountTransferService.getTransferRequests(user.id)
@@ -122,18 +89,5 @@ export async function GET(
       success: true,
       data: transfer
     })
-  } catch (error) {
-    console.error('[GET /api/accounts/[id]/transfer] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})

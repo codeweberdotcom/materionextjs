@@ -1,7 +1,6 @@
-import type { NextRequest} from 'next/server';
 import { NextResponse } from 'next/server'
 
-import { requireAuth } from '@/utils/auth/auth'
+import { withApiHandler } from '@/lib/api/withApiHandler'
 import { accountTransferService } from '@/services/accounts'
 import { eventService } from '@/services/events/EventService'
 
@@ -9,20 +8,9 @@ import { eventService } from '@/services/events/EventService'
  * POST /api/accounts/transfers/[transferId]/cancel
  * Отменить запрос на передачу аккаунта
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ transferId: string }> }
-) {
-  try {
-    const { user } = await requireAuth(request)
-    const { transferId } = await params
-
-    if (!user?.id) {
-      return NextResponse.json(
-        { message: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+export const POST = withApiHandler<unknown, { transferId: string }>({
+  handler: async ({ user, params }) => {
+    const { transferId } = params
 
     const transfer = await accountTransferService.cancelTransfer(
       transferId,
@@ -48,18 +36,5 @@ export async function POST(
       data: transfer,
       message: 'Transfer cancelled successfully'
     })
-  } catch (error) {
-    console.error('[POST /api/accounts/transfers/[transferId]/cancel] Error:', error)
-    
-return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : 'Internal server error'
-      },
-      { status: 500 }
-    )
   }
-}
-
-
-
+})
