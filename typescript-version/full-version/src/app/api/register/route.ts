@@ -73,6 +73,7 @@ return new NextResponse(JSON.stringify(payload), init)
     if (!validationResult.success) {
       await eventService.record(enrichEventInputFromRequest(request, {
         source: 'registration',
+        module: 'registration',
         type: 'signup_failed',
         severity: 'info',
         message: 'Registration failed: validation error',
@@ -143,6 +144,7 @@ return Math.max(0, Math.ceil(diff / 1000))
       if (!result.allowed) {
         await eventService.record(enrichEventInputFromRequest(request, {
           source: 'registration',
+          module: 'registration',
           type: 'signup_failed',
           severity: 'warning',
           message: `Registration rate limit exceeded: ${module}`,
@@ -217,6 +219,7 @@ return { response: new NextResponse(JSON.stringify(payload), init) }
 
     await eventService.record(enrichEventInputFromRequest(request, {
       source: 'registration',
+      module: 'registration',
       type: 'signup_attempt',
       severity: 'info',
       message: 'User registration attempt',
@@ -243,6 +246,7 @@ return { response: new NextResponse(JSON.stringify(payload), init) }
       if (existingUserByEmail) {
         await eventService.record(enrichEventInputFromRequest(request, {
           source: 'registration',
+          module: 'registration',
           type: 'signup_failed',
           severity: 'warning',
           message: 'Registration failed: email already exists',
@@ -280,6 +284,7 @@ return new NextResponse(JSON.stringify(payload), init)
       if (existingUserByPhone) {
         await eventService.record(enrichEventInputFromRequest(request, {
           source: 'registration',
+          module: 'registration',
           type: 'signup_failed',
           severity: 'warning',
           message: 'Registration failed: phone already exists',
@@ -386,6 +391,7 @@ return new NextResponse(JSON.stringify(payload), init)
 
         await eventService.record(enrichEventInputFromRequest(request, {
           source: 'registration',
+          module: 'registration',
           type: 'verification_code_sent',
           severity: 'info',
           message: 'Email verification code sent',
@@ -430,6 +436,7 @@ return new NextResponse(JSON.stringify(payload), init)
           if (smsResult.success) {
             await eventService.record(enrichEventInputFromRequest(request, {
               source: 'registration',
+              module: 'registration',
               type: 'verification_code_sent',
               severity: 'info',
               message: 'SMS verification code sent',
@@ -451,6 +458,7 @@ return new NextResponse(JSON.stringify(payload), init)
             console.error('Failed to send SMS:', smsResult.error)
             await eventService.record(enrichEventInputFromRequest(request, {
               source: 'registration',
+              module: 'registration',
               type: 'verification_code_sent',
               severity: 'warning',
               message: 'SMS verification code generated but failed to send',
@@ -471,6 +479,7 @@ return new NextResponse(JSON.stringify(payload), init)
           console.log(`[TEST] SMS verification code for ${normalizedPhone}: ${phoneCode}`)
           await eventService.record(enrichEventInputFromRequest(request, {
             source: 'registration',
+            module: 'registration',
             type: 'verification_code_sent',
             severity: 'info',
             message: 'SMS verification code generated (API key not configured)',
@@ -492,6 +501,7 @@ return new NextResponse(JSON.stringify(payload), init)
         // Пользователь сможет запросить повторную отправку
         await eventService.record(enrichEventInputFromRequest(request, {
           source: 'registration',
+          module: 'registration',
           type: 'verification_code_sent',
           severity: 'warning',
           message: 'SMS verification code generated but failed to send',
@@ -526,6 +536,7 @@ return new NextResponse(JSON.stringify(payload), init)
 
       await eventService.record(enrichEventInputFromRequest(request, {
         source: 'registration',
+        module: 'registration',
         type: 'account.created',
         severity: 'info',
         message: 'Account created during registration',
@@ -546,6 +557,7 @@ return new NextResponse(JSON.stringify(payload), init)
       // Пользователь сможет создать аккаунт позже
       await eventService.record(enrichEventInputFromRequest(request, {
         source: 'registration',
+        module: 'registration',
         type: 'account.creation_failed',
         severity: 'warning',
         message: 'Account creation failed during registration',
@@ -563,6 +575,7 @@ return new NextResponse(JSON.stringify(payload), init)
     // Record successful signup event
     await eventService.record(enrichEventInputFromRequest(request, {
       source: 'registration',
+      module: 'registration',
       type: 'signup_success',
       severity: 'info',
       message: 'User registered successfully',

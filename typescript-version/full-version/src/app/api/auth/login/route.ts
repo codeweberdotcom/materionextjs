@@ -100,6 +100,7 @@ return new NextResponse(JSON.stringify(payload), init)
       // Record failed login event due to rate limit
       await eventService.record({
         source: 'auth',
+        module: 'auth',
         type: 'login_failed',
         severity: 'warning',
         message: 'Login rate limit exceeded',
@@ -161,6 +162,26 @@ return new NextResponse(JSON.stringify(payload), init)
         logger.info('вќЊ [LOGIN] User-specific rate limit exceeded for user:', user.id)
         const retryAfter = calculateRetryAfterSeconds(userRateLimitResult.resetTime)
 
+        // Record failed login event due to user-level rate limit
+        await eventService.record({
+          source: 'auth',
+          module: 'auth',
+          type: 'login_failed',
+          severity: 'warning',
+          message: 'Login rate limit exceeded (user-level)',
+          actor: { type: 'user', id: user.id },
+          subject: { type: 'system', id: 'rate_limit' },
+          key: email,
+          correlationId,
+          payload: {
+            userId: user.id,
+            email: email,
+            ipAddress: clientIp,
+            reason: 'rate_limit_exceeded_user',
+            remaining: userRateLimitResult.remaining
+          }
+        })
+
         const { payload, init } = createErrorResponse({
           status: 429,
           code: 'AUTH_RATE_LIMIT_USER',
@@ -190,6 +211,7 @@ return new NextResponse(JSON.stringify(payload), init)
       // Record failed login event - user not found
       await eventService.record({
         source: 'auth',
+        module: 'auth',
         type: 'login_failed',
         severity: 'info',
         message: 'Login failed: user not found',
@@ -232,6 +254,7 @@ return new NextResponse(JSON.stringify(payload), init)
       // Record failed login event - invalid password
       await eventService.record({
         source: 'auth',
+        module: 'auth',
         type: 'login_failed',
         severity: 'warning',
         message: 'Login failed: invalid password',
@@ -269,6 +292,7 @@ return new NextResponse(JSON.stringify(payload), init)
       // Record failed login event - account suspended
       await eventService.record({
         source: 'auth',
+        module: 'auth',
         type: 'login_failed',
         severity: 'warning',
         message: 'Login failed: account suspended',
@@ -332,6 +356,7 @@ return new NextResponse(JSON.stringify(payload), init)
     // Record successful login event
     await eventService.record(enrichEventInputFromRequest(request, {
       source: 'auth',
+      module: 'auth',
       type: 'login_success',
       severity: 'info',
       message: 'User logged in successfully',
