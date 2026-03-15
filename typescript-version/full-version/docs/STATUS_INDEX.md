@@ -58,7 +58,7 @@
 - [План доработок модуля RateLimit](plans/active/ratelimit-improvements-plan.md) ⏳ (Активный, готовность ~98%)
 - [План реализации E2E тестов для Rate Limit](plans/active/plan-rate-limit-e2e-tests-2025-11-23.md) ⏳ (В работе, ~75%)
 - [План улучшений модуля Импорта/Экспорта](plans/active/plan-import-export-improvements-2025-01-24.md) ⏳ (В работе, ~25%)
-- [План улучшения E2E тестов - создание пользователей через API](plans/active/plan-e2e-test-improvements-user-creation-2025-01-24.md) ⏳ (В работе, ~80%)
+- [План улучшения E2E тестов - создание пользователей через API](plans/active/plan-e2e-test-improvements-user-creation-2025-01-24.md) ✅ (Завершено 2025-01-24 — все 8 этапов выполнены)
 - [План тестового покрытия модуля User](plans/active/plan-user-module-test-coverage-2025-11-24.md) ⏳ (В работе, ~95% - тесты созданы, требуется запуск E2E)
 - [Оставшиеся задачи для модуля User](plans/active/plan-user-module-remaining-tasks-2025-11-24.md) ⏳ (В работе, ~50% - DTO/валидаторы завершены, остались bulk-операции)
 - [План рефакторинга модуля массовых операций](plans/active/plan-bulk-operations-refactoring-2025-11-24.md) ✅ (Завершен, ~98% - Этапы 1-2 выполнены, все тесты созданы, метрики и события подключены, оптимизация для больших объемов, тесты производительности)
