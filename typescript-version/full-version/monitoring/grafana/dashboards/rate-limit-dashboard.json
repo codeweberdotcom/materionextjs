@@ -5,7 +5,7 @@
   "description": "Rate limiting metrics: checks, blocks, fallback, performance",
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "refresh": "10s",
   "tags": ["rate-limit", "security"],
   "templating": {
@@ -25,6 +25,22 @@
         ],
         "includeAll": true,
         "multi": false
+      },
+      {
+        "name": "module",
+        "type": "query",
+        "label": "Module",
+        "datasource": { "type": "prometheus" },
+        "query": "label_values(rate_limit_checks_total{environment=~\"$environment\"}, module)",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": "$__all"
+        },
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2,
+        "sort": 1
       }
     ]
   },
@@ -126,7 +142,7 @@
       },
       "targets": [
         {
-          "expr": "sum(increase(rate_limit_checks_total{environment=~\"$environment\"}[5m]))",
+          "expr": "sum(increase(rate_limit_checks_total{environment=~\"$environment\", module=~\"$module\"}[5m]))",
           "legendFormat": "Total Checks",
           "refId": "A"
         }
@@ -159,7 +175,7 @@
       },
       "targets": [
         {
-          "expr": "sum(increase(rate_limit_checks_total{environment=~\"$environment\", result=\"blocked\"}[5m]))",
+          "expr": "sum(increase(rate_limit_checks_total{environment=~\"$environment\", module=~\"$module\", result=\"blocked\"}[5m]))",
           "legendFormat": "Blocked",
           "refId": "A"
         }
@@ -192,7 +208,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate_limit_active_blocks{environment=~\"$environment\"})",
+          "expr": "sum(rate_limit_active_blocks{environment=~\"$environment\", module=~\"$module\"})",
           "legendFormat": "Active Blocks",
           "refId": "A"
         }
@@ -382,7 +398,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(rate_limit_checks_total{environment=~\"$environment\"}[5m])) by (module, result) * 60",
+          "expr": "sum(rate(rate_limit_checks_total{environment=~\"$environment\", module=~\"$module\"}[5m])) by (module, result) * 60",
           "legendFormat": "{{module}} ({{result}})",
           "refId": "A"
         }
@@ -405,8 +421,74 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(rate_limit_events_total{environment=~\"$environment\"}[5m])) by (event_type) * 60",
+          "expr": "sum(rate(rate_limit_events_total{environment=~\"$environment\", module=~\"$module\"}[5m])) by (event_type) * 60",
           "legendFormat": "{{event_type}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Events by Module",
+      "description": "Warnings and blocks broken down by module",
+      "gridPos": { "x": 0, "y": 32, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "short",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(rate_limit_events_total{environment=~\"$environment\", module=~\"$module\"}[5m])) by (module, event_type) * 60",
+          "legendFormat": "{{module}} / {{event_type}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Block Rate % by Module",
+      "description": "Percentage of requests blocked per module",
+      "gridPos": { "x": 12, "y": 32, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 15
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.05 },
+              { "color": "red", "value": 0.2 }
+            ]
+          }
+        }
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(rate_limit_checks_total{environment=~\"$environment\", module=~\"$module\", result=\"blocked\"}[5m])) by (module) / sum(rate(rate_limit_checks_total{environment=~\"$environment\", module=~\"$module\"}[5m])) by (module)",
+          "legendFormat": "{{module}}",
           "refId": "A"
         }
       ]
@@ -414,14 +496,14 @@
     {
       "type": "row",
       "title": "🚫 Blocks",
-      "gridPos": { "x": 0, "y": 32, "w": 24, "h": 1 },
+      "gridPos": { "x": 0, "y": 40, "w": 24, "h": 1 },
       "collapsed": false
     },
     {
       "type": "timeseries",
       "title": "Blocks by Type",
       "description": "Blocks distribution: automatic, manual, user, ip, email, domain",
-      "gridPos": { "x": 0, "y": 33, "w": 12, "h": 8 },
+      "gridPos": { "x": 0, "y": 41, "w": 12, "h": 8 },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -434,7 +516,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate(rate_limit_blocks_total{environment=~\"$environment\"}[5m])) by (block_type) * 60",
+          "expr": "sum(rate(rate_limit_blocks_total{environment=~\"$environment\", module=~\"$module\"}[5m])) by (block_type) * 60",
           "legendFormat": "{{block_type}}",
           "refId": "A"
         }
@@ -444,7 +526,7 @@
       "type": "piechart",
       "title": "Active Blocks Distribution",
       "description": "Currently active blocks by type",
-      "gridPos": { "x": 12, "y": 33, "w": 12, "h": 8 },
+      "gridPos": { "x": 12, "y": 41, "w": 12, "h": 8 },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" }
@@ -457,7 +539,7 @@
       },
       "targets": [
         {
-          "expr": "sum(rate_limit_active_blocks{environment=~\"$environment\"}) by (block_type)",
+          "expr": "sum(rate_limit_active_blocks{environment=~\"$environment\", module=~\"$module\"}) by (block_type)",
           "legendFormat": "{{block_type}}",
           "refId": "A"
         }
@@ -466,14 +548,14 @@
     {
       "type": "row",
       "title": "📋 Fallback Duration",
-      "gridPos": { "x": 0, "y": 41, "w": 24, "h": 1 },
+      "gridPos": { "x": 0, "y": 49, "w": 24, "h": 1 },
       "collapsed": false
     },
     {
       "type": "timeseries",
       "title": "Fallback Duration (time in Prisma)",
       "description": "Duration the service stays in Prisma fallback",
-      "gridPos": { "x": 0, "y": 42, "w": 24, "h": 8 },
+      "gridPos": { "x": 0, "y": 50, "w": 24, "h": 8 },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
