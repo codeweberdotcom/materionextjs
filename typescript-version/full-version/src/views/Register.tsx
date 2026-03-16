@@ -19,11 +19,6 @@ import FormControlLabel from '@mui/material/FormControlLabel'
 import Divider from '@mui/material/Divider'
 import Alert from '@mui/material/Alert'
 import CircularProgress from '@mui/material/CircularProgress'
-import Radio from '@mui/material/Radio'
-import RadioGroup from '@mui/material/RadioGroup'
-import Card from '@mui/material/Card'
-import CardContent from '@mui/material/CardContent'
-import Box from '@mui/material/Box'
 
 // Third-party Imports
 import classnames from 'classnames'
@@ -361,83 +356,6 @@ return prev - 1
               error={errors.some(error => error.includes('match') || error.includes('совпад'))}
             />
 
-            {/* Выбор типа аккаунта */}
-            <div className='flex flex-col gap-3'>
-              <Typography variant='body2' color='text.secondary'>
-                {t.accountTypeLabel || 'Select account type:'}
-              </Typography>
-              <RadioGroup
-                value={formData.accountType}
-                onChange={(e) => setFormData(prev => ({ ...prev, accountType: e.target.value as AccountType }))}
-                className='gap-2'
-              >
-                <Card
-                  variant='outlined'
-                  className={classnames('cursor-pointer transition-all', {
-                    'border-primary': formData.accountType === 'LISTING',
-                    'border-default': formData.accountType !== 'LISTING'
-                  })}
-                  onClick={() => setFormData(prev => ({ ...prev, accountType: 'LISTING' as any }))}
-                >
-                  <CardContent className='flex items-center gap-3 p-4'>
-                    <Radio value='LISTING' checked={formData.accountType === 'LISTING'} />
-                    <Box className='flex-1'>
-                      <Typography className='font-medium' color='text.primary'>
-                        {t.accountTypeListing || 'For posting ads'}
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        {t.accountTypeListingNote || 'A basic account with Free plan is created'}
-                      </Typography>
-                    </Box>
-                    <i className='ri-file-list-3-line text-2xl text-textSecondary' />
-                  </CardContent>
-                </Card>
-
-                <Card
-                  variant='outlined'
-                  className={classnames('cursor-pointer transition-all', {
-                    'border-primary': formData.accountType === 'COMPANY',
-                    'border-default': formData.accountType !== 'COMPANY'
-                  })}
-                  onClick={() => setFormData(prev => ({ ...prev, accountType: 'COMPANY' as any }))}
-                >
-                  <CardContent className='flex items-center gap-3 p-4'>
-                    <Radio value='COMPANY' checked={formData.accountType === 'COMPANY'} />
-                    <Box className='flex-1'>
-                      <Typography className='font-medium' color='text.primary'>
-                        {t.accountTypeCompany || 'For company listing'}
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        {t.accountTypeCompanyNote || 'Ability to list services. A basic account with Free plan is created'}
-                      </Typography>
-                    </Box>
-                    <i className='ri-building-line text-2xl text-textSecondary' />
-                  </CardContent>
-                </Card>
-
-                <Card
-                  variant='outlined'
-                  className={classnames('cursor-pointer transition-all', {
-                    'border-primary': formData.accountType === 'NETWORK',
-                    'border-default': formData.accountType !== 'NETWORK'
-                  })}
-                  onClick={() => setFormData(prev => ({ ...prev, accountType: 'NETWORK' as any }))}
-                >
-                  <CardContent className='flex items-center gap-3 p-4'>
-                    <Radio value='NETWORK' checked={formData.accountType === 'NETWORK'} />
-                    <Box className='flex-1'>
-                      <Typography className='font-medium' color='text.primary'>
-                        {t.accountTypeNetwork || 'Company network'}
-                      </Typography>
-                      <Typography variant='caption' color='text.secondary'>
-                        {t.accountTypeNetworkNote || 'Ability to create multiple accounts and assign other users to manage them. A basic account with Free plan is created'}
-                      </Typography>
-                    </Box>
-                    <i className='ri-group-line text-2xl text-textSecondary' />
-                  </CardContent>
-                </Card>
-              </RadioGroup>
-            </div>
 
             <div className='flex justify-between items-center gap-3'>
               <FormControlLabel
