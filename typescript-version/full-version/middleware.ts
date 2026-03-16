@@ -105,6 +105,15 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
 
+    // Helper to set renewed session cookie on any response
+    const withSessionCookie = (response: NextResponse) => {
+      if (session.fresh) {
+        const sessionCookie = lucia.createSessionCookie(session.id)
+        response.cookies.set(sessionCookie.name, sessionCookie.value, sessionCookie.attributes)
+      }
+      return response
+    }
+
     // Check permissions for protected routes
     const routeConfig = protectedRoutes[pathname as keyof typeof protectedRoutes]
     if (routeConfig) {
@@ -148,7 +157,7 @@ export async function middleware(request: NextRequest) {
           response.headers.set('X-Verification-Phone', user.phoneVerified ? 'true' : 'false')
           response.headers.set('X-Verification-Can-Manage', canManage(user) ? 'true' : 'false')
           finishMetrics(200)
-          return response
+          return withSessionCookie(response)
         }
       } catch (error) {
         console.error('Error checking verification in middleware:', error)
@@ -157,7 +166,7 @@ export async function middleware(request: NextRequest) {
     }
 
     finishMetrics(200)
-    return NextResponse.next()
+    return withSessionCookie(NextResponse.next())
   } catch (error) {
     console.error('Middleware error:', error)
     finishMetrics(500)

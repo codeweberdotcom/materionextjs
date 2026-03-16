@@ -108,10 +108,13 @@ export class SMSRuProvider extends SMSService {
         return 100.0
       }
 
-      // Библиотека node-sms-ru возвращает число напрямую (response.data.balance)
-      const balance = await this.smsRu.getBalance()
+      // Библиотека node-sms-ru возвращает { status, balance } или число напрямую
+      const result = await this.smsRu.getBalance()
+      const raw = typeof result === 'object' && result !== null && 'balance' in result
+        ? (result as any).balance
+        : result
 
-      return typeof balance === 'number' ? balance : parseFloat(balance as string)
+      return typeof raw === 'number' ? raw : parseFloat(String(raw))
     } catch (error) {
       logger.error('📱 Failed to get SMS.ru balance:', {
         error: error instanceof Error ? error.message : 'Unknown error'
