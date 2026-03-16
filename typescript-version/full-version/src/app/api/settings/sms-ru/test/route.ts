@@ -43,8 +43,7 @@ export const POST = withApiHandler({
     const provider = new SMSRuProvider({
       apiKey: settings.apiKey,
       sender: settings.sender,
-      testMode: settings.testMode,
-      useFreeFirst: settings.useFreeFirst
+      testMode: settings.testMode
     })
 
     const result = await provider.sendTest(validationResult.data.phone, validationResult.data.message)
@@ -54,7 +53,6 @@ export const POST = withApiHandler({
         message: 'Test SMS sent successfully',
         messageId: result.messageId,
         cost: result.cost,
-        freeRemaining: result.freeRemaining,
         testMode: settings.testMode
       })
     } else {

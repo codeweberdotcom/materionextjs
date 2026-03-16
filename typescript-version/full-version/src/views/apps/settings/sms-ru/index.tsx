@@ -17,7 +17,6 @@ import FormControlLabel from '@mui/material/FormControlLabel'
 import CircularProgress from '@mui/material/CircularProgress'
 import Skeleton from '@mui/material/Skeleton'
 import Chip from '@mui/material/Chip'
-import Tooltip from '@mui/material/Tooltip'
 
 // Context Imports
 import { toast } from 'react-toastify'
@@ -40,17 +39,14 @@ const SMSRuSettings = () => {
   const [formData, setFormData] = useState({
     apiKey: '',
     sender: '',
-    testMode: false,
-    useFreeFirst: false
+    testMode: false
   })
 
   const [balance, setBalance] = useState<number | null>(null)
-  const [freeInfo, setFreeInfo] = useState<{ free: number; used: number; total: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isTesting, setIsTesting] = useState(false)
   const [isCheckingBalance, setIsCheckingBalance] = useState(false)
-  const [isCheckingFree, setIsCheckingFree] = useState(false)
   const [testPhone, setTestPhone] = useState('')
   const [testMessage, setTestMessage] = useState(dictionary.smsRuDefaultTestMessage)
   const [error, setError] = useState<string | null>(null)
@@ -66,8 +62,7 @@ const SMSRuSettings = () => {
         setFormData({
           apiKey: data.apiKey || '',
           sender: data.sender || '',
-          testMode: data.testMode ?? false,
-          useFreeFirst: data.useFreeFirst ?? false
+          testMode: data.testMode ?? false
         })
       } else {
         const errorData = await response.json()
@@ -113,8 +108,7 @@ const SMSRuSettings = () => {
         setFormData({
           apiKey: data.settings.apiKey === '***provided***' ? formData.apiKey : data.settings.apiKey,
           sender: data.settings.sender || '',
-          testMode: data.settings.testMode ?? false,
-          useFreeFirst: data.settings.useFreeFirst ?? false
+          testMode: data.settings.testMode ?? false
         })
       } else {
         const errorData = await response.json()
@@ -162,30 +156,6 @@ const SMSRuSettings = () => {
     }
   }
 
-  const handleCheckFree = async () => {
-    try {
-      setIsCheckingFree(true)
-      setError(null)
-
-      const response = await fetch('/api/settings/sms-ru/free')
-
-      if (response.ok) {
-        const data = await response.json()
-
-        setFreeInfo({ free: data.free, used: data.used, total: data.total })
-      } else {
-        const errorData = await response.json()
-
-        toast.error(errorData.message || dictionary.smsRuFreeError)
-      }
-    } catch (err) {
-      toast.error(dictionary.smsRuFreeError)
-      console.error('Error checking free SMS:', err)
-    } finally {
-      setIsCheckingFree(false)
-    }
-  }
-
   const handleSendTest = async () => {
     if (!testPhone) {
       toast.error(dictionary.smsRuPhoneRequired)
@@ -211,15 +181,6 @@ const SMSRuSettings = () => {
             ? dictionary.smsRuTestSentTestMode
             : dictionary.smsRuTestSentId.replace('{{id}}', String(data.messageId))
         )
-
-        // Обновляем остаток бесплатных если useFreeFirst включен
-        if (formData.useFreeFirst && data.freeRemaining !== undefined) {
-          setFreeInfo(prev =>
-            prev
-              ? { ...prev, free: data.freeRemaining, used: prev.total - data.freeRemaining }
-              : { free: data.freeRemaining, used: 0, total: data.freeRemaining }
-          )
-        }
       } else {
         const errorData = await response.json()
 
@@ -251,16 +212,13 @@ const SMSRuSettings = () => {
         <CardHeader title={dictionary.smsRuSettings} subheader={dictionary.smsRuSettingsSubheader} />
         <CardContent>
           <Grid container spacing={4}>
-            {Array.from({ length: 4 }).map((_, index) => (
+            {Array.from({ length: 3 }).map((_, index) => (
               <Grid item xs={12} sm={6} key={index}>
                 <Skeleton height={56} />
               </Grid>
             ))}
             <Grid item xs={12}>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <Skeleton width={180} height={36} />
-                <Skeleton width={180} height={36} />
-              </div>
+              <Skeleton width={180} height={36} />
             </Grid>
           </Grid>
         </CardContent>
@@ -327,61 +285,6 @@ const SMSRuSettings = () => {
                 {dictionary.smsRuTestModeHelper}
               </Typography>
             </Grid>
-
-            {/* Use Free First */}
-            <Grid item xs={12} sm={6}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formData.useFreeFirst}
-                    onChange={e => setFormData({ ...formData, useFreeFirst: e.target.checked })}
-                    disabled={!canUpdate}
-                    color='success'
-                  />
-                }
-                label={dictionary.smsRuUseFreeFirst}
-              />
-              <Typography variant='caption' display='block' sx={{ color: 'text.secondary', ml: 4.5 }}>
-                {dictionary.smsRuUseFreeFirstHelper}
-              </Typography>
-            </Grid>
-
-            {/* Free SMS counter — показывается только когда useFreeFirst включен */}
-            {formData.useFreeFirst && (
-              <Grid item xs={12}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                  <Button
-                    variant='outlined'
-                    color='success'
-                    size='small'
-                    onClick={handleCheckFree}
-                    disabled={isCheckingFree || !formData.apiKey}
-                    startIcon={isCheckingFree ? <CircularProgress size={16} /> : <i className='ri-gift-line' />}
-                  >
-                    {dictionary.smsRuCheckFree}
-                  </Button>
-
-                  {freeInfo !== null && (
-                    <Tooltip
-                      title={dictionary.smsRuFreeTooltip
-                        .replace('{{used}}', String(freeInfo.used))
-                        .replace('{{total}}', String(freeInfo.total))}
-                    >
-                      <Chip
-                        label={
-                          freeInfo.free > 0
-                            ? dictionary.smsRuFreeRemaining.replace('{{count}}', String(freeInfo.free))
-                            : dictionary.smsRuFreeExhausted
-                        }
-                        color={freeInfo.free > 0 ? 'success' : 'warning'}
-                        variant='outlined'
-                        icon={<i className={freeInfo.free > 0 ? 'ri-gift-line' : 'ri-gift-2-line'} />}
-                      />
-                    </Tooltip>
-                  )}
-                </div>
-              </Grid>
-            )}
 
             {/* Balance */}
             <Grid item xs={12} sm={6}>

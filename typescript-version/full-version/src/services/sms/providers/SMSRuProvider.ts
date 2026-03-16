@@ -4,7 +4,7 @@
 
 import { SMSRu } from 'node-sms-ru'
 
-import { SMSService, type SMSResult, type SMSConfig, type SMSFreeInfo } from '../SMSService'
+import { SMSService, type SMSResult, type SMSConfig } from '../SMSService'
 import logger from '@/lib/logger'
 import { markNotificationSent, markNotificationFailed } from '@/lib/metrics/notifications'
 
@@ -24,14 +24,6 @@ interface SendSmsApiResponse {
   sms?: Record<string, SmsItemResult>
 }
 
-interface FreeApiResponse {
-  status: string
-  status_code: number
-  status_text?: string
-  total_free?: number
-  used_today?: number
-}
-
 export class SMSRuProvider extends SMSService {
   private smsRu: SMSRu
 
@@ -41,25 +33,7 @@ export class SMSRuProvider extends SMSService {
   }
 
   /**
-   * Получает информацию о бесплатных SMS на сегодня
-   * https://sms.ru/my/free?api_id=XXX&json=1
-   */
-  async getFreeCount(): Promise<SMSFreeInfo> {
-    if (this.config.testMode) {
-      return { free: 5, used: 0 } // Тестовые данные
-    }
-
-    const result = (await this.smsRu.getFree()) as FreeApiResponse
-
-    return {
-      free: result.total_free ?? 0,
-      used: result.used_today ?? 0
-    }
-  }
-
-  /**
    * Отправляет SMS с кодом верификации.
-   * Если useFreeFirst=true — после отправки проверяет остаток бесплатных SMS.
    */
   async sendCode(phone: string, code: string): Promise<SMSResult> {
     try {
@@ -71,13 +45,10 @@ export class SMSRuProvider extends SMSService {
         })
         markNotificationSent('sms', 'success')
 
-        const freeInfo = this.config.useFreeFirst ? await this._safeFreeCount() : undefined
-
         return {
           success: true,
           message: 'SMS sent (test mode)',
-          messageId: `test-${Date.now()}`,
-          freeRemaining: freeInfo?.free
+          messageId: `test-${Date.now()}`
         }
       }
 
@@ -95,14 +66,11 @@ export class SMSRuProvider extends SMSService {
           })
           markNotificationSent('sms', 'success')
 
-          const freeInfo = this.config.useFreeFirst ? await this._safeFreeCount() : undefined
-
           return {
             success: true,
             messageId: smsResult.sms_id,
             message: 'SMS sent successfully',
-            cost: parseFloat(smsResult.cost ?? '0'),
-            freeRemaining: freeInfo?.free
+            cost: parseFloat(smsResult.cost ?? '0')
           }
         } else {
           const errorCode = smsResult?.status_code ?? 'UNKNOWN'
@@ -161,7 +129,6 @@ export class SMSRuProvider extends SMSService {
 
   /**
    * Тестовая отправка SMS.
-   * Если useFreeFirst=true — после отправки проверяет остаток бесплатных SMS.
    */
   async sendTest(phone: string, message: string): Promise<SMSResult> {
     try {
@@ -169,13 +136,10 @@ export class SMSRuProvider extends SMSService {
         logger.info('📱 [SMS TEST MODE] Test SMS:', { phone, message })
         markNotificationSent('sms', 'success')
 
-        const freeInfo = this.config.useFreeFirst ? await this._safeFreeCount() : undefined
-
         return {
           success: true,
           message: 'Test SMS sent (test mode)',
-          messageId: `test-${Date.now()}`,
-          freeRemaining: freeInfo?.free
+          messageId: `test-${Date.now()}`
         }
       }
 
@@ -187,14 +151,11 @@ export class SMSRuProvider extends SMSService {
         if (smsResult && smsResult.status === 'OK') {
           markNotificationSent('sms', 'success')
 
-          const freeInfo = this.config.useFreeFirst ? await this._safeFreeCount() : undefined
-
           return {
             success: true,
             messageId: smsResult.sms_id,
             message: 'Test SMS sent successfully',
-            cost: parseFloat(smsResult.cost ?? '0'),
-            freeRemaining: freeInfo?.free
+            cost: parseFloat(smsResult.cost ?? '0')
           }
         } else {
           const errorText = smsResult?.status_text ?? 'Failed to send test SMS'
@@ -216,21 +177,6 @@ export class SMSRuProvider extends SMSService {
       markNotificationFailed('sms', 'exception')
 
       return { success: false, error: msg }
-    }
-  }
-
-  /**
-   * Безопасный вызов getFreeCount — не бросает, возвращает null при ошибке
-   */
-  private async _safeFreeCount(): Promise<SMSFreeInfo | null> {
-    try {
-      return await this.getFreeCount()
-    } catch (error) {
-      logger.warn('📱 Failed to fetch free SMS count:', {
-        error: error instanceof Error ? error.message : 'Unknown error'
-      })
-
-      return null
     }
   }
 }
