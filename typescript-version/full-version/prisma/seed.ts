@@ -1072,6 +1072,90 @@ async function main() {
 
   console.log(`✅ Created ${sampleNotifications.length} sample notifications for superadmin user`)
 
+  // Create sample notifications for admin user
+  const adminNotifications = [
+    {
+      title: 'Добро пожаловать в панель администратора',
+      message: 'Ваш аккаунт администратора активен. Управляйте пользователями, объявлениями и настройками.',
+      type: 'system',
+      avatarIcon: 'ri-admin-line',
+      avatarColor: 'primary',
+      status: 'unread',
+    },
+    {
+      title: 'Новый пользователь ожидает проверки',
+      message: 'Пользователь ivan.petrov@example.com зарегистрировался и ожидает подтверждения аккаунта.',
+      type: 'user',
+      avatarIcon: 'ri-user-follow-line',
+      avatarColor: 'warning',
+      status: 'unread',
+    },
+    {
+      title: 'Объявление отправлено на модерацию',
+      message: 'Объявление "Продам квартиру 3к, центр" ожидает проверки модератора.',
+      type: 'moderation',
+      avatarIcon: 'ri-file-list-3-line',
+      avatarColor: 'info',
+      status: 'unread',
+    },
+    {
+      title: 'Жалоба от пользователя',
+      message: 'Поступила жалоба на объявление #1042. Требуется проверка.',
+      type: 'alert',
+      avatarIcon: 'ri-flag-line',
+      avatarColor: 'error',
+      status: 'unread',
+    },
+    {
+      title: 'Тариф истекает',
+      message: 'У пользователя company@example.com тариф PRO истекает через 3 дня.',
+      type: 'billing',
+      avatarIcon: 'ri-calendar-event-line',
+      avatarColor: 'warning',
+      status: 'unread',
+    },
+    {
+      title: 'Статистика за неделю',
+      message: 'За прошедшую неделю зарегистрировано 24 новых пользователя и размещено 87 объявлений.',
+      type: 'report',
+      avatarIcon: 'ri-bar-chart-line',
+      avatarColor: 'success',
+      status: 'read',
+    },
+    {
+      title: 'Резервная копия создана',
+      message: 'Еженедельный бэкап базы данных выполнен успешно. Размер: 142 МБ.',
+      type: 'system',
+      avatarIcon: 'ri-database-2-line',
+      avatarColor: 'secondary',
+      status: 'read',
+    },
+    {
+      title: 'Обновление модуля SMS',
+      message: 'Модуль SMS.ru обновлён. Новые возможности: проверка баланса, тестовый режим.',
+      type: 'feature',
+      avatarIcon: 'ri-message-2-line',
+      avatarColor: 'primary',
+      status: 'unread',
+    },
+  ]
+
+  for (const notificationData of adminNotifications) {
+    await prisma.notification.create({
+      data: {
+        userId: user.id,
+        title: notificationData.title,
+        message: notificationData.message,
+        type: notificationData.type,
+        status: notificationData.status || 'unread',
+        avatarIcon: notificationData.avatarIcon,
+        avatarColor: notificationData.avatarColor,
+      },
+    })
+  }
+
+  console.log(`✅ Created ${adminNotifications.length} sample notifications for admin user`)
+
   // Remove deprecated registration module config
   await prisma.rateLimitConfig.deleteMany({
     where: { module: 'registration' }
