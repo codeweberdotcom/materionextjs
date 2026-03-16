@@ -15,6 +15,18 @@ export class ScenarioService {
 
   private constructor() {}
 
+  /**
+   * Парсить JSON-поля сценария из БД в объекты
+   */
+  private parseScenario(scenario: { trigger: string; actions: string; conditions: string | null; [key: string]: unknown }) {
+    return {
+      ...scenario,
+      trigger: (() => { try { return JSON.parse(scenario.trigger || '{}') } catch { return {} } })(),
+      actions: (() => { try { return JSON.parse(scenario.actions || '[]') } catch { return [] } })(),
+      conditions: scenario.conditions ? (() => { try { return JSON.parse(scenario.conditions as string) } catch { return null } })() : null
+    }
+  }
+
   static getInstance(): ScenarioService {
     if (!ScenarioService.instance) {
       ScenarioService.instance = new ScenarioService()
@@ -47,7 +59,7 @@ return ScenarioService.instance
         name: scenario.name
       })
 
-      return scenario
+      return this.parseScenario(scenario)
     } catch (error) {
       logger.error('[ScenarioService] Failed to create scenario', {
         error: error instanceof Error ? error.message : String(error),
@@ -81,7 +93,7 @@ return ScenarioService.instance
         scenarioId: scenario.id
       })
 
-      return scenario
+      return this.parseScenario(scenario)
     } catch (error) {
       logger.error('[ScenarioService] Failed to update scenario', {
         error: error instanceof Error ? error.message : String(error),
@@ -95,9 +107,11 @@ return ScenarioService.instance
    * Получить сценарий по ID
    */
   async getById(id: string) {
-    return prisma.notificationScenario.findUnique({
+    const scenario = await prisma.notificationScenario.findUnique({
       where: { id }
     })
+
+    return scenario ? this.parseScenario(scenario) : null
   }
 
   /**
@@ -110,13 +124,15 @@ return ScenarioService.instance
       where.enabled = enabled
     }
 
-    return prisma.notificationScenario.findMany({
+    const scenarios = await prisma.notificationScenario.findMany({
       where,
       orderBy: [
         { priority: 'desc' },
         { createdAt: 'desc' }
       ]
     })
+
+    return scenarios.map(s => this.parseScenario(s))
   }
 
   /**
