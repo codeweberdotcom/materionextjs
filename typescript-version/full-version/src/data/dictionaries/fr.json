@@ -1343,5 +1343,20 @@
     "alert": "Alerte",
     "billing": "Facturation",
     "report": "Rapport"
-  }
+  },
+  "forgotPasswordTitle": "Mot de passe oublié",
+  "forgotPasswordSubtitle": "Entrez votre email et nous vous enverrons des instructions",
+  "forgotPasswordEmailLabel": "Email",
+  "forgotPasswordSendLink": "Envoyer le lien",
+  "forgotPasswordSuccess": "Vérifiez votre email ! Nous avons envoyé les instructions.",
+  "forgotPasswordBackToLogin": "Retour à la connexion",
+  "resetPasswordTitle": "Réinitialiser le mot de passe",
+  "resetPasswordSubtitle": "Votre nouveau mot de passe doit être différent des précédents",
+  "resetPasswordNewPassword": "Nouveau mot de passe",
+  "resetPasswordConfirmPassword": "Confirmer le mot de passe",
+  "resetPasswordSubmit": "Définir le nouveau mot de passe",
+  "resetPasswordSuccess": "Mot de passe modifié ! Redirection vers la connexion...",
+  "resetPasswordInvalidToken": "Lien invalide ou expiré. Veuillez en demander un nouveau.",
+  "resetPasswordPasswordsMustMatch": "Les mots de passe ne correspondent pas",
+  "resetPasswordMinLength": "Le mot de passe doit contenir au moins 8 caractères"
 }

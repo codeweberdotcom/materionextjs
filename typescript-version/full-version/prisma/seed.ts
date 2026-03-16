@@ -1229,6 +1229,16 @@ async function main() {
       storeEmailInEvents: true,
       storeIpInEvents: true
     },
+    {
+      module: 'forgot-password',
+      maxRequests: 5,
+      windowMs: 15 * 60 * 1000,  // 15 minutes
+      blockMs: 60 * 60 * 1000,   // 1 hour
+      warnThreshold: 3,
+      isActive: true,
+      storeEmailInEvents: true,
+      storeIpInEvents: true
+    },
     // Новые модули для многоуровневой защиты регистрации
     {
       module: 'registration-ip',

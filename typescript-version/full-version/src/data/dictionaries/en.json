@@ -1682,5 +1682,20 @@
     "alert": "Alert",
     "billing": "Billing",
     "report": "Report"
-  }
+  },
+  "forgotPasswordTitle": "Forgot Password",
+  "forgotPasswordSubtitle": "Enter your email and we'll send you instructions to reset your password",
+  "forgotPasswordEmailLabel": "Email",
+  "forgotPasswordSendLink": "Send reset link",
+  "forgotPasswordSuccess": "Check your email! We sent password reset instructions.",
+  "forgotPasswordBackToLogin": "Back to Login",
+  "resetPasswordTitle": "Reset Password",
+  "resetPasswordSubtitle": "Your new password must be different from previously used passwords",
+  "resetPasswordNewPassword": "New Password",
+  "resetPasswordConfirmPassword": "Confirm Password",
+  "resetPasswordSubmit": "Set New Password",
+  "resetPasswordSuccess": "Password changed successfully! Redirecting to login...",
+  "resetPasswordInvalidToken": "Invalid or expired reset link. Please request a new one.",
+  "resetPasswordPasswordsMustMatch": "Passwords must match",
+  "resetPasswordMinLength": "Password must be at least 8 characters"
 }

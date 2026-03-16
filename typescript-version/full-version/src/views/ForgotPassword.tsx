@@ -1,5 +1,8 @@
 'use client'
 
+// React Imports
+import { useState, useEffect, useMemo } from 'react'
+
 // Next Imports
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
@@ -8,9 +11,16 @@ import { useParams } from 'next/navigation'
 import Typography from '@mui/material/Typography'
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
+import Alert from '@mui/material/Alert'
+import CircularProgress from '@mui/material/CircularProgress'
 
 // Third-party Imports
+import { Controller, useForm } from 'react-hook-form'
+import { valibotResolver } from '@hookform/resolvers/valibot'
+import { object, string, minLength, pipe, email as emailValidator } from 'valibot'
 import classnames from 'classnames'
+import type { SubmitHandler } from 'react-hook-form'
+import type { InferInput } from 'valibot'
 
 // Type Imports
 import type { Mode } from '@core/types'
@@ -27,7 +37,13 @@ import { useSettings } from '@core/hooks/useSettings'
 // Util Imports
 import { getLocalizedUrl } from '@/utils/formatting/i18n'
 
-const ForgotPasswordV2 = ({ mode }: { mode: Mode }) => {
+const ForgotPassword = ({ mode }: { mode: Mode }) => {
+  // States
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  const [dictionary, setDictionary] = useState<Record<string, any> | null>(null)
+
   // Vars
   const darkImg = '/images/pages/auth-v2-mask-dark.png'
   const lightImg = '/images/pages/auth-v2-mask-light.png'
@@ -48,6 +64,62 @@ const ForgotPasswordV2 = ({ mode }: { mode: Mode }) => {
     borderedLightIllustration,
     borderedDarkIllustration
   )
+
+  useEffect(() => {
+    import(`@/data/dictionaries/${locale}.json`).then(module => setDictionary(module.default))
+  }, [locale])
+
+  const schema = useMemo(
+    () =>
+      object({
+        email: pipe(
+          string(),
+          minLength(1, dictionary?.navigation?.fieldRequired || 'This field is required'),
+          emailValidator(dictionary?.navigation?.invalidEmail || 'Please enter a valid email address')
+        )
+      }),
+    [dictionary]
+  )
+
+  type FormData = InferInput<typeof schema>
+
+  const {
+    control,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<FormData>({
+    resolver: valibotResolver(schema),
+    defaultValues: { email: '' }
+  })
+
+  const onSubmit: SubmitHandler<FormData> = async data => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const res = await fetch('/api/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: data.email })
+      })
+
+      // Always show success (even if email not found) to prevent enumeration
+      if (res.status === 429) {
+        const json = await res.json()
+
+        setError(json.message || 'Too many requests. Please try again later.')
+        setLoading(false)
+
+        return
+      }
+
+      setSuccess(true)
+    } catch {
+      setError('Something went wrong. Please try again.')
+    }
+
+    setLoading(false)
+  }
 
   return (
     <div className='flex bs-full justify-center'>
@@ -81,27 +153,66 @@ const ForgotPasswordV2 = ({ mode }: { mode: Mode }) => {
         </Link>
         <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset]'>
           <div>
-            <Typography variant='h4'>Forgot Password 🔒</Typography>
+            <Typography variant='h4'>
+              {dictionary?.forgotPasswordTitle || 'Forgot Password 🔒'}
+            </Typography>
             <Typography className='mbs-1'>
-              Enter your email and we&#39;ll send you instructions to reset your password
+              {dictionary?.forgotPasswordSubtitle || "Enter your email and we'll send you instructions to reset your password"}
             </Typography>
           </div>
-          <form noValidate autoComplete='off' onSubmit={e => e.preventDefault()} className='flex flex-col gap-5'>
-            <TextField autoFocus fullWidth label='Email' />
-            <Button fullWidth variant='contained' type='submit'>
-              Send reset link
-            </Button>
-            <Typography className='flex justify-center items-center' color='primary.main'>
-              <Link href='/login' className='flex items-center'>
-                <i className='ri-arrow-left-s-line' />
-                <span>Back to Login</span>
-              </Link>
-            </Typography>
-          </form>
+
+          {success ? (
+            <Alert severity='success'>
+              {dictionary?.forgotPasswordSuccess || 'Check your email! We sent password reset instructions.'}
+            </Alert>
+          ) : (
+            <form
+              noValidate
+              autoComplete='off'
+              onSubmit={handleSubmit(onSubmit)}
+              className='flex flex-col gap-5'
+            >
+              {error && <Alert severity='error'>{error}</Alert>}
+
+              <Controller
+                name='email'
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    autoFocus
+                    fullWidth
+                    label={dictionary?.forgotPasswordEmailLabel || 'Email'}
+                    type='email'
+                    error={!!errors.email}
+                    helperText={errors.email?.message}
+                    disabled={loading}
+                  />
+                )}
+              />
+
+              <Button
+                fullWidth
+                variant='contained'
+                type='submit'
+                disabled={loading}
+                startIcon={loading ? <CircularProgress size={16} color='inherit' /> : undefined}
+              >
+                {loading ? '...' : (dictionary?.forgotPasswordSendLink || 'Send reset link')}
+              </Button>
+
+              <Typography className='flex justify-center items-center' color='primary.main'>
+                <Link href={getLocalizedUrl('/login', locale as Locale)} className='flex items-center'>
+                  <i className='ri-arrow-left-s-line' />
+                  <span>{dictionary?.forgotPasswordBackToLogin || 'Back to Login'}</span>
+                </Link>
+              </Typography>
+            </form>
+          )}
         </div>
       </div>
     </div>
   )
 }
 
-export default ForgotPasswordV2
+export default ForgotPassword

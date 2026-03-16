@@ -1795,5 +1795,20 @@
     "alert": "Предупреждение",
     "billing": "Биллинг",
     "report": "Отчёт"
-  }
+  },
+  "forgotPasswordTitle": "Забыли пароль",
+  "forgotPasswordSubtitle": "Введите email и мы отправим инструкции по сбросу пароля",
+  "forgotPasswordEmailLabel": "Email",
+  "forgotPasswordSendLink": "Отправить ссылку",
+  "forgotPasswordSuccess": "Проверьте email! Мы отправили инструкции по сбросу пароля.",
+  "forgotPasswordBackToLogin": "Назад к входу",
+  "resetPasswordTitle": "Сброс пароля",
+  "resetPasswordSubtitle": "Новый пароль должен отличаться от ранее использованных",
+  "resetPasswordNewPassword": "Новый пароль",
+  "resetPasswordConfirmPassword": "Подтвердите пароль",
+  "resetPasswordSubmit": "Установить пароль",
+  "resetPasswordSuccess": "Пароль успешно изменён! Переходим на страницу входа...",
+  "resetPasswordInvalidToken": "Ссылка недействительна или устарела. Запросите новую.",
+  "resetPasswordPasswordsMustMatch": "Пароли не совпадают",
+  "resetPasswordMinLength": "Пароль должен содержать не менее 8 символов"
 }

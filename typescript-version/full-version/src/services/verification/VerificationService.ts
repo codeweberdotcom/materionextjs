@@ -8,7 +8,7 @@ import crypto from 'crypto'
 import { prisma } from '@/libs/prisma'
 import { generateVerificationCode, isVerificationCodeExpired } from '@/lib/utils/phone-utils'
 
-export type VerificationType = 'email' | 'phone'
+export type VerificationType = 'email' | 'phone' | 'password_reset'
 
 export interface GenerateCodeOptions {
   identifier: string // email или phone
@@ -39,8 +39,8 @@ export class VerificationService {
   async generateCode(options: GenerateCodeOptions): Promise<string> {
     const { identifier, type, expiresInMinutes = 15, maxAttempts = 3 } = options
 
-    // Для email генерируем токен, для phone - 6-значный код
-    const code = type === 'email' ? crypto.randomBytes(32).toString('hex') : generateVerificationCode()
+    // Для email и password_reset генерируем токен, для phone - 6-значный код
+    const code = (type === 'email' || type === 'password_reset') ? crypto.randomBytes(32).toString('hex') : generateVerificationCode()
 
     const expires = new Date()
 

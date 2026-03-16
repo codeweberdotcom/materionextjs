@@ -1412,5 +1412,20 @@
     "alert": "تنبيه",
     "billing": "فوترة",
     "report": "تقرير"
-  }
+  },
+  "forgotPasswordTitle": "نسيت كلمة المرور",
+  "forgotPasswordSubtitle": "أدخل بريدك الإلكتروني وسنرسل لك تعليمات إعادة تعيين كلمة المرور",
+  "forgotPasswordEmailLabel": "البريد الإلكتروني",
+  "forgotPasswordSendLink": "إرسال رابط الاستعادة",
+  "forgotPasswordSuccess": "تحقق من بريدك الإلكتروني! لقد أرسلنا تعليمات إعادة تعيين كلمة المرور.",
+  "forgotPasswordBackToLogin": "العودة إلى تسجيل الدخول",
+  "resetPasswordTitle": "إعادة تعيين كلمة المرور",
+  "resetPasswordSubtitle": "يجب أن تكون كلمة المرور الجديدة مختلفة عن كلمات المرور المستخدمة سابقاً",
+  "resetPasswordNewPassword": "كلمة المرور الجديدة",
+  "resetPasswordConfirmPassword": "تأكيد كلمة المرور",
+  "resetPasswordSubmit": "تعيين كلمة المرور الجديدة",
+  "resetPasswordSuccess": "تم تغيير كلمة المرور بنجاح! جاري إعادة التوجيه...",
+  "resetPasswordInvalidToken": "الرابط غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد.",
+  "resetPasswordPasswordsMustMatch": "كلمتا المرور غير متطابقتين",
+  "resetPasswordMinLength": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل"
 }
