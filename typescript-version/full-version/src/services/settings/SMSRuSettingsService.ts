@@ -14,6 +14,7 @@ export interface SMSRuSettings {
   apiKey: string
   sender?: string
   testMode: boolean
+  useFreeFirst: boolean
   updatedAt?: string
 }
 
@@ -21,6 +22,7 @@ const defaultSettings: SMSRuSettings = {
   apiKey: process.env.SMSRU_API_KEY || '',
   sender: undefined,
   testMode: process.env.NODE_ENV !== 'production',
+  useFreeFirst: false,
   updatedAt: new Date().toISOString()
 }
 
@@ -32,6 +34,7 @@ const isSMSRuSettings = (data: unknown): data is SMSRuSettings => {
 return (
     typeof obj.apiKey === 'string' &&
     typeof obj.testMode === 'boolean'
+    // useFreeFirst необязателен — обратная совместимость со старыми файлами настроек
   )
 }
 
@@ -67,10 +70,16 @@ return SMSRuSettingsService.instance
         const settings = JSON.parse(data)
 
         if (isSMSRuSettings(settings)) {
-          this.settingsCache = settings
+          // Применяем дефолт useFreeFirst для файлов, созданных до добавления поля
+          const normalized: SMSRuSettings = {
+            useFreeFirst: false,
+            ...settings
+          }
+
+          this.settingsCache = normalized
           this.cacheExpiry = now + this.CACHE_TTL
-          
-return settings
+
+return normalized
         }
       }
     } catch (error) {

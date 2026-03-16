@@ -428,7 +428,8 @@ return new NextResponse(JSON.stringify(payload), init)
           const smsProvider = new SMSRuProvider({
             apiKey: smsSettings.apiKey,
             sender: smsSettings.sender,
-            testMode: smsSettings.testMode
+            testMode: smsSettings.testMode,
+            useFreeFirst: smsSettings.useFreeFirst
           })
 
           const smsResult = await smsProvider.sendCode(normalizedPhone, phoneCode)

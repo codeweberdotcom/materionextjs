@@ -14,7 +14,7 @@ const testSMSSchema = z.object({
 
 // POST - Отправить тестовое SMS (admin only)
 export const POST = withApiHandler({
-  permission: 'smtpManagement.update',
+  permission: 'smsManagement.update',
   handler: async ({ request }) => {
     const body = await request.json()
 
@@ -43,7 +43,8 @@ export const POST = withApiHandler({
     const provider = new SMSRuProvider({
       apiKey: settings.apiKey,
       sender: settings.sender,
-      testMode: settings.testMode
+      testMode: settings.testMode,
+      useFreeFirst: settings.useFreeFirst
     })
 
     const result = await provider.sendTest(validationResult.data.phone, validationResult.data.message)
@@ -53,6 +54,7 @@ export const POST = withApiHandler({
         message: 'Test SMS sent successfully',
         messageId: result.messageId,
         cost: result.cost,
+        freeRemaining: result.freeRemaining,
         testMode: settings.testMode
       })
     } else {

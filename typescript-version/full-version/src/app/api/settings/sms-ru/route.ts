@@ -4,18 +4,21 @@ import { z } from 'zod'
 
 import { withApiHandler } from '@/lib/api/withApiHandler'
 import { smsRuSettingsService } from '@/services/settings/SMSRuSettingsService'
+import { eventService } from '@/services/events/EventService'
+import { enrichEventInputFromRequest } from '@/services/events/event-helpers'
 import logger from '@/lib/logger'
 
 // Схема валидации настроек SMS.ru
 const smsRuSettingsSchema = z.object({
   apiKey: z.string().min(1, 'API ключ обязателен'),
   sender: z.string().optional(),
-  testMode: z.boolean().default(false)
+  testMode: z.boolean().default(false),
+  useFreeFirst: z.boolean().default(false)
 })
 
 // GET - Получить текущие настройки SMS.ru (admin only)
 export const GET = withApiHandler({
-  permission: 'smtpManagement.read',
+  permission: 'smsManagement.read',
   handler: async () => {
     const settings = await smsRuSettingsService.getSettings()
 
@@ -24,6 +27,7 @@ export const GET = withApiHandler({
       apiKey: settings.apiKey ? '***provided***' : '',
       sender: settings.sender,
       testMode: settings.testMode,
+      useFreeFirst: settings.useFreeFirst,
       updatedAt: settings.updatedAt
     })
   }
@@ -31,8 +35,8 @@ export const GET = withApiHandler({
 
 // PUT - Обновить настройки SMS.ru (admin only)
 export const PUT = withApiHandler({
-  permission: 'smtpManagement.update',
-  handler: async ({ request }) => {
+  permission: 'smsManagement.update',
+  handler: async ({ user, request }) => {
     const body = await request.json()
 
     // Валидация
@@ -55,8 +59,25 @@ export const PUT = withApiHandler({
     const updated = await smsRuSettingsService.updateSettings({
       apiKey,
       sender: validationResult.data.sender,
-      testMode: validationResult.data.testMode
+      testMode: validationResult.data.testMode,
+      useFreeFirst: validationResult.data.useFreeFirst
     })
+
+    await eventService.record(enrichEventInputFromRequest(request, {
+      source: 'admin',
+      module: 'settings',
+      type: 'sms.config_saved',
+      severity: 'info',
+      message: 'SMS.ru configuration saved',
+      actor: { type: 'user', id: user.id },
+      subject: { type: 'settings', id: 'sms-ru' },
+      payload: {
+        apiKeyChanged: body.apiKey !== '***provided***',
+        senderChanged: validationResult.data.sender !== currentSettings.sender,
+        testMode: validationResult.data.testMode,
+        useFreeFirst: validationResult.data.useFreeFirst
+      }
+    }))
 
     return NextResponse.json({
       message: 'SMS.ru settings updated successfully',
@@ -64,6 +85,7 @@ export const PUT = withApiHandler({
         apiKey: '***provided***',
         sender: updated.sender,
         testMode: updated.testMode,
+        useFreeFirst: updated.useFreeFirst,
         updatedAt: updated.updatedAt
       }
     })

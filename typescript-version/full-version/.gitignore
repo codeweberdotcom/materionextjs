@@ -37,6 +37,10 @@ yarn-error.log*
 .env*.local
 .env
 
+# service settings files (contain API keys)
+smtp-settings.json
+sms-ru-settings.json
+
 # vercel
 .vercel
 

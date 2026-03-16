@@ -115,7 +115,7 @@ const filterAdminSectionChild = (
   }
 
   if (child.label === labels.smsRuSettings) {
-    return checkPermission(user, 'smtpManagement', 'read')
+    return checkPermission(user, 'smsManagement', 'read')
   }
 
   if (child.label === labels.telegramSettings) {

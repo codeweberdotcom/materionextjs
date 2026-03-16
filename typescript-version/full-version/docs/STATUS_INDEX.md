@@ -2,7 +2,7 @@
 
 Этот документ отслеживает статус всех ТЗ, планов, анализов и отчетов для быстрого понимания текущего состояния проекта.
 
-**Последнее обновление:** 2026-03-16 (Grafana rate-limit dashboard v3 — $module фильтр, Events by Module, Block Rate %)
+**Последнее обновление:** 2026-03-16 (Анализ модуля SMS.ru — 10 проблем, критическая: API-ключ в plaintext)
 
 ---
 
@@ -35,6 +35,8 @@
 - Нет активных ТЗ
 
 ### Планы работ
+
+- [План: Доработка модуля SMS.ru](plans/active/plan-sms-ru-improvements-2026-03-16.md) ⏳ (В работе, ~10% — баг getBalance исправлен, 5 этапов впереди)
 
 - [План: Улучшение схемы модели Event](plans/active/plan-events-schema-improvement-2026-03-15.md) ✅ (Завершено 2026-03-16 — payload/metadata→Json, ip поле, убрана ручная сериализация)
 - [План: Добавление недостающего event logging](plans/active/plan-missing-event-logging-2026-03-16.md) ✅ (Завершено 2026-03-16 — 30 операций в 24 файлах, 5 фаз)
@@ -71,6 +73,7 @@
 
 ### Анализы
 
+- [Анализ модуля SMS.ru](analysis/architecture/analysis-sms-ru-module-2026-03-16.md) ✅ (Завершён 2026-03-16 — 10 проблем: 1 критическая, 3 высоких, 4 средних, 2 низких)
 - [Анализ: Улучшение схемы и формата Event](analysis/architecture/analysis-events-schema-improvement-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Анализ: Параллельные bulk-операции — интеграционный тест](analysis/architecture/analysis-bulk-concurrent-integration-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Анализ: Тестовое покрытие Import/Bulk Operations](analysis/architecture/analysis-test-coverage-import-bulk-2026-03-15.md) ✅ (Завершен 2026-03-15)

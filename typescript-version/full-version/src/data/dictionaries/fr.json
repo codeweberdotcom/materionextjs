@@ -449,6 +449,8 @@
     "smtpFromEmail": "From Email",
     "smtpFromName": "From Name",
     "smtpHost": "SMTP Host",
+    "smsManagement": "Gestion SMS",
+    "smsRuSettings": "Paramètres SMS.ru",
     "smtpManagement": "SMTP Management",
     "smtpPassword": "SMTP Password",
     "smtpPort": "SMTP Port",

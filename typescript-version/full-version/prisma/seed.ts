@@ -92,6 +92,7 @@ async function main() {
         translationManagement: ['create', 'read', 'update', 'delete'],
         emailTemplatesManagement: ['create', 'read', 'update', 'delete'],
         smtpManagement: ['create', 'read', 'update', 'delete'],
+        smsManagement: ['create', 'read', 'update', 'delete'],
         notificationScenarios: ['create', 'read', 'update', 'delete']
       }),
       level: 10,
@@ -113,6 +114,7 @@ async function main() {
         translationManagement: ['create', 'read', 'update', 'delete'],
         emailTemplatesManagement: ['create', 'read', 'update', 'delete'],
         smtpManagement: ['create', 'read', 'update', 'delete'],
+        smsManagement: ['create', 'read', 'update', 'delete'],
         notificationScenarios: ['create', 'read', 'update', 'delete']
       }),
       level: 10,
@@ -277,7 +279,8 @@ async function main() {
         languageManagement: ['create', 'read', 'update', 'delete'],
         translationManagement: ['create', 'read', 'update', 'delete'],
         emailTemplatesManagement: ['create', 'read', 'update', 'delete'],
-        smtpManagement: ['read']
+        smtpManagement: ['read'],
+        smsManagement: ['read']
       }),
       level: 20,
       isSystem: true

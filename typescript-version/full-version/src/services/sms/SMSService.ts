@@ -32,12 +32,19 @@ export interface SMSResult {
   message?: string
   error?: string
   cost?: number
+  freeRemaining?: number
+}
+
+export interface SMSFreeInfo {
+  free: number
+  used: number
 }
 
 export interface SMSConfig {
   apiKey: string
   sender?: string
   testMode?: boolean
+  useFreeFirst?: boolean
 }
 
 /**
