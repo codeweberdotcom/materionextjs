@@ -2,7 +2,7 @@
 
 Этот документ отслеживает статус всех ТЗ, планов, анализов и отчетов для быстрого понимания текущего состояния проекта.
 
-**Последнее обновление:** 2026-03-16 (SMS.ru модуль завершён — все 6 этапов выполнены, useFreeFirst удалён)
+**Последнее обновление:** 2026-03-16 (Session renewal fix, build fixes, notifications i18n, registration public endpoint, demo seed)
 
 ---
 
@@ -73,6 +73,7 @@
 
 ### Анализы
 
+- [Анализ: Реализация Forgot/Reset Password](analysis/architecture/analysis-forgot-password-implementation-2026-03-16.md) ✅ (Завершён 2026-03-16 — инфраструктура готова, нужны 2 API routes + 1 страница + обновить 2 компонента + i18n)
 - [Анализ модуля SMS.ru](analysis/architecture/analysis-sms-ru-module-2026-03-16.md) ✅ (Завершён 2026-03-16 — 10 проблем: 1 критическая, 3 высоких, 4 средних, 2 низких)
 - [Анализ: Улучшение схемы и формата Event](analysis/architecture/analysis-events-schema-improvement-2026-03-15.md) ✅ (Завершен 2026-03-15)
 - [Анализ: Параллельные bulk-операции — интеграционный тест](analysis/architecture/analysis-bulk-concurrent-integration-2026-03-15.md) ✅ (Завершен 2026-03-15)
@@ -135,6 +136,10 @@
 
 ### Отчеты
 
+- [Отчёт: Исправления TypeScript сборки (build fixes)](reports/fixes/report-ts-build-fixes-2026-03-16.md) ✅ (Завершен 2026-03-16 — JsonValue касты в 5 местах, удалён SMSFreeInfo)
+- [Отчёт: Исправление переводов типов уведомлений и SMS.ru i18n](reports/fixes/report-notifications-i18n-type-chips-2026-03-16.md) ✅ (Завершен 2026-03-16 — notificationTypes раздел, smsRu* ключи перемещены из navigation)
+- [Отчёт: Исправление сессии при смене языка и NaN баланса SMS.ru](reports/fixes/report-auth-session-renewal-sms-balance-2026-03-16.md) ✅ (Завершен 2026-03-16 — withSessionCookie в middleware, getBalance() fix)
+- [Отчёт: Публичный endpoint регистрации и демо-уведомления seed](reports/fixes/report-registration-public-endpoint-seed-2026-03-16.md) ✅ (Завершен 2026-03-16 — GET /api/settings/registration публичный, 16 демо-уведомлений)
 - [Отчёт: Улучшение схемы модели Event](reports/deployment/report-events-schema-improvement-2026-03-16.md) ✅ (Завершен 2026-03-16 — payload/metadata→Json, ip поле, убрана сериализация)
 - [Отчёт: Интеграционный тест параллельных bulk-операций](reports/testing/report-bulk-concurrent-integration-2026-03-15.md) ✅ (Завершен 2026-03-15 — 3 теста, без дедлоков)
 - [Отчёт: Тестовое покрытие Import/Bulk Operations](reports/testing/report-test-coverage-import-bulk-2026-03-15.md) ✅ (Завершен 2026-03-15 — +83 теста, 804 unit-тестов)
