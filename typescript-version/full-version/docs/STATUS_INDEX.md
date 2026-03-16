@@ -2,7 +2,7 @@
 
 Этот документ отслеживает статус всех ТЗ, планов, анализов и отчетов для быстрого понимания текущего состояния проекта.
 
-**Последнее обновление:** 2026-03-16 (Session renewal fix, build fixes, notifications i18n, registration public endpoint, demo seed)
+**Последнее обновление:** 2026-03-16 (Forgot/Reset Password реализован — полный flow, rate limit, events, i18n)
 
 ---
 
@@ -36,6 +36,7 @@
 
 ### Планы работ
 
+- [План: Forgot/Reset Password](plans/active/plan-forgot-password-implementation-2026-03-16.md) ✅ (Завершено 2026-03-16 — все 5 этапов выполнены)
 - [План: Доработка модуля SMS.ru](plans/active/plan-sms-ru-improvements-2026-03-16.md) ✅ (Завершено 2026-03-16 — все 6 этапов: gitignore, smsManagement permissions, audit events, метрики, типизация, i18n)
 
 - [План: Улучшение схемы модели Event](plans/active/plan-events-schema-improvement-2026-03-15.md) ✅ (Завершено 2026-03-16 — payload/metadata→Json, ip поле, убрана ручная сериализация)
@@ -136,6 +137,7 @@
 
 ### Отчеты
 
+- [Отчёт: Forgot/Reset Password — полная реализация](reports/improve/report-forgot-password-implementation-2026-03-16.md) ✅ (Завершен 2026-03-16 — 2 API routes, 2 компонента, i18n, rate limit, events)
 - [Отчёт: Исправления TypeScript сборки (build fixes)](reports/fixes/report-ts-build-fixes-2026-03-16.md) ✅ (Завершен 2026-03-16 — JsonValue касты в 5 местах, удалён SMSFreeInfo)
 - [Отчёт: Исправление переводов типов уведомлений и SMS.ru i18n](reports/fixes/report-notifications-i18n-type-chips-2026-03-16.md) ✅ (Завершен 2026-03-16 — notificationTypes раздел, smsRu* ключи перемещены из navigation)
 - [Отчёт: Исправление сессии при смене языка и NaN баланса SMS.ru](reports/fixes/report-auth-session-renewal-sms-balance-2026-03-16.md) ✅ (Завершен 2026-03-16 — withSessionCookie в middleware, getBalance() fix)
