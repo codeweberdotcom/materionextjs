@@ -1127,11 +1127,7 @@
     "summaryRequests": "Запросов за окно",
     "summaryWindows": "Активные окна",
     "title": "Управление лимитами",
-    "viewingLabel": {
-      "one": "Показано ${count} из ${total}",
-      "few": "Показано ${count} из ${total}",
-      "many": "Показано ${count} из ${total}"
-    },
+    "viewingLabel": "Показано ${count} из ${total}",
     "windowSize": "Окно: ${minutes} мин"
   },
   "rateLimitEvents": {
@@ -1810,5 +1806,41 @@
   "resetPasswordSuccess": "Пароль успешно изменён! Переходим на страницу входа...",
   "resetPasswordInvalidToken": "Ссылка недействительна или устарела. Запросите новую.",
   "resetPasswordPasswordsMustMatch": "Пароли не совпадают",
-  "resetPasswordMinLength": "Пароль должен содержать не менее 8 символов"
+  "resetPasswordMinLength": "Пароль должен содержать не менее 8 символов",
+  "register": {
+    "title": "Добро пожаловать 🚀",
+    "subtitle": "Управляйте своими приложениями легко и с удовольствием!",
+    "usernameLabel": "Имя пользователя",
+    "emailLabel": "Email",
+    "passwordLabel": "Пароль",
+    "confirmPasswordLabel": "Подтвердите пароль",
+    "accountTypeLabel": "Выберите тип аккаунта:",
+    "accountTypeListing": "Для публикации объявления",
+    "accountTypeListingNote": "Создается базовый аккаунт с тарифом Free",
+    "accountTypeCompany": "Для размещения компании",
+    "accountTypeCompanyNote": "Откроется возможность размещать услуги. Создается базовый аккаунт с тарифом Free",
+    "accountTypeNetwork": "Сеть компаний",
+    "accountTypeNetworkNote": "Возможность создать несколько аккаунтов и назначить других пользователей для управления ими. Создается базовый аккаунт с тарифом Free",
+    "agreeToPrefix": "Я согласен с ",
+    "privacyPolicyLink": "политикой конфиденциальности и условиями",
+    "submitButton": "Зарегистрироваться",
+    "submittingButton": "Создание аккаунта...",
+    "blockedButton": "Заблокировано (${hours}ч ${minutes}м)",
+    "rateLimitAlert": "Слишком много попыток регистрации. Повторите через: ${hours}ч ${minutes}м",
+    "successMessage": "Регистрация успешна! Перенаправление на страницу входа...",
+    "haveAccount": "Уже есть аккаунт?",
+    "signInLink": "Войти",
+    "or": "или",
+    "errorUsernameRequired": "Имя пользователя обязательно",
+    "errorEmailRequired": "Email обязателен",
+    "errorEmailInvalid": "Введите корректный email",
+    "errorPasswordRequired": "Пароль обязателен",
+    "errorPasswordMinLength": "Пароль должен содержать не менее 8 символов",
+    "errorPasswordsMismatch": "Пароли не совпадают",
+    "errorAgreeRequired": "Необходимо принять политику конфиденциальности и условия",
+    "errorInvalidResponse": "Неверный ответ от сервера",
+    "errorNetworkError": "Ошибка сети. Попробуйте снова.",
+    "errorGeneric": "Ошибка регистрации",
+    "errorRateLimit": "Слишком много попыток регистрации. Повторите через ${hours} часов."
+  }
 }

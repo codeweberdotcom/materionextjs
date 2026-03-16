@@ -1,7 +1,7 @@
 'use client'
 
 // React Imports
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 
 import { useRouter , useParams } from 'next/navigation'
 
@@ -75,6 +75,15 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
   // Hooks
   const { lang: locale } = useParams()
   const router = useRouter()
+
+  // Dictionary
+  const [dictionary, setDictionary] = useState<Record<string, any> | null>(null)
+
+  useEffect(() => {
+    import(`@/data/dictionaries/${locale}.json`).then(module => setDictionary(module.default))
+  }, [locale])
+
+  const t = useMemo(() => dictionary?.register ?? {}, [dictionary])
   const authBackground = useImageVariant(mode, lightImg, darkImg)
   const { settings } = useSettings()
 
@@ -105,27 +114,27 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
     const newErrors: string[] = []
 
     if (!formData.name.trim()) {
-      newErrors.push('Username is required')
+      newErrors.push(t.errorUsernameRequired || 'Username is required')
     }
 
     if (!formData.email.trim()) {
-      newErrors.push('Email is required')
+      newErrors.push(t.errorEmailRequired || 'Email is required')
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.push('Please enter a valid email address')
+      newErrors.push(t.errorEmailInvalid || 'Please enter a valid email address')
     }
 
     if (!formData.password) {
-      newErrors.push('Password is required')
+      newErrors.push(t.errorPasswordRequired || 'Password is required')
     } else if (formData.password.length < 8) {
-      newErrors.push('Password must be at least 8 characters long')
+      newErrors.push(t.errorPasswordMinLength || 'Password must be at least 8 characters long')
     }
 
     if (formData.password !== formData.confirmPassword) {
-      newErrors.push('Passwords do not match')
+      newErrors.push(t.errorPasswordsMismatch || 'Passwords do not match')
     }
 
     if (!agreeToTerms) {
-      newErrors.push('You must agree to the privacy policy and terms')
+      newErrors.push(t.errorAgreeRequired || 'You must agree to the privacy policy and terms')
     }
 
     setErrors(newErrors)
@@ -170,7 +179,7 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
           error: parseError instanceof Error ? parseError.message : 'Unknown error',
           file: 'src/views/Register.tsx'
         })
-        throw new Error('Invalid response from server')
+        throw new Error(t.errorInvalidResponse || 'Invalid response from server')
       }
 
       if (response.ok) {
@@ -195,7 +204,7 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
           logger.info('🚫 [REGISTER] Rate limit triggered', { retryAfter: data.retryAfter })
           setIsBlocked(true)
           setBlockTimeLeft(data.retryAfter)
-          setErrors([`Слишком много попыток регистрации. Повторите через ${Math.ceil(data.retryAfter / 3600)} часов.`])
+          setErrors([(t.errorRateLimit || 'Too many registration attempts. Please try again in ${hours} hours.').replace('${hours}', String(Math.ceil(data.retryAfter / 3600)))])
 
           // Запустить таймер
           const timer = setInterval(() => {
@@ -213,7 +222,7 @@ return prev - 1
             })
           }, 1000)
         } else {
-          const errorMsg = data?.error?.message || data?.message || 'Registration failed'
+          const errorMsg = data?.error?.message || data?.message || t.errorGeneric || 'Registration failed'
           const errorDetails = data?.error?.details
 
           if (Array.isArray(errorDetails) && errorDetails.length > 0) {
@@ -228,7 +237,7 @@ return prev - 1
         error: error instanceof Error ? error.message : 'Unknown error',
         file: 'src/views/Register.tsx'
       })
-      setErrors(['Network error. Please try again.'])
+      setErrors([t.errorNetworkError || 'Network error. Please try again.'])
     } finally {
       setIsLoading(false)
     }
@@ -267,8 +276,8 @@ return prev - 1
 
         <div className='flex flex-col gap-5 is-full sm:is-auto md:is-full sm:max-is-[400px] md:max-is-[unset]'>
           <div>
-            <Typography variant='h4'>Adventure starts here 🚀</Typography>
-            <Typography className='mbe-1'>Make your app management easy and fun!</Typography>
+            <Typography variant='h4'>{t.title || 'Adventure starts here 🚀'}</Typography>
+            <Typography className='mbe-1'>{t.subtitle || 'Make your app management easy and fun!'}</Typography>
           </div>
           <form noValidate autoComplete='off' onSubmit={handleSubmit} className='flex flex-col gap-5'>
             {errors.length > 0 && (
@@ -282,45 +291,47 @@ return prev - 1
             {isBlocked && (
               <Alert severity='warning' variant='filled'>
                 <Typography variant='body2'>
-                  Слишком много попыток регистрации. Повторите через: {Math.floor(blockTimeLeft / 3600)}ч {Math.floor((blockTimeLeft % 3600) / 60)}м
+                  {(t.rateLimitAlert || 'Too many registration attempts. Please try again in: ${hours}h ${minutes}m')
+                    .replace('${hours}', String(Math.floor(blockTimeLeft / 3600)))
+                    .replace('${minutes}', String(Math.floor((blockTimeLeft % 3600) / 60)))}
                 </Typography>
               </Alert>
             )}
 
             {success && (
               <Alert severity='success' variant='outlined'>
-                Registration successful! Redirecting to login...
+                {t.successMessage || 'Registration successful! Redirecting to login...'}
               </Alert>
             )}
 
             <TextField
               autoFocus
               fullWidth
-              label='Username'
+              label={t.usernameLabel || 'Username'}
               value={formData.name}
               onChange={handleInputChange('name')}
               disabled={isLoading || isBlocked}
-              error={errors.some(error => error.includes('Username'))}
+              error={errors.some(error => error.includes('Username') || error.includes('пользователя'))}
             />
 
             <TextField
               fullWidth
-              label='Email'
+              label={t.emailLabel || 'Email'}
               type='email'
               value={formData.email}
               onChange={handleInputChange('email')}
               disabled={isLoading || isBlocked}
-              error={errors.some(error => error.includes('Email'))}
+              error={errors.some(error => error.includes('Email') || error.includes('email') || error.includes('почт'))}
             />
 
             <TextField
               fullWidth
-              label='Password'
+              label={t.passwordLabel || 'Password'}
               type={isPasswordShown ? 'text' : 'password'}
               value={formData.password}
               onChange={handleInputChange('password')}
               disabled={isLoading || isBlocked}
-              error={errors.some(error => error.includes('Password'))}
+              error={errors.some(error => error.includes('Password') || error.includes('Пароль') || error.includes('пароль'))}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -342,18 +353,18 @@ return prev - 1
 
             <TextField
               fullWidth
-              label='Confirm Password'
+              label={t.confirmPasswordLabel || 'Confirm Password'}
               type='password'
               value={formData.confirmPassword}
               onChange={handleInputChange('confirmPassword')}
               disabled={isLoading || isBlocked}
-              error={errors.some(error => error.includes('match'))}
+              error={errors.some(error => error.includes('match') || error.includes('совпад'))}
             />
 
             {/* Выбор типа аккаунта */}
             <div className='flex flex-col gap-3'>
               <Typography variant='body2' color='text.secondary'>
-                Выберите тип аккаунта:
+                {t.accountTypeLabel || 'Select account type:'}
               </Typography>
               <RadioGroup
                 value={formData.accountType}
@@ -372,10 +383,10 @@ return prev - 1
                     <Radio value='LISTING' checked={formData.accountType === 'LISTING'} />
                     <Box className='flex-1'>
                       <Typography className='font-medium' color='text.primary'>
-                        Для публикации объявления
+                        {t.accountTypeListing || 'For posting ads'}
                       </Typography>
                       <Typography variant='caption' color='text.secondary'>
-                        Создается базовый аккаунт с тарифом Free
+                        {t.accountTypeListingNote || 'A basic account with Free plan is created'}
                       </Typography>
                     </Box>
                     <i className='ri-file-list-3-line text-2xl text-textSecondary' />
@@ -394,10 +405,10 @@ return prev - 1
                     <Radio value='COMPANY' checked={formData.accountType === 'COMPANY'} />
                     <Box className='flex-1'>
                       <Typography className='font-medium' color='text.primary'>
-                        Для размещения компании
+                        {t.accountTypeCompany || 'For company listing'}
                       </Typography>
                       <Typography variant='caption' color='text.secondary'>
-                        Откроется возможность размещать услуги. Создается базовый аккаунт с тарифом Free
+                        {t.accountTypeCompanyNote || 'Ability to list services. A basic account with Free plan is created'}
                       </Typography>
                     </Box>
                     <i className='ri-building-line text-2xl text-textSecondary' />
@@ -416,10 +427,10 @@ return prev - 1
                     <Radio value='NETWORK' checked={formData.accountType === 'NETWORK'} />
                     <Box className='flex-1'>
                       <Typography className='font-medium' color='text.primary'>
-                        Сеть компаний
+                        {t.accountTypeNetwork || 'Company network'}
                       </Typography>
                       <Typography variant='caption' color='text.secondary'>
-                        Возможность создать несколько аккаунтов и назначить других пользователей для управления ими. Создается базовый аккаунт с тарифом Free
+                        {t.accountTypeNetworkNote || 'Ability to create multiple accounts and assign other users to manage them. A basic account with Free plan is created'}
                       </Typography>
                     </Box>
                     <i className='ri-group-line text-2xl text-textSecondary' />
@@ -438,9 +449,9 @@ return prev - 1
                 }
                 label={
                   <>
-                    <span>I agree to </span>
+                    <span>{t.agreeToPrefix || 'I agree to '}</span>
                     <Link className='text-primary' href='/' onClick={e => e.preventDefault()}>
-                      privacy policy & terms
+                      {t.privacyPolicyLink || 'privacy policy & terms'}
                     </Link>
                   </>
                 }
@@ -455,19 +466,21 @@ return prev - 1
               startIcon={isLoading ? <CircularProgress size={20} /> : null}
             >
               {isBlocked
-                ? `Заблокировано (${Math.floor(blockTimeLeft / 3600)}ч ${Math.floor((blockTimeLeft % 3600) / 60)}м)`
+                ? (t.blockedButton || 'Blocked (${hours}h ${minutes}m)')
+                    .replace('${hours}', String(Math.floor(blockTimeLeft / 3600)))
+                    .replace('${minutes}', String(Math.floor((blockTimeLeft % 3600) / 60)))
                 : isLoading
-                  ? 'Creating Account...'
-                  : 'Sign Up'
+                  ? (t.submittingButton || 'Creating Account...')
+                  : (t.submitButton || 'Sign Up')
               }
             </Button>
             <div className='flex justify-center items-center flex-wrap gap-2'>
-              <Typography>Already have an account?</Typography>
+              <Typography>{t.haveAccount || 'Already have an account?'}</Typography>
               <Typography component={Link} href='/login' color='primary.main'>
-                Sign in instead
+                {t.signInLink || 'Sign in instead'}
               </Typography>
             </div>
-            <Divider className='gap-3'>or</Divider>
+            <Divider className='gap-3'>{t.or || 'or'}</Divider>
             <div className='flex justify-center items-center gap-2'>
               <IconButton size='small'>
                 <i className='ri-facebook-fill text-facebook' />

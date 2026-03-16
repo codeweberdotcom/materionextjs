@@ -1,35 +1,5 @@
 [
   {
-    "code": "aa",
-    "name": "Aa",
-    "direction": "ltr"
-  },
-  {
-    "code": "ar",
-    "name": "Ar",
-    "direction": "rtl"
-  },
-  {
-    "code": "de",
-    "name": "De",
-    "direction": "ltr"
-  },
-  {
-    "code": "en",
-    "name": "En",
-    "direction": "ltr"
-  },
-  {
-    "code": "fr",
-    "name": "Fr",
-    "direction": "ltr"
-  },
-  {
-    "code": "hy",
-    "name": "Hy",
-    "direction": "ltr"
-  },
-  {
     "code": "ru",
     "name": "Ru",
     "direction": "ltr"
