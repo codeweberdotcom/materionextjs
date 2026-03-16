@@ -208,7 +208,7 @@ const NotificationsList = (props: Props) => {
                       </Typography>
                       {notification.type && (
                         <Chip
-                          label={dictionary.navigation[notification.type] || notification.type}
+                          label={(dictionary.notificationTypes as Record<string, string>)?.[notification.type] || notification.type}
                           size='small'
                           variant='outlined'
                         />

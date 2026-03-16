@@ -1670,5 +1670,17 @@
       "CHU": "Chukotka Autonomous Okrug",
       "YAN": "Yamalo-Nenets Autonomous Okrug"
     }
+  },
+  "notificationTypes": {
+    "system": "System",
+    "security": "Security",
+    "feature": "Feature",
+    "user": "User",
+    "update": "Update",
+    "error": "Error",
+    "moderation": "Moderation",
+    "alert": "Alert",
+    "billing": "Billing",
+    "report": "Report"
   }
 }

@@ -1331,5 +1331,17 @@
       "CHU": "District autonome de Tchoukotka",
       "YAN": "District autonome des Iamalo-Nenets"
     }
+  },
+  "notificationTypes": {
+    "system": "Système",
+    "security": "Sécurité",
+    "feature": "Fonctionnalité",
+    "user": "Utilisateur",
+    "update": "Mise à jour",
+    "error": "Erreur",
+    "moderation": "Modération",
+    "alert": "Alerte",
+    "billing": "Facturation",
+    "report": "Rapport"
   }
 }
