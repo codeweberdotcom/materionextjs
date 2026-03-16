@@ -116,8 +116,8 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
 
     if (!formData.password) {
       newErrors.push('Password is required')
-    } else if (formData.password.length < 6) {
-      newErrors.push('Password must be at least 6 characters long')
+    } else if (formData.password.length < 8) {
+      newErrors.push('Password must be at least 8 characters long')
     }
 
     if (formData.password !== formData.confirmPassword) {
@@ -213,7 +213,14 @@ return prev - 1
             })
           }, 1000)
         } else {
-          setErrors(Array.isArray(data.message) ? data.message : [data.message || 'Registration failed'])
+          const errorMsg = data?.error?.message || data?.message || 'Registration failed'
+          const errorDetails = data?.error?.details
+
+          if (Array.isArray(errorDetails) && errorDetails.length > 0) {
+            setErrors(errorDetails)
+          } else {
+            setErrors([errorMsg])
+          }
         }
       }
     } catch (error) {
