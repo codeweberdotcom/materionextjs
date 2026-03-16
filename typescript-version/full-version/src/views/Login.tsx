@@ -129,10 +129,11 @@ const Login = ({ mode }: { mode: Mode }) => {
     try {
       await login(data.email, data.password)
 
-      // Vars
-      const redirectURL = searchParams.get('redirectTo') ?? '/en/dashboards/crm'
+      // Vars - strip any existing locale prefix to apply the current locale
+      const rawRedirect = searchParams.get('redirectTo') ?? '/dashboards/crm'
+      const redirectPath = rawRedirect.replace(/^\/(?:en|ru|fr|ar)(?=\/|$)/, '') || '/dashboards/crm'
 
-      window.location.href = getLocalizedUrl(redirectURL, locale as Locale)
+      window.location.href = getLocalizedUrl(redirectPath, locale as Locale)
     } catch (error: any) {
       // Очистить предыдущие сообщения
       setWarningMessage(null)

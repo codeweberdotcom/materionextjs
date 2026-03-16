@@ -19,6 +19,7 @@ import Autocomplete from '@mui/material/Autocomplete'
 import Skeleton from '@mui/material/Skeleton'
 import Stack from '@mui/material/Stack'
 import type { SelectChangeEvent } from '@mui/material/Select'
+import { useParams } from 'next/navigation'
 import { toast } from 'react-toastify'
 
 // Context Imports
@@ -93,6 +94,7 @@ const FormSkeleton = () => (
 
 const AccountDetails = () => {
   // Hooks
+  const { lang: locale } = useParams()
   const dictionary = useTranslation()
   const { refreshSession } = useAuth()
 
@@ -266,7 +268,7 @@ const AccountDetails = () => {
         } else if (response.status === 401) {
           // User is not authenticated, redirect to login
           toast.error('Please log in to access your account settings')
-          window.location.href = '/en/login'
+          window.location.href = `/${locale}/login`
           
 return
         }

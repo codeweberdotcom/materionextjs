@@ -84,7 +84,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ? { message: errorMessage, stack: error.stack }
         : { message: errorMessage }
       
-      // Ошибки оставляем на уровне ERROR - они важны
       logger.error('❌ [AUTH] Auth check failed:', errorDetails)
       setUser(null)
       setSession(null)

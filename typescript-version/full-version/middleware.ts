@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { lucia } from '@/libs/lucia'
+import { i18n } from '@/configs/i18n'
 import { checkPermission, isSuperadmin, getUserPermissions } from '@/utils/permissions/permissions'
 import { prisma } from '@/libs/prisma'
 import { canViewAdmin, canManage } from '@/utils/verification'
@@ -71,6 +72,20 @@ export async function middleware(request: NextRequest) {
       decrementActiveRequests(environment)
     }
     return NextResponse.next()
+  }
+
+  // Redirect unsupported locales — detect browser language from Accept-Language
+  const pathnameLocale = pathname.split('/')[1]
+  if (pathnameLocale && pathnameLocale.length === 2 && !i18n.locales.includes(pathnameLocale)) {
+    const acceptLanguage = request.headers.get('accept-language') ?? ''
+    const browserLocales = acceptLanguage
+      .split(',')
+      .map(l => l.split(';')[0].trim().slice(0, 2).toLowerCase())
+    const preferred = browserLocales.find(l => i18n.locales.includes(l))
+    const targetLocale = preferred ?? (i18n.locales.includes(i18n.defaultLocale) ? i18n.defaultLocale : i18n.locales[0])
+    const newPathname = pathname.replace(`/${pathnameLocale}`, `/${targetLocale}`)
+    finishMetrics(302)
+    return NextResponse.redirect(new URL(newPathname, request.url))
   }
 
   // Для API routes пропускаем middleware (метрики собираются в самих route handlers)

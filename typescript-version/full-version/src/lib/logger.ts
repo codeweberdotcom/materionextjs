@@ -81,13 +81,14 @@ if (!isClient) {
     warn: (message: string | LoggerData, meta?: LoggerData) =>
       typeof message === 'string' ? console.warn(`[WARN] ${message}`, meta) : console.warn('[WARN]', message, meta),
     error: (message: string | LoggerData, meta?: LoggerData) => {
+      // Use console.warn instead of console.error to avoid Next.js dev overlay
       if (typeof message === 'string') {
-        console.error(`[ERROR] ${message}`, meta)
+        console.warn(`[ERROR] ${message}`, meta)
       } else {
         try {
-          console.error('[ERROR]', JSON.stringify(message, null, 2), meta)
+          console.warn('[ERROR]', JSON.stringify(message, null, 2), meta)
         } catch (e) {
-          console.error('[ERROR] [Non-serializable object]', message, meta)
+          console.warn('[ERROR] [Non-serializable object]', message, meta)
         }
       }
     },

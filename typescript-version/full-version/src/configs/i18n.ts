@@ -7,7 +7,7 @@ languages.forEach(lang => {
 })
 
 export const i18n = {
-  defaultLocale: 'en',
+  defaultLocale: languages[0]?.code ?? 'ru',
   locales: languages.map(lang => lang.code),
   langDirection
 } as const
