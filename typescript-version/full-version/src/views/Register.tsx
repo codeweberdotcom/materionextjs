@@ -181,7 +181,7 @@ const RegisterV2 = ({ mode }: { mode: Mode }) => {
         logger.info('✅ [REGISTER] Registration succeeded', { email: formData.email.trim() })
         setSuccess(true)
         setTimeout(() => {
-          router.push('/login?message=Registration successful! Please log in.')
+          router.push(getLocalizedUrl('/login', locale as Locale) + '?message=Registration+successful%21+Please+log+in.')
         }, 2000)
       } else {
         const logClientError = response.status >= 400 && response.status < 500
@@ -394,7 +394,7 @@ return prev - 1
             </Button>
             <div className='flex justify-center items-center flex-wrap gap-2'>
               <Typography>{t.haveAccount || 'Already have an account?'}</Typography>
-              <Typography component={Link} href='/login' color='primary.main'>
+              <Typography component={Link} href={getLocalizedUrl('/login', locale as Locale)} color='primary.main'>
                 {t.signInLink || 'Sign in instead'}
               </Typography>
             </div>
