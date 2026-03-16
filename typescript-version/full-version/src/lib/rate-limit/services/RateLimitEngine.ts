@@ -750,9 +750,10 @@ return null
         targetMailDomain: block.mailDomain,
         targetCidr: block.cidr,
         targetAsn: block.asn,
+        targetIpPrefix: block.ipPrefix,
         blockedBy: block.blockedBy,
         config,
-        source: 'manual',
+        source: block.blockedBy === 'system' ? 'state' : 'manual',
         user: block.user,
         activeBlock: {
           id: block.id,

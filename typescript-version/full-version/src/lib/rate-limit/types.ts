@@ -77,6 +77,7 @@ export interface RateLimitStateAdminEntry {
   reason?: string | null
   violationNumber?: number | null
   targetIp?: string | null
+  targetIpPrefix?: string | null
   targetEmail?: string | null
   targetMailDomain?: string | null
   targetCidr?: string | null

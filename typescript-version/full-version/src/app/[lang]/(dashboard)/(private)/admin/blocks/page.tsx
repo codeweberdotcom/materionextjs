@@ -51,12 +51,18 @@ type StateEntry = {
   reason?: string | null
   violationNumber?: number | null
   targetIp?: string | null
+  targetIpPrefix?: string | null
   targetEmail?: string | null
   targetMailDomain?: string | null
   targetCidr?: string | null
   targetAsn?: string | null
   blockedBy?: string | null
   blockedByUser?: { id: string; email: string | null } | null
+  config?: {
+    maxRequests: number
+    windowMs: number
+    blockMs?: number | null
+  } | null
   activeBlock?: {
     id: string
     reason: string
@@ -1044,7 +1050,32 @@ return (
         <DialogContent dividers>
           {viewEntry ? (
             <Stack spacing={1.5}>
-              <Typography variant='body2'><strong>Ключ:</strong> {viewEntry.key}</Typography>
+              {(() => {
+                const targetType = viewEntry.module.includes('-email') ? 'Email'
+                  : viewEntry.module.includes('-ip') ? 'IP'
+                  : viewEntry.module.includes('-domain') ? 'Домен'
+                  : viewEntry.module.includes('-phone') ? 'Телефон'
+                  : viewEntry.module.includes('user') ? 'Пользователь'
+                  : null
+
+                const directValue = viewEntry.targetEmail || viewEntry.targetIp || viewEntry.targetMailDomain || viewEntry.targetCidr || viewEntry.targetAsn
+                const eventValue = events.find(e => e.key && e.key !== viewEntry.id)?.key
+                const blockedValue = directValue || eventValue
+
+                return (
+                  <>
+                    {targetType ? (
+                      <Typography variant='body2'><strong>Тип цели:</strong> {targetType}</Typography>
+                    ) : null}
+                    {blockedValue ? (
+                      <Typography variant='body2'><strong>Заблокировано:</strong> {blockedValue}</Typography>
+                    ) : null}
+                    {viewEntry.targetIpPrefix ? (
+                      <Typography variant='body2'><strong>IP-префикс:</strong> {viewEntry.targetIpPrefix}</Typography>
+                    ) : null}
+                  </>
+                )
+              })()}
               {viewEntry.user?.email || viewEntry.targetEmail || viewEntry.targetMailDomain || viewEntry.targetIp ? (
                 <Typography variant='body2'>
                   <strong>Пользователь:</strong>{' '}
@@ -1083,6 +1114,18 @@ return (
                 <Typography variant='body2'>
                   <strong>Причина:</strong> {viewEntry.reason || viewEntry.activeBlock?.reason}
                 </Typography>
+              ) : null}
+              {viewEntry.config ? (
+                <>
+                  <Typography variant='body2'>
+                    <strong>Лимит:</strong> {viewEntry.config.maxRequests} запр. / {humanizeWindow(viewEntry.config.windowMs)}
+                  </Typography>
+                  {viewEntry.config.blockMs ? (
+                    <Typography variant='body2'>
+                      <strong>Длит. блока:</strong> {humanizeWindow(viewEntry.config.blockMs)}
+                    </Typography>
+                  ) : null}
+                </>
               ) : null}
               {viewEntry.notes || viewEntry.activeBlock?.notes ? (
                 <Typography variant='body2'>
@@ -1153,6 +1196,7 @@ return (
                       {overText}
                     </Typography>
                     <Typography variant='caption' color='text.secondary' className='mt-0.5 block'>
+                      {ev.key && ev.key !== viewEntry?.id ? `${ev.key} • ` : ''}
                       Окно до {formatDate(ev.windowEnd)}
                       {ev.blockedUntil ? ` • блок до ${formatDate(ev.blockedUntil)}` : ''}
                     </Typography>
