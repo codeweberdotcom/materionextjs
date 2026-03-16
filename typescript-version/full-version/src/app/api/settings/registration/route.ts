@@ -9,24 +9,21 @@ import {
 } from '@/lib/validations/registration-settings-schemas'
 import logger from '@/lib/logger'
 
-// GET - Получить текущие настройки регистрации (admin only)
-export const GET = withApiHandler({
-  permission: 'settings.read',
-  handler: async () => {
+// GET - Публичный endpoint для формы регистрации (только публичные поля)
+export async function GET() {
+  try {
     const settings = await registrationSettingsService.getSettings()
 
     return NextResponse.json({
-      id: settings.id,
       registrationMode: settings.registrationMode,
       requirePhoneVerification: settings.requirePhoneVerification,
       requireEmailVerification: settings.requireEmailVerification,
-      smsProvider: settings.smsProvider,
-      updatedBy: settings.updatedBy,
-      createdAt: settings.createdAt,
-      updatedAt: settings.updatedAt
     })
+  } catch (error) {
+    logger.error('Failed to get registration settings', { error })
+    return NextResponse.json({ error: 'Failed to load settings' }, { status: 500 })
   }
-})
+}
 
 // PUT - Обновить настройки регистрации (admin only)
 export const PUT = withApiHandler({
