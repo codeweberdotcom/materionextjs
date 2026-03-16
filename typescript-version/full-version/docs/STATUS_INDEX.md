@@ -2,7 +2,7 @@
 
 Этот документ отслеживает статус всех ТЗ, планов, анализов и отчетов для быстрого понимания текущего состояния проекта.
 
-**Последнее обновление:** 2026-03-16 (Forgot/Reset Password реализован — полный flow, rate limit, events, i18n)
+**Последнее обновление:** 2026-03-16 (Rate Limits: исправлена метка источника авто-блоков + улучшен диалог деталей)
 
 ---
 
@@ -137,6 +137,7 @@
 
 ### Отчеты
 
+- [Отчёт: Rate Limits — метка источника авто-блоков + детали блокировки](reports/improve/report-rate-limits-block-source-label-2026-03-16.md) ✅ (Завершен 2026-03-16 — Авто/Ручная, тип цели, email/IP, конфиг лимита)
 - [Отчёт: Forgot/Reset Password — полная реализация](reports/improve/report-forgot-password-implementation-2026-03-16.md) ✅ (Завершен 2026-03-16 — 2 API routes, 2 компонента, i18n, rate limit, events)
 - [Отчёт: Исправления TypeScript сборки (build fixes)](reports/fixes/report-ts-build-fixes-2026-03-16.md) ✅ (Завершен 2026-03-16 — JsonValue касты в 5 местах, удалён SMSFreeInfo)
 - [Отчёт: Исправление переводов типов уведомлений и SMS.ru i18n](reports/fixes/report-notifications-i18n-type-chips-2026-03-16.md) ✅ (Завершен 2026-03-16 — notificationTypes раздел, smsRu* ключи перемещены из navigation)
