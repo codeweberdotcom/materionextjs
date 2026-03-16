@@ -52,7 +52,7 @@ const SMSRuSettings = () => {
   const [isCheckingBalance, setIsCheckingBalance] = useState(false)
   const [isCheckingFree, setIsCheckingFree] = useState(false)
   const [testPhone, setTestPhone] = useState('')
-  const [testMessage, setTestMessage] = useState('Тестовое сообщение от Materio')
+  const [testMessage, setTestMessage] = useState(dictionary.smsRuDefaultTestMessage)
   const [error, setError] = useState<string | null>(null)
 
   const loadSettings = useCallback(async () => {
@@ -72,15 +72,15 @@ const SMSRuSettings = () => {
       } else {
         const errorData = await response.json()
 
-        setError(errorData.message || 'Failed to load settings')
+        setError(errorData.message || dictionary.smsRuSaveError)
       }
     } catch (err) {
-      setError('Failed to load settings')
+      setError(dictionary.smsRuSaveError)
       console.error('Error loading SMS.ru settings:', err)
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [dictionary])
 
   // Load settings on mount
   useEffect(() => {
@@ -91,7 +91,7 @@ const SMSRuSettings = () => {
 
   const handleSave = async () => {
     if (!canUpdate) {
-      toast.error('Недостаточно прав для обновления настроек')
+      toast.error(dictionary.smsRuNoAccessUpdate)
 
       return
     }
@@ -109,7 +109,7 @@ const SMSRuSettings = () => {
       if (response.ok) {
         const data = await response.json()
 
-        toast.success('Настройки SMS.ru успешно сохранены')
+        toast.success(dictionary.smsRuSettingsSaved)
         setFormData({
           apiKey: data.settings.apiKey === '***provided***' ? formData.apiKey : data.settings.apiKey,
           sender: data.settings.sender || '',
@@ -119,12 +119,12 @@ const SMSRuSettings = () => {
       } else {
         const errorData = await response.json()
 
-        setError(errorData.message || 'Failed to save settings')
-        toast.error(errorData.message || 'Ошибка при сохранении настроек')
+        setError(errorData.message || dictionary.smsRuSaveError)
+        toast.error(errorData.message || dictionary.smsRuSaveError)
       }
     } catch (err) {
-      setError('Failed to save settings')
-      toast.error('Ошибка при сохранении настроек')
+      setError(dictionary.smsRuSaveError)
+      toast.error(dictionary.smsRuSaveError)
       console.error('Error saving SMS.ru settings:', err)
     } finally {
       setIsSaving(false)
@@ -142,16 +142,20 @@ const SMSRuSettings = () => {
         const data = await response.json()
 
         setBalance(data.balance)
-        toast.success(`Баланс: ${data.balance} ${data.currency}`)
+        toast.success(
+          dictionary.smsRuBalanceResult
+            .replace('{{balance}}', String(data.balance))
+            .replace('{{currency}}', data.currency)
+        )
       } else {
         const errorData = await response.json()
 
-        setError(errorData.message || 'Failed to check balance')
-        toast.error(errorData.message || 'Ошибка при проверке баланса')
+        setError(errorData.message || dictionary.smsRuBalanceError)
+        toast.error(errorData.message || dictionary.smsRuBalanceError)
       }
     } catch (err) {
-      setError('Failed to check balance')
-      toast.error('Ошибка при проверке баланса')
+      setError(dictionary.smsRuBalanceError)
+      toast.error(dictionary.smsRuBalanceError)
       console.error('Error checking balance:', err)
     } finally {
       setIsCheckingBalance(false)
@@ -172,10 +176,10 @@ const SMSRuSettings = () => {
       } else {
         const errorData = await response.json()
 
-        toast.error(errorData.message || 'Ошибка при проверке бесплатных SMS')
+        toast.error(errorData.message || dictionary.smsRuFreeError)
       }
     } catch (err) {
-      toast.error('Ошибка при проверке бесплатных SMS')
+      toast.error(dictionary.smsRuFreeError)
       console.error('Error checking free SMS:', err)
     } finally {
       setIsCheckingFree(false)
@@ -184,7 +188,7 @@ const SMSRuSettings = () => {
 
   const handleSendTest = async () => {
     if (!testPhone) {
-      toast.error('Введите номер телефона для теста')
+      toast.error(dictionary.smsRuPhoneRequired)
 
       return
     }
@@ -204,8 +208,8 @@ const SMSRuSettings = () => {
 
         toast.success(
           data.testMode
-            ? 'Тестовое SMS отправлено (тестовый режим)'
-            : `Тестовое SMS отправлено. ID: ${data.messageId}`
+            ? dictionary.smsRuTestSentTestMode
+            : dictionary.smsRuTestSentId.replace('{{id}}', String(data.messageId))
         )
 
         // Обновляем остаток бесплатных если useFreeFirst включен
@@ -219,12 +223,12 @@ const SMSRuSettings = () => {
       } else {
         const errorData = await response.json()
 
-        setError(errorData.message || 'Failed to send test SMS')
-        toast.error(errorData.message || 'Ошибка при отправке тестового SMS')
+        setError(errorData.message || dictionary.smsRuTestSendError)
+        toast.error(errorData.message || dictionary.smsRuTestSendError)
       }
     } catch (err) {
-      setError('Failed to send test SMS')
-      toast.error('Ошибка при отправке тестового SMS')
+      setError(dictionary.smsRuTestSendError)
+      toast.error(dictionary.smsRuTestSendError)
       console.error('Error sending test SMS:', err)
     } finally {
       setIsTesting(false)
@@ -235,7 +239,7 @@ const SMSRuSettings = () => {
     return (
       <Card>
         <CardContent>
-          <Alert severity='error'>Недостаточно прав для просмотра настроек</Alert>
+          <Alert severity='error'>{dictionary.smsRuNoAccess}</Alert>
         </CardContent>
       </Card>
     )
@@ -244,7 +248,7 @@ const SMSRuSettings = () => {
   if (isLoading) {
     return (
       <Card>
-        <CardHeader title='Настройки SMS.ru' subheader='Конфигурация сервиса отправки SMS сообщений' />
+        <CardHeader title={dictionary.smsRuSettings} subheader={dictionary.smsRuSettingsSubheader} />
         <CardContent>
           <Grid container spacing={4}>
             {Array.from({ length: 4 }).map((_, index) => (
@@ -269,8 +273,8 @@ const SMSRuSettings = () => {
       {/* Main Settings Card */}
       <Card>
         <CardHeader
-          title='Настройки SMS.ru'
-          subheader='Конфигурация сервиса отправки SMS сообщений'
+          title={dictionary.smsRuSettings}
+          subheader={dictionary.smsRuSettingsSubheader}
         />
         <CardContent>
           {error && (
@@ -284,12 +288,12 @@ const SMSRuSettings = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label='API ключ SMS.ru'
+                label={dictionary.smsRuApiKey}
                 type='password'
                 value={formData.apiKey}
                 onChange={e => setFormData({ ...formData, apiKey: e.target.value })}
-                placeholder='Введите API ключ от SMS.ru'
-                helperText='API ключ можно получить в личном кабинете SMS.ru'
+                placeholder={dictionary.smsRuApiKeyPlaceholder}
+                helperText={dictionary.smsRuApiKeyHelper}
                 disabled={!canUpdate}
               />
             </Grid>
@@ -298,11 +302,11 @@ const SMSRuSettings = () => {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label='Отправитель (Sender ID)'
+                label={dictionary.smsRuSenderId}
                 value={formData.sender}
                 onChange={e => setFormData({ ...formData, sender: e.target.value })}
-                placeholder='Например: MATERIO'
-                helperText='Имя отправителя (опционально). Должно быть одобрено в SMS.ru'
+                placeholder={dictionary.smsRuSenderIdPlaceholder}
+                helperText={dictionary.smsRuSenderIdHelper}
                 disabled={!canUpdate}
               />
             </Grid>
@@ -317,10 +321,10 @@ const SMSRuSettings = () => {
                     disabled={!canUpdate}
                   />
                 }
-                label='Тестовый режим'
+                label={dictionary.smsRuTestMode}
               />
               <Typography variant='caption' display='block' sx={{ color: 'text.secondary', ml: 4.5 }}>
-                В тестовом режиме SMS не отправляются, но логируются в консоль
+                {dictionary.smsRuTestModeHelper}
               </Typography>
             </Grid>
 
@@ -335,10 +339,10 @@ const SMSRuSettings = () => {
                     color='success'
                   />
                 }
-                label='Использовать бесплатные SMS первыми'
+                label={dictionary.smsRuUseFreeFirst}
               />
               <Typography variant='caption' display='block' sx={{ color: 'text.secondary', ml: 4.5 }}>
-                Сначала расходует дневной лимит бесплатных SMS, затем переходит на платные
+                {dictionary.smsRuUseFreeFirstHelper}
               </Typography>
             </Grid>
 
@@ -354,16 +358,20 @@ const SMSRuSettings = () => {
                     disabled={isCheckingFree || !formData.apiKey}
                     startIcon={isCheckingFree ? <CircularProgress size={16} /> : <i className='ri-gift-line' />}
                   >
-                    Проверить бесплатные SMS
+                    {dictionary.smsRuCheckFree}
                   </Button>
 
                   {freeInfo !== null && (
-                    <Tooltip title={`Использовано: ${freeInfo.used} / ${freeInfo.total}`}>
+                    <Tooltip
+                      title={dictionary.smsRuFreeTooltip
+                        .replace('{{used}}', String(freeInfo.used))
+                        .replace('{{total}}', String(freeInfo.total))}
+                    >
                       <Chip
                         label={
                           freeInfo.free > 0
-                            ? `${freeInfo.free} бесплатных осталось`
-                            : 'Бесплатные SMS исчерпаны'
+                            ? dictionary.smsRuFreeRemaining.replace('{{count}}', String(freeInfo.free))
+                            : dictionary.smsRuFreeExhausted
                         }
                         color={freeInfo.free > 0 ? 'success' : 'warning'}
                         variant='outlined'
@@ -384,7 +392,7 @@ const SMSRuSettings = () => {
                   disabled={!canRead || isCheckingBalance || !formData.apiKey}
                   startIcon={isCheckingBalance ? <CircularProgress size={20} /> : <i className='ri-wallet-3-line' />}
                 >
-                  Проверить баланс
+                  {dictionary.smsRuCheckBalance}
                 </Button>
                 {balance !== null && (
                   <Chip
@@ -405,7 +413,7 @@ const SMSRuSettings = () => {
                 disabled={!canUpdate || isSaving}
                 startIcon={isSaving ? <CircularProgress size={20} color='inherit' /> : <i className='ri-save-line' />}
               >
-                {isSaving ? 'Сохранение...' : 'Сохранить настройки'}
+                {isSaving ? dictionary.saving : dictionary.smsRuSaveSettings}
               </Button>
             </Grid>
           </Grid>
@@ -415,26 +423,26 @@ const SMSRuSettings = () => {
       {/* Test SMS Card */}
       <Card sx={{ mt: 4 }}>
         <CardHeader
-          title='Тестовая отправка SMS'
-          subheader='Проверьте работу сервиса отправив тестовое сообщение'
+          title={dictionary.smsRuTestCardTitle}
+          subheader={dictionary.smsRuTestCardSubheader}
         />
         <CardContent>
           <Grid container spacing={4}>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label='Номер телефона'
+                label={dictionary.phoneNumber}
                 value={testPhone}
                 onChange={e => setTestPhone(e.target.value)}
                 placeholder='+79991234567'
-                helperText='Формат: +7XXXXXXXXXX'
+                helperText={dictionary.smsRuPhoneFormat}
                 disabled={!canUpdate || isTesting}
               />
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label='Текст сообщения'
+                label={dictionary.smsRuMessageText}
                 value={testMessage}
                 onChange={e => setTestMessage(e.target.value)}
                 disabled={!canUpdate || isTesting}
@@ -448,7 +456,7 @@ const SMSRuSettings = () => {
                 disabled={!canUpdate || isTesting || !testPhone || !formData.apiKey}
                 startIcon={isTesting ? <CircularProgress size={20} color='inherit' /> : <i className='ri-send-plane-line' />}
               >
-                {isTesting ? 'Отправка...' : 'Отправить тестовое SMS'}
+                {isTesting ? dictionary.smsRuSending : dictionary.smsRuSendTestButton}
               </Button>
             </Grid>
           </Grid>
@@ -457,22 +465,17 @@ const SMSRuSettings = () => {
 
       {/* Info Card */}
       <Card sx={{ mt: 4 }}>
-        <CardHeader title='Информация о сервисе SMS.ru' />
+        <CardHeader title={dictionary.smsRuInfoCardTitle} />
         <CardContent>
           <Alert severity='info' icon={<i className='ri-information-line' />}>
             <Typography variant='body2' paragraph sx={{ mb: 1 }}>
-              <strong>SMS.ru</strong> — российский сервис отправки SMS сообщений.
+              <strong>SMS.ru</strong> — {dictionary.smsRuInfoText1}
             </Typography>
             <Typography variant='body2' paragraph sx={{ mb: 1 }}>
-              Для получения API ключа зарегистрируйтесь на{' '}
-              <a href='https://sms.ru' target='_blank' rel='noopener noreferrer' style={{ color: 'inherit' }}>
-                sms.ru
-              </a>{' '}
-              и перейдите в раздел «API».
+              {dictionary.smsRuInfoText2}
             </Typography>
             <Typography variant='body2'>
-              Sender ID (имя отправителя) требует предварительного согласования с сервисом.
-              Бесплатный лимит SMS обновляется ежедневно.
+              {dictionary.smsRuInfoText3}
             </Typography>
           </Alert>
         </CardContent>
