@@ -130,12 +130,13 @@ return
       }
 
       const sharedOptions = {
-        transports: ['websocket', 'polling'],
+        transports: ['websocket'],
         auth: { token },
         timeout: 20000,
         reconnection: true,
-        reconnectionAttempts: 5,
-        reconnectionDelay: 1000,
+        reconnectionAttempts: 3,
+        reconnectionDelay: 2000,
+        reconnectionDelayMax: 10000,
         path: SOCKET_PATH,
         withCredentials: Boolean(SOCKET_BASE_URL)
       }
@@ -154,15 +155,22 @@ return
         setStatus('disconnected')
       }
 
+      const handleReconnectFailed = () => {
+        setStatus('disconnected')
+        setLastError('Socket server unavailable. Real-time features disabled.')
+      }
+
       nextChatSocket.on('connect', updateStatus)
       nextChatSocket.on('disconnect', updateStatus)
       nextChatSocket.on('connect_error', handleError)
       nextChatSocket.on('error', handleError)
+      nextChatSocket.on('reconnect_failed', handleReconnectFailed)
 
       nextNotificationSocket.on('connect', updateStatus)
       nextNotificationSocket.on('disconnect', updateStatus)
       nextNotificationSocket.on('connect_error', handleError)
       nextNotificationSocket.on('error', handleError)
+      nextNotificationSocket.on('reconnect_failed', handleReconnectFailed)
 
       setChatSocket(nextChatSocket)
       setNotificationSocket(nextNotificationSocket)
