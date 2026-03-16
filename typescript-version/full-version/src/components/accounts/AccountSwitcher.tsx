@@ -4,6 +4,9 @@
 import { useRef, useState } from 'react'
 import type { MouseEvent } from 'react'
 
+// Next Imports
+import { useParams, useRouter } from 'next/navigation'
+
 // MUI Imports
 import IconButton from '@mui/material/IconButton'
 import Popper from '@mui/material/Popper'
@@ -27,6 +30,8 @@ import type { AccountType } from '@/types/accounts/types'
 
 // Utils
 import { accountStateColors } from '@/services/workflows/machines/AccountMachine'
+import { getLocalizedUrl } from '@/utils/formatting/i18n'
+import type { Locale } from '@/configs/i18n'
 
 // Маппинг типов аккаунтов на иконки
 const accountTypeIcons: Record<AccountType, string> = {
@@ -52,6 +57,8 @@ const AccountSwitcher = () => {
 
   // Hooks
   const { settings } = useSettings()
+  const router = useRouter()
+  const { lang } = useParams() as { lang: string }
   const accountContext = useAccount()
   const { currentAccount, userAccounts, loading } = accountContext
   const switchAccount = useSwitchAccount()
@@ -207,8 +214,7 @@ return
                     onClick={e => {
                       handleDropdownClose(e)
 
-                      // TODO: Переход на страницу управления аккаунтами
-                      window.location.href = '/accounts'
+                      router.push(getLocalizedUrl('/accounts', lang as Locale))
                     }}
                   >
                     <i className='ri-settings-3-line' />
