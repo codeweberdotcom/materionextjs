@@ -327,14 +327,15 @@ return prev - 1
             disabled={isRateLimited || isRoomLoading || !room || isSending}
           >
             <div className='flex items-center gap-2'>
-              {isRateLimited ? (
+              {isSending ? (
+                <CircularProgress size={16} color='inherit' />
+              ) : isRateLimited ? (
                 countdown
               ) : isRoomLoading || !room ? (
                 '...'
               ) : (
                 <i className='ri-send-plane-line' />
               )}
-              {isSending && <CircularProgress size={16} color='inherit' />}
             </div>
           </CustomIconButton>
         ) : (
@@ -355,11 +356,10 @@ return prev - 1
                 navigation.loadingButton
               ) : (
                 <span className='flex items-center gap-2'>
-                  {navigation.send}
-                  <i className='ri-send-plane-line' />
+                  {isSending ? navigation.sending : navigation.send}
+                  {isSending ? <CircularProgress size={16} color='inherit' /> : <i className='ri-send-plane-line' style={{ fontSize: 16, width: 16, height: 16 }} />}
                 </span>
               )}
-              {isSending && <CircularProgress size={16} color='inherit' />}
             </div>
           </Button>
         )}

@@ -313,7 +313,7 @@ return prev - 1
             />
             <div className='flex justify-between items-center flex-wrap gap-x-3 gap-y-1'>
               <FormControlLabel control={<Checkbox defaultChecked />} label={dictionary?.navigation?.rememberMe || 'Remember me'} />
-              <Typography className='text-end' color='primary.main' component={Link} href='/forgot-password'>
+              <Typography className='text-end' color='primary.main' component={Link} href={getLocalizedUrl('/forgot-password', locale as Locale)}>
                 {dictionary?.navigation?.forgotPassword || 'Forgot password?'}
               </Typography>
             </div>
@@ -327,7 +327,7 @@ return prev - 1
             </Button>
             <div className='flex justify-center items-center flex-wrap gap-2'>
               <Typography>{dictionary?.navigation?.newUser || 'New on our platform?'}</Typography>
-              <Typography component={Link} href='/register' color='primary.main'>
+              <Typography component={Link} href={getLocalizedUrl('/register', locale as Locale)} color='primary.main'>
                 {dictionary?.navigation?.createAccount || 'Create an account'}
               </Typography>
             </div>

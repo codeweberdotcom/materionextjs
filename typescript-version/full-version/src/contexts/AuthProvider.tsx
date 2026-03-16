@@ -4,7 +4,6 @@ import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState } from 'react'
 
 import logger from '@/lib/logger'
-import { lucia } from '@/libs/lucia'
 
 interface UserRole {
   id: string
