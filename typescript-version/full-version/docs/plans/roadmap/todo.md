@@ -1,5 +1,17 @@
 # RateLimit TODO / Backlog
 
+## Карточка пользователя
+
+1. **Блокировки в профиле пользователя** *(admin/users/view)*
+   - Добавить секцию "Блокировки" на страницу просмотра пользователя (`/apps/user/view?id=...`)
+   - Показывать активные и истёкшие блоки пользователя
+   - Связывать через `UserBlock.userId` и `UserBlock.emailHash` (HMAC от email)
+   - Показывать: модуль, причину, дату блока, срок действия, автора
+   - Кнопка "Снять блок" для активных блоков (superadmin/admin)
+   - Ссылка на страницу `/admin/blocks` с фильтром по пользователю
+
+## Backlog
+
 1. **PII / ipHash** *(RateLimitService, EventService)*
    - Добавить поля `ipHash`, `ipPrefix`, `hashVersion` в `RateLimitEvent` и `UserBlock`.
    - Хэшировать IP через HMAC (секрет хранить в `.env`, см. `RATE_LIMIT_IP_HASH_SECRET`).
