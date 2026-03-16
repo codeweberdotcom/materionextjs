@@ -214,13 +214,13 @@ export const GET = withApiHandler<unknown, { format: string }>({
 
     // Применяем маскирование PII данных
     const items = result.items.map(event => {
-      const parsedPayload = safeParseJson(event.payload, {
+      const parsedPayload = safeParseJson(event.payload as string | null | undefined, {
         field: 'payload',
         eventId: event.id,
         source: event.source
       })
 
-      const parsedMetadata = safeParseJson(event.metadata, {
+      const parsedMetadata = safeParseJson(event.metadata as string | null | undefined, {
         field: 'metadata',
         eventId: event.id,
         source: event.source

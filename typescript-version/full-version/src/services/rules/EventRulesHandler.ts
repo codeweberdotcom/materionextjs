@@ -112,7 +112,7 @@ return
     // Парсим payload если есть
     if (event.payload) {
       try {
-        facts.eventPayload = JSON.parse(event.payload)
+        facts.eventPayload = JSON.parse(event.payload as string)
       } catch {
         // Игнорируем ошибки парсинга
       }

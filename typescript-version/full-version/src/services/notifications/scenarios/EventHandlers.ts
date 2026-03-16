@@ -67,7 +67,7 @@ return
       let payload: Record<string, any> = {}
 
       try {
-        payload = JSON.parse(event.payload || '{}')
+        payload = JSON.parse((event.payload as string | null) || '{}')
       } catch (e) {
         logger.warn('[NotificationEventHandlers] Failed to parse event payload', {
           eventId: event.id,
@@ -113,7 +113,7 @@ return
               subjectType: event.subjectType || undefined,
               subjectId: event.subjectId || undefined,
               payload,
-              metadata: event.metadata ? JSON.parse(event.metadata) : undefined
+              metadata: event.metadata ? JSON.parse(event.metadata as string) : undefined
             }
           })
         } catch (error) {
